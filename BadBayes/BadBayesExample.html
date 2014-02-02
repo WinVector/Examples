@@ -1,0 +1,385 @@
+<h1 id="examples-for-bad-bayes-an-example-of-why-you-need-hold-out-testing">Examples for <a href="http://www.win-vector.com/blog/2014/02/bad-bayes-an-example-of-why-you-need-hold-out-testing/">Bad Bayes: an example of why you need hold-out testing</a></h1>
+<p>Document rendering command (in bash):</p>
+<pre><code>echo &quot;library(&#39;knitr&#39;); knit(&#39;BadBayesExample.Rmd&#39;)&quot; | R --vanilla ; pandoc -o BadBayesExample.html BadBayesExample.md</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">runExample &lt;-<span class="st"> </span>function(rows,features,<span class="dt">rareFeature=</span>F,<span class="dt">nSignal=</span><span class="dv">0</span>,trainer,predictor) {
+   <span class="kw">print</span>(<span class="kw">sys.call</span>(<span class="dv">0</span>)) <span class="co"># print call and arguments</span>
+   <span class="kw">set.seed</span>(<span class="dv">123525</span>)   <span class="co"># make result deterministic</span>
+   yValues &lt;-<span class="st"> </span><span class="kw">factor</span>(<span class="kw">c</span>(<span class="st">&#39;A&#39;</span>,<span class="st">&#39;B&#39;</span>))
+   xValues &lt;-<span class="st"> </span><span class="kw">factor</span>(<span class="kw">c</span>(<span class="st">&#39;a&#39;</span>,<span class="st">&#39;b&#39;</span>,<span class="st">&#39;z&#39;</span>))
+   yData =<span class="st"> </span><span class="kw">sample</span>(yValues,<span class="dt">replace=</span>T,<span class="dt">size=</span>rows)
+   d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">y=</span>yData,
+                   <span class="dt">group=</span><span class="kw">sample</span>(<span class="dv">1</span>:<span class="dv">100</span>,<span class="dt">replace=</span>T,<span class="dt">size=</span>rows))
+   mkRandVar &lt;-<span class="st"> </span>function() {
+     if(rareFeature) {
+         v &lt;-<span class="st"> </span><span class="kw">rep</span>(xValues[[<span class="dv">3</span>]],rows)
+         signalIndices &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:rows,<span class="dt">replace=</span>F,<span class="dt">size=</span><span class="dv">2</span>)
+         v[signalIndices] &lt;-<span class="st"> </span><span class="kw">sample</span>(xValues[<span class="dv">1</span>:<span class="dv">2</span>],<span class="dt">replace=</span>T,<span class="dt">size=</span><span class="dv">2</span>)
+      } else {
+         v &lt;-<span class="st"> </span><span class="kw">sample</span>(xValues[<span class="dv">1</span>:<span class="dv">2</span>],<span class="dt">replace=</span>T,<span class="dt">size=</span>rows)
+      }
+      if(nSignal&gt;<span class="dv">0</span>) {
+         goodIndices &lt;-<span class="st"> </span><span class="kw">sample</span>(<span class="dv">1</span>:rows,<span class="dt">replace=</span>F,<span class="dt">size=</span>nSignal)
+         v[goodIndices] &lt;-<span class="st"> </span>xValues[<span class="kw">as.numeric</span>(yData[goodIndices])]
+      }
+      v
+   }
+   varValues &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">replicate</span>(features,<span class="kw">mkRandVar</span>()))
+   varNames &lt;-<span class="st"> </span><span class="kw">colnames</span>(varValues)
+   d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,varValues)
+   dTrain &lt;-<span class="st"> </span><span class="kw">subset</span>(d,group&lt;=<span class="dv">50</span>)
+   dTest &lt;-<span class="st"> </span><span class="kw">subset</span>(d,group&gt;<span class="dv">50</span>)
+   model &lt;-<span class="st"> </span><span class="kw">trainer</span>(<span class="dt">yName=</span><span class="st">&#39;y&#39;</span>,<span class="dt">varNames=</span>varNames,<span class="dt">yValues=</span>yValues,
+      <span class="dt">data=</span>dTrain)
+   tabTrain &lt;-<span class="st"> </span><span class="kw">table</span>(<span class="dt">truth=</span>dTrain$y,
+      <span class="dt">predict=</span><span class="kw">predictor</span>(model,<span class="dt">newdata=</span>dTrain,<span class="dt">yValues=</span>yValues))
+   <span class="kw">print</span>(<span class="st">&#39;train set results&#39;</span>)
+   <span class="kw">print</span>(tabTrain)
+   <span class="kw">print</span>(<span class="kw">fisher.test</span>(tabTrain))
+   tabTest &lt;-<span class="st"> </span><span class="kw">table</span>(<span class="dt">truth=</span>dTest$y,
+      <span class="dt">predict=</span><span class="kw">predictor</span>(model,<span class="dt">newdata=</span>dTest,<span class="dt">yValues=</span>yValues))
+   <span class="kw">print</span>(<span class="st">&#39;hold-out test set results&#39;</span>)
+   <span class="kw">print</span>(tabTest)
+   <span class="kw">print</span>(<span class="kw">fisher.test</span>(tabTest))
+   <span class="kw">list</span>(<span class="dt">yName=</span><span class="st">&#39;y&#39;</span>,<span class="dt">yValues=</span>yValues,<span class="dt">xValues=</span>xValues,<span class="dt">varNames=</span>varNames,<span class="dt">data=</span>d,
+      <span class="dt">model=</span>model,<span class="dt">tabTrain=</span>tabTrain,<span class="dt">tabTest=</span>tabTest)
+}</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(e1071)</code></pre>
+<pre><code>## Loading required package: class</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">res &lt;-<span class="st"> </span><span class="kw">runExample</span>(<span class="dt">rows=</span><span class="dv">200</span>,<span class="dt">features=</span><span class="dv">400</span>,<span class="dt">rareFeature=</span>T,
+   <span class="dt">trainer=</span>function(yName,varNames,yValues,data) {
+      formula &lt;-<span class="st"> </span><span class="kw">as.formula</span>(<span class="kw">paste</span>(yName,<span class="kw">paste</span>(varNames,<span class="dt">collapse=</span><span class="st">&#39; + &#39;</span>),
+         <span class="dt">sep=</span><span class="st">&#39; ~ &#39;</span>))
+      <span class="kw">naiveBayes</span>(formula,data) 
+   },
+   <span class="dt">predictor=</span>function(model,newdata,yValues) { 
+      <span class="kw">predict</span>(model,newdata,<span class="dt">type=</span><span class="st">&#39;class&#39;</span>)
+   }
+)</code></pre>
+<pre><code>## runExample(rows = 200, features = 400, rareFeature = T, trainer = function(yName, 
+##     varNames, yValues, data) {
+##     formula &lt;- as.formula(paste(yName, paste(varNames, collapse = &quot; + &quot;), 
+##         sep = &quot; ~ &quot;))
+##     naiveBayes(formula, data)
+## }, predictor = function(model, newdata, yValues) {
+##     predict(model, newdata, type = &quot;class&quot;)
+## })
+## [1] &quot;train set results&quot;
+##      predict
+## truth  A  B
+##     A 45  2
+##     B  0 49
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTrain
+## p-value &lt; 2.2e-16
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  131.3   Inf
+## sample estimates:
+## odds ratio 
+##        Inf 
+## 
+## [1] &quot;hold-out test set results&quot;
+##      predict
+## truth  A  B
+##     A 17 41
+##     B 14 32
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTest
+## p-value = 1
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  0.3753 2.4193
+## sample estimates:
+## odds ratio 
+##     0.9482</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(rpart)
+res &lt;-<span class="st"> </span><span class="kw">runExample</span>(<span class="dt">rows=</span><span class="dv">200</span>,<span class="dt">features=</span><span class="dv">400</span>,<span class="dt">rareFeature=</span>F,
+   <span class="dt">trainer=</span>function(yName,varNames,yValues,data) {
+     formula &lt;-<span class="st"> </span><span class="kw">as.formula</span>(<span class="kw">paste</span>(yName,<span class="kw">paste</span>(varNames,<span class="dt">collapse=</span><span class="st">&#39; + &#39;</span>),
+        <span class="dt">sep=</span><span class="st">&#39; ~ &#39;</span>))
+     <span class="kw">rpart</span>(formula,data) 
+   },
+   <span class="dt">predictor=</span>function(model,newdata,yValues) { 
+      <span class="kw">predict</span>(model,newdata,<span class="dt">type=</span><span class="st">&#39;class&#39;</span>)
+   }
+)</code></pre>
+<pre><code>## runExample(rows = 200, features = 400, rareFeature = F, trainer = function(yName, 
+##     varNames, yValues, data) {
+##     formula &lt;- as.formula(paste(yName, paste(varNames, collapse = &quot; + &quot;), 
+##         sep = &quot; ~ &quot;))
+##     rpart(formula, data)
+## }, predictor = function(model, newdata, yValues) {
+##     predict(model, newdata, type = &quot;class&quot;)
+## })
+## [1] &quot;train set results&quot;
+##      predict
+## truth  A  B
+##     A 42  5
+##     B 16 33
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTrain
+## p-value = 7.575e-09
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##   5.273 64.713
+## sample estimates:
+## odds ratio 
+##       16.7 
+## 
+## [1] &quot;hold-out test set results&quot;
+##      predict
+## truth  A  B
+##     A 33 25
+##     B 27 19
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTest
+## p-value = 1
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  0.3933 2.1839
+## sample estimates:
+## odds ratio 
+##     0.9296</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># glm example</span>
+res &lt;-<span class="st"> </span><span class="kw">runExample</span>(<span class="dt">rows=</span><span class="dv">200</span>,<span class="dt">features=</span><span class="dv">400</span>,<span class="dt">rareFeature=</span>F,
+   <span class="dt">trainer=</span>function(yName,varNames,yValues,data) {
+      formula &lt;-<span class="st"> </span><span class="kw">as.formula</span>(<span class="kw">paste</span>(yName,<span class="kw">paste</span>(varNames,<span class="dt">collapse=</span><span class="st">&#39; + &#39;</span>),
+         <span class="dt">sep=</span><span class="st">&#39; ~ &#39;</span>))
+      <span class="kw">glm</span>(formula,data,<span class="dt">family=</span><span class="kw">binomial</span>(<span class="dt">link=</span><span class="st">&#39;logit&#39;</span>)) 
+   },
+   <span class="dt">predictor=</span>function(model,newdata,yValues) { 
+      pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model,<span class="dt">newdata=</span>newdata,<span class="dt">type=</span><span class="st">&#39;response&#39;</span>)
+      yValues[<span class="kw">ifelse</span>(pred&gt;=<span class="fl">0.5</span>,<span class="dv">2</span>,<span class="dv">1</span>)]
+   }
+)</code></pre>
+<pre><code>## runExample(rows = 200, features = 400, rareFeature = F, trainer = function(yName, 
+##     varNames, yValues, data) {
+##     formula &lt;- as.formula(paste(yName, paste(varNames, collapse = &quot; + &quot;), 
+##         sep = &quot; ~ &quot;))
+##     glm(formula, data, family = binomial(link = &quot;logit&quot;))
+## }, predictor = function(model, newdata, yValues) {
+##     pred &lt;- predict(model, newdata = newdata, type = &quot;response&quot;)
+##     yValues[ifelse(pred &gt;= 0.5, 2, 1)]
+## })</code></pre>
+<pre><code>## Warning: prediction from a rank-deficient fit may be misleading</code></pre>
+<pre><code>## [1] &quot;train set results&quot;
+##      predict
+## truth  A  B
+##     A 47  0
+##     B  0 49
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTrain
+## p-value &lt; 2.2e-16
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  301.5   Inf
+## sample estimates:
+## odds ratio 
+##        Inf</code></pre>
+<pre><code>## Warning: prediction from a rank-deficient fit may be misleading</code></pre>
+<pre><code>## [1] &quot;hold-out test set results&quot;
+##      predict
+## truth  A  B
+##     A 35 23
+##     B 25 21
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTest
+## p-value = 0.5556
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  0.5426 3.0070
+## sample estimates:
+## odds ratio 
+##      1.275</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(randomForest)</code></pre>
+<pre><code>## randomForest 4.6-7
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">res &lt;-<span class="st"> </span><span class="kw">runExample</span>(<span class="dt">rows=</span><span class="dv">200</span>,<span class="dt">features=</span><span class="dv">400</span>,<span class="dt">rareFeature=</span>F,
+   <span class="dt">trainer=</span>function(yName,varNames,yValues,data) {
+      formula &lt;-<span class="st"> </span><span class="kw">as.formula</span>(<span class="kw">paste</span>(yName,<span class="kw">paste</span>(varNames,<span class="dt">collapse=</span><span class="st">&#39; + &#39;</span>),
+         <span class="dt">sep=</span><span class="st">&#39; ~ &#39;</span>))
+      <span class="kw">randomForest</span>(formula,data) 
+   },
+   <span class="dt">predictor=</span>function(model,newdata,yValues) { 
+      <span class="kw">predict</span>(model,newdata,<span class="dt">type=</span><span class="st">&#39;response&#39;</span>)
+   }
+)</code></pre>
+<pre><code>## runExample(rows = 200, features = 400, rareFeature = F, trainer = function(yName, 
+##     varNames, yValues, data) {
+##     formula &lt;- as.formula(paste(yName, paste(varNames, collapse = &quot; + &quot;), 
+##         sep = &quot; ~ &quot;))
+##     randomForest(formula, data)
+## }, predictor = function(model, newdata, yValues) {
+##     predict(model, newdata, type = &quot;response&quot;)
+## })
+## [1] &quot;train set results&quot;
+##      predict
+## truth  A  B
+##     A 47  0
+##     B  0 49
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTrain
+## p-value &lt; 2.2e-16
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  301.5   Inf
+## sample estimates:
+## odds ratio 
+##        Inf 
+## 
+## [1] &quot;hold-out test set results&quot;
+##      predict
+## truth  A  B
+##     A 21 37
+##     B 13 33
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTest
+## p-value = 0.4095
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  0.5794 3.6528
+## sample estimates:
+## odds ratio 
+##      1.436</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">## recognizes no fit
+<span class="kw">library</span>(gbm)</code></pre>
+<pre><code>## Loading required package: survival
+## Loading required package: splines
+## Loading required package: lattice
+## Loading required package: parallel
+## Loaded gbm 2.1</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">for (nSignal in <span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">50</span>)) { 
+   <span class="kw">print</span>(<span class="st">&#39;##################&#39;</span>)
+   <span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;nSignal:&#39;</span>,nSignal))
+   <span class="kw">print</span>(<span class="st">&#39;&#39;</span>)
+   res &lt;-<span class="st"> </span><span class="kw">runExample</span>(<span class="dt">rows=</span><span class="dv">200</span>,<span class="dt">features=</span><span class="dv">400</span>,<span class="dt">rareFeature=</span>T,<span class="dt">nSignal=</span>nSignal,
+      <span class="dt">trainer=</span>function(yName,varNames,yValues,data) {
+         yTerm &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;ifelse(&#39;</span>,yName,<span class="st">&#39;==&quot;&#39;</span>,yValues[[<span class="dv">1</span>]],<span class="st">&#39;&quot;,1,0)&#39;</span>,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+         formula &lt;-<span class="st"> </span><span class="kw">as.formula</span>(<span class="kw">paste</span>(yTerm,<span class="kw">paste</span>(varNames,<span class="dt">collapse=</span><span class="st">&#39; + &#39;</span>),
+            <span class="dt">sep=</span><span class="st">&#39; ~ &#39;</span>))
+         <span class="kw">gbm</span>(formula,<span class="dt">data=</span>data,<span class="dt">distribution=</span><span class="st">&#39;bernoulli&#39;</span>,<span class="dt">n.trees=</span><span class="dv">100</span>,
+            <span class="dt">interaction.depth=</span><span class="dv">3</span>) 
+      },
+      <span class="dt">predictor=</span>function(model,newdata,yValues) { 
+         pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model,newdata,<span class="dt">n.trees=</span><span class="dv">100</span>,<span class="dt">type=</span><span class="st">&#39;response&#39;</span>)
+         yValues[<span class="kw">ifelse</span>(pred&gt;=<span class="fl">0.5</span>,<span class="dv">1</span>,<span class="dv">2</span>)]
+      }
+   )
+   <span class="kw">print</span>(<span class="st">&#39;##################&#39;</span>)
+}</code></pre>
+<pre><code>## [1] &quot;##################&quot;
+## [1] &quot;nSignal: 0&quot;
+## [1] &quot;&quot;
+## runExample(rows = 200, features = 400, rareFeature = T, nSignal = nSignal, 
+##     trainer = function(yName, varNames, yValues, data) {
+##         yTerm &lt;- paste(&quot;ifelse(&quot;, yName, &quot;==\&quot;&quot;, yValues[[1]], 
+##             &quot;\&quot;,1,0)&quot;, sep = &quot;&quot;)
+##         formula &lt;- as.formula(paste(yTerm, paste(varNames, collapse = &quot; + &quot;), 
+##             sep = &quot; ~ &quot;))
+##         gbm(formula, data = data, distribution = &quot;bernoulli&quot;, 
+##             n.trees = 100, interaction.depth = 3)
+##     }, predictor = function(model, newdata, yValues) {
+##         pred &lt;- predict(model, newdata, n.trees = 100, type = &quot;response&quot;)
+##         yValues[ifelse(pred &gt;= 0.5, 1, 2)]
+##     })
+## [1] &quot;train set results&quot;
+##      predict
+## truth  A  B
+##     A  0 47
+##     B  0 49
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTrain
+## p-value = 1
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##    0 Inf
+## sample estimates:
+## odds ratio 
+##          0 
+## 
+## [1] &quot;hold-out test set results&quot;
+##      predict
+## truth  A  B
+##     A  0 58
+##     B  0 46
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTest
+## p-value = 1
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##    0 Inf
+## sample estimates:
+## odds ratio 
+##          0 
+## 
+## [1] &quot;##################&quot;
+## [1] &quot;##################&quot;
+## [1] &quot;nSignal: 50&quot;
+## [1] &quot;&quot;
+## runExample(rows = 200, features = 400, rareFeature = T, nSignal = nSignal, 
+##     trainer = function(yName, varNames, yValues, data) {
+##         yTerm &lt;- paste(&quot;ifelse(&quot;, yName, &quot;==\&quot;&quot;, yValues[[1]], 
+##             &quot;\&quot;,1,0)&quot;, sep = &quot;&quot;)
+##         formula &lt;- as.formula(paste(yTerm, paste(varNames, collapse = &quot; + &quot;), 
+##             sep = &quot; ~ &quot;))
+##         gbm(formula, data = data, distribution = &quot;bernoulli&quot;, 
+##             n.trees = 100, interaction.depth = 3)
+##     }, predictor = function(model, newdata, yValues) {
+##         pred &lt;- predict(model, newdata, n.trees = 100, type = &quot;response&quot;)
+##         yValues[ifelse(pred &gt;= 0.5, 1, 2)]
+##     })
+## [1] &quot;train set results&quot;
+##      predict
+## truth  A  B
+##     A 46  1
+##     B  0 49
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTrain
+## p-value &lt; 2.2e-16
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  181.9   Inf
+## sample estimates:
+## odds ratio 
+##        Inf 
+## 
+## [1] &quot;hold-out test set results&quot;
+##      predict
+## truth  A  B
+##     A 19 39
+##     B  0 46
+## 
+##  Fisher&#39;s Exact Test for Count Data
+## 
+## data:  tabTest
+## p-value = 3.71e-06
+## alternative hypothesis: true odds ratio is not equal to 1
+## 95 percent confidence interval:
+##  4.999   Inf
+## sample estimates:
+## odds ratio 
+##        Inf 
+## 
+## [1] &quot;##################&quot;</code></pre>

@@ -1,0 +1,136 @@
+
+# Examples for [Bad Bayes: an example of why you need hold-out testing](http://www.win-vector.com/blog/2014/02/bad-bayes-an-example-of-why-you-need-hold-out-testing/)
+
+Document rendering command (in bash):
+```
+echo "library('knitr'); knit('BadBayesExample.Rmd')" | R --vanilla ; pandoc -o BadBayesExample.html BadBayesExample.md
+```
+
+```{r exampleGenerator,tidy=F}
+runExample <- function(rows,features,rareFeature=F,nSignal=0,trainer,predictor) {
+   print(sys.call(0)) # print call and arguments
+   set.seed(123525)   # make result deterministic
+   yValues <- factor(c('A','B'))
+   xValues <- factor(c('a','b','z'))
+   yData = sample(yValues,replace=T,size=rows)
+   d <- data.frame(y=yData,
+                   group=sample(1:100,replace=T,size=rows))
+   mkRandVar <- function() {
+     if(rareFeature) {
+         v <- rep(xValues[[3]],rows)
+         signalIndices <- sample(1:rows,replace=F,size=2)
+         v[signalIndices] <- sample(xValues[1:2],replace=T,size=2)
+      } else {
+         v <- sample(xValues[1:2],replace=T,size=rows)
+      }
+      if(nSignal>0) {
+         goodIndices <- sample(1:rows,replace=F,size=nSignal)
+         v[goodIndices] <- xValues[as.numeric(yData[goodIndices])]
+      }
+      v
+   }
+   varValues <- as.data.frame(replicate(features,mkRandVar()))
+   varNames <- colnames(varValues)
+   d <- cbind(d,varValues)
+   dTrain <- subset(d,group<=50)
+   dTest <- subset(d,group>50)
+   model <- trainer(yName='y',varNames=varNames,yValues=yValues,
+      data=dTrain)
+   tabTrain <- table(truth=dTrain$y,
+      predict=predictor(model,newdata=dTrain,yValues=yValues))
+   print('train set results')
+   print(tabTrain)
+   print(fisher.test(tabTrain))
+   tabTest <- table(truth=dTest$y,
+      predict=predictor(model,newdata=dTest,yValues=yValues))
+   print('hold-out test set results')
+   print(tabTest)
+   print(fisher.test(tabTest))
+   list(yName='y',yValues=yValues,xValues=xValues,varNames=varNames,data=d,
+      model=model,tabTrain=tabTrain,tabTest=tabTest)
+}
+```
+
+```{r NaiveBayes,tidy=F}
+library(e1071)
+res <- runExample(rows=200,features=400,rareFeature=T,
+   trainer=function(yName,varNames,yValues,data) {
+      formula <- as.formula(paste(yName,paste(varNames,collapse=' + '),
+         sep=' ~ '))
+      naiveBayes(formula,data) 
+   },
+   predictor=function(model,newdata,yValues) { 
+      predict(model,newdata,type='class')
+   }
+)
+```
+
+```{r DecisionTrees,tidy=F}
+library(rpart)
+res <- runExample(rows=200,features=400,rareFeature=F,
+   trainer=function(yName,varNames,yValues,data) {
+     formula <- as.formula(paste(yName,paste(varNames,collapse=' + '),
+        sep=' ~ '))
+     rpart(formula,data) 
+   },
+   predictor=function(model,newdata,yValues) { 
+      predict(model,newdata,type='class')
+   }
+)
+```
+
+```{r LogisticRegression,tidy=F}
+# glm example
+res <- runExample(rows=200,features=400,rareFeature=F,
+   trainer=function(yName,varNames,yValues,data) {
+      formula <- as.formula(paste(yName,paste(varNames,collapse=' + '),
+         sep=' ~ '))
+      glm(formula,data,family=binomial(link='logit')) 
+   },
+   predictor=function(model,newdata,yValues) { 
+      pred <- predict(model,newdata=newdata,type='response')
+      yValues[ifelse(pred>=0.5,2,1)]
+   }
+)
+```
+
+```{r RandomForest,tidy=F}
+library(randomForest)
+res <- runExample(rows=200,features=400,rareFeature=F,
+   trainer=function(yName,varNames,yValues,data) {
+      formula <- as.formula(paste(yName,paste(varNames,collapse=' + '),
+         sep=' ~ '))
+      randomForest(formula,data) 
+   },
+   predictor=function(model,newdata,yValues) { 
+      predict(model,newdata,type='response')
+   }
+)
+```
+
+```{r GradientBoostedTrees,tidy=F}
+## recognizes no fit
+library(gbm)
+for (nSignal in c(0,50)) { 
+   print('##################')
+   print(paste('nSignal:',nSignal))
+   print('')
+   res <- runExample(rows=200,features=400,rareFeature=T,nSignal=nSignal,
+      trainer=function(yName,varNames,yValues,data) {
+         yTerm <- paste('ifelse(',yName,'=="',yValues[[1]],'",1,0)',sep='')
+         formula <- as.formula(paste(yTerm,paste(varNames,collapse=' + '),
+            sep=' ~ '))
+         gbm(formula,data=data,distribution='bernoulli',n.trees=100,
+            interaction.depth=3) 
+      },
+      predictor=function(model,newdata,yValues) { 
+         pred <- predict(model,newdata,n.trees=100,type='response')
+         yValues[ifelse(pred>=0.5,1,2)]
+      }
+   )
+   print('##################')
+}
+```
+
+
+
