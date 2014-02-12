@@ -1,0 +1,2 @@
+
+Example files for [Bad Bayes: an example of why you need hold-out testing](http://www.win-vector.com/blog/2014/02/bad-bayes-an-example-of-why-you-need-hold-out-testing/) article.
