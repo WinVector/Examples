@@ -1,0 +1,78 @@
+
+# load and prepare the data
+urlBase <- 'http://www.win-vector.com/dfiles/PCA/'
+pv <- read.table(paste(urlBase,'ProxyVariables.csv',sep=''),
+   sep=',',header=T,comment.char='')
+ot <- read.table(paste(urlBase,'ObservedTemps.csv',sep=''),
+   sep=',',header=T,comment.char='')
+keyName <- 'Year'
+varNames <- setdiff(colnames(pv),keyName)
+yName = setdiff(colnames(ot),keyName)
+d <- merge(pv,ot,by=c(keyName))
+
+# perform a regression on new PCA variables
+pcomp <- prcomp(d[,varNames])
+synthNames <- colnames(pcomp$rotation)
+d <- cbind(d,
+   as.matrix(d[,varNames]) %*% pcomp$rotation)
+f <- as.formula(paste(yName,
+   paste(synthNames,collapse=' + '),sep=' ~ '))
+model <- step(lm(f,data=d))
+
+# print and plot a little
+print(summary(model)$r.squared)
+d$pred <- predict(model,newdata=d)
+library(ggplot2)
+ggplot(data=d) +
+   geom_point(aes_string(x=keyName,y=yName)) +
+   geom_line(aes_string(x=keyName,y='pred'))
+
+
+
+d$trainGroup <- d[,keyName]>=median(d[,keyName])
+dTrain <- subset(d,trainGroup)
+dTest <- subset(d,!trainGroup)
+model <- step(lm(f,data=dTrain))
+dTest$pred <- predict(model,newdata=dTest)
+dTrain$pred <- predict(model,newdata=dTrain)
+ggplot() +
+   geom_point(data=dTest,aes_string(x=keyName,y=yName)) +
+   geom_line(data=dTest,aes_string(x=keyName,y='pred'),color='blue',linetype=2) +
+   geom_point(data=dTrain,aes_string(x=keyName,y=yName)) +
+   geom_line(data=dTrain,aes_string(x=keyName,y='pred'),color='red',linetype=1)
+
+
+
+rmse <- function(a,b) { sqrt(mean((a-b)^2)) }
+print(rmse(dTrain[,yName],mean(dTrain[,yName])))
+print(rmse(dTrain[,yName],dTrain$pred))
+print(rmse(dTest[,yName],mean(dTest[,yName])))
+print(rmse(dTest[,yName],dTest$pred))
+
+
+
+pcomp <- prcomp(d[,varNames],scale.=T)
+plot(pcomp)
+synthNames <- colnames(pcomp$rotation)
+#synthNames <- colnames(pcomp$rotation)[pcomp$sdev>1]
+f <- as.formula(paste(yName,
+   paste(synthNames,collapse=' + '),sep=' ~ '))
+d$trainGroup <- d[,keyName]>=median(d[,keyName])
+dTrain <- subset(d,trainGroup)
+dTest <- subset(d,!trainGroup)
+model <- lm(f,data=dTrain)
+dTest$pred <- predict(model,newdata=dTest)
+dTrain$pred <- predict(model,newdata=dTrain)
+ggplot() +
+   geom_point(data=dTest,aes_string(x=keyName,y=yName)) +
+   geom_line(data=dTest,aes_string(x=keyName,y='pred'),color='blue',linetype=2) +
+   geom_point(data=dTrain,aes_string(x=keyName,y=yName)) +
+   geom_line(data=dTrain,aes_string(x=keyName,y='pred'),color='red',linetype=1)
+   
+
+rmse <- function(a,b) { sqrt(mean((a-b)^2)) }
+print(rmse(dTrain[,yName],mean(dTrain[,yName])))
+print(rmse(dTrain[,yName],dTrain$pred))
+
+print(rmse(dTest[,yName],mean(dTest[,yName])))
+print(rmse(dTest[,yName],dTest$pred))
