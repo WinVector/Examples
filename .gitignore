@@ -2,3 +2,5 @@
 *~
 .Rhistory
 .RHistory
+.*
+!.gitignore
