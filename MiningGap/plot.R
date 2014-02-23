@@ -82,6 +82,4 @@ print(kEst)
 ## [1] 69851.47
 print(dim(d)[[1]])
 ## [1] 193
-print(kEst*dim(d)[[1]])
-## [1] 13481334
 
