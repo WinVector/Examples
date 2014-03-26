@@ -2,7 +2,7 @@
 # load libraries
 require('gam')
 require('ggplot2')
-requrie('gdata')
+require('gdata')
 require('RCurl')
 
 # Data: http://authorearnings.com/wp-content/uploads/2014/02/Amazon-US-Kindle-bestsellers-anon-snapshot-20140207-v8.xlsx
