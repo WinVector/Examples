@@ -15,10 +15,10 @@ d <- read.table(mkCon('NMsg.csv'),header=T,sep=',')
 d <- d[order(d$DaysBeforeAfterRelationship),]
 
 # plot something similar to original graph
-ggplot(data=d,aes(x=DaysBeforeAfterRelationship,
+print(ggplot(data=d,aes(x=DaysBeforeAfterRelationship,
    y=NumberOfTimelinePosts)) +
    geom_point() + 
-   stat_smooth(method = "gam", formula = y ~ s(x))
+   stat_smooth(method = "gam", formula = y ~ s(x)))
 
 earlyIntensity <- mean(
    d[d$DaysBeforeAfterRelationship >= -100 &
@@ -55,10 +55,10 @@ dm <- melt(density,
    id.vars=c('NumberOfTimelinePosts'),
    variable.name='group',
    value.name='density')
-ggplot(data=dm) +
+print(ggplot(data=dm) +
    geom_bar(stat='identity',position='dodge',
       aes(x=NumberOfTimelinePosts,y=density,fill=group)) +
-  scale_x_continuous(breaks=density$NumberOfTimelinePosts)
+  scale_x_continuous(breaks=density$NumberOfTimelinePosts))
 print(dm[dm$NumberOfTimelinePosts==4,])
 ##    NumberOfTimelinePosts       group    density
 ## 5                      4  nearCounts 0.05957193
@@ -82,6 +82,4 @@ print(kEst)
 ## [1] 69851.47
 print(dim(d)[[1]])
 ## [1] 193
-print(kEst*dim(d)[[1]])
-## [1] 13481334
 
