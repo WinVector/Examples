@@ -51,13 +51,22 @@ cLength <- length(serialize(cm,NULL))
 print(paste('reduced size',cLength))
 print(paste('size ratio',cLength/mLength))
 
+# more leaks are found if the work is done in a function 
+# which creates local environments
+# preventing later changes from masking size changes
+# confusing sizes
+doWork <- function(n) {
+  dTraini <- synthFrame(n)
+  modeli <- gam(y~s(xN1)+xN2+xC,data=dTraini)
+  c(length(serialize(modeli,NULL)),length(serialize(stripGamR(modeli),NULL)))
+}
+
 plotFrame <- data.frame(n=seq(100,10000,100),originalSize=0,strippedSize=0)
 for(i in 1:dim(plotFrame)[[1]]) {
   n <- plotFrame[i,'n']
-  dTraini <- synthFrame(n)
-  modeli <- gam(y~s(xN1)+xN2+xC,data=dTraini)
-  plotFrame[i,'originalSize'] <- length(serialize(modeli,NULL))  
-  plotFrame[i,'strippedSize'] <- length(serialize(stripGamR(modeli),NULL))  
+  sizes <- doWork(n)
+  plotFrame[i,'originalSize'] <- sizes[1]
+  plotFrame[i,'strippedSize'] <- sizes[2]
 }
 
 pf <- melt(plotFrame,id.vars='n',variable.name='treatment',value.name='model.size')
