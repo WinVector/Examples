@@ -33,9 +33,13 @@ stripGlmLR <- function(cm) {
    cm$weights <- c()
    cm$prior.weights <- c()
    cm$qr$qr <- c()
+   attr(cm$formula,".Environment") <- c()
+   cm$family <- c()
    attr(cm$terms,".Environment") <- c()
    cm
 }
+
+# type='response', need sigmoid for link
 
 cm <- stripGlmLR(model)
 dTest$pred2 <- predict(cm,newdata=dTest,type='response')
