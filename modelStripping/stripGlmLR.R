@@ -74,15 +74,41 @@ for(i in 1:dim(plotFrame)[[1]]) {
 
 pf <- melt(plotFrame,id.vars='n',variable.name='treatment',value.name='model.size')
 ggplot(data=pf,aes(x=n,y=model.size,color=treatment)) + geom_line()
+ggsave(filename='glmLRmodelSizes.png')
 
 # try glm.fit()
 doWork2 <- function(n) {
   dTraini <- synthFrame(n)
-  modeli <- glm.fit(y=dTraini$y,x=model.matrix(~xN+xC,dTraini))
+  modeli <- glm.fit(y=dTraini$y,x=model.matrix(~xN+xC,dTraini),
+     family=binomial(link='logit'))
   length(serialize(modeli,NULL))
 }
 plotFrame2 <- data.frame(n=seq(100,10000,100))
 plotFrame2$fitSize <- sapply(plotFrame2$n,doWork2)
 ggplot(data=plotFrame2,aes(x=n,y=fitSize)) + geom_line()
+ggsave(filename='glmLRfitSizes.png')
 
+
+# see if step() is working off (X^T X, X^T y) or re-scanning data
+# answer: it has a run time proportional to the data size, not just
+# a function of the design matrix.
+dTrainB <- synthFrame(100)
+timeStep <- function(n) {
+  dTraini <- c()
+  for(i in 1:(n/dim(dTrainB)[[1]])) {
+     dTraini <- rbind(dTraini,dTrainB)
+  }
+  nreps <- 5
+  modeli <- glm(y~xN+xC,data=dTraini,family=binomial(link='logit'))
+  stepResF <- step(modeli,trace=0) # run once to make sure data frame is ready
+  duration <- system.time(
+     for(i in 1:nreps) {
+        stepResI <- step(modeli,trace=0)
+     })
+  duration['elapsed']/nreps
+}
+plotFrameStep <- data.frame(n=seq(100,10000,100))
+plotFrameStep$stepTimeSeconds <- sapply(plotFrameStep$n,timeStep)
+ggplot(data=plotFrameStep,aes(x=n,y=stepTimeSeconds)) + geom_line()
+ggsave(filename='glmLRstepTimes.png')
 
