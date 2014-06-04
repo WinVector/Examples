@@ -14,6 +14,7 @@ dTrain <- synthFrame(100000)
 dTest <- synthFrame(100)
 model <- glm(y~xN+xC,data=dTrain,family=binomial(link='logit'))
 
+
 mLength <- length(serialize(model,NULL))
 print(paste('orig size',mLength))
 
@@ -73,3 +74,15 @@ for(i in 1:dim(plotFrame)[[1]]) {
 
 pf <- melt(plotFrame,id.vars='n',variable.name='treatment',value.name='model.size')
 ggplot(data=pf,aes(x=n,y=model.size,color=treatment)) + geom_line()
+
+# try glm.fit()
+doWork2 <- function(n) {
+  dTraini <- synthFrame(n)
+  modeli <- glm.fit(y=dTraini$y,x=model.matrix(~xN+xC,dTraini))
+  length(serialize(modeli,NULL))
+}
+plotFrame2 <- data.frame(n=seq(100,10000,100))
+plotFrame2$fitSize <- sapply(plotFrame2$n,doWork2)
+ggplot(data=plotFrame2,aes(x=n,y=fitSize)) + geom_line()
+
+
