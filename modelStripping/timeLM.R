@@ -1,5 +1,6 @@
 
 library(ggplot2)
+library('microbenchmark')
 set.seed(2325235)
 
 synthFrame <- function(nrows) {
@@ -19,17 +20,21 @@ timeStep <- function(n) {
   for(i in 1:(n/dim(dTrainB)[[1]])) {
      dTraini <- rbind(dTraini,dTrainB)
   }
-  nreps <- 5
   modeli <- lm(y~xN+xC,data=dTraini)
-  stepResF <- step(modeli,trace=0) # run once to make sure data frame is ready
-  duration <- system.time(
-     for(i in 1:nreps) {
-        stepResI <- step(modeli,trace=0)
-     })
-  duration['elapsed']/nreps
+  stepResF <- step(modeli,trace=0) # run once to make sure data caches are hot
+  microbenchmark(step(modeli,trace=0))$time
 }
-plotFrameStep <- data.frame(n=seq(100,10000,100))
-plotFrameStep$stepTimeSeconds <- sapply(plotFrameStep$n,timeStep)
-ggplot(data=plotFrameStep,aes(x=n,y=stepTimeSeconds)) + geom_line()
-ggsave(filename='lmstepTimes.png')
+plotFrameStep <- c()
+for(n in seq(1000,10000,1000)) {
+   ti <- data.frame(n=n,stepTime=timeStep(n))
+   plotFrameStep <- rbind(plotFrameStep,ti)
+}
+uB <- max(aggregate(stepTime~n,data=plotFrameStep,
+   FUN=function(x) { quantile(x,0.9) })$stepTime)
+lB <- min(aggregate(stepTime~n,data=plotFrameStep,
+   FUN=function(x) { quantile(x,0.9) })$stepTime)
+ggplot(data=plotFrameStep,aes(x=n,y=stepTime)) + 
+   geom_boxplot(aes(group=n),outlier.size=0) + 
+   coord_cartesian(ylim=c(lB,uB)) +
+   geom_smooth()
 
