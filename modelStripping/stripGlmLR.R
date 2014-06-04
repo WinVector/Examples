@@ -91,7 +91,7 @@ ggsave(filename='glmLRfitSizes.png')
 
 # see if step() is working off (X^T X, X^T y) or re-scanning data
 # answer: it has a run time proportional to the data size, not just
-# a function of the design matrix.
+# a function of (X^T X, X^T y).
 dTrainB <- synthFrame(100)
 timeStep <- function(n) {
   dTraini <- c()
