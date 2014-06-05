@@ -1,4 +1,5 @@
 
+library(plyr)
 library(ggplot2)
 library(reshape2)
 set.seed(2325235)
@@ -61,16 +62,13 @@ print(paste('size ratio',cLength/mLength))
 doWork <- function(n) {
   dTraini <- synthFrame(n)
   modeli <- glm(y~xN+xC,data=dTraini,family=binomial(link='logit'))
-  c(length(serialize(modeli,NULL)),length(serialize(stripGlmLR(modeli),NULL)))
+  data.frame(n=n,
+     originalSize=length(serialize(modeli,NULL)),
+     strippedSize=length(serialize(stripGlmLR(modeli),NULL)))
 }
 
-plotFrame <- data.frame(n=seq(100,10000,100),originalSize=0,strippedSize=0)
-for(i in 1:dim(plotFrame)[[1]]) {
-  n <- plotFrame[i,'n']
-  sizes <- doWork(n)
-  plotFrame[i,'originalSize'] <- sizes[1]
-  plotFrame[i,'strippedSize'] <- sizes[2]
-}
+plotFrame <- adply(seq(100,10000,100),1,doWork)
+plotFrame <- plotFrame[,setdiff(colnames(plotFrame),'X1')]
 
 pf <- melt(plotFrame,id.vars='n',variable.name='treatment',value.name='model.size')
 ggplot(data=pf,aes(x=n,y=model.size,color=treatment)) + geom_line()
@@ -88,27 +86,4 @@ plotFrame2$fitSize <- sapply(plotFrame2$n,doWork2)
 ggplot(data=plotFrame2,aes(x=n,y=fitSize)) + geom_line()
 ggsave(filename='glmLRfitSizes.png')
 
-
-# see if step() is working off (X^T X, X^T y) or re-scanning data
-# answer: it has a run time proportional to the data size, not just
-# a function of (X^T X, X^T y).
-dTrainB <- synthFrame(100)
-timeStep <- function(n) {
-  dTraini <- c()
-  for(i in 1:(n/dim(dTrainB)[[1]])) {
-     dTraini <- rbind(dTraini,dTrainB)
-  }
-  nreps <- 5
-  modeli <- glm(y~xN+xC,data=dTraini,family=binomial(link='logit'))
-  stepResF <- step(modeli,trace=0) # run once to make sure data frame is ready
-  duration <- system.time(
-     for(i in 1:nreps) {
-        stepResI <- step(modeli,trace=0)
-     })
-  duration['elapsed']/nreps
-}
-plotFrameStep <- data.frame(n=seq(100,10000,100))
-plotFrameStep$stepTimeSeconds <- sapply(plotFrameStep$n,timeStep)
-ggplot(data=plotFrameStep,aes(x=n,y=stepTimeSeconds)) + geom_line()
-ggsave(filename='glmLRstepTimes.png')
 

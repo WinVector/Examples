@@ -1,6 +1,8 @@
 
+
+library(plyr)
 library(ggplot2)
-library('microbenchmark')
+library(microbenchmark)
 set.seed(2325235)
 
 synthFrame <- function(nrows) {
@@ -16,19 +18,13 @@ synthFrame <- function(nrows) {
 # a function of (X^T X, X^T y).
 dTrainB <- synthFrame(100)
 timeStep <- function(n) {
-  dTraini <- c()
-  for(i in 1:(n/dim(dTrainB)[[1]])) {
-     dTraini <- rbind(dTraini,dTrainB)
-  }
+  dTraini <- adply(1:(n/dim(dTrainB)[[1]]),1,function(x) dTrainB)
   modeli <- lm(y~xN+xC,data=dTraini)
   stepResF <- step(modeli,trace=0) # run once to make sure data caches are hot
   microbenchmark(step(modeli,trace=0))$time
 }
-plotFrameStep <- c()
-for(n in seq(1000,10000,1000)) {
-   ti <- data.frame(n=n,stepTime=timeStep(n))
-   plotFrameStep <- rbind(plotFrameStep,ti)
-}
+plotFrameStep <- adply(seq(1000,10000,1000),1,
+   function(n) data.frame(n=n,stepTime=timeStep(n)))
 uBr <- max(aggregate(stepTime~n,data=plotFrameStep,
    FUN=function(x) { quantile(x,0.9) })$stepTime)
 lBr <- min(aggregate(stepTime~n,data=plotFrameStep,

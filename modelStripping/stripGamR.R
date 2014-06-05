@@ -1,4 +1,5 @@
 
+library(plyr)
 library(ggplot2)
 library(mgcv)
 library(reshape2)
@@ -58,16 +59,13 @@ print(paste('size ratio',cLength/mLength))
 doWork <- function(n) {
   dTraini <- synthFrame(n)
   modeli <- gam(y~s(xN1)+xN2+xC,data=dTraini)
-  c(length(serialize(modeli,NULL)),length(serialize(stripGamR(modeli),NULL)))
+  data.frame(n=n,
+     originalSize=length(serialize(modeli,NULL)),
+     strippedSize=length(serialize(stripGamR(modeli),NULL)))
 }
 
-plotFrame <- data.frame(n=seq(100,10000,100),originalSize=0,strippedSize=0)
-for(i in 1:dim(plotFrame)[[1]]) {
-  n <- plotFrame[i,'n']
-  sizes <- doWork(n)
-  plotFrame[i,'originalSize'] <- sizes[1]
-  plotFrame[i,'strippedSize'] <- sizes[2]
-}
+plotFrame <- adply(seq(100,10000,100),1,doWork)
+plotFrame <- plotFrame[,setdiff(colnames(plotFrame),'X1')]
 
 pf <- melt(plotFrame,id.vars='n',variable.name='treatment',value.name='model.size')
 ggplot(data=pf,aes(x=n,y=model.size,color=treatment)) + geom_line()
