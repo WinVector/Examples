@@ -21,10 +21,11 @@ timeStep <- function(n) {
   dTraini <- adply(1:(n/dim(dTrainB)[[1]]),1,function(x) dTrainB)
   modeli <- lm(y~xN+xC,data=dTraini)
   stepResF <- step(modeli,trace=0) # run once to make sure data caches are hot
-  microbenchmark(step(modeli,trace=0))$time
+  data.frame(n=n,stepTime=microbenchmark(step(modeli,trace=0))$time)
 }
-plotFrameStep <- adply(seq(1000,10000,1000),1,
-   function(n) data.frame(n=n,stepTime=timeStep(n)))
+
+plotFrameStep <- adply(seq(1000,10000,1000),1,timeStep)
+
 uBr <- max(aggregate(stepTime~n,data=plotFrameStep,
    FUN=function(x) { quantile(x,0.9) })$stepTime)
 lBr <- min(aggregate(stepTime~n,data=plotFrameStep,
