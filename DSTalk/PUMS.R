@@ -65,8 +65,6 @@ print(pl2$plot)
 auc2 <- attributes(performance(eval2,'auc'))$y.values[[1]]
 print(auc2)
 
-
-
 pl1$pf$what <- 'model1'
 pl2$pf$what <- 'model2'
 pf <- rbind(pl1$pf,pl2$pf)
