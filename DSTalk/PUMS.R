@@ -55,6 +55,35 @@ print(pl1$plot)
 auc1 <- attributes(performance(eval1,'auc'))$y.values[[1]]
 print(auc1)
 
+confusion1 <- table(truth=dTestCTreated[,dYName],pred=dTestCTreated$pred1>=0.75)
+print(confusion1)
+print(confusion1/sum(confusion1))
+
+S <- 0
+truth <- dTestCTreated[,dYName]
+pred <- dTestCTreated$pred1
+deviance = -2*(sum(ifelse(truth,log(pred),log(1-pred)))-S)
+print(deviance)
+## [1] 487.3445
+
+
+
+dPos <- density(dTestCTreated[dTestCTreated[,dYName],'pred1'])
+pd2pos <- data.frame(pred=dPos$x,density=dPos$y)
+pd2pos[,dYName] <- TRUE
+dNeg <- density(dTestCTreated[!dTestCTreated[,dYName],'pred1'])
+pd2neg <- data.frame(pred=dNeg$x,density=dNeg$y)
+pd2neg[,dYName] <- FALSE
+pd2 <- rbind(pd2pos,pd2neg)
+ggplot(data=pd2) +
+  geom_line(aes_string(x='pred',y='density',color=dYName)) +
+  geom_vline(xintercept=0.75) +
+  geom_ribbon(data=pd2[pd2[,dYName] & pd2$pred<=0.75,],aes(x=pred,ymax=density,ymin=0),alpha=0.3) +
+  geom_ribbon(data=pd2[(!pd2[,dYName]) & pd2$pred>=0.75,],aes(x=pred,ymax=density,ymin=0),alpha=0.3) +
+  facet_wrap(as.formula(paste('~',dYName)),ncol=1)
+
+
+
 model2 <- glm(paste(dYName,paste(cvars,collapse=' + '),sep=' ~ '),data=dTrainCTreated,
               family=binomial(link='logit'))
 dTestCTreated$pred2 <- predict(model2,newdata=dTestCTreated,type='response')
