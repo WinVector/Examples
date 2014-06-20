@@ -5,31 +5,33 @@ library('ggplot2')
 
 
 # example data load from https://github.com/WinVector/zmPDSwR/tree/master/PUMS
-load('phsample.RData')
-annotations <- c("ORIGFILEROWNUMBER","ORIGFILENAME","ORIGINSERTTIME","ORIGRANDGROUP")
-ignore <- c("RT","SERIALNO","SPORDER","RELP")
-hcols <- setdiff(colnames(dhus)[-grep('WGTP',colnames(dhus))],c(annotations,ignore))
-pcols <- setdiff(colnames(dpus)[-grep('PWGTP',colnames(dpus))],c(annotations,ignore))
+# load('phsample.RData')
+# annotations <- c("ORIGFILEROWNUMBER","ORIGFILENAME","ORIGINSERTTIME","ORIGRANDGROUP")
+# ignore <- c("RT","SERIALNO","SPORDER","RELP")
+# hcols <- setdiff(colnames(dhus)[-grep('WGTP',colnames(dhus))],c(annotations,ignore))
+# pcols <- setdiff(colnames(dpus)[-grep('PWGTP',colnames(dpus))],c(annotations,ignore))
+# 
+# # NOT done yet, need to force variables to be factors
+# 
+# # Categoric example on person data
+# dYName <- 'hasInsurance'
+# dpus[,dYName] <- (dpus$HICOV==1)
+# pvars <- setdiff(pcols,c(dYName,'HINS1','HINS2','HINS3',
+#                          'HINS4','HINS5','HINS6','HINS7',
+#                          'HICOV','PRIVCOV','PUBCOV'))
+# numericVars <- c('PINCP','AGEP','PERNP')
+# for(v in setdiff(pvars,numericVars)) {
+#   dpus[,v] <- as.factor(dpus[,v])
+# }
+# dTrainC <- subset(dpus,ORIGRANDGROUP>=100)
+# dTestC <- subset(dpus,ORIGRANDGROUP<100)
+# modelVars <- c('PINCP','PUMA','AGEP','OCCP')
+# treatmentsC <- designTreatmentsC(dTrainC,modelVars,dYName,TRUE)
+# dTrainCTreated <- prepare(treatmentsC,dTrainC)
+# cvars <- setdiff(colnames(dTrainCTreated),dYName)
+# dTestCTreated <- prepare(treatmentsC,dTestC)
 
-# NOT done yet, need to force variables to be factors
-
-# Categoric example on person data
-dYName <- 'hasInsurance'
-dpus[,dYName] <- (dpus$HICOV==1)
-pvars <- setdiff(pcols,c(dYName,'HINS1','HINS2','HINS3',
-                         'HINS4','HINS5','HINS6','HINS7',
-                         'HICOV','PRIVCOV','PUBCOV'))
-numericVars <- c('PINCP','AGEP','PERNP')
-for(v in setdiff(pvars,numericVars)) {
-  dpus[,v] <- as.factor(dpus[,v])
-}
-dTrainC <- subset(dpus,ORIGRANDGROUP>=100)
-dTestC <- subset(dpus,ORIGRANDGROUP<100)
-modelVars <- c('PINCP','PUMA','AGEP','OCCP')
-treatmentsC <- designTreatmentsC(dTrainC,modelVars,dYName,TRUE)
-dTrainCTreated <- prepare(treatmentsC,dTrainC)
-cvars <- setdiff(colnames(dTrainCTreated),dYName)
-dTestCTreated <- prepare(treatmentsC,dTestC)
+load('healthInsExample.rData')
 
 plotROC <- function(predcol,outcol) {
   perf <- performance(prediction(predcol,outcol),'tpr','fpr')
