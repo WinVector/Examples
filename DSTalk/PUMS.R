@@ -69,20 +69,23 @@ print(deviance)
 ## [1] 487.3445
 
 
+plotThreshDoubleDense <- function(truth,pred,yname) {
+  dPos <- density(pred[truth])
+  pd2pos <- data.frame(pred=dPos$x,density=dPos$y)
+  pd2pos[,yname] <- TRUE
+  dNeg <- density(pred[!truth])
+  pd2neg <- data.frame(pred=dNeg$x,density=dNeg$y)
+  pd2neg[,yname] <- FALSE
+  pd2 <- rbind(pd2pos,pd2neg)
+  ggplot(data=pd2) +
+    geom_line(aes_string(x='pred',y='density',color=yname)) +
+    geom_vline(xintercept=0.75) +
+    geom_ribbon(data=pd2[pd2[,yname] & pd2$pred<=0.75,],aes(x=pred,ymax=density,ymin=0),alpha=0.3) +
+    geom_ribbon(data=pd2[(!pd2[,yname]) & pd2$pred>=0.75,],aes(x=pred,ymax=density,ymin=0),alpha=0.3) +
+    facet_wrap(as.formula(paste('~',yname)),ncol=1)
+}
 
-dPos <- density(dTestCTreated[dTestCTreated[,dYName],'pred1'])
-pd2pos <- data.frame(pred=dPos$x,density=dPos$y)
-pd2pos[,dYName] <- TRUE
-dNeg <- density(dTestCTreated[!dTestCTreated[,dYName],'pred1'])
-pd2neg <- data.frame(pred=dNeg$x,density=dNeg$y)
-pd2neg[,dYName] <- FALSE
-pd2 <- rbind(pd2pos,pd2neg)
-ggplot(data=pd2) +
-  geom_line(aes_string(x='pred',y='density',color=dYName)) +
-  geom_vline(xintercept=0.75) +
-  geom_ribbon(data=pd2[pd2[,dYName] & pd2$pred<=0.75,],aes(x=pred,ymax=density,ymin=0),alpha=0.3) +
-  geom_ribbon(data=pd2[(!pd2[,dYName]) & pd2$pred>=0.75,],aes(x=pred,ymax=density,ymin=0),alpha=0.3) +
-  facet_wrap(as.formula(paste('~',dYName)),ncol=1)
+plotThreshDoubleDense(dTestCTreated[,dYName],dTestCTreated[,'pred1'],dYName)
 
 
 
@@ -95,6 +98,7 @@ pl2 <- plotROC(dTestCTreated$pred2,dTestCTreated[,dYName])
 print(pl2$plot)
 auc2 <- attributes(performance(eval2,'auc'))$y.values[[1]]
 print(auc2)
+
 
 pl1$pf$what <- 'model1'
 pl2$pf$what <- 'model2'
