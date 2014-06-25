@@ -11,7 +11,7 @@ from rank_nullspace import rank,nullspace
 
 # In all cases we are model the observed number of wins (winsSeen)
 # found in flipping a coin kFlips times where the probability of
-# winning on each flip is given by the probility pWin 
+# winning on each flip is given by the probility pWin
 # (pWin in the set {1/nSides, ... (nSides-1)/nSides}).
 
 def drangei(start, stop, step):
@@ -24,16 +24,20 @@ def drangei(start, stop, step):
 
 
 # Write down the linear conditions that confirm a vector
-# of estimates of length kFlips+1 where the entry winsSeen+1
+# of estimates of length kFlips+1 where the entry winsSeen
 # represents the estimated expected value of pWin give
 # we observed winsSeen successes in kFlips trials.
 # We are writing one check condition for each possible value
-# of the unknown win probably pWin in the set {1/nSides, ... (nSides-1)/nSides}.
+# of the unknown win probably pWin in the
+# set {1/nSides, ... (nSides-1)/nSides}.
 def freqSystem(nSides,kFlips,stepMult=1):
   pSeq = [ j/float(nSides) for j in range(1,nSides)]
   if(stepMult>1):
-     pSeq = drangei(1/float(nSides),(nSides-1)/float(nSides),1/float(nSides*stepMult))
-  a = matrix([[binom(kFlips,winsSeen) * pWin**winsSeen * (1-pWin)**(kFlips-winsSeen) for winsSeen in range(kFlips+1)] for pWin in pSeq])
+     pSeq = drangei(1/float(nSides),(nSides-1)/float(nSides),\
+        1/float(nSides*stepMult))
+  a = matrix([[binom(kFlips,winsSeen) * pWin**winsSeen * \
+      (1-pWin)**(kFlips-winsSeen) for winsSeen in range(kFlips+1)] \
+      for pWin in pSeq])
   b = matrix([[pWin] for pWin in pSeq])
   return {'a':a,'b':b}
 
@@ -48,7 +52,8 @@ def empiricalMeansEstimates(nSides,kFlips):
 
 
 # Build the Bayes estimate of expected values from uniform priors
-# on the unknown probility pWin (in the set {1/nSides, ... (nSides-1)/nSides})
+# on the unknown probility pWin
+# (in the set {1/nSides, ... (nSides-1)/nSides})
 # seen in kFlips trials
 def bayesMeansEstimates(nSides,kFlips):
   e = zeros(kFlips+1)
@@ -56,21 +61,23 @@ def bayesMeansEstimates(nSides,kFlips):
     posteriorProbs = zeros(nSides-1)
     for i in range(1,nSides):
       pWin = i/float(nSides)
-      posteriorProbs[i-1] = binom(kFlips,winsSeen) * pWin**winsSeen * (1-pWin)**(kFlips-winsSeen)
+      posteriorProbs[i-1] = binom(kFlips,winsSeen) * \
+         pWin**winsSeen * (1-pWin)**(kFlips-winsSeen)
     posteriorProbs = posteriorProbs/sum(posteriorProbs)
     e[winsSeen] = sum(posteriorProbs*range(1,nSides))/float(nSides)
   return numpy.array(e)
 
 
 # Compute for a given assumed win probabilty pWin
-# the expected loss (under outcomes distributed 
+# the expected loss (under outcomes distributed
 # as len(ests)-1 flips with probility Win)
 # of the estimates ests.
 def lossFn(pWin,ests):
   kFlips = len(ests)-1
   loss = 0.0
   for winsSeen in range(kFlips+1):
-    probObservation = binom(kFlips,winsSeen) * pWin**winsSeen * (1-pWin)**(kFlips-winsSeen)
+    probObservation = binom(kFlips,winsSeen) * pWin**winsSeen *\
+       (1-pWin)**(kFlips-winsSeen)
     loss = loss + probObservation*(ests[winsSeen]-pWin)**2
   return loss
 
@@ -78,17 +85,18 @@ def lossFn(pWin,ests):
 
 # Compute for all win probabilities
 # pWin in the set {1/nSides, ... (nSides-1)/nSides}
-# the expected loss (under outcomes distributed 
+# the expected loss (under outcomes distributed
 # as len(ests)-1 flips with probility Win)
 # of the estimates ests.
 def losses(nSides,ests):
-  return numpy.array([ lossFn(j/float(nSides),ests) for j in range(1,nSides) ])
+  return numpy.array([ lossFn(j/float(nSides),ests) for j in \
+     range(1,nSides) ])
 
 
 def flatten(x):
-   return numpy.asarray(x).reshape(-1) 
+   return numpy.asarray(x).reshape(-1)
 
-def matMulFlatten(a,x): 
+def matMulFlatten(a,x):
    return flatten(a * numpy.matrix(numpy.reshape(x,[a.shape[1],1])))
 
 nSides = 6
@@ -96,19 +104,20 @@ for kFlips in range(1,4):
   print
   print '***** nSides =',nSides,'kFlips =',kFlips
   # first check insisting on unbiasedness
-  # completely determines the estimate for 
+  # completely determines the estimate for
   # one flip from a nSides-slides system
   sNK = freqSystem(nSides,kFlips)
   # print sNK
   print 'full rank'
   print rank(sNK['a'].T * sNK['a'])==kFlips+1
   print 'bias free determined solution'
-  print flatten(numpy.linalg.solve(sNK['a'].T * sNK['a'],sNK['a'].T * sNK['b']))
+  print flatten(numpy.linalg.solve(sNK['a'].T * sNK['a'], \
+     sNK['a'].T * sNK['b']))
   print 'standard empirical solution'
   print empiricalMeansEstimates(nSides,kFlips)
   print 'losses for standard empirical solution'
   print losses(nSides,empiricalMeansEstimates(nSides,kFlips))
-  
+
   # now show the bayes solution has smaller loss
   bayesSoln = bayesMeansEstimates(nSides,kFlips)
   print 'Bayes solution'
@@ -116,7 +125,8 @@ for kFlips in range(1,4):
   print 'losses for Bayes solution'
   print losses(nSides,bayesSoln)
   print 'Bayes max loss improvement'
-  print max(losses(nSides,empiricalMeansEstimates(nSides,kFlips))) - max(losses(nSides,bayesSoln))
+  print max(losses(nSides,empiricalMeansEstimates(nSides,kFlips))) - \
+     max(losses(nSides,bayesSoln))
   print 'Bayes solution bias check (failed)'
   print matMulFlatten(sNK['a'],bayesSoln) - flatten(sNK['b'])
   print
@@ -126,7 +136,8 @@ print
 print '*****'
 # now show a underdetermined system allows more solutions
 kFlips = 7
-# confirm more probs would completely determine this situation (should by analogy to the moment curve)
+# confirm more probs would completely determine this situation
+# (will be by analogy to the moment curve)
 print '***** nSides =',nSides,'kFlips =',kFlips
 sU = freqSystem(nSides,kFlips)
 print 'is full rank'
@@ -137,7 +148,9 @@ print rank(sCheck['a'].T * sCheck['a'])==kFlips+1
 wiggleRoom = nullspace(sU['a'])
 print 'confirm null vecs'
 wiggleDim = wiggleRoom.shape[1]
-print (wiggleRoom.shape[0]==kFlips+1) & (wiggleDim + nSides-1==kFlips+1) & (numpy.matrix.max(abs(sU['a'] * wiggleRoom))<1.0e-12)
+print (wiggleRoom.shape[0]==kFlips+1) & \
+   (wiggleDim + nSides-1==kFlips+1) & \
+   (numpy.matrix.max(abs(sU['a'] * wiggleRoom))<1.0e-12)
 baseSoln = empiricalMeansEstimates(nSides,kFlips)
 print 'empirical solution'
 print baseSoln
@@ -182,7 +195,8 @@ def wsolnF(x):
 def maxlossF(x):
   return max(losses(nSides,wsolnF(x)))-max(bayesLosses)
 
-optM = scipy.optimize.minimize(maxlossF,zeros(len(bayesSoln)),method='Powell')
+optM = scipy.optimize.minimize(maxlossF,zeros(len(bayesSoln)), \
+   method='Powell')
 maxPolished = wsolnF(optM['x'])
 print 'polished max soln'
 print maxPolished
@@ -197,7 +211,8 @@ print max(bayesLosses)-max(losses(nSides,maxPolished))
 def sumlossF(x):
    return sum(losses(nSides,wsolnF(x)))-sum(bayesLosses)
 
-optS = scipy.optimize.minimize(sumlossF,zeros(len(bayesSoln)),method='Powell')
+optS = scipy.optimize.minimize(sumlossF,zeros(len(bayesSoln)),\
+   method='Powell')
 polishedSum = wsolnF(optS['x'])
 print 'polished sum soln'
 print polishedSum
