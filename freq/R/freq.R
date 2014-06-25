@@ -2,7 +2,7 @@ library(MASS)
 
 # In all cases we are model the observed number of wins (winsSeen)
 # found in flipping a coin kFlips times where the probability of
-# winning on each flip is given by the probility pWin 
+# winning on each flip is given by the probability pWin 
 # (pWin in the set {1/nSides, ... (nSides-1)/nSides}).
 
 # Write down the linear conditions that confirm a vector
@@ -29,7 +29,7 @@ freqSystem <- function(nSides,kFlips,stepMult=1) {
   list(a=a,b=b)
 }
 
-# Build the tradtinal frequentist emprical estimates of
+# Build the traditional frequentist empirical estimates of
 # the expected value of the unknown quantity pWin
 # for each possible observed outcome of number of wins
 # seen in kFlips trials
@@ -38,7 +38,7 @@ empiricalMeansEstimates <- function(nSides,kFlips) {
 }
 
 # Build the Bayes estimate of expected values from uniform priors
-# on the unknown probility pWin (in the set {1/nSides, ... (nSides-1)/nSides})
+# on the unknown probability pWin (in the set {1/nSides, ... (nSides-1)/nSides})
 # seen in kFlips trials
 bayesMeansEstimates <- function(nSides,kFlips) {
   e <- rep(0.0,kFlips+1)
@@ -54,9 +54,9 @@ bayesMeansEstimates <- function(nSides,kFlips) {
   e
 }
 
-# Compute for a given assumed win probabilty pWin
+# Compute for a given assumed win probability pWin
 # the expected loss (under outcomes distributed 
-# as length(ests)-1 flips with probility Win)
+# as length(ests)-1 flips with probability Win)
 # of the estimates ests.
 lossFn <- function(pWin,ests) {
   kFlips <- length(ests)-1
@@ -68,7 +68,7 @@ lossFn <- function(pWin,ests) {
   loss
 }
 
-# # build the least squares frame representing the gradient = condtions that arrise from
+# # build the least squares frame representing the gradient = conditions that arise from
 # # the loss Fn
 # # seems to be equal to the Bayes solution confirming Bayes should be least total loss
 # lossFGradSys <- function(nSides,kFlips) {
@@ -96,7 +96,7 @@ lossFn <- function(pWin,ests) {
 # Compute for all win probabilities
 # pWin in the set {1/nSides, ... (nSides-1)/nSides}
 # the expected loss (under outcomes distributed 
-# as length(ests)-1 flips with probility Win)
+# as length(ests)-1 flips with probability Win)
 # of the estimates ests.
 losses <- function(nSides,ests) {
   sapply((1:(nSides-1))/nSides,function(pWin) lossFn(pWin,ests))
@@ -126,7 +126,7 @@ for(kFlips in (1:3)) {
   print('losses for standard empirical solution')
   print(losses(nSides,empiricalMeansEstimates(nSides,kFlips)))
   
-  # now show the bayes solution has smaller loss
+  # now show the Bayes solution has smaller loss
   bayesSoln <- bayesMeansEstimates(nSides,kFlips)
   print('Bayes solution')
   print(bayesSoln)
@@ -141,7 +141,7 @@ for(kFlips in (1:3)) {
 
 print('')
 print('*****')
-# now show a underdetermined system allows more solutions
+# now show a under-determined system allows more solutions
 kFlips = 7
 # confirm more probs would completely determine this situation (should by analogy to the moment curve)
 print('')
@@ -224,7 +224,7 @@ print(sum(bayesLosses)-sum(losses(nSides,polishedSum)))
 # conv$A/conv$B
 # # likely not near a simple fraction
 
-# # try for simultaneous improvents on all coords
+# # try for simultaneous improvements on all coords
 # coordloss <- function(x) {max(losses(nSides,wsoln(x))-baseLosses)}
 # optZ <- c()
 # for(i in 1:100) {

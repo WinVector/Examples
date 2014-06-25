@@ -11,7 +11,7 @@ from rank_nullspace import rank,nullspace
 
 # In all cases we are model the observed number of wins (winsSeen)
 # found in flipping a coin kFlips times where the probability of
-# winning on each flip is given by the probility pWin
+# winning on each flip is given by the probability pWin
 # (pWin in the set {1/nSides, ... (nSides-1)/nSides}).
 
 def drangei(start, stop, step):
@@ -42,7 +42,7 @@ def freqSystem(nSides,kFlips,stepMult=1):
   return {'a':a,'b':b}
 
 
-# Build the tradtinal frequentist emprical estimates of
+# Build the traditional frequentist empirical estimates of
 # the expected value of the unknown quantity pWin
 # for each possible observed outcome of number of wins
 # seen in kFlips trials
@@ -52,7 +52,7 @@ def empiricalMeansEstimates(nSides,kFlips):
 
 
 # Build the Bayes estimate of expected values from uniform priors
-# on the unknown probility pWin
+# on the unknown probability pWin
 # (in the set {1/nSides, ... (nSides-1)/nSides})
 # seen in kFlips trials
 def bayesMeansEstimates(nSides,kFlips):
@@ -68,9 +68,9 @@ def bayesMeansEstimates(nSides,kFlips):
   return numpy.array(e)
 
 
-# Compute for a given assumed win probabilty pWin
+# Compute for a given assumed win probability pWin
 # the expected loss (under outcomes distributed
-# as len(ests)-1 flips with probility Win)
+# as len(ests)-1 flips with probability Win)
 # of the estimates ests.
 def lossFn(pWin,ests):
   kFlips = len(ests)-1
@@ -86,7 +86,7 @@ def lossFn(pWin,ests):
 # Compute for all win probabilities
 # pWin in the set {1/nSides, ... (nSides-1)/nSides}
 # the expected loss (under outcomes distributed
-# as len(ests)-1 flips with probility Win)
+# as len(ests)-1 flips with probability Win)
 # of the estimates ests.
 def losses(nSides,ests):
   return numpy.array([ lossFn(j/float(nSides),ests) for j in \
@@ -118,7 +118,7 @@ for kFlips in range(1,4):
   print 'losses for standard empirical solution'
   print losses(nSides,empiricalMeansEstimates(nSides,kFlips))
 
-  # now show the bayes solution has smaller loss
+  # now show the Bayes solution has smaller loss
   bayesSoln = bayesMeansEstimates(nSides,kFlips)
   print 'Bayes solution'
   print bayesSoln
@@ -134,7 +134,7 @@ for kFlips in range(1,4):
 
 print
 print '*****'
-# now show a underdetermined system allows more solutions
+# now show a under-determined system allows more solutions
 kFlips = 7
 # confirm more probs would completely determine this situation
 # (will be by analogy to the moment curve)
