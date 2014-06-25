@@ -1,0 +1,7 @@
+```{r wholething,tidy=FALSE,echo=FALSE}
+# to make HTML from this (from the shell:
+#  echo "library(knitr); knit('freq.Rmd')" | R --vanilla ; pandoc freq.md -o freq.html
+
+source('freq.R')
+
+```
