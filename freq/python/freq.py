@@ -42,6 +42,18 @@ def freqSystem(nSides,kFlips,stepMult=1):
   return {'a':a,'b':b}
 
 
+def printBiasChecks(biases):
+  for j in range(len(biases)):
+    print 'bias for p=',(j+1)/float(len(biases)+1),'\t',biases[j]
+
+def printEsts(ests):
+  for j in range(len(ests)):
+    print 'pest for',j,'heads\t',ests[j]
+
+def printLosses(losses):
+  for j in range(len(losses)):
+    print 'exp. sq error for p=',(j+1)/float(len(losses)+1),'\t',losses[j]
+
 # Build the traditional frequentist empirical estimates of
 # the expected value of the unknown quantity pWin
 # for each possible observed outcome of number of wins
@@ -111,24 +123,24 @@ for kFlips in range(1,4):
   print 'full rank'
   print rank(sNK['a'].T * sNK['a'])==kFlips+1
   print 'bias free determined solution'
-  print flatten(numpy.linalg.solve(sNK['a'].T * sNK['a'], \
-     sNK['a'].T * sNK['b']))
+  printEsts(flatten(numpy.linalg.solve(sNK['a'].T * sNK['a'], \
+     sNK['a'].T * sNK['b'])))
   print 'standard empirical solution'
-  print empiricalMeansEstimates(nSides,kFlips)
+  printEsts(empiricalMeansEstimates(nSides,kFlips))
   print 'losses for standard empirical solution'
-  print losses(nSides,empiricalMeansEstimates(nSides,kFlips))
+  print printLosses(losses(nSides,empiricalMeansEstimates(nSides,kFlips)))
 
   # now show the Bayes solution has smaller loss
   bayesSoln = bayesMeansEstimates(nSides,kFlips)
   print 'Bayes solution'
-  print bayesSoln
+  printEsts(bayesSoln)
   print 'losses for Bayes solution'
-  print losses(nSides,bayesSoln)
+  printLosses(losses(nSides,bayesSoln))
   print 'Bayes max loss improvement'
   print max(losses(nSides,empiricalMeansEstimates(nSides,kFlips))) - \
      max(losses(nSides,bayesSoln))
   print 'Bayes solution bias check (failed)'
-  print matMulFlatten(sNK['a'],bayesSoln) - flatten(sNK['b'])
+  printBiasChecks(matMulFlatten(sNK['a'],bayesSoln) - flatten(sNK['b']))
   print
 
 
@@ -153,10 +165,10 @@ print (wiggleRoom.shape[0]==kFlips+1) & \
    (numpy.matrix.max(abs(sU['a'] * wiggleRoom))<1.0e-12)
 baseSoln = empiricalMeansEstimates(nSides,kFlips)
 print 'empirical solution'
-print baseSoln
+printEsts(baseSoln)
 baseLosses = losses(nSides,baseSoln)
 print 'empirical solution losses'
-print baseLosses
+printLosses(baseLosses)
 
 def wsoln(x):
    return baseSoln + matMulFlatten(wiggleRoom,x)
@@ -167,11 +179,11 @@ def maxloss(x):
 opt = scipy.optimize.minimize(maxloss,zeros(wiggleDim),method='Powell')
 newSoln = wsoln(opt['x'])
 print 'new solution'
-print newSoln
+printEsts(newSoln)
 print 'new solution losses'
-print losses(nSides,newSoln)
+printLosses(losses(nSides,newSoln))
 print 'new solution bias checks'
-print matMulFlatten(sU['a'],newSoln) - flatten(sU['b'])
+printBiasChecks(matMulFlatten(sU['a'],newSoln) - flatten(sU['b']))
 print 'new solution max loss improvement'
 print max(baseLosses)-max(losses(nSides,newSoln))
 print 'new solution individual loss changes'
@@ -179,9 +191,9 @@ print baseLosses-losses(nSides,newSoln)
 bayesSoln = bayesMeansEstimates(nSides,kFlips)
 bayesLosses = losses(nSides,bayesSoln)
 print 'bayes solution'
-print bayesSoln
+printEsts(bayesSoln)
 print 'bayes losses'
-print bayesLosses
+printLosses(bayesLosses)
 print 'sum bayes losses'
 print sum(bayesLosses)
 print 'max bayes losses'
@@ -199,9 +211,9 @@ optM = scipy.optimize.minimize(maxlossF,zeros(len(bayesSoln)), \
    method='Powell')
 maxPolished = wsolnF(optM['x'])
 print 'polished max soln'
-print maxPolished
+printEsts(maxPolished)
 print 'polished max losses'
-print losses(nSides,maxPolished)
+printLosses(losses(nSides,maxPolished))
 print 'polished max losses max'
 print max(losses(nSides,maxPolished))
 print 'polished max improvement'
@@ -215,9 +227,9 @@ optS = scipy.optimize.minimize(sumlossF,zeros(len(bayesSoln)),\
    method='Powell')
 polishedSum = wsolnF(optS['x'])
 print 'polished sum soln'
-print polishedSum
+printEsts(polishedSum)
 print 'polished sum losses'
-print losses(nSides,polishedSum)
+printLosses(losses(nSides,polishedSum))
 print 'polished sum losses sum'
 print sum(losses(nSides,polishedSum))
 print 'polished sum improvement'

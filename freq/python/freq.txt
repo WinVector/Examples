@@ -3,57 +3,114 @@
 full rank
 True
 bias free determined solution
-[ 0.  1.]
+pest for 0 heads	0.0
+pest for 1 heads	1.0
 standard empirical solution
-[ 0.  1.]
+pest for 0 heads	0.0
+pest for 1 heads	1.0
 losses for standard empirical solution
-[ 0.13888889  0.22222222  0.25        0.22222222  0.13888889]
+exp. sq error for p= 0.166666666667 	0.138888888889
+exp. sq error for p= 0.333333333333 	0.222222222222
+exp. sq error for p= 0.5 	0.25
+exp. sq error for p= 0.666666666667 	0.222222222222
+exp. sq error for p= 0.833333333333 	0.138888888889
+None
 Bayes solution
-[ 0.38888889  0.61111111]
+pest for 0 heads	0.388888888889
+pest for 1 heads	0.611111111111
 losses for Bayes solution
-[ 0.07407407  0.02777778  0.01234568  0.02777778  0.07407407]
+exp. sq error for p= 0.166666666667 	0.0740740740741
+exp. sq error for p= 0.333333333333 	0.0277777777778
+exp. sq error for p= 0.5 	0.0123456790123
+exp. sq error for p= 0.666666666667 	0.0277777777778
+exp. sq error for p= 0.833333333333 	0.0740740740741
 Bayes max loss improvement
 0.175925925926
 Bayes solution bias check (failed)
-[ 0.25925926  0.12962963  0.         -0.12962963 -0.25925926]
+bias for p= 0.166666666667 	0.259259259259
+bias for p= 0.333333333333 	0.12962962963
+bias for p= 0.5 	0.0
+bias for p= 0.666666666667 	-0.12962962963
+bias for p= 0.833333333333 	-0.259259259259
 
 
 ***** nSides = 6 kFlips = 2
 full rank
 True
 bias free determined solution
-[  5.14399555e-16   5.00000000e-01   1.00000000e+00]
+pest for 0 heads	5.14399554617e-16
+pest for 1 heads	0.5
+pest for 2 heads	1.0
 standard empirical solution
-[ 0.   0.5  1. ]
+pest for 0 heads	0.0
+pest for 1 heads	0.5
+pest for 2 heads	1.0
 losses for standard empirical solution
-[ 0.06944444  0.11111111  0.125       0.11111111  0.06944444]
+exp. sq error for p= 0.166666666667 	0.0694444444444
+exp. sq error for p= 0.333333333333 	0.111111111111
+exp. sq error for p= 0.5 	0.125
+exp. sq error for p= 0.666666666667 	0.111111111111
+exp. sq error for p= 0.833333333333 	0.0694444444444
+None
 Bayes solution
-[ 0.31818182  0.5         0.68181818]
+pest for 0 heads	0.318181818182
+pest for 1 heads	0.5
+pest for 2 heads	0.681818181818
 losses for Bayes solution
-[ 0.05417815  0.02594123  0.01652893  0.02594123  0.05417815]
+exp. sq error for p= 0.166666666667 	0.0541781450872
+exp. sq error for p= 0.333333333333 	0.0259412304867
+exp. sq error for p= 0.5 	0.0165289256198
+exp. sq error for p= 0.666666666667 	0.0259412304867
+exp. sq error for p= 0.833333333333 	0.0541781450872
 Bayes max loss improvement
 0.0708218549128
 Bayes solution bias check (failed)
-[ 0.21212121  0.10606061  0.         -0.10606061 -0.21212121]
+bias for p= 0.166666666667 	0.212121212121
+bias for p= 0.333333333333 	0.106060606061
+bias for p= 0.5 	0.0
+bias for p= 0.666666666667 	-0.106060606061
+bias for p= 0.833333333333 	-0.212121212121
 
 
 ***** nSides = 6 kFlips = 3
 full rank
 True
 bias free determined solution
-[  2.90364856e-15   3.33333333e-01   6.66666667e-01   1.00000000e+00]
+pest for 0 heads	2.90364856215e-15
+pest for 1 heads	0.333333333333
+pest for 2 heads	0.666666666667
+pest for 3 heads	1.0
 standard empirical solution
-[ 0.          0.33333333  0.66666667  1.        ]
+pest for 0 heads	0.0
+pest for 1 heads	0.333333333333
+pest for 2 heads	0.666666666667
+pest for 3 heads	1.0
 losses for standard empirical solution
-[ 0.0462963   0.07407407  0.08333333  0.07407407  0.0462963 ]
+exp. sq error for p= 0.166666666667 	0.0462962962963
+exp. sq error for p= 0.333333333333 	0.0740740740741
+exp. sq error for p= 0.5 	0.0833333333333
+exp. sq error for p= 0.666666666667 	0.0740740740741
+exp. sq error for p= 0.833333333333 	0.0462962962963
+None
 Bayes solution
-[ 0.27481481  0.41111111  0.58888889  0.72518519]
+pest for 0 heads	0.274814814815
+pest for 1 heads	0.411111111111
+pest for 2 heads	0.588888888889
+pest for 3 heads	0.725185185185
 losses for Bayes solution
-[ 0.04134028  0.02390325  0.01860302  0.02390325  0.04134028]
+exp. sq error for p= 0.166666666667 	0.0413402834934
+exp. sq error for p= 0.333333333333 	0.0239032464563
+exp. sq error for p= 0.5 	0.0186030178326
+exp. sq error for p= 0.666666666667 	0.0239032464563
+exp. sq error for p= 0.833333333333 	0.0413402834934
 Bayes max loss improvement
 0.04199304984
 Bayes solution bias check (failed)
-[ 0.179369    0.08853224  0.         -0.08853224 -0.179369  ]
+bias for p= 0.166666666667 	0.179368998628
+bias for p= 0.333333333333 	0.0885322359396
+bias for p= 0.5 	0.0
+bias for p= 0.666666666667 	-0.0885322359396
+bias for p= 0.833333333333 	-0.179368998628
 
 
 *****
@@ -65,46 +122,99 @@ True
 confirm null vecs
 True
 empirical solution
-[ 0.          0.14285714  0.28571429  0.42857143  0.57142857  0.71428571
-  0.85714286  1.        ]
+pest for 0 heads	0.0
+pest for 1 heads	0.142857142857
+pest for 2 heads	0.285714285714
+pest for 3 heads	0.428571428571
+pest for 4 heads	0.571428571429
+pest for 5 heads	0.714285714286
+pest for 6 heads	0.857142857143
+pest for 7 heads	1.0
 empirical solution losses
-[ 0.01984127  0.03174603  0.03571429  0.03174603  0.01984127]
+exp. sq error for p= 0.166666666667 	0.0198412698413
+exp. sq error for p= 0.333333333333 	0.031746031746
+exp. sq error for p= 0.5 	0.0357142857143
+exp. sq error for p= 0.666666666667 	0.031746031746
+exp. sq error for p= 0.833333333333 	0.0198412698413
 new solution
-[ 0.0319031   0.11184509  0.29666633  0.43917028  0.56083025  0.7033323
-  0.88815656  0.96809557]
+pest for 0 heads	0.0319031034157
+pest for 1 heads	0.111845090806
+pest for 2 heads	0.296666330987
+pest for 3 heads	0.439170280769
+pest for 4 heads	0.560830250198
+pest for 5 heads	0.703332297349
+pest for 6 heads	0.888156558984
+pest for 7 heads	0.968095569167
 new solution losses
-[ 0.01904294  0.03268742  0.03549232  0.03268746  0.01904297]
+exp. sq error for p= 0.166666666667 	0.0190429417868
+exp. sq error for p= 0.333333333333 	0.0326874155863
+exp. sq error for p= 0.5 	0.0354923217193
+exp. sq error for p= 0.666666666667 	0.0326874558772
+exp. sq error for p= 0.833333333333 	0.019042969537
 new solution bias checks
-[  8.32667268e-17   2.77555756e-16   3.33066907e-16   1.11022302e-16
-   1.11022302e-16]
+bias for p= 0.166666666667 	8.32667268469e-17
+bias for p= 0.333333333333 	2.77555756156e-16
+bias for p= 0.5 	3.33066907388e-16
+bias for p= 0.666666666667 	1.11022302463e-16
+bias for p= 0.833333333333 	1.11022302463e-16
 new solution max loss improvement
 0.000221963994965
 new solution individual loss changes
 [ 0.00079833 -0.00094138  0.00022196 -0.00094142  0.0007983 ]
 bayes solution
-[ 0.20306567  0.25140555  0.33603151  0.44386198  0.55613802  0.66396849
-  0.74859445  0.79693433]
+pest for 0 heads	0.203065668302
+pest for 1 heads	0.251405546037
+pest for 2 heads	0.33603150662
+pest for 3 heads	0.443861984801
+pest for 4 heads	0.556138015199
+pest for 5 heads	0.66396849338
+pest for 6 heads	0.748594453963
+pest for 7 heads	0.796934331698
 bayes losses
-[ 0.01878232  0.01725516  0.01868227  0.01725516  0.01878232]
+exp. sq error for p= 0.166666666667 	0.0187823171961
+exp. sq error for p= 0.333333333333 	0.0172551632291
+exp. sq error for p= 0.5 	0.0186822672601
+exp. sq error for p= 0.666666666667 	0.0172551632291
+exp. sq error for p= 0.833333333333 	0.0187823171961
 sum bayes losses
 0.0907572281105
 max bayes losses
 0.0187823171961
 
 polished max soln
-[ 0.20306567  0.25140555  0.33603151  0.44386198  0.55613802  0.66396849
-  0.74859445  0.79693433]
+pest for 0 heads	0.203065668302
+pest for 1 heads	0.251405546037
+pest for 2 heads	0.33603150662
+pest for 3 heads	0.443861984801
+pest for 4 heads	0.556138015199
+pest for 5 heads	0.66396849338
+pest for 6 heads	0.748594453963
+pest for 7 heads	0.796934331698
 polished max losses
-[ 0.01878232  0.01725516  0.01868227  0.01725516  0.01878232]
+exp. sq error for p= 0.166666666667 	0.0187823171961
+exp. sq error for p= 0.333333333333 	0.0172551632291
+exp. sq error for p= 0.5 	0.0186822672601
+exp. sq error for p= 0.666666666667 	0.0172551632291
+exp. sq error for p= 0.833333333333 	0.0187823171961
 polished max losses max
 0.0187823171961
 polished max improvement
 0.0
 polished sum soln
-[ 0.20306567  0.25140554  0.33603151  0.44386198  0.55613802  0.66396849
-  0.74859446  0.79693433]
+pest for 0 heads	0.203065668292
+pest for 1 heads	0.251405544883
+pest for 2 heads	0.336031507616
+pest for 3 heads	0.44386198473
+pest for 4 heads	0.556138015199
+pest for 5 heads	0.663968493402
+pest for 6 heads	0.748594455091
+pest for 7 heads	0.796934331542
 polished sum losses
-[ 0.01878232  0.01725516  0.01868227  0.01725516  0.01878232]
+exp. sq error for p= 0.166666666667 	0.0187823171957
+exp. sq error for p= 0.333333333333 	0.0172551632721
+exp. sq error for p= 0.5 	0.0186822672712
+exp. sq error for p= 0.666666666667 	0.0172551632495
+exp. sq error for p= 0.833333333333 	0.018782317122
 polished sum losses sum
 0.0907572281105
 polished sum improvement
