@@ -42,17 +42,26 @@ def freqSystem(nSides,kFlips,stepMult=1):
   return {'a':a,'b':b}
 
 
+def printAligned(strsL,values):
+  maxlen = max([ len(s) for s in strsL ])
+  for j in range(len(strsL)):
+    print strsL[j] + (' '*(maxlen-len(strsL[j]))) + '\t' + str(values[j])
+
 def printBiasChecks(biases):
-  for j in range(len(biases)):
-    print 'bias for p=',(j+1)/float(len(biases)+1),'\t',biases[j]
+  strsL = [ 'bias for p=' + str((j+1)/float(len(biases)+1)) \
+    for j in range(len(biases)) ]
+  printAligned(strsL,biases)
+
 
 def printEsts(ests):
-  for j in range(len(ests)):
-    print 'pest for',j,'heads\t',ests[j]
+  strsL = [ 'pest for ' + str(j) + ' heads' for j in range(len(ests)) ]
+  printAligned(strsL,ests)
+
 
 def printLosses(losses):
-  for j in range(len(losses)):
-    print 'exp. sq error for p=',(j+1)/float(len(losses)+1),'\t',losses[j]
+  strsL = [  'exp. sq error for p=' + str((j+1)/float(len(losses)+1)) \
+    for j in range(len(losses)) ]
+  printAligned(strsL,losses)
 
 # Build the traditional frequentist empirical estimates of
 # the expected value of the unknown quantity pWin
