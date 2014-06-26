@@ -17,7 +17,11 @@ freqSystem <- function(nSides,kFlips,stepMult=1) {
      pSeq <- seq(1/nSides,(nSides-1)/nSides,by=1/(nSides*stepMult))
   }
   a <- matrix(data=0.0,nrow=length(pSeq),ncol=kFlips+1)
+  rownames(a) <- paste('check for p=',pSeq,sep='')
+  colnames(a) <- paste('observe ',0:kFlips,'heads')
   b <- matrix(data=0,nrow=length(pSeq),ncol=1)
+  rownames(b) <- paste('check for p=',pSeq,sep='')
+  colnames(b) <- c('p')
   i <- 1
   for(pWin in pSeq) {
     for(winsSeen in 0:kFlips) {
@@ -29,12 +33,17 @@ freqSystem <- function(nSides,kFlips,stepMult=1) {
   list(a=a,b=b)
 }
 
+nameEstimates <- function(x) {
+  names(x) <- paste('pest for',0:(length(x)-1),'heads')
+  x
+}
+
 # Build the traditional frequentist empirical estimates of
 # the expected value of the unknown quantity pWin
 # for each possible observed outcome of number of wins
 # seen in kFlips trials
 empiricalMeansEstimates <- function(nSides,kFlips) {
-   c((0:kFlips)/kFlips)
+  nameEstimates(c((0:kFlips)/kFlips))
 }
 
 # Build the Bayes estimate of expected values from uniform priors
@@ -51,7 +60,7 @@ bayesMeansEstimates <- function(nSides,kFlips) {
     posteriorProbs <- posteriorProbs/sum(posteriorProbs)
     e[winsSeen+1] <- sum(posteriorProbs*(1:(nSides-1))/nSides)
   }
-  e
+  nameEstimates(e)
 }
 
 # Compute for a given assumed win probability pWin
@@ -65,33 +74,9 @@ lossFn <- function(pWin,ests) {
     probObservation <- choose(kFlips,winsSeen) * pWin^winsSeen * (1-pWin)^(kFlips-winsSeen)
     loss <- loss + probObservation*(ests[winsSeen+1]-pWin)^2
   }
+  names(loss) <- paste('exp. sq. error for p=',pWin,sep='')
   loss
 }
-
-# # build the least squares frame representing the gradient = conditions that arise from
-# # the loss Fn
-# # seems to be equal to the Bayes solution confirming Bayes should be least total loss
-# lossFGradSys <- function(nSides,kFlips) {
-#   d <- c()
-#   for(pWin in ((1:(nSides-1))/nSides)) {
-#     for(winsSeen in 0:kFlips) {
-#       probObservation <- choose(kFlips,winsSeen) * pWin^winsSeen * (1-pWin)^(kFlips-winsSeen)
-#       di <- data.frame(weights=probObservation,y=pWin)
-#       for(j in 0:kFlips) {
-#         dij <- data.frame(xV=ifelse(j==winsSeen,1.0,0.0))
-#         names(dij) <- paste('x',j,sep='.')
-#         di <- cbind(di,dij)
-#       }
-#       d <- rbind(d,di)
-#     }
-#   }
-#   d
-# }
-# sys <- lossFGradSys(6,7)
-# lrSoln <- lm(y~0+x.0+x.1+x.2+x.3+x.4+x.5+x.6+x.7,data=sys,weights=sys$weights)$coefficients
-# # can solve for the minimal total loss system by adding equality contraints between each loss level
-# # and then asking to minimize the positive-definite quadratic (so looking for the gradient to be minimal)
-
 
 # Compute for all win probabilities
 # pWin in the set {1/nSides, ... (nSides-1)/nSides}
@@ -164,7 +149,7 @@ print(baseSoln)
 baseLosses <- losses(nSides,baseSoln)
 print('empirical solution losses')
 print(baseLosses)
-wsoln <- function(x) {baseSoln  + as.numeric(wiggleRoom %*% x)}
+wsoln <- function(x) {nameEstimates(baseSoln  + as.numeric(wiggleRoom %*% x))}
 maxloss <- function(x) {max(losses(nSides,wsoln(x)))-max(baseLosses)}
 opt <- optim(rep(0.0,wiggleDim),f=maxloss,method='BFGS')
 newSoln <- wsoln(opt$par)
@@ -191,7 +176,7 @@ print(max(bayesLosses))
 
 print('')
 # see if we can improve on Bayes by max criterion
-wsolnF <- function(x) {bayesSoln + x}
+wsolnF <- function(x) {nameEstimates(bayesSoln + x)}
 maxlossF <- function(x) {max(losses(nSides,wsolnF(x)))-max(bayesLosses)}
 optM <- optim(rep(0.0,length(bayesSoln)),f=maxlossF,method='BFGS')
 maxPolished <- wsolnF(optM$par)
@@ -224,12 +209,4 @@ print(sum(bayesLosses)-sum(losses(nSides,polishedSum)))
 # conv$A/conv$B
 # # likely not near a simple fraction
 
-# # try for simultaneous improvements on all coords
-# coordloss <- function(x) {max(losses(nSides,wsoln(x))-baseLosses)}
-# optZ <- c()
-# for(i in 1:100) {
-#   opti <- optim(0.1*rnorm(wiggleDim),f=coordloss,method='BFGS')
-#   if(is.null(opt) || opti$value<opt$value) {
-#     optX <- opti
-#   }
-# }
+
