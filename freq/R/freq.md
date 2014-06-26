@@ -5,7 +5,8 @@
 ## [1] "full rank"
 ## [1] TRUE
 ## [1] "bias free determined solution"
-## [1] -4.491e-16  1.000e+00
+## pest for 0 heads pest for 1 heads 
+##       -4.491e-16        1.000e+00 
 ## [1] "standard empirical solution"
 ## pest for 0 heads pest for 1 heads 
 ##                0                1 
@@ -37,14 +38,20 @@
 ## [1] "Bayes max loss improvement"
 ## [1] 0.1759
 ## [1] "Bayes solution bias check (failed)"
-## [1]  0.2593  0.1296  0.0000 -0.1296 -0.2593
+## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                       0.2593                       0.1296 
+##               bias for p=0.5 bias for p=0.666666666666667 
+##                       0.0000                      -0.1296 
+## bias for p=0.833333333333333 
+##                      -0.2593 
 ## [1] ""
 ## [1] ""
 ## [1] "***** nSides = 6 kFlips = 2"
 ## [1] "full rank"
 ## [1] TRUE
 ## [1] "bias free determined solution"
-## [1] 0.0 0.5 1.0
+## pest for 0 heads pest for 1 heads pest for 2 heads 
+##              0.0              0.5              1.0 
 ## [1] "standard empirical solution"
 ## pest for 0 heads pest for 1 heads pest for 2 heads 
 ##              0.0              0.5              1.0 
@@ -76,14 +83,20 @@
 ## [1] "Bayes max loss improvement"
 ## [1] 0.07082
 ## [1] "Bayes solution bias check (failed)"
-## [1]  0.2121  0.1061  0.0000 -0.1061 -0.2121
+## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                       0.2121                       0.1061 
+##               bias for p=0.5 bias for p=0.666666666666667 
+##                       0.0000                      -0.1061 
+## bias for p=0.833333333333333 
+##                      -0.2121 
 ## [1] ""
 ## [1] ""
 ## [1] "***** nSides = 6 kFlips = 3"
 ## [1] "full rank"
 ## [1] TRUE
 ## [1] "bias free determined solution"
-## [1] -2.930e-16  3.333e-01  6.667e-01  1.000e+00
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##       -2.930e-16        3.333e-01        6.667e-01        1.000e+00 
 ## [1] "standard empirical solution"
 ## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##           0.0000           0.3333           0.6667           1.0000 
@@ -115,7 +128,12 @@
 ## [1] "Bayes max loss improvement"
 ## [1] 0.04199
 ## [1] "Bayes solution bias check (failed)"
-## [1]  0.17937  0.08853  0.00000 -0.08853 -0.17937
+## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                      0.17937                      0.08853 
+##               bias for p=0.5 bias for p=0.666666666666667 
+##                      0.00000                     -0.08853 
+## bias for p=0.833333333333333 
+##                     -0.17937 
 ## [1] ""
 ## [1] ""
 ## [1] "*****"
@@ -161,7 +179,12 @@
 ## exp. sq. error for p=0.833333333333333 
 ##                                0.01904 
 ## [1] "new solution bias checks"
-## [1] 2.776e-17 1.110e-16 0.000e+00 0.000e+00 0.000e+00
+## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                    2.776e-17                    1.110e-16 
+##               bias for p=0.5 bias for p=0.666666666666667 
+##                    0.000e+00                    0.000e+00 
+## bias for p=0.833333333333333 
+##                    0.000e+00 
 ## [1] "new solution max loss improvement"
 ## [1] 0.000222
 ## [1] "new solution individual loss changes"

@@ -33,6 +33,11 @@ freqSystem <- function(nSides,kFlips,stepMult=1) {
   list(a=a,b=b)
 }
 
+nameBiasChecks <- function(x) {
+  names(x) <- paste('bias for p=',1:length(x)/(length(x)+1),sep='')
+  x
+}
+
 nameEstimates <- function(x) {
   names(x) <- paste('pest for',0:(length(x)-1),'heads')
   x
@@ -105,7 +110,7 @@ for(kFlips in (1:3)) {
   print('full rank')
   print(qr(sNK$a)$rank==kFlips+1)
   print('bias free determined solution')
-  print(as.numeric(qr.solve(sNK$a,sNK$b)))
+  print(nameEstimates(as.numeric(qr.solve(sNK$a,sNK$b))))
   print('standard empirical solution')
   print(empiricalMeansEstimates(nSides,kFlips))
   print('losses for standard empirical solution')
@@ -120,7 +125,7 @@ for(kFlips in (1:3)) {
   print('Bayes max loss improvement')
   print(max(losses(nSides,empiricalMeansEstimates(nSides,kFlips))) - max(losses(nSides,bayesSoln)))
   print('Bayes solution bias check (failed)')
-  print(as.numeric(sNK$a %*% bayesSoln - sNK$b))
+  print(nameBiasChecks(as.numeric(sNK$a %*% bayesSoln - sNK$b)))
   print('')
 }
 
@@ -158,7 +163,7 @@ print(newSoln)
 print('new solution losses')
 print(losses(nSides,newSoln))
 print('new solution bias checks')
-print(as.numeric(sU$a %*% newSoln - sU$b))
+print(nameBiasChecks(as.numeric(sU$a %*% newSoln - sU$b)))
 print('new solution max loss improvement')
 print(max(baseLosses)-max(losses(nSides,newSoln)))
 print('new solution individual loss changes')
