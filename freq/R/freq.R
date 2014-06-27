@@ -18,7 +18,7 @@ freqSystem <- function(nSides,kFlips,stepMult=1) {
   }
   a <- matrix(data=0.0,nrow=length(pSeq),ncol=kFlips+1)
   rownames(a) <- paste('check for p=',pSeq,sep='')
-  colnames(a) <- paste('observe ',0:kFlips,'heads')
+  colnames(a) <- paste('prob.',0:kFlips,'heads')
   b <- matrix(data=0,nrow=length(pSeq),ncol=1)
   rownames(b) <- paste('check for p=',pSeq,sep='')
   colnames(b) <- c('p')
