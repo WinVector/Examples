@@ -178,6 +178,8 @@ printEsts(baseSoln)
 baseLosses = losses(nSides,baseSoln)
 print 'empirical solution losses'
 printLosses(baseLosses)
+print(sum(baseLosses))
+print(max(baseLosses))
 
 def wsoln(x):
    return baseSoln + matMulFlatten(wiggleRoom,x)
@@ -187,15 +189,17 @@ def maxloss(x):
 
 opt = scipy.optimize.minimize(maxloss,zeros(wiggleDim),method='Powell')
 newSoln = wsoln(opt['x'])
-print 'new solution'
+print 'minmax solution'
 printEsts(newSoln)
-print 'new solution losses'
+print 'minmax solution losses'
 printLosses(losses(nSides,newSoln))
-print 'new solution bias checks'
+print(sum(losses(nSides,newSoln)))
+print(max(losses(nSides,newSoln)))
+print 'minmax solution bias checks'
 printBiasChecks(matMulFlatten(sU['a'],newSoln) - flatten(sU['b']))
-print 'new solution max loss improvement'
+print 'minmax solution max loss improvement'
 print max(baseLosses)-max(losses(nSides,newSoln))
-print 'new solution individual loss changes'
+print 'minmax solution individual loss changes'
 print baseLosses-losses(nSides,newSoln)
 bayesSoln = bayesMeansEstimates(nSides,kFlips)
 bayesLosses = losses(nSides,bayesSoln)
@@ -208,6 +212,24 @@ print sum(bayesLosses)
 print 'max bayes losses'
 print max(bayesLosses)
 print
+
+
+def sumloss(x):
+   return sum(losses(nSides,wsoln(x)))
+
+print
+optS = scipy.optimize.minimize(sumloss,zeros(wiggleDim),method='Powell')
+newSolnS = wsoln(optS['x'])
+print 'sumloss solution'
+printEsts(newSolnS)
+print 'sumloss solution losses'
+printLosses(losses(nSides,newSolnS))
+print(sum(losses(nSides,newSolnS)))
+print(max(losses(nSides,newSolnS)))
+print 'sumloss solution bias checks'
+printBiasChecks(matMulFlatten(sU['a'],newSolnS) - flatten(sU['b']))
+print
+
 
 # see if we can improve on Bayes by max criterion
 def wsolnF(x):

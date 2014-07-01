@@ -1,3 +1,4 @@
+
 library(MASS)
 
 # In all cases we are model the observed number of wins (winsSeen)
@@ -154,19 +155,23 @@ print(baseSoln)
 baseLosses <- losses(nSides,baseSoln)
 print('empirical solution losses')
 print(baseLosses)
+print(sum(baseLosses))
+print(max(baseLosses))
 wsoln <- function(x) {nameEstimates(baseSoln  + as.numeric(wiggleRoom %*% x))}
 maxloss <- function(x) {max(losses(nSides,wsoln(x)))-max(baseLosses)}
 opt <- optim(rep(0.0,wiggleDim),f=maxloss,method='BFGS')
 newSoln <- wsoln(opt$par)
-print('new solution')
+print('minmax soln')
 print(newSoln)
-print('new solution losses')
+print('minmax soln losses')
 print(losses(nSides,newSoln))
-print('new solution bias checks')
+print(sum(losses(nSides,newSoln)))
+print(max(losses(nSides,newSoln)))
+print('minmax soln bias checks')
 print(nameBiasChecks(as.numeric(sU$a %*% newSoln - sU$b)))
-print('new solution max loss improvement')
+print('minmax soln max loss improvement')
 print(max(baseLosses)-max(losses(nSides,newSoln)))
-print('new solution individual loss changes')
+print('minmax soln individual loss changes')
 print(baseLosses-losses(nSides,newSoln))
 bayesSoln <- bayesMeansEstimates(nSides,kFlips)
 bayesLosses <- losses(nSides,bayesSoln)
@@ -178,6 +183,20 @@ print('sum bayes losses')
 print(sum(bayesLosses))
 print('max bayes losses')
 print(max(bayesLosses))
+
+sumloss <- function(x) {sum(losses(nSides,wsoln(x)))}
+optS <- optim(rep(0.0,wiggleDim),f=sumloss,method='BFGS')
+newSolnS <- wsoln(optS$par)
+print('sumloss soln')
+print(newSolnS)
+print('sumloss soln losses')
+print(losses(nSides,newSolnS))
+print(sum(losses(nSides,newSolnS)))
+print(max(losses(nSides,newSolnS)))
+print('sumloss soln bias checks')
+print(nameBiasChecks(as.numeric(sU$a %*% newSolnS - sU$b)))
+
+
 
 print('')
 # see if we can improve on Bayes by max criterion

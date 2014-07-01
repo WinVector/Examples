@@ -136,7 +136,9 @@ exp. sq error for p=0.333333333333	0.031746031746
 exp. sq error for p=0.5           	0.0357142857143
 exp. sq error for p=0.666666666667	0.031746031746
 exp. sq error for p=0.833333333333	0.0198412698413
-new solution
+0.138888888889
+0.0357142857143
+minmax solution
 pest for 0 heads	0.0319031034157
 pest for 1 heads	0.111845090806
 pest for 2 heads	0.296666330987
@@ -145,21 +147,23 @@ pest for 4 heads	0.560830250198
 pest for 5 heads	0.703332297349
 pest for 6 heads	0.888156558984
 pest for 7 heads	0.968095569167
-new solution losses
+minmax solution losses
 exp. sq error for p=0.166666666667	0.0190429417868
 exp. sq error for p=0.333333333333	0.0326874155863
 exp. sq error for p=0.5           	0.0354923217193
 exp. sq error for p=0.666666666667	0.0326874558772
 exp. sq error for p=0.833333333333	0.019042969537
-new solution bias checks
+0.138953104507
+0.0354923217193
+minmax solution bias checks
 bias for p=0.166666666667	8.32667268469e-17
 bias for p=0.333333333333	2.77555756156e-16
 bias for p=0.5           	3.33066907388e-16
 bias for p=0.666666666667	1.11022302463e-16
 bias for p=0.833333333333	1.11022302463e-16
-new solution max loss improvement
+minmax solution max loss improvement
 0.000221963994965
-new solution individual loss changes
+minmax solution individual loss changes
 [ 0.00079833 -0.00094138  0.00022196 -0.00094142  0.0007983 ]
 bayes solution
 pest for 0 heads	0.203065668302
@@ -180,6 +184,31 @@ sum bayes losses
 0.0907572281105
 max bayes losses
 0.0187823171961
+
+
+sumloss solution
+pest for 0 heads	0.0156807159119
+pest for 1 heads	0.128439610175
+pest for 2 heads	0.288704102893
+pest for 3 heads	0.437527835678
+pest for 4 heads	0.562471700593
+pest for 5 heads	0.711297095073
+pest for 6 heads	0.871558948953
+pest for 7 heads	0.98432044341
+sumloss solution losses
+exp. sq error for p=0.166666666667	0.0192267017055
+exp. sq error for p=0.333333333333	0.0321545408909
+exp. sq error for p=0.5           	0.0355488784747
+exp. sq error for p=0.666666666667	0.0321545223123
+exp. sq error for p=0.833333333333	0.0192267109895
+0.138311354373
+0.0355488784747
+sumloss solution bias checks
+bias for p=0.166666666667	8.32667268469e-17
+bias for p=0.333333333333	2.77555756156e-16
+bias for p=0.5           	3.33066907388e-16
+bias for p=0.666666666667	2.22044604925e-16
+bias for p=0.833333333333	1.11022302463e-16
 
 polished max soln
 pest for 0 heads	0.203065668302

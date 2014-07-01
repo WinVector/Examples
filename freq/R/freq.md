@@ -162,12 +162,14 @@
 ##                                0.03175 
 ## exp. sq. error for p=0.833333333333333 
 ##                                0.01984 
-## [1] "new solution"
+## [1] 0.1389
+## [1] 0.03571
+## [1] "minmax soln"
 ## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##          0.03191          0.11184          0.29667          0.43917 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
 ##          0.56083          0.70333          0.88816          0.96809 
-## [1] "new solution losses"
+## [1] "minmax soln losses"
 ## exp. sq. error for p=0.166666666666667 
 ##                                0.01904 
 ## exp. sq. error for p=0.333333333333333 
@@ -178,16 +180,18 @@
 ##                                0.03269 
 ## exp. sq. error for p=0.833333333333333 
 ##                                0.01904 
-## [1] "new solution bias checks"
+## [1] 0.139
+## [1] 0.03549
+## [1] "minmax soln bias checks"
 ## bias for p=0.166666666666667 bias for p=0.333333333333333 
 ##                    2.776e-17                    1.110e-16 
 ##               bias for p=0.5 bias for p=0.666666666666667 
 ##                    0.000e+00                    0.000e+00 
 ## bias for p=0.833333333333333 
 ##                    0.000e+00 
-## [1] "new solution max loss improvement"
+## [1] "minmax soln max loss improvement"
 ## [1] 0.000222
-## [1] "new solution individual loss changes"
+## [1] "minmax soln individual loss changes"
 ## exp. sq. error for p=0.166666666666667 
 ##                              0.0007983 
 ## exp. sq. error for p=0.333333333333333 
@@ -218,6 +222,31 @@
 ## [1] 0.09076
 ## [1] "max bayes losses"
 ## [1] 0.01878
+## [1] "sumloss soln"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##          0.01569          0.12843          0.28871          0.43753 
+## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
+##          0.56247          0.71129          0.87157          0.98431 
+## [1] "sumloss soln losses"
+## exp. sq. error for p=0.166666666666667 
+##                                0.01923 
+## exp. sq. error for p=0.333333333333333 
+##                                0.03215 
+##               exp. sq. error for p=0.5 
+##                                0.03555 
+## exp. sq. error for p=0.666666666666667 
+##                                0.03215 
+## exp. sq. error for p=0.833333333333333 
+##                                0.01923 
+## [1] 0.1383
+## [1] 0.03555
+## [1] "sumloss soln bias checks"
+## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                    2.776e-17                    1.110e-16 
+##               bias for p=0.5 bias for p=0.666666666666667 
+##                    0.000e+00                   -1.110e-16 
+## bias for p=0.833333333333333 
+##                    0.000e+00 
 ## [1] ""
 ## [1] "polished max soln"
 ## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
@@ -261,3 +290,4 @@
 ## [1] "polished sum improvement"
 ## [1] 0
 ```
+
