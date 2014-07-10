@@ -1,8 +1,12 @@
 
 # adapted from http://jakevdp.github.io/blog/2014/06/06/frequentism-and-bayesianism-2-when-results-differ/
 
-# 
-# %load_ext rpy2.ipython 
+# run this: python < lFit.py > lFitLog.txt 2>&1
+
+# or try lFit.ipynb
+# Install ipython: sudo pip install ipython[all] --force-reinstall -I
+# ipython notebook
+# %load_ext rpy2.ipython
 
 import numpy as np
 
@@ -63,8 +67,9 @@ def log_prior(theta):
     if (all(gs > 0) and all(gs < 1)):
         intercept = theta[0]
         slope = theta[1]
-        return -len(gs)*priorGS.logpdf(np.mean(gs)) - \  # faster than summing -logpdf() over the individual gs
+        return -len(gs)*priorGS.logpdf(np.mean(gs)) - \
            0.01*intercept**2 - 0.01*slope**2  # unscaled very rough priors
+        # faster than summing -logpdf() over the individual gs
     else:
         return -np.inf  # recall log(0) = -inf
 
@@ -105,7 +110,8 @@ ests = [ np.mean(sample[:,:,j]) for j in range(ndim) ]
 intercept = ests[0]
 slope = ests[1]
 gs = [ ests[j+2] for j in range(len(x)) ]
-cut = min(0.5,np.percentile(gs,15))
+print gs
+cut = min(0.5,np.percentile(gs,20))
 typical = [ g>=cut for g in gs ]
 
 
