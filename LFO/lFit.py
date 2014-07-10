@@ -48,10 +48,17 @@ theta1 = optimize.fmin(squared_loss, [0, 0], disp=False)
 # theta[0] is the intercept, theta[1] is the slope,
 # and theta[2 + i] is the weight g_i
 
+from scipy.stats import beta
+
+priorGS = beta(0.1,0.9)
+
 def log_prior(theta):
     #g_i needs to be between 0 and 1
-    if (all(theta[2:] > 0) and all(theta[2:] < 1)):
-        return 0
+    gs = theta[2:]
+    if (all(gs > 0) and all(gs < 1)):
+        intercept = theta[0]
+        slope = theta[1]
+        return -np.log(priorGS.pdf(np.mean(gs))) - 0.01*intercept**2 - 0.01*slope**2  # unscaled very rough priors
     else:
         return -np.inf  # recall log(0) = -inf
 
@@ -72,8 +79,9 @@ def log_posterior(theta, x, y, e, sigma_B):
 
 ndim = 2 + len(x)  # number of parameters in the model
 nwalkers = 50  # number of MCMC walkers
-nburn = 10000  # "burn-in" period to let chains stabilize
+nburn = 10000   # "burn-in" period to let chains stabilize
 nsteps = 15000  # number of MCMC steps to take
+sigmaB = 50.0  # outlier sigma
 
 # set theta near the maximum likelihood, with 
 np.random.seed(0)
@@ -82,7 +90,7 @@ starting_guesses[:, :2] = np.random.normal(theta1, 1, (nwalkers, 2))
 starting_guesses[:, 2:] = np.random.normal(0.5, 0.1, (nwalkers, ndim - 2))
 
 import emcee
-sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=[x, y, e, 50])
+sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=[x, y, e, sigmaB])
 sampler.run_mcmc(starting_guesses, nsteps)
 
 #  sample = sampler.chain  # shape = (nwalkers, nsteps, ndim)
@@ -91,7 +99,9 @@ sample = sampler.chain[:, (nsteps-1):, :].reshape(-1, ndim) # now (nwalkers,ndim
 meds = [ np.median(sample[:,j]) for j in range(ndim) ]
 intercept = meds[0]
 slope = meds[1]
-outlier = [ meds[j+2]<0.5 for j in range(len(x)) ]
+gs = [ meds[j+2] for j in range(len(x)) ]
+cut = np.percentile(gs,20)
+outlier = [ g<cut for g in gs ]
 
 
 df = ro.DataFrame({'x': ro.FloatVector(x), \
@@ -109,4 +119,5 @@ pp = gp + \
    ggplot2.geom_errorbar(ggplot2.aes_string(x='x', ymin='ymin', ymax='ymax')) +\
    ggplot2.geom_line(ggplot2.aes_string(x='x', y='yest'))
 pp.plot()
+
 
