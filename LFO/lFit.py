@@ -63,7 +63,8 @@ def log_prior(theta):
     if (all(gs > 0) and all(gs < 1)):
         intercept = theta[0]
         slope = theta[1]
-        return -np.log(priorGS.pdf(np.mean(gs))) - 0.01*intercept**2 - 0.01*slope**2  # unscaled very rough priors
+        return -len(gs)*priorGS.logpdf(np.mean(gs)) - \  # faster than summing -logpdf() over the individual gs
+           0.01*intercept**2 - 0.01*slope**2  # unscaled very rough priors
     else:
         return -np.inf  # recall log(0) = -inf
 
@@ -83,7 +84,7 @@ def log_posterior(theta, x, y, e, sigma_B):
 # Note that this step will take a few minutes to run!
 
 ndim = 2 + len(x)  # number of parameters in the model
-nwalkers = 50  # number of MCMC walkers
+nwalkers = 2*ndim+6  # number of MCMC walkers
 nburn = 10000   # "burn-in" period to let chains stabilize
 nsteps = 15000  # number of MCMC steps to take
 sigmaB = 50.0  # outlier sigma
