@@ -93,15 +93,13 @@ import emcee
 sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior, args=[x, y, e, sigmaB])
 sampler.run_mcmc(starting_guesses, nsteps)
 
-#  sample = sampler.chain  # shape = (nwalkers, nsteps, ndim)
-sample = sampler.chain[:, (nsteps-1):, :].reshape(-1, ndim) # now (nwalkers,ndim)
+sample = sampler.chain  # shape = (nwalkers, nsteps, ndim)
 
-meds = [ np.median(sample[:,j]) for j in range(ndim) ]
-intercept = meds[0]
-slope = meds[1]
-gs = [ meds[j+2] for j in range(len(x)) ]
-cut = min(0.5,np.percentile(gs,20))
-outlier = [ g<cut for g in gs ]
+ests = [ np.mean(sample[:,:,j]) for j in range(ndim) ]
+intercept = ests[0]
+slope = ests[1]
+gs = [ ests[j+2] for j in range(len(x)) ] cut = min(0.5,np.percentile(gs,15))
+typical = [ g>=cut for g in gs ]
 
 
 df = ro.DataFrame({'x': ro.FloatVector(x), \
@@ -110,12 +108,12 @@ df = ro.DataFrame({'x': ro.FloatVector(x), \
                    'ymin': ro.FloatVector(y-e), \
                    'ymax': ro.FloatVector(y+e), \
                    'yest': ro.FloatVector(slope*x+intercept), \
-                   'outlier': ro.BoolVector(outlier)})
+                   'typical': ro.BoolVector(typical)})
 rprint(df)
 gp = ggplot2.ggplot(df)
 pp = gp + \
    ggplot2.geom_point(ggplot2.aes_string(x='x', y='y',\
-     color='outlier',shape='outlier'),size=5) + \
+     color='typical',shape='typical'),size=5) + \
    ggplot2.geom_errorbar(ggplot2.aes_string(x='x', ymin='ymin', ymax='ymax')) +\
    ggplot2.geom_line(ggplot2.aes_string(x='x', y='yest'))
 pp.plot()
