@@ -100,7 +100,7 @@ meds = [ np.median(sample[:,j]) for j in range(ndim) ]
 intercept = meds[0]
 slope = meds[1]
 gs = [ meds[j+2] for j in range(len(x)) ]
-cut = np.percentile(gs,20)
+cut = min(0.5,np.percentile(gs,20))
 outlier = [ g<cut for g in gs ]
 
 
