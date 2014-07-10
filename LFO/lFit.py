@@ -1,6 +1,9 @@
 
 # adapted from http://jakevdp.github.io/blog/2014/06/06/frequentism-and-bayesianism-2-when-results-differ/
 
+# 
+# %load_ext rpy2.ipython 
+
 import numpy as np
 
 x = np.array([ 0,  3,  9, 14, 15, 19, 20, 21, 30, 35,
@@ -16,7 +19,7 @@ import rpy2.robjects as ro
 from rpy2.robjects.packages import importr
 rprint = ro.globalenv.get("print")
 base = importr('base')
-datasets = importr('datasets')
+grdevices = importr('grDevices')
 r = ro.r
 
 df = ro.DataFrame({'x': ro.FloatVector(x), \
@@ -30,7 +33,9 @@ pp = gp + \
      ggplot2.aes_string(x='x', y='y', ymin='ymin', ymax='ymax') + \
      ggplot2.geom_point() + \
      ggplot2.geom_errorbar()
-pp.plot()
+grdevices.png(file="data.png", width=512, height=512)
+print(pp)
+grdevices.dev_off()
 
 
 from scipy import optimize
@@ -83,7 +88,7 @@ nburn = 10000   # "burn-in" period to let chains stabilize
 nsteps = 15000  # number of MCMC steps to take
 sigmaB = 50.0  # outlier sigma
 
-# set theta near the maximum likelihood, with 
+# set theta near the maximum likelihood, with
 np.random.seed(0)
 starting_guesses = np.zeros((nwalkers, ndim))
 starting_guesses[:, :2] = np.random.normal(theta1, 1, (nwalkers, 2))
@@ -98,24 +103,29 @@ sample = sampler.chain  # shape = (nwalkers, nsteps, ndim)
 ests = [ np.mean(sample[:,:,j]) for j in range(ndim) ]
 intercept = ests[0]
 slope = ests[1]
-gs = [ ests[j+2] for j in range(len(x)) ] cut = min(0.5,np.percentile(gs,15))
+gs = [ ests[j+2] for j in range(len(x)) ]
+cut = min(0.5,np.percentile(gs,15))
 typical = [ g>=cut for g in gs ]
 
 
-df = ro.DataFrame({'x': ro.FloatVector(x), \
+pdf = ro.DataFrame({'x': ro.FloatVector(x), \
                    'y': ro.FloatVector(y), \
                    'e': ro.FloatVector(e), \
                    'ymin': ro.FloatVector(y-e), \
                    'ymax': ro.FloatVector(y+e), \
                    'yest': ro.FloatVector(slope*x+intercept), \
                    'typical': ro.BoolVector(typical)})
-rprint(df)
-gp = ggplot2.ggplot(df)
-pp = gp + \
+rprint(pdf)
+gpf = ggplot2.ggplot(pdf)
+ppf = gpf + \
    ggplot2.geom_point(ggplot2.aes_string(x='x', y='y',\
      color='typical',shape='typical'),size=5) + \
    ggplot2.geom_errorbar(ggplot2.aes_string(x='x', ymin='ymin', ymax='ymax')) +\
    ggplot2.geom_line(ggplot2.aes_string(x='x', y='yest'))
-pp.plot()
+grdevices.png(file="fit.png", width=512, height=512)
+print(ppf)
+grdevices.dev_off()
+
+
 
 
