@@ -59,7 +59,7 @@ theta1 = optimize.fmin(squared_loss, [0, 0], disp=False)
 
 from scipy.stats import beta
 
-priorGS = beta(0.1,0.9)
+priorGS = beta(0.9,0.1) # prior: most points are typical
 
 def log_prior(theta):
     #g_i needs to be between 0 and 1
@@ -111,7 +111,7 @@ intercept = ests[0]
 slope = ests[1]
 gs = [ ests[j+2] for j in range(len(x)) ]
 print gs
-cut = min(0.5,np.percentile(gs,20))
+cut = min(0.5,np.percentile(gs,15))
 typical = [ g>=cut for g in gs ]
 
 
