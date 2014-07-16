@@ -234,3 +234,46 @@ print(sum(bayesLosses)-sum(losses(nSides,polishedSum)))
 # # likely not near a simple fraction
 
 
+
+
+
+# look into game theory solution
+library(ggplot2)
+library(reshape2)
+
+
+d <- data.frame(lambda=seq(.2,.3,0.001))
+pseq <- seq(1/6,5/6,1/6)
+sqErrP <- function(lambda,p) { p*(1-lambda-p)^2 + (1-p)*(lambda-p)^2 }
+sqErrM <- function(lambda) { max(sapply(pseq,function(p) sqErrP(lambda,p))) }
+lossM <- sapply(pseq,function(p) { sqErrP(d$lambda,p)})
+colnames(lossM) <- paste('p',pseq,sep='_')
+d <- cbind(d,lossM)
+d$pmax <- sapply(d$lambda,sqErrM)
+dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='loss')
+ggplot() +
+   geom_line(data=dplot,aes(x=lambda,y=loss,color=p)) +
+   geom_point(data=subset(dplot,p=='pmax'),aes(x=lambda,y=loss),alpha=0.3) +
+   ylim(0.06,0.07)
+# lambda = 2*p*(1-p) = 10/36 is optimal solution
+# at lambda1/4 all curves cross: p*(3/4-p)^2+(1-p)*(1/4-p)^2 = 1/16
+lambda <- 2*pseq[1]*(1-pseq[1])
+print('Null estimate')
+nullEst <- c(0.5,0.5)
+print(nullEst)
+print(losses(6,nullEst))
+print('Empirical frequency estimate')
+empEst <- empiricalMeansEstimates(6,1)
+print(empEst)
+print(losses(6,empEst))
+print('Bayes estimate')
+print(bayesMeansEstimates(6,1))
+print(losses(6,bayesMeansEstimates(6,1)))
+print('Symmetric estimate')
+symmetryEst <- c(0.25,0.75)
+print(symmetryEst)
+print(losses(6,symmetryEst))
+print('Game theory estimate')
+gameTheoryEst <- c(lambda,1-lambda)
+print(gameTheoryEst)
+print(losses(6,gameTheoryEst))
