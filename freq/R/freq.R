@@ -1,5 +1,8 @@
 
 library(MASS)
+library(ggplot2)
+library(reshape2)
+
 
 # In all cases we are model the observed number of wins (winsSeen)
 # found in flipping a coin kFlips times where the probability of
@@ -238,8 +241,6 @@ print(sum(bayesLosses)-sum(losses(nSides,polishedSum)))
 
 
 # look into game theory solution
-library(ggplot2)
-library(reshape2)
 
 
 d <- data.frame(lambda=seq(.2,.3,0.001))
@@ -250,13 +251,14 @@ lossM <- sapply(pseq,function(p) { sqErrP(d$lambda,p)})
 colnames(lossM) <- paste('p',pseq,sep='_')
 d <- cbind(d,lossM)
 d$pmax <- sapply(d$lambda,sqErrM)
-dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='loss')
+dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='sq_loss')
 ggplot() +
-   geom_line(data=dplot,aes(x=lambda,y=loss,color=p)) +
-   geom_point(data=subset(dplot,p=='pmax'),aes(x=lambda,y=loss),alpha=0.3) +
-   ylim(0.06,0.07)
+   geom_line(data=dplot,aes(x=lambda,y=sq_loss,color=p)) +
+   geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) +
+   coord_cartesian(ylim = c(0.05,0.07))
 # lambda = 2*p*(1-p) = 10/36 is optimal solution
 # at lambda1/4 all curves cross: p*(3/4-p)^2+(1-p)*(1/4-p)^2 = 1/16
+
 lambda <- 2*pseq[1]*(1-pseq[1])
 print('Null estimate')
 nullEst <- c(0.5,0.5)
@@ -277,3 +279,33 @@ print('Game theory estimate')
 gameTheoryEst <- c(lambda,1-lambda)
 print(gameTheoryEst)
 print(losses(6,gameTheoryEst))
+
+# l2 all crossing
+d <- data.frame(lambda=seq(0,1,0.01))
+pseq <- seq(0,1,0.05)
+sqErrP <- function(lambda,p) { p*(1-lambda-p)^2 + (1-p)*(lambda-p)^2 }
+sqErrM <- function(lambda) { max(sapply(pseq,function(p) sqErrP(lambda,p))) }
+lossM <- sapply(pseq,function(p) { sqErrP(d$lambda,p)})
+colnames(lossM) <- paste('p',pseq,sep='_')
+d <- cbind(d,lossM)
+d$pmax <- sapply(d$lambda,sqErrM)
+dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='sq_loss')
+ggplot() +
+   geom_line(data=dplot,aes(x=lambda,y=sq_loss,color=p)) +
+   geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) 
+# at lambda1/4 all curves cross: p*(3/4-p)^2+(1-p)*(1/4-p)^2 = 1/16
+
+
+# l1 error (notice no all-crossing)
+d <- data.frame(lambda=seq(0,1,0.01))
+pseq <- seq(0,1,0.05)
+l1ErrP <- function(lambda,p) { p*abs(1-lambda-p) + (1-p)*abs(lambda-p) }
+l1ErrM <- function(lambda) { max(sapply(pseq,function(p) l1ErrP(lambda,p))) }
+lossM <- sapply(pseq,function(p) { l1ErrP(d$lambda,p)})
+colnames(lossM) <- paste('p',pseq,sep='_')
+d <- cbind(d,lossM)
+d$pmax <- sapply(d$lambda,l1ErrM)
+dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='l1_loss')
+ggplot() +
+   geom_line(data=dplot,aes(x=lambda,y=l1_loss,color=p)) +
+   geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
