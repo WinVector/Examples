@@ -19,7 +19,7 @@
         return { k:complex(si[k]).real for k in si.keys() }
     
     def isRealSoln(si):
-        return all([abs(complex(sij).imag)<1.0e-5 for sij in si.values()])
+        return all([abs(complex(sij).imag)<1.0e-6 for sij in si.values()])
     
     def printsoln(phis,soln):
        ns = numericSoln(soln)
@@ -28,37 +28,24 @@
              print '\t',phi,'\t',soln[phi],'\t',ns[phi]
     
     p = symbols('p')
-    floatPoly = False
-    powerTerms = True
     
     def solveForK(k):
        print '*******************'
        print k
        print 'powerTerms',powerTerms
        phis = [ symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
-       if floatPoly:
-          poly = sum([ p**h * (1.0-p)**(k-h) * float(ncr(k,h)) * (phis[h]-p)**2 for h in range(k+1) ])
-       else:
-          poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
+       poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
        # print poly
-       if powerTerms:
-         # powers of p
-         polyTerms = collect(expand(poly),p,evaluate=False)
-         eqns = [ polyTerms[p**(pow+1)] for pow in range(len(polyTerms)-1) ]
-       else:
-         # different evaluations
-         p0 = poly.subs({p:0})
-         if floatPoly:
-            eqns = [ poly.subs({p:(i+1.0/k+1.0)})-p0 for i in range(k+1) ]
-         else:
-            eqns = [ poly.subs({p:(simplify(Fraction(i+1,k+1)))})-p0 for i in range(k+1) ]
+       # powers of p
+       polyTerms = collect(expand(poly),p,evaluate=False)
+       eqns = [ polyTerms[p**(pow+1)] for pow in range(len(polyTerms)-1) ]
        #print eqns
        soln1 = solve(eqns)
        #print soln1
        numSoln = [ numericSoln(si) for si in soln1 ]
+       viol = [ max([ abs(expand(eij.subs(si))) for eij in eqns ]) for si in numSoln ]
        isReal = [ isRealSoln(si) for si in soln1 ]
-       #print isReal
-       costs = { i:abs(expand(poly.subs(numSoln[i]).subs({p:0}))) for i in range(len(numSoln)) if isReal[i] }
+       costs = { i:abs(expand(poly.subs(numSoln[i]).subs({p:0}))) for i in range(len(numSoln)) if isReal[i] and viol[i]<1.0e-8 }
        #print costs
        minCost = min(costs.values())
        index = [ i for i in costs.keys() if costs[i] <= minCost ][0]
@@ -66,7 +53,7 @@
        printsoln(phis,soln)
        print abs(complex(expand(poly.subs(soln).subs({p:0}))))
        print '*******************'
-       return soln
+       return numericSoln(soln)
 .. code:: python
 
     solveForK(1)
@@ -86,7 +73,7 @@
 
 .. parsed-literal::
 
-    {phi_0_1: 1/4, phi_1_1: 3/4}
+    {phi_0_1: 0.25, phi_1_1: 0.75}
 
 
 
@@ -110,7 +97,7 @@
 
 .. parsed-literal::
 
-    {phi_2_2: -sqrt(2)/2 + 3/2, phi_0_2: -1/2 + sqrt(2)/2, phi_1_2: 1/2}
+    {phi_2_2: 0.7928932188134524, phi_0_2: 0.20710678118654752, phi_1_2: 0.5}
 
 
 
@@ -135,10 +122,10 @@
 
 .. parsed-literal::
 
-    {phi_3_3: -sqrt(3)/4 + 5/4,
-     phi_1_3: sqrt(3)/12 + 1/4,
-     phi_2_3: -sqrt(3)/12 + 3/4,
-     phi_0_3: -1/4 + sqrt(3)/4}
+    {phi_3_3: 0.8169872981077807,
+     phi_1_3: 0.39433756729740643,
+     phi_2_3: 0.6056624327025936,
+     phi_0_3: 0.18301270189221933}
 
 
 
@@ -164,6 +151,10 @@
 
 .. parsed-literal::
 
-    {phi_0_4: 1/6, phi_2_4: 1/2, phi_4_4: 5/6, phi_1_4: 1/3, phi_3_4: 2/3}
+    {phi_0_4: 0.16666666666666666,
+     phi_2_4: 0.5,
+     phi_4_4: 0.8333333333333334,
+     phi_1_4: 0.3333333333333333,
+     phi_3_4: 0.6666666666666666}
 
 
