@@ -1678,23 +1678,24 @@ div#notebook {
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[6]:
+In&nbsp;[21]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
 <div class="highlight"><pre><span class="kn">from</span> <span class="nn">sympy</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="kn">import</span> <span class="nn">numpy</span>
 <span class="kn">from</span> <span class="nn">fractions</span> <span class="kn">import</span> <span class="n">Fraction</span>
-
-<span class="c"># from http://stackoverflow.com/questions/4941753/is-there-a-math-ncr-function-in-python</span>
 <span class="kn">import</span> <span class="nn">operator</span> <span class="kn">as</span> <span class="nn">op</span>
 
+
+<span class="c"># ncr from http://stackoverflow.com/questions/4941753/is-there-a-math-ncr-function-in-python</span>
 <span class="k">def</span> <span class="nf">ncr</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
     <span class="n">r</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">r</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="k">return</span> <span class="mi">1</span>
     <span class="n">numer</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">r</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
     <span class="n">denom</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">r</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">numer</span><span class="o">//</span><span class="n">denom</span>
+
 
 <span class="k">def</span> <span class="nf">numericSoln</span><span class="p">(</span><span class="n">si</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span><span class="nb">complex</span><span class="p">(</span><span class="n">si</span><span class="p">[</span><span class="n">k</span><span class="p">])</span><span class="o">.</span><span class="n">real</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">si</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">}</span>
@@ -1703,12 +1704,20 @@ In&nbsp;[6]:
     <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">sij</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1.0e-6</span> <span class="k">for</span> <span class="n">sij</span> <span class="ow">in</span> <span class="n">si</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
 
 <span class="k">def</span> <span class="nf">printsoln</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">soln</span><span class="p">):</span>
+   <span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">phis</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">soln</span><span class="p">:</span>
+         <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span><span class="n">soln</span><span class="p">[</span><span class="n">phi</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">printsolnN</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">soln</span><span class="p">):</span>
    <span class="n">ns</span> <span class="o">=</span> <span class="n">numericSoln</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span>
    <span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">phis</span><span class="p">:</span>
       <span class="k">if</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">soln</span><span class="p">:</span>
          <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span><span class="n">soln</span><span class="p">[</span><span class="n">phi</span><span class="p">],</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span><span class="n">ns</span><span class="p">[</span><span class="n">phi</span><span class="p">]</span>
 
-
+            
+            
+<span class="c"># for k flips of unknown coin solve for minimal max variance estimate schedule</span>
 <span class="k">def</span> <span class="nf">solveForK</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
    <span class="n">p</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
    <span class="k">print</span> <span class="s">&#39;*******************&#39;</span>
@@ -1730,11 +1739,36 @@ In&nbsp;[6]:
    <span class="n">minCost</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">costs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
    <span class="n">index</span> <span class="o">=</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">costs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">costs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">minCost</span> <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
    <span class="n">soln</span> <span class="o">=</span> <span class="n">soln1</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
-   <span class="n">printsoln</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">soln</span><span class="p">)</span>
+   <span class="n">printsolnN</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">soln</span><span class="p">)</span>
    <span class="k">print</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">p</span><span class="p">:</span><span class="mi">0</span><span class="p">}))))</span>
    <span class="k">print</span> <span class="s">&#39;*******************&#39;</span>
    <span class="n">ns</span> <span class="o">=</span> <span class="n">numericSoln</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span>
    <span class="k">return</span> <span class="p">{</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span><span class="n">ns</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ns</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">}</span>
+
+<span class="c"># solve numerically using Newton&#39;s zero finding method</span>
+<span class="k">def</span> <span class="nf">solveForKN</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+   <span class="k">print</span> <span class="s">&#39;*******************&#39;</span>
+   <span class="k">print</span> <span class="n">k</span>
+   <span class="n">p</span> <span class="o">=</span> <span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+   <span class="n">phis</span> <span class="o">=</span> <span class="p">[</span> <span class="n">symbols</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="s">&#39;phi_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">h</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+   <span class="n">poly</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span> <span class="n">p</span><span class="o">**</span><span class="n">h</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">p</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">ncr</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">h</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">phis</span><span class="p">[</span><span class="n">h</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">])</span>
+   <span class="c"># print poly</span>
+   <span class="c"># powers of p</span>
+   <span class="n">polyTerms</span> <span class="o">=</span> <span class="n">collect</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">poly</span><span class="p">),</span><span class="n">p</span><span class="p">,</span><span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+   <span class="n">eqns</span> <span class="o">=</span> <span class="p">[</span> <span class="n">polyTerms</span><span class="p">[</span><span class="n">p</span><span class="o">**</span><span class="p">(</span><span class="nb">pow</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="k">for</span> <span class="nb">pow</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">polyTerms</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+   <span class="n">jacobian</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="n">diff</span><span class="p">(</span><span class="n">eqi</span><span class="p">,</span><span class="n">phij</span><span class="p">)</span> <span class="k">for</span> <span class="n">phij</span> <span class="ow">in</span> <span class="n">phis</span> <span class="p">]</span> <span class="k">for</span> <span class="n">eqi</span> <span class="ow">in</span> <span class="n">eqns</span> <span class="p">]</span>
+   <span class="n">nSoln</span> <span class="o">=</span> <span class="p">{</span> <span class="n">phis</span><span class="p">[</span><span class="n">i</span><span class="p">]:((</span><span class="n">i</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mf">1.0</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">phis</span><span class="p">))</span> <span class="p">}</span>
+   <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+      <span class="n">checks</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="nb">float</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">ei</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">nSoln</span><span class="p">)))</span> <span class="k">for</span> <span class="n">ei</span> <span class="ow">in</span> <span class="n">eqns</span> <span class="p">])</span>
+      <span class="k">if</span> <span class="nb">max</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">ci</span><span class="p">)</span> <span class="k">for</span> <span class="n">ci</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">])</span><span class="o">&lt;</span><span class="mf">1.0e-12</span><span class="p">:</span>
+         <span class="k">break</span>
+      <span class="n">js</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">matrix</span><span class="p">([</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">expand</span><span class="p">(</span><span class="n">jij</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">nSoln</span><span class="p">)))</span> <span class="k">for</span> <span class="n">jij</span> <span class="ow">in</span> <span class="n">ji</span> <span class="p">]</span> <span class="k">for</span> <span class="n">ji</span> <span class="ow">in</span> <span class="n">jacobian</span> <span class="p">])</span>
+      <span class="n">step</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">js</span><span class="p">,</span><span class="n">checks</span><span class="p">)</span>
+      <span class="n">nSoln</span> <span class="o">=</span> <span class="p">{</span> <span class="n">phis</span><span class="p">[</span><span class="n">i</span><span class="p">]:(</span><span class="n">nSoln</span><span class="p">[</span><span class="n">phis</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">-</span><span class="n">step</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">phis</span><span class="p">))</span> <span class="p">}</span>
+      <span class="k">if</span> <span class="nb">max</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">si</span><span class="p">)</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">step</span><span class="p">])</span><span class="o">&lt;</span><span class="mf">1.0e-12</span><span class="p">:</span>
+         <span class="k">break</span>
+   <span class="n">printsoln</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">nSoln</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">nSoln</span>
 </pre></div>
 
 </div>
@@ -1745,7 +1779,7 @@ In&nbsp;[6]:
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[7]:
+In&nbsp;[22]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -1775,7 +1809,7 @@ In&nbsp;[7]:
 </div>
 
 <div class="output_area"><div class="prompt output_prompt">
-    Out[7]:</div>
+    Out[22]:</div>
 
 
 <div class="output_text output_subarea output_pyout">
@@ -1793,7 +1827,53 @@ In&nbsp;[7]:
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[8]:
+In&nbsp;[23]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre><span class="n">solveForKN</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+*******************
+1
+	phi_0_1 	0.25
+	phi_1_1 	0.75
+
+</pre>
+</div>
+</div>
+
+<div class="output_area"><div class="prompt output_prompt">
+    Out[23]:</div>
+
+
+<div class="output_text output_subarea output_pyout">
+<pre>
+{phi_0_1: 0.25, phi_1_1: 0.75}
+</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[24]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -1824,7 +1904,7 @@ In&nbsp;[8]:
 </div>
 
 <div class="output_area"><div class="prompt output_prompt">
-    Out[8]:</div>
+    Out[24]:</div>
 
 
 <div class="output_text output_subarea output_pyout">
@@ -1842,7 +1922,56 @@ In&nbsp;[8]:
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[9]:
+In&nbsp;[25]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre><span class="n">solveForKN</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+*******************
+2
+	phi_0_2 	0.207106781187
+	phi_1_2 	0.5
+	phi_2_2 	0.792893218813
+
+</pre>
+</div>
+</div>
+
+<div class="output_area"><div class="prompt output_prompt">
+    Out[25]:</div>
+
+
+<div class="output_text output_subarea output_pyout">
+<pre>
+{phi_2_2: 0.79289321881345221,
+ phi_0_2: 0.20710678118654738,
+ phi_1_2: 0.49999999999999983}
+</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[26]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -1874,7 +2003,7 @@ In&nbsp;[9]:
 </div>
 
 <div class="output_area"><div class="prompt output_prompt">
-    Out[9]:</div>
+    Out[26]:</div>
 
 
 <div class="output_text output_subarea output_pyout">
@@ -1895,7 +2024,58 @@ In&nbsp;[9]:
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[10]:
+In&nbsp;[27]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre><span class="n">solveForKN</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+*******************
+3
+	phi_0_3 	0.183012701892
+	phi_1_3 	0.394337567297
+	phi_2_3 	0.605662432703
+	phi_3_3 	0.816987298108
+
+</pre>
+</div>
+</div>
+
+<div class="output_area"><div class="prompt output_prompt">
+    Out[27]:</div>
+
+
+<div class="output_text output_subarea output_pyout">
+<pre>
+{phi_3_3: 0.81698729810778192,
+ phi_1_3: 0.39433756729740699,
+ phi_2_3: 0.60566243270259434,
+ phi_0_3: 0.18301270189221974}
+</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[28]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -1928,7 +2108,7 @@ In&nbsp;[10]:
 </div>
 
 <div class="output_area"><div class="prompt output_prompt">
-    Out[10]:</div>
+    Out[28]:</div>
 
 
 <div class="output_text output_subarea output_pyout">
@@ -1941,6 +2121,153 @@ In&nbsp;[10]:
 </pre>
 </div>
 
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[29]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre><span class="n">solveForKN</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+*******************
+4
+	phi_0_4 	0.166666666667
+	phi_1_4 	0.333333333333
+	phi_2_4 	0.5
+	phi_3_4 	0.666666666667
+	phi_4_4 	0.833333333333
+
+</pre>
+</div>
+</div>
+
+<div class="output_area"><div class="prompt output_prompt">
+    Out[29]:</div>
+
+
+<div class="output_text output_subarea output_pyout">
+<pre>
+{phi_0_4: 0.16666666666666768,
+ phi_2_4: 0.50000000000000111,
+ phi_4_4: 0.83333333333333526,
+ phi_1_4: 0.33333333333333431,
+ phi_3_4: 0.66666666666666807}
+</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[30]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">11</span><span class="p">):</span>
+    <span class="n">solveForKN</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+*******************
+5
+	phi_0_5 	0.154508497187
+	phi_1_5 	0.292705098312
+	phi_2_5 	0.430901699437
+	phi_3_5 	0.569098300562
+	phi_4_5 	0.707294901688
+	phi_5_5 	0.845491502813
+*******************
+6
+	phi_0_6 	0.144948974279
+	phi_1_6 	0.263299316186
+	phi_2_6 	0.381649658093
+	phi_3_6 	0.5
+	phi_4_6 	0.618350341907
+	phi_5_6 	0.736700683814
+	phi_6_6 	0.855051025721
+*******************
+7
+	phi_0_7 	0.137145942589
+	phi_1_7 	0.240818530421
+	phi_2_7 	0.344491118252
+	phi_3_7 	0.448163706084
+	phi_4_7 	0.551836293916
+	phi_5_7 	0.655508881748
+	phi_6_7 	0.759181469579
+	phi_7_7 	0.862854057411
+*******************
+8
+	phi_0_8 	0.130601937482
+	phi_1_8 	0.222951453111
+	phi_2_8 	0.315300968741
+	phi_3_8 	0.40765048437
+	phi_4_8 	0.5
+	phi_5_8 	0.592349515629
+	phi_6_8 	0.684699031259
+	phi_7_8 	0.777048546889
+	phi_8_8 	0.869398062518
+*******************
+9
+	phi_0_9 	0.125
+	phi_1_9 	0.208333333333
+	phi_2_9 	0.291666666667
+	phi_3_9 	0.375
+	phi_4_9 	0.458333333333
+	phi_5_9 	0.541666666667
+	phi_6_9 	0.625
+	phi_7_9 	0.708333333334
+	phi_8_9 	0.791666666667
+	phi_9_9 	0.875000000001
+*******************
+10
+	phi_0_10 	0.120126536676
+	phi_1_10 	0.196101229341
+	phi_2_10 	0.272075922005
+	phi_3_10 	0.34805061467
+	phi_4_10 	0.424025307335
+	phi_5_10 	0.499999999999
+	phi_6_10 	0.575974692664
+	phi_7_10 	0.651949385329
+	phi_8_10 	0.727924077993
+	phi_9_10 	0.803898770657
+	phi_10_10 	0.87987346332
+
+</pre>
+</div>
 </div>
 
 </div>
