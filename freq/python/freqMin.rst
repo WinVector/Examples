@@ -1,21 +1,16 @@
 
 .. code:: python
 
-    from sympy import *
+    import sympy
     import numpy
-    from fractions import Fraction
     import scipy
+    import scipy.special
     import scipy.optimize
-    import operator as op
     
     
-    # ncr from http://stackoverflow.com/questions/4941753/is-there-a-math-ncr-function-in-python
     def ncr(n, r):
-        r = min(r, n-r)
-        if r == 0: return 1
-        numer = reduce(op.mul, xrange(n, n-r, -1))
-        denom = reduce(op.mul, xrange(1, r+1))
-        return numer//denom
+        s = scipy.special.binom(n,r)
+        return int(round(s)) # scipy special function return is not always an integer
     
     
     
@@ -31,59 +26,59 @@
           if phi in soln:
              print '\t',phi,'\t',soln[phi],'\t',ns[phi]
     
-                
-                
+    
+    
     # for k flips of unknown coin solve for minimal max variance estimate schedule
     def solveForK(k):
        print '*******************'
        print k
-       p = symbols('p')
-       phis = [ symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
-       poly = sum([ p**h * (1-p)**(k-h) * int(ncr(k,h)) * (phis[h]-p)**2 for h in range(k+1) ])
+       p = sympy.symbols('p')
+       phis = [ sympy.symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
+       poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
        # print poly
        # powers of p
-       polyTerms = collect(expand(poly),p,evaluate=False)
+       polyTerms = sympy.collect(sympy.expand(poly),p,evaluate=False)
        eqns = [ polyTerms[p**(pow+1)] for pow in range(len(polyTerms)-1) ]
        #print eqns
-       soln1 = solve(eqns)
+       soln1 = sympy.solve(eqns)
        #print soln1
        numSoln = [ numericSoln(si) for si in soln1 ]
-       viol = [ max([ abs(expand(eij.subs(si))) for eij in eqns ]) for si in numSoln ]
+       viol = [ max([ abs(sympy.expand(eij.subs(si))) for eij in eqns ]) for si in numSoln ]
        isReal = [ isRealSoln(si) for si in soln1 ]
-       costs = { i:abs(expand(poly.subs(numSoln[i]).subs({p:0}))) for i in range(len(numSoln)) if isReal[i] and viol[i]<1.0e-8 }
+       costs = { i:abs(sympy.expand(poly.subs(numSoln[i]).subs({p:0}))) for i in range(len(numSoln)) if isReal[i] and viol[i]<1.0e-8 }
        #print costs
        minCost = min(costs.values())
        index = [ i for i in costs.keys() if costs[i] <= minCost ][0]
        soln = soln1[index]
        printsolnN(phis,soln)
-       print abs(complex(expand(poly.subs(soln).subs({p:0}))))
+       print abs(complex(sympy.expand(poly.subs(soln).subs({p:0}))))
        print '*******************'
        ns = numericSoln(soln)
        return [ ns[phi] for phi in phis ]
     
     # solve numerically using Newton's zero finding method
     def solveForKN(k):
-       p = symbols('p')
-       phis = [ symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
-       poly = sum([ p**h * (1.0-p)**(k-h) * float(ncr(k,h)) * (phis[h]-p)**2 for h in range(k+1) ])
+       p = sympy.symbols('p')
+       phis = [ sympy.symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
+       poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
        # print poly
        # powers of p
-       polyTerms = collect(expand(poly),p,evaluate=False)
+       polyTerms = sympy.collect(sympy.expand(poly),p,evaluate=False)
        eqns = [ polyTerms[p**(pow+1)] for pow in range(len(polyTerms)-1) ]
-       jacobian = [ [ diff(eqi,phij) for phij in phis ] for eqi in eqns ]
+       jacobian = [ [ sympy.diff(eqi,phij) for phij in phis ] for eqi in eqns ]
        nSoln = { phis[i]:((i+0.5)/(k+1.0)) for i in range(len(phis)) }
        while True:
-          checks = numpy.array([ float(expand(ei.subs(nSoln))) for ei in eqns ])
+          checks = numpy.array([ float(sympy.expand(ei.subs(nSoln))) for ei in eqns ])
           if max([abs(ci) for ci in checks])<1.0e-12:
              break
-          js = numpy.matrix([ [ float(expand(jij.subs(nSoln))) for jij in ji ] for ji in jacobian ])
+          js = numpy.matrix([ [ float(sympy.expand(jij.subs(nSoln))) for jij in ji ] for ji in jacobian ])
           step = numpy.linalg.solve(js,checks)
           nSoln = { phis[i]:(nSoln[phis[i]]-step[i]) for i in range(len(phis)) }
           if max([abs(si) for si in step])<1.0e-12:
              break
        return [ nSoln[phi] for phi in phis ]
     
-                
+    
     # approximate l1 loss
     def l1Loss(phis):
         nps = 10000
@@ -96,8 +91,6 @@
             return -sum([ p**h * (1.0-p)**(k-h) * kchoose[h] * abs(phis[h]-p) for h in range(k+1) ])
         reg = max([ -f(p) for p in pseq ])
         return reg
-    
-        
 .. code:: python
 
     k=2
@@ -179,7 +172,7 @@
     0.0334936490539
     *******************
     numeric l2 solution for k= 3
-    [0.18301270189221974, 0.39433756729740699, 0.60566243270259434, 0.81698729810778192]
+    [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
     
     
     analytic l2 solution for k= 4
@@ -193,7 +186,7 @@
     0.0277777777778
     *******************
     numeric l2 solution for k= 4
-    [0.16666666666666768, 0.33333333333333431, 0.50000000000000111, 0.66666666666666807, 0.83333333333333526]
+    [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
     
 
 
@@ -206,15 +199,15 @@
 .. parsed-literal::
 
     numeric l2 solution for k= 5
-    [0.15450849718749685, 0.29270509831249786, 0.43090169943749879, 0.56909830056249966, 0.70729490168750031, 0.84549150281250052]
+    [0.15450849718749732, 0.29270509831249841, 0.43090169943749956, 0.56909830056250077, 0.70729490168750231, 0.84549150281250485]
     numeric l2 solution for k= 6
-    [0.14494897427875741, 0.26329931618583946, 0.38164965809292156, 0.500000000000004, 0.61835034190708682, 0.73670068381417098, 0.85505102572125735]
+    [0.14494897427875081, 0.26329931618583163, 0.38164965809291207, 0.49999999999999173, 0.61835034190706983, 0.736700683814145, 0.85505102572121505]
     numeric l2 solution for k= 7
-    [0.13714594258870841, 0.24081853042050264, 0.34449111825229645, 0.44816370608408934, 0.55183629391588074, 0.65550888174766897, 0.75918146957945176, 0.86285405741122756]
+    [0.13714594258870808, 0.24081853042050227, 0.344491118252296, 0.44816370608408912, 0.55183629391588152, 0.65550888174767297, 0.75918146957946298, 0.86285405741124843]
     numeric l2 solution for k= 8
-    [0.1306019374818575, 0.22295145311138789, 0.31530096874091768, 0.40765048437044638, 0.49999999999997313, 0.59234951562949656, 0.68469903125901432, 0.77704854688852543, 0.86939806251803797]
+    [0.13060193748186366, 0.22295145311139491, 0.31530096874092589, 0.40765048437045631, 0.49999999999998584, 0.59234951562951332, 0.68469903125903675, 0.77704854688855263, 0.8693980625180614]
     numeric l2 solution for k= 9
-    [0.12500000000008105, 0.20833333333342519, 0.29166666666677243, 0.37500000000012412, 0.45833333333348275, 0.5416666666668527, 0.62500000000024392, 0.70833333333367521, 0.79166666666717644, 0.87500000000077582]
+    [0.12499999999993124, 0.20833333333325538, 0.29166666666657692, 0.37499999999989464, 0.45833333333320636, 0.54166666666650842, 0.62499999999979383, 0.70833333333304671, 0.79166666666622476, 0.87499999999922329]
     numeric l2 solution for k= 10
-    [0.12012653667575041, 0.19610122934051302, 0.27207592200526709, 0.34805061467000892, 0.42402530733473265, 0.4999999999994279, 0.57597469266407486, 0.65194938532863334, 0.72792407799301684, 0.80389877065702275, 0.87987346332016558]
+    [0.12012653667611538, 0.19610122934092272, 0.27207592200573305, 0.3480506146705476, 0.42402530733536842, 0.50000000000019862, 0.5759746926650432, 0.65194938532990943, 0.72792407799480374, 0.80389877065973081, 0.87987346332470762]
 
