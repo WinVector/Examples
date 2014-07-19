@@ -6,6 +6,7 @@
     import scipy
     import scipy.special
     import scipy.optimize
+    import cvxopt
     
     
     def ncr(n, r):
@@ -91,6 +92,213 @@
             return -sum([ p**h * (1.0-p)**(k-h) * kchoose[h] * abs(phis[h]-p) for h in range(k+1) ])
         reg = max([ -f(p) for p in pseq ])
         return reg
+    
+    # Pick set of estimates (indexed by evidence) minimizing worse L1 loss expected for any p
+    # k: number of flips
+    # p: array of probabilities to check against
+    def solveL1Problem(k,p):
+       nphis = k+1
+       nps = len(p)
+       # solve a x <= b 
+       # varibles: 
+       #  phi (indices: 0 ... nphis-1)
+       #  u (indices: nphis ... (1+nps)*nphis-1) 
+       #   u(i,j) = var((i+1)*nphis+j) = abs(phi(j)-p(i)) i=0...nps-1, j=0...nphis-1
+       #  s (index: (1+nps)*nphis )
+       # eqns: 
+       #  u(i,j) >= phi(j) - p(i)
+       #  u(i,j) >= -(phi(j) - p(i))
+       #  s >= sum_{j=0}^{k} (k choose j) p(i)^j (1-p(i))^{k-j} u(i,j)
+       nvars = (1+nps)*nphis+1
+       sindex = (1+nps)*nphis
+       a = []
+       b = []
+       c = numpy.zeros(nvars)
+       c[sindex] = 1.0
+       for i in range(nps):
+          arow = numpy.zeros(nvars)
+          brow = 0.0
+          # TODO: put poly coefs in terms of u's here
+          arow[sindex] = -1.0
+          for j in range(nphis):
+             uindex = (i+1)*nphis+j
+             arow[uindex] = ncr(k,j) * p[i]**j * (1-p[i])**(k-j)
+          a.append(arow)
+          b.append(brow)
+          for j in range(nphis):
+             uindex = (i+1)*nphis+j
+             phiindex = j
+             # u(i,j) >= phi(j) - p(i) : phi(j) - u(i,j) <= p(i)
+             arow = numpy.zeros(nvars)
+             arow[phiindex] = 1.0
+             arow[uindex] = -1.0 
+             brow = p[i]
+             a.append(arow)
+             b.append(brow)
+             # u(i,j) >= -(phi(j) - p(i)) : -phi(j) - u(i,j) <= -p(i)
+             arow = numpy.zeros(nvars)
+             arow[phiindex] = -1.0
+             arow[uindex] = -1.0 
+             brow = -p[i]
+             a.append(arow)
+             b.append(brow)
+       cmat = cvxopt.matrix(c)
+       gmat = cvxopt.matrix(numpy.matrix(a))
+       hmat = cvxopt.matrix(b)
+       sol = cvxopt.solvers.lp(cmat,gmat,hmat) # solve gmax * x <= hmat minimizing cmat
+       return [ sol['x'][i] for i in range(nphis) ]
+.. code:: python
+
+    for k in range(1,11):
+        print
+        print 'l1 solution to dice game for k-rolls:',k
+        print solveL1Problem(k,(1/6.0,2/6.0,3/6.0,4/6.0,5/6.0))
+        print
+
+.. parsed-literal::
+
+    
+    l1 solution to dice game for k-rolls: 1
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  4e-17  1e+00
+     1:  6.8365e-02  5.5415e-02  4e-01  4e-01  2e-16  1e-01
+     2:  1.7186e-01  1.6067e-01  1e-01  9e-02  4e-16  2e-02
+     3:  1.8929e-01  1.8708e-01  2e-02  2e-02  7e-16  4e-03
+     4:  1.9966e-01  1.9935e-01  1e-03  1e-03  1e-15  1e-04
+     5:  2.0000e-01  1.9999e-01  1e-05  1e-05  4e-16  1e-06
+     6:  2.0000e-01  2.0000e-01  1e-07  1e-07  3e-16  1e-08
+     7:  2.0000e-01  2.0000e-01  1e-09  1e-09  3e-16  1e-10
+    Optimal solution found.
+    [0.30000000025554363, 0.6999999997444564]
+    
+    
+    l1 solution to dice game for k-rolls: 2
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00 -6.9389e-18  3e+00  3e+00  6e-17  1e+00
+     1:  6.5039e-02  4.6507e-02  3e-01  3e-01  5e-17  1e-01
+     2:  1.4330e-01  1.3491e-01  8e-02  7e-02  4e-16  2e-02
+     3:  1.5546e-01  1.5396e-01  1e-02  1e-02  4e-16  2e-03
+     4:  1.6152e-01  1.6147e-01  3e-04  3e-04  2e-15  4e-05
+     5:  1.6162e-01  1.6161e-01  3e-06  3e-06  2e-16  4e-07
+     6:  1.6162e-01  1.6162e-01  3e-08  3e-08  3e-16  4e-09
+    Optimal solution found.
+    [0.24242424302874574, 0.5000000000000002, 0.7575757569712546]
+    
+    
+    l1 solution to dice game for k-rolls: 3
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  2e-16  1e+00
+     1:  6.2325e-02  3.9812e-02  3e-01  3e-01  2e-16  1e-01
+     2:  1.3201e-01  1.2463e-01  5e-02  4e-02  5e-16  1e-02
+     3:  1.4100e-01  1.3969e-01  9e-03  7e-03  2e-16  1e-03
+     4:  1.4247e-01  1.4244e-01  2e-04  2e-04  1e-16  4e-05
+     5:  1.4250e-01  1.4250e-01  2e-06  2e-06  3e-16  4e-07
+     6:  1.4250e-01  1.4250e-01  2e-08  2e-08  5e-16  4e-09
+    Optimal solution found.
+    [0.21326372456875112, 0.4055813337386642, 0.5944186662613361, 0.7867362754312492]
+    
+    
+    l1 solution to dice game for k-rolls: 4
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00  6.9389e-18  3e+00  3e+00  2e-16  1e+00
+     1:  6.0667e-02  3.5061e-02  3e-01  3e-01  4e-16  8e-02
+     2:  1.1455e-01  1.0648e-01  6e-02  5e-02  2e-16  1e-02
+     3:  1.1779e-01  1.1671e-01  8e-03  7e-03  1e-16  2e-03
+     4:  1.1980e-01  1.1939e-01  3e-03  2e-03  9e-16  5e-04
+     5:  1.2018e-01  1.2015e-01  1e-04  1e-04  2e-16  2e-05
+     6:  1.2020e-01  1.2020e-01  1e-06  1e-06  3e-16  2e-07
+     7:  1.2020e-01  1.2020e-01  1e-08  1e-08  3e-16  2e-09
+    Optimal solution found.
+    [0.18090056258036644, 0.3393724694222323, 0.5000000000000001, 0.6606275305777679, 0.8190994374196339]
+    
+    
+    l1 solution to dice game for k-rolls: 5
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  5e-17  1e+00
+     1:  5.9402e-02  3.1387e-02  3e-01  2e-01  4e-17  7e-02
+     2:  1.1087e-01  1.0344e-01  5e-02  4e-02  4e-16  9e-03
+     3:  1.1615e-01  1.1552e-01  4e-03  3e-03  2e-16  7e-04
+     4:  1.1723e-01  1.1721e-01  1e-04  1e-04  3e-16  2e-05
+     5:  1.1726e-01  1.1726e-01  1e-06  1e-06  2e-16  2e-07
+     6:  1.1726e-01  1.1726e-01  1e-08  1e-08  2e-16  2e-09
+    Optimal solution found.
+    [0.16666666791208357, 0.313638256874728, 0.4388931407533864, 0.5611068592466135, 0.686361743125272, 0.8333333320879165]
+    
+    
+    l1 solution to dice game for k-rolls: 6
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00 -0.0000e+00  3e+00  2e+00  6e-17  1e+00
+     1:  5.7623e-02  2.8077e-02  3e-01  2e-01  3e-16  6e-02
+     2:  1.0540e-01  9.8070e-02  4e-02  3e-02  2e-16  6e-03
+     3:  1.0957e-01  1.0823e-01  7e-03  5e-03  5e-16  8e-04
+     4:  1.0981e-01  1.0974e-01  3e-04  3e-04  8e-16  4e-05
+     5:  1.0984e-01  1.0984e-01  2e-05  1e-05  1e-15  2e-06
+     6:  1.0984e-01  1.0984e-01  2e-07  1e-07  9e-16  2e-08
+     7:  1.0984e-01  1.0984e-01  2e-09  1e-09  3e-16  2e-10
+    Optimal solution found.
+    [0.16666666730865295, 0.2810765242229833, 0.3754580498073887, 0.5000000000000001, 0.6245419501926115, 0.7189234757770169, 0.8333333326913474]
+    
+    
+    l1 solution to dice game for k-rolls: 7
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00  1.0408e-17  3e+00  2e+00  2e-16  1e+00
+     1:  5.6143e-02  2.5408e-02  3e-01  2e-01  2e-16  6e-02
+     2:  9.7364e-02  8.8361e-02  6e-02  4e-02  3e-16  9e-03
+     3:  1.0179e-01  1.0027e-01  9e-03  7e-03  1e-16  1e-03
+     4:  1.0258e-01  1.0246e-01  7e-04  5e-04  4e-16  9e-05
+     5:  1.0263e-01  1.0262e-01  2e-05  2e-05  3e-16  3e-06
+     6:  1.0263e-01  1.0263e-01  9e-07  7e-07  4e-16  1e-07
+     7:  1.0263e-01  1.0263e-01  9e-09  7e-09  4e-16  1e-09
+    Optimal solution found.
+    [0.16666667287996165, 0.25129079795016174, 0.3333333333253158, 0.4715996013407066, 0.5284003986592933, 0.6666666666746843, 0.7487092020498383, 0.8333333271200385]
+    
+    
+    l1 solution to dice game for k-rolls: 8
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00  1.0408e-17  3e+00  2e+00  5e-17  1e+00
+     1:  5.5087e-02  2.3295e-02  3e-01  2e-01  2e-16  5e-02
+     2:  9.1334e-02  8.1445e-02  6e-02  5e-02  3e-16  1e-02
+     3:  9.5502e-02  9.3153e-02  1e-02  1e-02  2e-16  2e-03
+     4:  9.7543e-02  9.7053e-02  3e-03  2e-03  2e-16  4e-04
+     5:  9.7710e-02  9.7684e-02  1e-04  1e-04  4e-16  2e-05
+     6:  9.7726e-02  9.7725e-02  6e-06  5e-06  2e-16  8e-07
+     7:  9.7727e-02  9.7727e-02  3e-07  2e-07  3e-16  4e-08
+     8:  9.7727e-02  9.7727e-02  3e-09  2e-09  2e-16  4e-10
+    Optimal solution found.
+    [0.16666666883414594, 0.21679824970018224, 0.33333333372250007, 0.40636702014862486, 0.5000000000000002, 0.5936329798513754, 0.6666666662775, 0.7832017502998184, 0.8333333311658545]
+    
+    
+    l1 solution to dice game for k-rolls: 9
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00 -1.1102e-16  1e+02  2e+00  1e+01  1e+00
+     1:  9.7659e-01  8.9137e-01  8e+00  2e-01  1e+00  6e-03
+     2:  2.6575e-01  2.5759e-01  5e-01  3e-02  2e-01  4e-03
+     3:  1.1844e-01  1.1687e-01  1e-01  6e-03  3e-02  8e-04
+     4:  9.2710e-02  9.2481e-02  1e-02  8e-04  5e-03  1e-04
+     5:  9.0232e-02  9.0176e-02  3e-03  2e-04  1e-03  2e-05
+     6:  8.9177e-02  8.9175e-02  9e-05  7e-06  4e-05  6e-07
+     7:  8.9138e-02  8.9138e-02  2e-06  1e-07  7e-07  6e-09
+     8:  8.9137e-02  8.9137e-02  2e-08  2e-09  1e-08  7e-11
+    Optimal solution found.
+    [0.16666666901939056, 0.17839485069204533, 0.3333333327163271, 0.3381984815899825, 0.49999999929048483, 0.5000000007095147, 0.6618015184100171, 0.6666666672836725, 0.8216051493079544, 0.8333333309806091]
+    
+    
+    l1 solution to dice game for k-rolls: 10
+         pcost       dcost       gap    pres   dres   k/t
+     0:  0.0000e+00  4.4409e-16  2e+02  2e+00  2e+01  1e+00
+     1:  1.0170e+00  9.2831e-01  9e+00  2e-01  1e+00  6e-03
+     2:  2.8916e-01  2.7987e-01  7e-01  3e-02  2e-01  4e-03
+     3:  1.2382e-01  1.2178e-01  1e-01  8e-03  5e-02  1e-03
+     4:  9.4357e-02  9.3999e-02  2e-02  1e-03  8e-03  1e-04
+     5:  8.8715e-02  8.8680e-02  2e-03  1e-04  7e-04  1e-05
+     6:  8.8019e-02  8.8018e-02  4e-05  3e-06  2e-05  1e-07
+     7:  8.7998e-02  8.7998e-02  7e-07  5e-08  3e-07  1e-09
+     8:  8.7998e-02  8.7998e-02  9e-09  7e-10  4e-09  1e-11
+    Optimal solution found.
+    [0.1666666665277379, 0.1666666670780608, 0.31137820730300036, 0.33333333320176733, 0.43857086996118483, 0.49999999999999994, 0.5614291300388151, 0.6666666667982325, 0.6886217926969995, 0.833333332921939, 0.833333333472262]
+    
+
+
 .. code:: python
 
     k=2
