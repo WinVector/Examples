@@ -352,4 +352,10 @@ ggplot() +
    geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
 
 
+# confirm Bayes estimate breaks symmetry at 9 filps
+for( k in 1:10) {
+  print(paste('solving dice game for k-rolls',k))
+  print(bayesMeansEstimates(6,k))
+}
+
 ```

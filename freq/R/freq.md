@@ -1152,3 +1152,64 @@ ggplot() +
 ```
 
 ![plot of chunk wholething](figure/wholething5.png) 
+
+```r
+# confirm Bayes estimate breaks symmetry at 9 filps
+for( k in 1:10) {
+  print(paste('solving dice game for k-rolls',k))
+  print(bayesMeansEstimates(6,k))
+}
+```
+
+```
+## [1] "solving dice game for k-rolls 1"
+## pest for 0 heads pest for 1 heads 
+##           0.3889           0.6111 
+## [1] "solving dice game for k-rolls 2"
+## pest for 0 heads pest for 1 heads pest for 2 heads 
+##           0.3182           0.5000           0.6818 
+## [1] "solving dice game for k-rolls 3"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.2748           0.4111           0.5889           0.7252 
+## [1] "solving dice game for k-rolls 4"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.2467           0.3491           0.5000           0.6509 
+## pest for 4 heads 
+##           0.7533 
+## [1] "solving dice game for k-rolls 5"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.2273           0.3058           0.4296           0.5704 
+## pest for 4 heads pest for 5 heads 
+##           0.6942           0.7727 
+## [1] "solving dice game for k-rolls 6"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.2134           0.2746           0.3766           0.5000 
+## pest for 4 heads pest for 5 heads pest for 6 heads 
+##           0.6234           0.7254           0.7866 
+## [1] "solving dice game for k-rolls 7"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.2031           0.2514           0.3360           0.4439 
+## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
+##           0.5561           0.6640           0.7486           0.7969 
+## [1] "solving dice game for k-rolls 8"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.1953           0.2337           0.3041           0.3991 
+## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
+##           0.5000           0.6009           0.6959           0.7663 
+## pest for 8 heads 
+##           0.8047 
+## [1] "solving dice game for k-rolls 9"
+## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##           0.1893           0.2200           0.2787           0.3624 
+## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
+##           0.4542           0.5458           0.6376           0.7213 
+## pest for 8 heads pest for 9 heads 
+##           0.7800           0.8107 
+## [1] "solving dice game for k-rolls 10"
+##  pest for 0 heads  pest for 1 heads  pest for 2 heads  pest for 3 heads 
+##            0.1846            0.2092            0.2581            0.3319 
+##  pest for 4 heads  pest for 5 heads  pest for 6 heads  pest for 7 heads 
+##            0.4161            0.5000            0.5839            0.6681 
+##  pest for 8 heads  pest for 9 heads pest for 10 heads 
+##            0.7419            0.7908            0.8154
+```
