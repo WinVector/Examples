@@ -1678,7 +1678,7 @@ div#notebook {
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[5]:
+In&nbsp;[1]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -1733,7 +1733,10 @@ In&nbsp;[5]:
    <span class="n">index</span> <span class="o">=</span> <span class="p">[</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">costs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">costs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">minCost</span> <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
    <span class="n">soln</span> <span class="o">=</span> <span class="n">soln1</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
    <span class="n">printsolnN</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">soln</span><span class="p">)</span>
-   <span class="k">print</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">p</span><span class="p">:</span><span class="mi">0</span><span class="p">}))))</span>
+   <span class="k">print</span> <span class="s">&#39;loss&#39;</span><span class="p">,</span><span class="nb">abs</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">poly</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">({</span><span class="n">p</span><span class="p">:</span><span class="mi">0</span><span class="p">}))))</span>
+   <span class="c"># check if gradient is p-free (or even zero) at our fixed point</span>
+   <span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">phis</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;d&#39;</span><span class="p">,</span><span class="n">phi</span><span class="p">,</span><span class="n">sympy</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">sympy</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">poly</span><span class="p">,</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">soln</span><span class="p">))</span>
    <span class="k">print</span> <span class="s">&#39;*******************&#39;</span>
    <span class="n">ns</span> <span class="o">=</span> <span class="n">numericSoln</span><span class="p">(</span><span class="n">soln</span><span class="p">)</span>
    <span class="k">return</span> <span class="p">[</span> <span class="n">ns</span><span class="p">[</span><span class="n">phi</span><span class="p">]</span> <span class="k">for</span> <span class="n">phi</span> <span class="ow">in</span> <span class="n">phis</span> <span class="p">]</span>
@@ -1838,7 +1841,7 @@ In&nbsp;[5]:
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[6]:
+In&nbsp;[2]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -1865,67 +1868,67 @@ l1 solution to dice game for k-rolls: 1
      pcost       dcost       gap    pres   dres   k/t
  0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  4e-17  1e+00
  1:  6.8365e-02  5.5415e-02  4e-01  4e-01  2e-16  1e-01
- 2:  1.7186e-01  1.6067e-01  1e-01  9e-02  4e-16  2e-02
- 3:  1.8929e-01  1.8708e-01  2e-02  2e-02  7e-16  4e-03
- 4:  1.9966e-01  1.9935e-01  1e-03  1e-03  1e-15  1e-04
- 5:  2.0000e-01  1.9999e-01  1e-05  1e-05  4e-16  1e-06
+ 2:  1.7186e-01  1.6067e-01  1e-01  9e-02  6e-16  2e-02
+ 3:  1.8929e-01  1.8708e-01  2e-02  2e-02  2e-16  4e-03
+ 4:  1.9966e-01  1.9935e-01  1e-03  1e-03  8e-16  1e-04
+ 5:  2.0000e-01  1.9999e-01  1e-05  1e-05  3e-16  1e-06
  6:  2.0000e-01  2.0000e-01  1e-07  1e-07  3e-16  1e-08
- 7:  2.0000e-01  2.0000e-01  1e-09  1e-09  3e-16  1e-10
+ 7:  2.0000e-01  2.0000e-01  1e-09  1e-09  2e-16  1e-10
 Optimal solution found.
-[0.30000000025554363, 0.6999999997444564]
+[0.30000000025554363, 0.6999999997444563]
 
 
 l1 solution to dice game for k-rolls: 2
      pcost       dcost       gap    pres   dres   k/t
- 0:  0.0000e+00 -6.9389e-18  3e+00  3e+00  6e-17  1e+00
- 1:  6.5039e-02  4.6507e-02  3e-01  3e-01  5e-17  1e-01
- 2:  1.4330e-01  1.3491e-01  8e-02  7e-02  4e-16  2e-02
- 3:  1.5546e-01  1.5396e-01  1e-02  1e-02  4e-16  2e-03
- 4:  1.6152e-01  1.6147e-01  3e-04  3e-04  2e-15  4e-05
- 5:  1.6162e-01  1.6161e-01  3e-06  3e-06  2e-16  4e-07
+ 0:  0.0000e+00  3.4694e-18  3e+00  3e+00  6e-17  1e+00
+ 1:  6.5039e-02  4.6507e-02  3e-01  3e-01  7e-17  1e-01
+ 2:  1.4330e-01  1.3491e-01  8e-02  7e-02  6e-16  2e-02
+ 3:  1.5546e-01  1.5396e-01  1e-02  1e-02  3e-16  2e-03
+ 4:  1.6152e-01  1.6147e-01  3e-04  3e-04  5e-16  4e-05
+ 5:  1.6162e-01  1.6161e-01  3e-06  3e-06  8e-16  4e-07
  6:  1.6162e-01  1.6162e-01  3e-08  3e-08  3e-16  4e-09
 Optimal solution found.
-[0.24242424302874574, 0.5000000000000002, 0.7575757569712546]
+[0.24242424302874568, 0.5000000000000001, 0.7575757569712543]
 
 
 l1 solution to dice game for k-rolls: 3
      pcost       dcost       gap    pres   dres   k/t
  0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  2e-16  1e+00
  1:  6.2325e-02  3.9812e-02  3e-01  3e-01  2e-16  1e-01
- 2:  1.3201e-01  1.2463e-01  5e-02  4e-02  5e-16  1e-02
+ 2:  1.3201e-01  1.2463e-01  5e-02  4e-02  4e-16  1e-02
  3:  1.4100e-01  1.3969e-01  9e-03  7e-03  2e-16  1e-03
  4:  1.4247e-01  1.4244e-01  2e-04  2e-04  1e-16  4e-05
  5:  1.4250e-01  1.4250e-01  2e-06  2e-06  3e-16  4e-07
- 6:  1.4250e-01  1.4250e-01  2e-08  2e-08  5e-16  4e-09
+ 6:  1.4250e-01  1.4250e-01  2e-08  2e-08  2e-16  4e-09
 Optimal solution found.
-[0.21326372456875112, 0.4055813337386642, 0.5944186662613361, 0.7867362754312492]
+[0.2132637245687511, 0.405581333738664, 0.5944186662613359, 0.7867362754312489]
 
 
 l1 solution to dice game for k-rolls: 4
      pcost       dcost       gap    pres   dres   k/t
- 0:  0.0000e+00  6.9389e-18  3e+00  3e+00  2e-16  1e+00
+ 0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  2e-16  1e+00
  1:  6.0667e-02  3.5061e-02  3e-01  3e-01  4e-16  8e-02
- 2:  1.1455e-01  1.0648e-01  6e-02  5e-02  2e-16  1e-02
- 3:  1.1779e-01  1.1671e-01  8e-03  7e-03  1e-16  2e-03
- 4:  1.1980e-01  1.1939e-01  3e-03  2e-03  9e-16  5e-04
- 5:  1.2018e-01  1.2015e-01  1e-04  1e-04  2e-16  2e-05
+ 2:  1.1455e-01  1.0648e-01  6e-02  5e-02  3e-16  1e-02
+ 3:  1.1779e-01  1.1671e-01  8e-03  7e-03  2e-16  2e-03
+ 4:  1.1980e-01  1.1939e-01  3e-03  2e-03  2e-16  5e-04
+ 5:  1.2018e-01  1.2015e-01  1e-04  1e-04  6e-16  2e-05
  6:  1.2020e-01  1.2020e-01  1e-06  1e-06  3e-16  2e-07
- 7:  1.2020e-01  1.2020e-01  1e-08  1e-08  3e-16  2e-09
+ 7:  1.2020e-01  1.2020e-01  1e-08  1e-08  7e-16  2e-09
 Optimal solution found.
-[0.18090056258036644, 0.3393724694222323, 0.5000000000000001, 0.6606275305777679, 0.8190994374196339]
+[0.18090056258036633, 0.33937246942223204, 0.4999999999999999, 0.6606275305777674, 0.8190994374196335]
 
 
 l1 solution to dice game for k-rolls: 5
      pcost       dcost       gap    pres   dres   k/t
  0:  0.0000e+00 -0.0000e+00  3e+00  3e+00  5e-17  1e+00
  1:  5.9402e-02  3.1387e-02  3e-01  2e-01  4e-17  7e-02
- 2:  1.1087e-01  1.0344e-01  5e-02  4e-02  4e-16  9e-03
- 3:  1.1615e-01  1.1552e-01  4e-03  3e-03  2e-16  7e-04
- 4:  1.1723e-01  1.1721e-01  1e-04  1e-04  3e-16  2e-05
- 5:  1.1726e-01  1.1726e-01  1e-06  1e-06  2e-16  2e-07
- 6:  1.1726e-01  1.1726e-01  1e-08  1e-08  2e-16  2e-09
+ 2:  1.1087e-01  1.0344e-01  5e-02  4e-02  2e-16  9e-03
+ 3:  1.1615e-01  1.1552e-01  4e-03  3e-03  5e-16  7e-04
+ 4:  1.1723e-01  1.1721e-01  1e-04  1e-04  2e-16  2e-05
+ 5:  1.1726e-01  1.1726e-01  1e-06  1e-06  3e-16  2e-07
+ 6:  1.1726e-01  1.1726e-01  1e-08  1e-08  5e-16  2e-09
 Optimal solution found.
-[0.16666666791208357, 0.313638256874728, 0.4388931407533864, 0.5611068592466135, 0.686361743125272, 0.8333333320879165]
+[0.1666666679120836, 0.3136382568747281, 0.4388931407533864, 0.5611068592466137, 0.6863617431252721, 0.8333333320879167]
 
 
 l1 solution to dice game for k-rolls: 6
@@ -1933,47 +1936,47 @@ l1 solution to dice game for k-rolls: 6
  0:  0.0000e+00 -0.0000e+00  3e+00  2e+00  6e-17  1e+00
  1:  5.7623e-02  2.8077e-02  3e-01  2e-01  3e-16  6e-02
  2:  1.0540e-01  9.8070e-02  4e-02  3e-02  2e-16  6e-03
- 3:  1.0957e-01  1.0823e-01  7e-03  5e-03  5e-16  8e-04
- 4:  1.0981e-01  1.0974e-01  3e-04  3e-04  8e-16  4e-05
- 5:  1.0984e-01  1.0984e-01  2e-05  1e-05  1e-15  2e-06
- 6:  1.0984e-01  1.0984e-01  2e-07  1e-07  9e-16  2e-08
- 7:  1.0984e-01  1.0984e-01  2e-09  1e-09  3e-16  2e-10
+ 3:  1.0957e-01  1.0823e-01  7e-03  5e-03  6e-16  8e-04
+ 4:  1.0981e-01  1.0974e-01  3e-04  3e-04  5e-16  4e-05
+ 5:  1.0984e-01  1.0984e-01  2e-05  1e-05  6e-16  2e-06
+ 6:  1.0984e-01  1.0984e-01  2e-07  1e-07  5e-16  2e-08
+ 7:  1.0984e-01  1.0984e-01  2e-09  1e-09  5e-16  2e-10
 Optimal solution found.
-[0.16666666730865295, 0.2810765242229833, 0.3754580498073887, 0.5000000000000001, 0.6245419501926115, 0.7189234757770169, 0.8333333326913474]
+[0.16666666730865293, 0.2810765242229833, 0.3754580498073886, 0.5, 0.6245419501926115, 0.7189234757770168, 0.8333333326913472]
 
 
 l1 solution to dice game for k-rolls: 7
      pcost       dcost       gap    pres   dres   k/t
- 0:  0.0000e+00  1.0408e-17  3e+00  2e+00  2e-16  1e+00
+ 0:  0.0000e+00 -3.4694e-18  3e+00  2e+00  2e-16  1e+00
  1:  5.6143e-02  2.5408e-02  3e-01  2e-01  2e-16  6e-02
  2:  9.7364e-02  8.8361e-02  6e-02  4e-02  3e-16  9e-03
- 3:  1.0179e-01  1.0027e-01  9e-03  7e-03  1e-16  1e-03
- 4:  1.0258e-01  1.0246e-01  7e-04  5e-04  4e-16  9e-05
- 5:  1.0263e-01  1.0262e-01  2e-05  2e-05  3e-16  3e-06
+ 3:  1.0179e-01  1.0027e-01  9e-03  7e-03  7e-16  1e-03
+ 4:  1.0258e-01  1.0246e-01  7e-04  5e-04  5e-16  9e-05
+ 5:  1.0263e-01  1.0262e-01  2e-05  2e-05  4e-16  3e-06
  6:  1.0263e-01  1.0263e-01  9e-07  7e-07  4e-16  1e-07
- 7:  1.0263e-01  1.0263e-01  9e-09  7e-09  4e-16  1e-09
+ 7:  1.0263e-01  1.0263e-01  9e-09  7e-09  5e-16  1e-09
 Optimal solution found.
-[0.16666667287996165, 0.25129079795016174, 0.3333333333253158, 0.4715996013407066, 0.5284003986592933, 0.6666666666746843, 0.7487092020498383, 0.8333333271200385]
+[0.16666667287996165, 0.25129079795016174, 0.3333333333253158, 0.4715996013407067, 0.5284003986592934, 0.6666666666746842, 0.7487092020498384, 0.8333333271200385]
 
 
 l1 solution to dice game for k-rolls: 8
      pcost       dcost       gap    pres   dres   k/t
- 0:  0.0000e+00  1.0408e-17  3e+00  2e+00  5e-17  1e+00
+ 0:  0.0000e+00 -0.0000e+00  3e+00  2e+00  5e-17  1e+00
  1:  5.5087e-02  2.3295e-02  3e-01  2e-01  2e-16  5e-02
- 2:  9.1334e-02  8.1445e-02  6e-02  5e-02  3e-16  1e-02
+ 2:  9.1334e-02  8.1445e-02  6e-02  5e-02  1e-16  1e-02
  3:  9.5502e-02  9.3153e-02  1e-02  1e-02  2e-16  2e-03
- 4:  9.7543e-02  9.7053e-02  3e-03  2e-03  2e-16  4e-04
- 5:  9.7710e-02  9.7684e-02  1e-04  1e-04  4e-16  2e-05
- 6:  9.7726e-02  9.7725e-02  6e-06  5e-06  2e-16  8e-07
+ 4:  9.7543e-02  9.7053e-02  3e-03  2e-03  3e-16  4e-04
+ 5:  9.7710e-02  9.7684e-02  1e-04  1e-04  2e-16  2e-05
+ 6:  9.7726e-02  9.7725e-02  6e-06  5e-06  5e-16  8e-07
  7:  9.7727e-02  9.7727e-02  3e-07  2e-07  3e-16  4e-08
- 8:  9.7727e-02  9.7727e-02  3e-09  2e-09  2e-16  4e-10
+ 8:  9.7727e-02  9.7727e-02  3e-09  2e-09  5e-16  4e-10
 Optimal solution found.
-[0.16666666883414594, 0.21679824970018224, 0.33333333372250007, 0.40636702014862486, 0.5000000000000002, 0.5936329798513754, 0.6666666662775, 0.7832017502998184, 0.8333333311658545]
+[0.16666666883414585, 0.2167982497001821, 0.33333333372249996, 0.4063670201486247, 0.4999999999999999, 0.5936329798513751, 0.6666666662774997, 0.7832017502998178, 0.833333331165854]
 
 
 l1 solution to dice game for k-rolls: 9
      pcost       dcost       gap    pres   dres   k/t
- 0:  0.0000e+00 -1.1102e-16  1e+02  2e+00  1e+01  1e+00
+ 0:  0.0000e+00  5.5511e-16  1e+02  2e+00  1e+01  1e+00
  1:  9.7659e-01  8.9137e-01  8e+00  2e-01  1e+00  6e-03
  2:  2.6575e-01  2.5759e-01  5e-01  3e-02  2e-01  4e-03
  3:  1.1844e-01  1.1687e-01  1e-01  6e-03  3e-02  8e-04
@@ -1983,12 +1986,12 @@ l1 solution to dice game for k-rolls: 9
  7:  8.9138e-02  8.9138e-02  2e-06  1e-07  7e-07  6e-09
  8:  8.9137e-02  8.9137e-02  2e-08  2e-09  1e-08  7e-11
 Optimal solution found.
-[0.16666666901939056, 0.17839485069204533, 0.3333333327163271, 0.3381984815899825, 0.49999999929048483, 0.5000000007095147, 0.6618015184100171, 0.6666666672836725, 0.8216051493079544, 0.8333333309806091]
+[0.16666666901939065, 0.17839485069204533, 0.3333333327163272, 0.3381984815899826, 0.4999999992904852, 0.500000000709515, 0.6618015184100173, 0.6666666672836729, 0.821605149307955, 0.8333333309806096]
 
 
 l1 solution to dice game for k-rolls: 10
      pcost       dcost       gap    pres   dres   k/t
- 0:  0.0000e+00  4.4409e-16  2e+02  2e+00  2e+01  1e+00
+ 0:  0.0000e+00  2.2204e-16  2e+02  2e+00  2e+01  1e+00
  1:  1.0170e+00  9.2831e-01  9e+00  2e-01  1e+00  6e-03
  2:  2.8916e-01  2.7987e-01  7e-01  3e-02  2e-01  4e-03
  3:  1.2382e-01  1.2178e-01  1e-01  8e-03  5e-02  1e-03
@@ -1998,7 +2001,7 @@ l1 solution to dice game for k-rolls: 10
  7:  8.7998e-02  8.7998e-02  7e-07  5e-08  3e-07  1e-09
  8:  8.7998e-02  8.7998e-02  9e-09  7e-10  4e-09  1e-11
 Optimal solution found.
-[0.1666666665277379, 0.1666666670780608, 0.31137820730300036, 0.33333333320176733, 0.43857086996118483, 0.49999999999999994, 0.5614291300388151, 0.6666666667982325, 0.6886217926969995, 0.833333332921939, 0.833333333472262]
+[0.16666666652773787, 0.1666666670780608, 0.3113782073030003, 0.3333333332017673, 0.43857086996118466, 0.4999999999999999, 0.561429130038815, 0.6666666667982325, 0.6886217926969996, 0.833333332921939, 0.833333333472262]
 
 
 </pre>
@@ -2012,7 +2015,7 @@ Optimal solution found.
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[7]:
+In&nbsp;[3]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -2047,7 +2050,10 @@ analytic l2 solution for k= 2
 	phi_0_2 	-1/2 + sqrt(2)/2 	0.207106781187
 	phi_1_2 	1/2 	0.5
 	phi_2_2 	-sqrt(2)/2 + 3/2 	0.792893218813
-0.0428932188135
+loss 0.0428932188135
+d phi_0_2 0
+d phi_1_2 0
+d phi_2_2 0
 *******************
 [0.20710678118654752, 0.5, 0.7928932188134524]
 approximate numeric l1 solution for k= 2
@@ -2067,7 +2073,7 @@ difference 0.0
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[8]:
+In&nbsp;[4]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -2098,7 +2104,9 @@ analytic l2 solution for k= 1
 1
 	phi_0_1 	1/4 	0.25
 	phi_1_1 	3/4 	0.75
-0.0625
+loss 0.0625
+d phi_0_1 0
+d phi_1_1 0
 *******************
 numeric l2 solution for k= 1
 [0.25, 0.75]
@@ -2110,7 +2118,10 @@ analytic l2 solution for k= 2
 	phi_0_2 	-1/2 + sqrt(2)/2 	0.207106781187
 	phi_1_2 	1/2 	0.5
 	phi_2_2 	-sqrt(2)/2 + 3/2 	0.792893218813
-0.0428932188135
+loss 0.0428932188135
+d phi_0_2 0
+d phi_1_2 0
+d phi_2_2 0
 *******************
 numeric l2 solution for k= 2
 [0.20710678118654738, 0.49999999999999983, 0.79289321881345221]
@@ -2123,7 +2134,11 @@ analytic l2 solution for k= 3
 	phi_1_3 	sqrt(3)/12 + 1/4 	0.394337567297
 	phi_2_3 	-sqrt(3)/12 + 3/4 	0.605662432703
 	phi_3_3 	-sqrt(3)/4 + 5/4 	0.816987298108
-0.0334936490539
+loss 0.0334936490539
+d phi_0_3 0
+d phi_1_3 0
+d phi_2_3 0
+d phi_3_3 0
 *******************
 numeric l2 solution for k= 3
 [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
@@ -2137,7 +2152,12 @@ analytic l2 solution for k= 4
 	phi_2_4 	1/2 	0.5
 	phi_3_4 	2/3 	0.666666666667
 	phi_4_4 	5/6 	0.833333333333
-0.0277777777778
+loss 0.0277777777778
+d phi_0_4 0
+d phi_1_4 0
+d phi_2_4 0
+d phi_3_4 0
+d phi_4_4 0
 *******************
 numeric l2 solution for k= 4
 [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
@@ -2154,7 +2174,7 @@ numeric l2 solution for k= 4
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[9]:
+In&nbsp;[5]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
