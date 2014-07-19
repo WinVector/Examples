@@ -1,3 +1,140 @@
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># to make HTML from this (from the shell:</span>
+<span class="co">#  echo &quot;library(knitr); knit(&#39;freq.Rmd&#39;)&quot; | R --vanilla ; pandoc freq.md -o freq.html</span>
+
+
+<span class="kw">library</span>(MASS)
+<span class="kw">library</span>(ggplot2)
+<span class="kw">library</span>(reshape2)
+
+
+<span class="co"># In all cases we are model the observed number of wins (winsSeen)</span>
+<span class="co"># found in flipping a coin kFlips times where the probability of</span>
+<span class="co"># winning on each flip is given by the probability pWin </span>
+<span class="co"># (pWin in the set {1/nSides, ... (nSides-1)/nSides}).</span>
+
+<span class="co"># Write down the linear conditions that confirm a vector</span>
+<span class="co"># of estimates of length kFlips+1 where the entry winsSeen+1</span>
+<span class="co"># represents the estimated expected value of pWin give</span>
+<span class="co"># we observed winsSeen successes in kFlips trials.</span>
+<span class="co"># We are writing one check condition for each possible value</span>
+<span class="co"># of the unknown win probably pWin in the set {1/nSides, ... (nSides-1)/nSides}.</span>
+freqSystem &lt;-<span class="st"> </span>function(nSides,kFlips,<span class="dt">stepMult=</span><span class="dv">1</span>) {
+  pSeq &lt;-<span class="st"> </span>(<span class="dv">1</span>:(nSides<span class="dv">-1</span>))/nSides
+  if(stepMult&gt;<span class="dv">1</span>) {
+     pSeq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">1</span>/nSides,(nSides<span class="dv">-1</span>)/nSides,<span class="dt">by=</span><span class="dv">1</span>/(nSides*stepMult))
+  }
+  a &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dt">data=</span><span class="fl">0.0</span>,<span class="dt">nrow=</span><span class="kw">length</span>(pSeq),<span class="dt">ncol=</span>kFlips<span class="dv">+1</span>)
+  <span class="kw">rownames</span>(a) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;check for p=&#39;</span>,pSeq,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+  <span class="kw">colnames</span>(a) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;prob.&#39;</span>,<span class="dv">0</span>:kFlips,<span class="st">&#39;heads&#39;</span>)
+  b &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dt">data=</span><span class="dv">0</span>,<span class="dt">nrow=</span><span class="kw">length</span>(pSeq),<span class="dt">ncol=</span><span class="dv">1</span>)
+  <span class="kw">rownames</span>(b) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;check for p=&#39;</span>,pSeq,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+  <span class="kw">colnames</span>(b) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;p&#39;</span>)
+  i &lt;-<span class="st"> </span><span class="dv">1</span>
+  for(pWin in pSeq) {
+    for(winsSeen in <span class="dv">0</span>:kFlips) {
+      a[i,winsSeen<span class="dv">+1</span>] &lt;-<span class="st"> </span><span class="kw">choose</span>(kFlips,winsSeen) *<span class="st"> </span>pWin^winsSeen *<span class="st"> </span>(<span class="dv">1</span>-pWin)^(kFlips-winsSeen)
+    }
+    b[i,<span class="dv">1</span>] &lt;-<span class="st"> </span>pWin
+    i &lt;-<span class="st"> </span>i +<span class="st"> </span><span class="dv">1</span>
+  }
+  <span class="kw">list</span>(<span class="dt">a=</span>a,<span class="dt">b=</span>b)
+}
+
+nameBiasChecks &lt;-<span class="st"> </span>function(x) {
+  <span class="kw">names</span>(x) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;bias for p=&#39;</span>,<span class="dv">1</span>:<span class="kw">length</span>(x)/(<span class="kw">length</span>(x)+<span class="dv">1</span>),<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+  x
+}
+
+nameEstimates &lt;-<span class="st"> </span>function(x) {
+  <span class="kw">names</span>(x) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;pest for&#39;</span>,<span class="dv">0</span>:(<span class="kw">length</span>(x)-<span class="dv">1</span>),<span class="st">&#39;heads&#39;</span>)
+  x
+}
+
+<span class="co"># Build the traditional frequentist empirical estimates of</span>
+<span class="co"># the expected value of the unknown quantity pWin</span>
+<span class="co"># for each possible observed outcome of number of wins</span>
+<span class="co"># seen in kFlips trials</span>
+empiricalMeansEstimates &lt;-<span class="st"> </span>function(nSides,kFlips) {
+  <span class="kw">nameEstimates</span>(<span class="kw">c</span>((<span class="dv">0</span>:kFlips)/kFlips))
+}
+
+<span class="co"># Build the Bayes estimate of expected values from uniform priors</span>
+<span class="co"># on the unknown probability pWin (in the set {1/nSides, ... (nSides-1)/nSides})</span>
+<span class="co"># seen in kFlips trials</span>
+bayesMeansEstimates &lt;-<span class="st"> </span>function(nSides,kFlips) {
+  e &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="fl">0.0</span>,kFlips<span class="dv">+1</span>)
+  for(winsSeen in <span class="dv">0</span>:kFlips) {
+    posteriorProbs &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>,nSides<span class="dv">-1</span>)
+    for(i in <span class="dv">1</span>:(nSides<span class="dv">-1</span>)) {
+      pWin &lt;-<span class="st"> </span>i/nSides
+      posteriorProbs[i] &lt;-<span class="st"> </span><span class="kw">choose</span>(kFlips,winsSeen) *<span class="st"> </span>pWin^winsSeen *<span class="st"> </span>(<span class="dv">1</span>-pWin)^(kFlips-winsSeen)
+    }
+    posteriorProbs &lt;-<span class="st"> </span>posteriorProbs/<span class="kw">sum</span>(posteriorProbs)
+    e[winsSeen<span class="dv">+1</span>] &lt;-<span class="st"> </span><span class="kw">sum</span>(posteriorProbs*(<span class="dv">1</span>:(nSides<span class="dv">-1</span>))/nSides)
+  }
+  <span class="kw">nameEstimates</span>(e)
+}
+
+<span class="co"># Compute for a given assumed win probability pWin</span>
+<span class="co"># the expected loss (under outcomes distributed </span>
+<span class="co"># as length(ests)-1 flips with probability Win)</span>
+<span class="co"># of the estimates ests.</span>
+lossFn &lt;-<span class="st"> </span>function(pWin,ests) {
+  kFlips &lt;-<span class="st"> </span><span class="kw">length</span>(ests)-<span class="dv">1</span>
+  loss &lt;-<span class="st"> </span><span class="fl">0.0</span>
+  for(winsSeen in <span class="dv">0</span>:kFlips) {
+    probObservation &lt;-<span class="st"> </span><span class="kw">choose</span>(kFlips,winsSeen) *<span class="st"> </span>pWin^winsSeen *<span class="st"> </span>(<span class="dv">1</span>-pWin)^(kFlips-winsSeen)
+    loss &lt;-<span class="st"> </span>loss +<span class="st"> </span>probObservation*(ests[winsSeen<span class="dv">+1</span>]-pWin)^<span class="dv">2</span>
+  }
+  <span class="kw">names</span>(loss) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;exp. sq. error for p=&#39;</span>,pWin,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+  loss
+}
+
+<span class="co"># Compute for all win probabilities</span>
+<span class="co"># pWin in the set {1/nSides, ... (nSides-1)/nSides}</span>
+<span class="co"># the expected loss (under outcomes distributed </span>
+<span class="co"># as length(ests)-1 flips with probability Win)</span>
+<span class="co"># of the estimates ests.</span>
+losses &lt;-<span class="st"> </span>function(nSides,ests) {
+  <span class="kw">sapply</span>((<span class="dv">1</span>:(nSides<span class="dv">-1</span>))/nSides,function(pWin) <span class="kw">lossFn</span>(pWin,ests))
+}
+
+<span class="co"># return null vectors as columns of a matrix</span>
+nullVecs &lt;-<span class="st"> </span>function(a) {
+  <span class="kw">Null</span>(<span class="kw">t</span>(a))  <span class="co"># from MASS</span>
+}
+
+
+nSides &lt;-<span class="st"> </span><span class="dv">6</span>
+for(kFlips in (<span class="dv">1</span>:<span class="dv">3</span>)) {
+  <span class="kw">print</span>(<span class="st">&#39;&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;***** nSides =&#39;</span>,nSides,<span class="st">&#39;kFlips =&#39;</span>,kFlips))
+  <span class="co"># first check insisting on unbiasedness</span>
+  <span class="co"># completely determines the estimate for </span>
+  <span class="co"># one flip from a nSides-slides system</span>
+  sNK =<span class="st"> </span><span class="kw">freqSystem</span>(nSides,kFlips)
+  <span class="co"># print(sNK)</span>
+  <span class="kw">print</span>(<span class="st">&#39;full rank&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">qr</span>(sNK$a)$rank==kFlips<span class="dv">+1</span>)
+  <span class="kw">print</span>(<span class="st">&#39;bias free determined solution&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">nameEstimates</span>(<span class="kw">as.numeric</span>(<span class="kw">qr.solve</span>(sNK$a,sNK$b))))
+  <span class="kw">print</span>(<span class="st">&#39;standard empirical solution&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">empiricalMeansEstimates</span>(nSides,kFlips))
+  <span class="kw">print</span>(<span class="st">&#39;losses for standard empirical solution&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">losses</span>(nSides,<span class="kw">empiricalMeansEstimates</span>(nSides,kFlips)))
+  
+  <span class="co"># now show the Bayes solution has smaller loss</span>
+  bayesSoln &lt;-<span class="st"> </span><span class="kw">bayesMeansEstimates</span>(nSides,kFlips)
+  <span class="kw">print</span>(<span class="st">&#39;Bayes solution&#39;</span>)
+  <span class="kw">print</span>(bayesSoln)
+  <span class="kw">print</span>(<span class="st">&#39;losses for Bayes solution&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">losses</span>(nSides,bayesSoln))
+  <span class="kw">print</span>(<span class="st">&#39;Bayes max loss improvement&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">max</span>(<span class="kw">losses</span>(nSides,<span class="kw">empiricalMeansEstimates</span>(nSides,kFlips))) -<span class="st"> </span><span class="kw">max</span>(<span class="kw">losses</span>(nSides,bayesSoln)))
+  <span class="kw">print</span>(<span class="st">&#39;Bayes solution bias check (failed)&#39;</span>)
+  <span class="kw">print</span>(<span class="kw">nameBiasChecks</span>(<span class="kw">as.numeric</span>(sNK$a %*%<span class="st"> </span>bayesSoln -<span class="st"> </span>sNK$b)))
+  <span class="kw">print</span>(<span class="st">&#39;&#39;</span>)
+}</code></pre>
 <pre><code>## [1] &quot;&quot;
 ## [1] &quot;***** nSides = 6 kFlips = 1&quot;
 ## [1] &quot;full rank&quot;
@@ -132,25 +269,50 @@
 ##                      0.00000                     -0.08853 
 ## bias for p=0.833333333333333 
 ##                     -0.17937 
-## [1] &quot;&quot;
-## [1] &quot;&quot;
-## [1] &quot;*****&quot;
-## [1] &quot;&quot;
-## [1] &quot;***** nSides = 6 kFlips = 7&quot;
-## [1] 7
-## [1] &quot;is full rank&quot;
-## [1] FALSE
-## [1] &quot;can extend to full rank&quot;
-## [1] TRUE
-## [1] &quot;confirm null vecs&quot;
-## [1] TRUE
-## [1] &quot;empirical solution&quot;
-## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+## [1] &quot;&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;*****&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;*****&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># now show a under-determined system allows more solutions</span>
+kFlips =<span class="st"> </span><span class="dv">7</span>
+<span class="co"># confirm more probs would completely determine this situation (should by analogy to the moment curve)</span>
+<span class="kw">print</span>(<span class="st">&#39;&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;***** nSides =&#39;</span>,nSides,<span class="st">&#39;kFlips =&#39;</span>,kFlips))</code></pre>
+<pre><code>## [1] &quot;***** nSides = 6 kFlips = 7&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(kFlips)</code></pre>
+<pre><code>## [1] 7</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">sU &lt;-<span class="st"> </span><span class="kw">freqSystem</span>(nSides,kFlips)
+<span class="kw">print</span>(<span class="st">&#39;is full rank&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;is full rank&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">qr</span>(sU$a)$rank==kFlips<span class="dv">+1</span>)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;can extend to full rank&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;can extend to full rank&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">sCheck =<span class="st"> </span><span class="kw">freqSystem</span>(nSides,kFlips,<span class="dt">stepMult=</span><span class="dv">2</span>)
+<span class="kw">print</span>(<span class="kw">qr</span>(sCheck$a)$rank==kFlips<span class="dv">+1</span>)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">wiggleRoom =<span class="st"> </span><span class="kw">nullVecs</span>(sU$a)
+<span class="kw">print</span>(<span class="st">&#39;confirm null vecs&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;confirm null vecs&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">wiggleDim &lt;-<span class="st"> </span><span class="kw">dim</span>(wiggleRoom)[[<span class="dv">2</span>]]
+<span class="kw">print</span>((<span class="kw">dim</span>(wiggleRoom)[[<span class="dv">1</span>]]==kFlips<span class="dv">+1</span>) &amp;&amp;<span class="st"> </span>(wiggleDim +<span class="st"> </span>nSides<span class="dv">-1</span>==kFlips<span class="dv">+1</span>) &amp;&amp;
+<span class="st">   </span>(<span class="kw">max</span>(<span class="kw">abs</span>(sU$a %*%<span class="st"> </span>wiggleRoom))&lt;<span class="fl">1.0e-12</span>))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">baseSoln &lt;-<span class="st"> </span><span class="kw">empiricalMeansEstimates</span>(nSides,kFlips)
+<span class="kw">print</span>(<span class="st">&#39;empirical solution&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;empirical solution&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(baseSoln)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##           0.0000           0.1429           0.2857           0.4286 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
-##           0.5714           0.7143           0.8571           1.0000 
-## [1] &quot;empirical solution losses&quot;
-## exp. sq. error for p=0.166666666666667 
+##           0.5714           0.7143           0.8571           1.0000</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">baseLosses &lt;-<span class="st"> </span><span class="kw">losses</span>(nSides,baseSoln)
+<span class="kw">print</span>(<span class="st">&#39;empirical solution losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;empirical solution losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(baseLosses)</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                                0.01984 
 ## exp. sq. error for p=0.333333333333333 
 ##                                0.03175 
@@ -159,16 +321,26 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                                0.03175 
 ## exp. sq. error for p=0.833333333333333 
-##                                0.01984 
-## [1] 0.1389
-## [1] 0.03571
-## [1] &quot;minmax soln&quot;
-## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##                                0.01984</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(baseLosses))</code></pre>
+<pre><code>## [1] 0.1389</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(baseLosses))</code></pre>
+<pre><code>## [1] 0.03571</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">wsoln &lt;-<span class="st"> </span>function(x) {<span class="kw">nameEstimates</span>(baseSoln  +<span class="st"> </span><span class="kw">as.numeric</span>(wiggleRoom %*%<span class="st"> </span>x))}
+maxloss &lt;-<span class="st"> </span>function(x) {<span class="kw">max</span>(<span class="kw">losses</span>(nSides,<span class="kw">wsoln</span>(x)))-<span class="kw">max</span>(baseLosses)}
+opt &lt;-<span class="st"> </span><span class="kw">optim</span>(<span class="kw">rep</span>(<span class="fl">0.0</span>,wiggleDim),<span class="dt">f=</span>maxloss,<span class="dt">method=</span><span class="st">&#39;BFGS&#39;</span>)
+newSoln &lt;-<span class="st"> </span><span class="kw">wsoln</span>(opt$par)
+<span class="kw">print</span>(<span class="st">&#39;minmax soln&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;minmax soln&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(newSoln)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##          0.03191          0.11184          0.29667          0.43917 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
-##          0.56083          0.70333          0.88816          0.96809 
-## [1] &quot;minmax soln losses&quot;
-## exp. sq. error for p=0.166666666666667 
+##          0.56083          0.70333          0.88816          0.96809</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;minmax soln losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;minmax soln losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(nSides,newSoln))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                                0.01904 
 ## exp. sq. error for p=0.333333333333333 
 ##                                0.03269 
@@ -177,20 +349,28 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                                0.03269 
 ## exp. sq. error for p=0.833333333333333 
-##                                0.01904 
-## [1] 0.139
-## [1] 0.03549
-## [1] &quot;minmax soln bias checks&quot;
-## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                                0.01904</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(<span class="kw">losses</span>(nSides,newSoln)))</code></pre>
+<pre><code>## [1] 0.139</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(<span class="kw">losses</span>(nSides,newSoln)))</code></pre>
+<pre><code>## [1] 0.03549</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;minmax soln bias checks&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;minmax soln bias checks&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">nameBiasChecks</span>(<span class="kw">as.numeric</span>(sU$a %*%<span class="st"> </span>newSoln -<span class="st"> </span>sU$b)))</code></pre>
+<pre><code>## bias for p=0.166666666666667 bias for p=0.333333333333333 
 ##                    2.776e-17                    1.110e-16 
 ##               bias for p=0.5 bias for p=0.666666666666667 
 ##                    0.000e+00                    0.000e+00 
 ## bias for p=0.833333333333333 
-##                    0.000e+00 
-## [1] &quot;minmax soln max loss improvement&quot;
-## [1] 0.000222
-## [1] &quot;minmax soln individual loss changes&quot;
-## exp. sq. error for p=0.166666666666667 
+##                    0.000e+00</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;minmax soln max loss improvement&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;minmax soln max loss improvement&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(baseLosses)-<span class="kw">max</span>(<span class="kw">losses</span>(nSides,newSoln)))</code></pre>
+<pre><code>## [1] 0.000222</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;minmax soln individual loss changes&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;minmax soln individual loss changes&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(baseLosses-<span class="kw">losses</span>(nSides,newSoln))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                              0.0007983 
 ## exp. sq. error for p=0.333333333333333 
 ##                             -0.0009417 
@@ -199,14 +379,20 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                             -0.0009417 
 ## exp. sq. error for p=0.833333333333333 
-##                              0.0007983 
-## [1] &quot;bayes solution&quot;
-## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##                              0.0007983</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">bayesSoln &lt;-<span class="st"> </span><span class="kw">bayesMeansEstimates</span>(nSides,kFlips)
+bayesLosses &lt;-<span class="st"> </span><span class="kw">losses</span>(nSides,bayesSoln)
+<span class="kw">print</span>(<span class="st">&#39;bayes solution&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;bayes solution&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(bayesSoln)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##           0.2031           0.2514           0.3360           0.4439 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
-##           0.5561           0.6640           0.7486           0.7969 
-## [1] &quot;bayes losses&quot;
-## exp. sq. error for p=0.166666666666667 
+##           0.5561           0.6640           0.7486           0.7969</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;bayes losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;bayes losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(bayesLosses)</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                                0.01878 
 ## exp. sq. error for p=0.333333333333333 
 ##                                0.01726 
@@ -215,18 +401,29 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                                0.01726 
 ## exp. sq. error for p=0.833333333333333 
-##                                0.01878 
-## [1] &quot;sum bayes losses&quot;
-## [1] 0.09076
-## [1] &quot;max bayes losses&quot;
-## [1] 0.01878
-## [1] &quot;sumloss soln&quot;
-## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##                                0.01878</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;sum bayes losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;sum bayes losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(bayesLosses))</code></pre>
+<pre><code>## [1] 0.09076</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;max bayes losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;max bayes losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(bayesLosses))</code></pre>
+<pre><code>## [1] 0.01878</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">sumloss &lt;-<span class="st"> </span>function(x) {<span class="kw">sum</span>(<span class="kw">losses</span>(nSides,<span class="kw">wsoln</span>(x)))}
+optS &lt;-<span class="st"> </span><span class="kw">optim</span>(<span class="kw">rep</span>(<span class="fl">0.0</span>,wiggleDim),<span class="dt">f=</span>sumloss,<span class="dt">method=</span><span class="st">&#39;BFGS&#39;</span>)
+newSolnS &lt;-<span class="st"> </span><span class="kw">wsoln</span>(optS$par)
+<span class="kw">print</span>(<span class="st">&#39;sumloss soln&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;sumloss soln&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(newSolnS)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##          0.01569          0.12843          0.28871          0.43753 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
-##          0.56247          0.71129          0.87157          0.98431 
-## [1] &quot;sumloss soln losses&quot;
-## exp. sq. error for p=0.166666666666667 
+##          0.56247          0.71129          0.87157          0.98431</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;sumloss soln losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;sumloss soln losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(nSides,newSolnS))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                                0.01923 
 ## exp. sq. error for p=0.333333333333333 
 ##                                0.03215 
@@ -235,24 +432,38 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                                0.03215 
 ## exp. sq. error for p=0.833333333333333 
-##                                0.01923 
-## [1] 0.1383
-## [1] 0.03555
-## [1] &quot;sumloss soln bias checks&quot;
-## bias for p=0.166666666666667 bias for p=0.333333333333333 
+##                                0.01923</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(<span class="kw">losses</span>(nSides,newSolnS)))</code></pre>
+<pre><code>## [1] 0.1383</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(<span class="kw">losses</span>(nSides,newSolnS)))</code></pre>
+<pre><code>## [1] 0.03555</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;sumloss soln bias checks&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;sumloss soln bias checks&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">nameBiasChecks</span>(<span class="kw">as.numeric</span>(sU$a %*%<span class="st"> </span>newSolnS -<span class="st"> </span>sU$b)))</code></pre>
+<pre><code>## bias for p=0.166666666666667 bias for p=0.333333333333333 
 ##                    2.776e-17                    1.110e-16 
 ##               bias for p=0.5 bias for p=0.666666666666667 
 ##                    0.000e+00                   -1.110e-16 
 ## bias for p=0.833333333333333 
-##                    0.000e+00 
-## [1] &quot;&quot;
-## [1] &quot;polished max soln&quot;
-## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##                    0.000e+00</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># see if we can improve on Bayes by max criterion</span>
+wsolnF &lt;-<span class="st"> </span>function(x) {<span class="kw">nameEstimates</span>(bayesSoln +<span class="st"> </span>x)}
+maxlossF &lt;-<span class="st"> </span>function(x) {<span class="kw">max</span>(<span class="kw">losses</span>(nSides,<span class="kw">wsolnF</span>(x)))-<span class="kw">max</span>(bayesLosses)}
+optM &lt;-<span class="st"> </span><span class="kw">optim</span>(<span class="kw">rep</span>(<span class="fl">0.0</span>,<span class="kw">length</span>(bayesSoln)),<span class="dt">f=</span>maxlossF,<span class="dt">method=</span><span class="st">&#39;BFGS&#39;</span>)
+maxPolished &lt;-<span class="st"> </span><span class="kw">wsolnF</span>(optM$par)
+<span class="kw">print</span>(<span class="st">&#39;polished max soln&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished max soln&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(maxPolished)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##           0.1900           0.2275           0.3455           0.4577 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
-##           0.5423           0.6545           0.7725           0.8100 
-## [1] &quot;polished max losses&quot;
-## exp. sq. error for p=0.166666666666667 
+##           0.5423           0.6545           0.7725           0.8100</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;polished max losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished max losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(nSides,maxPolished))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                                0.01841 
 ## exp. sq. error for p=0.333333333333333 
 ##                                0.01839 
@@ -261,19 +472,32 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                                0.01839 
 ## exp. sq. error for p=0.833333333333333 
-##                                0.01841 
-## [1] &quot;polished max losses max&quot;
-## [1] 0.01843
-## [1] &quot;polished max improvement&quot;
-## [1] 0.0003476
-## [1] &quot;&quot;
-## [1] &quot;polished sum soln&quot;
-## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
+##                                0.01841</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;polished max losses max&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished max losses max&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(<span class="kw">losses</span>(nSides,maxPolished)))</code></pre>
+<pre><code>## [1] 0.01843</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;polished max improvement&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished max improvement&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">max</span>(bayesLosses)-<span class="kw">max</span>(<span class="kw">losses</span>(nSides,maxPolished)))</code></pre>
+<pre><code>## [1] 0.0003476</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># see if we can improve on Bayes by max criterion</span>
+sumlossF &lt;-<span class="st"> </span>function(x) {<span class="kw">sum</span>(<span class="kw">losses</span>(nSides,<span class="kw">wsolnF</span>(x)))-<span class="kw">sum</span>(bayesLosses)}
+optS &lt;-<span class="st"> </span><span class="kw">optim</span>(<span class="kw">rep</span>(<span class="fl">0.0</span>,<span class="kw">length</span>(bayesSoln)),<span class="dt">f=</span>sumlossF,<span class="dt">method=</span><span class="st">&#39;BFGS&#39;</span>)
+polishedSum &lt;-<span class="st"> </span><span class="kw">wsolnF</span>(optS$par)
+<span class="kw">print</span>(<span class="st">&#39;polished sum soln&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished sum soln&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(polishedSum)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads pest for 2 heads pest for 3 heads 
 ##           0.2031           0.2514           0.3360           0.4439 
 ## pest for 4 heads pest for 5 heads pest for 6 heads pest for 7 heads 
-##           0.5561           0.6640           0.7486           0.7969 
-## [1] &quot;polished sum losses&quot;
-## exp. sq. error for p=0.166666666666667 
+##           0.5561           0.6640           0.7486           0.7969</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;polished sum losses&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished sum losses&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(nSides,polishedSum))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
 ##                                0.01878 
 ## exp. sq. error for p=0.333333333333333 
 ##                                0.01726 
@@ -282,8 +506,183 @@
 ## exp. sq. error for p=0.666666666666667 
 ##                                0.01726 
 ## exp. sq. error for p=0.833333333333333 
-##                                0.01878 
-## [1] &quot;polished sum losses sum&quot;
-## [1] 0.09076
-## [1] &quot;polished sum improvement&quot;
-## [1] 0</code></pre>
+##                                0.01878</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;polished sum losses sum&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished sum losses sum&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(<span class="kw">losses</span>(nSides,polishedSum)))</code></pre>
+<pre><code>## [1] 0.09076</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;polished sum improvement&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;polished sum improvement&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(bayesLosses)-<span class="kw">sum</span>(<span class="kw">losses</span>(nSides,polishedSum)))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># # look into polished soln</span>
+<span class="co"># library(contfrac)</span>
+<span class="co"># conv &lt;- convergents(as_cf(polished[[1]]))</span>
+<span class="co"># conv$A/conv$B</span>
+<span class="co"># # likely not near a simple fraction</span>
+
+
+
+
+
+<span class="co"># look into game theory solution</span>
+
+
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">lambda=</span><span class="kw">seq</span>(.<span class="dv">2</span>,.<span class="dv">3</span>,<span class="fl">0.001</span>))
+pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">1</span>/<span class="dv">6</span>,<span class="dv">5</span>/<span class="dv">6</span>,<span class="dv">1</span>/<span class="dv">6</span>)
+sqErrP &lt;-<span class="st"> </span>function(lambda,p) { p*(<span class="dv">1</span>-lambda-p)^<span class="dv">2</span> +<span class="st"> </span>(<span class="dv">1</span>-p)*(lambda-p)^<span class="dv">2</span> }
+sqErrM &lt;-<span class="st"> </span>function(lambda) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq,function(p) <span class="kw">sqErrP</span>(lambda,p))) }
+lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">sqErrP</span>(d$lambda,p)})
+<span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
+d$pmax &lt;-<span class="st"> </span><span class="kw">sapply</span>(d$lambda,sqErrM)
+dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;lambda&#39;</span>),<span class="dt">variable.name=</span><span class="st">&#39;p&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;sq_loss&#39;</span>)
+<span class="kw">ggplot</span>() +
+<span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>lambda,<span class="dt">y=</span>sq_loss,<span class="dt">color=</span>p)) +
+<span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>lambda,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>sq_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) +
+<span class="st">   </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim =</span> <span class="kw">c</span>(<span class="fl">0.05</span>,<span class="fl">0.07</span>))</code></pre>
+<div class="figure">
+<img src="figure/wholething1.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># lambda = 2*p*(1-p) = 10/36 is optimal solution</span>
+<span class="co"># at lambda1/4 all curves cross: p*(3/4-p)^2+(1-p)*(1/4-p)^2 = 1/16</span>
+
+<span class="kw">print</span>(<span class="st">&#39;Null estimate&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;Null estimate&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">nullEst &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="fl">0.5</span>,<span class="fl">0.5</span>)
+<span class="kw">print</span>(nullEst)</code></pre>
+<pre><code>## [1] 0.5 0.5</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(<span class="dv">6</span>,nullEst))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
+##                                0.11111 
+## exp. sq. error for p=0.333333333333333 
+##                                0.02778 
+##               exp. sq. error for p=0.5 
+##                                0.00000 
+## exp. sq. error for p=0.666666666666667 
+##                                0.02778 
+## exp. sq. error for p=0.833333333333333 
+##                                0.11111</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;Empirical frequency estimate&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;Empirical frequency estimate&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">empEst &lt;-<span class="st"> </span><span class="kw">empiricalMeansEstimates</span>(<span class="dv">6</span>,<span class="dv">1</span>)
+<span class="kw">print</span>(empEst)</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads 
+##                0                1</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(<span class="dv">6</span>,empEst))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
+##                                 0.1389 
+## exp. sq. error for p=0.333333333333333 
+##                                 0.2222 
+##               exp. sq. error for p=0.5 
+##                                 0.2500 
+## exp. sq. error for p=0.666666666666667 
+##                                 0.2222 
+## exp. sq. error for p=0.833333333333333 
+##                                 0.1389</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;Bayes estimate&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;Bayes estimate&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">bayesMeansEstimates</span>(<span class="dv">6</span>,<span class="dv">1</span>))</code></pre>
+<pre><code>## pest for 0 heads pest for 1 heads 
+##           0.3889           0.6111</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(<span class="dv">6</span>,<span class="kw">bayesMeansEstimates</span>(<span class="dv">6</span>,<span class="dv">1</span>)))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
+##                                0.07407 
+## exp. sq. error for p=0.333333333333333 
+##                                0.02778 
+##               exp. sq. error for p=0.5 
+##                                0.01235 
+## exp. sq. error for p=0.666666666666667 
+##                                0.02778 
+## exp. sq. error for p=0.833333333333333 
+##                                0.07407</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="st">&#39;collared estimate&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;collared estimate&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">collaredEst &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">1</span>/<span class="dv">6</span>,<span class="dv">5</span>/<span class="dv">6</span>)
+<span class="kw">print</span>(collaredEst)</code></pre>
+<pre><code>## [1] 0.1667 0.8333</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">losses</span>(<span class="dv">6</span>,collaredEst))</code></pre>
+<pre><code>## exp. sq. error for p=0.166666666666667 
+##                                0.07407 
+## exp. sq. error for p=0.333333333333333 
+##                                0.10185 
+##               exp. sq. error for p=0.5 
+##                                0.11111 
+## exp. sq. error for p=0.666666666666667 
+##                                0.10185 
+## exp. sq. error for p=0.833333333333333 
+##                                0.07407</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># l2 all crossing</span>
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">lambda=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))
+pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.05</span>)
+sqErrP &lt;-<span class="st"> </span>function(lambda,p) { p*(<span class="dv">1</span>-lambda-p)^<span class="dv">2</span> +<span class="st"> </span>(<span class="dv">1</span>-p)*(lambda-p)^<span class="dv">2</span> }
+sqErrM &lt;-<span class="st"> </span>function(lambda) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq,function(p) <span class="kw">sqErrP</span>(lambda,p))) }
+lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">sqErrP</span>(d$lambda,p)})
+<span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
+d$pmax &lt;-<span class="st"> </span><span class="kw">sapply</span>(d$lambda,sqErrM)
+dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;lambda&#39;</span>),<span class="dt">variable.name=</span><span class="st">&#39;p&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;sq_loss&#39;</span>)
+<span class="kw">ggplot</span>() +
+<span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>lambda,<span class="dt">y=</span>sq_loss,<span class="dt">color=</span>p)) +
+<span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>lambda,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>sq_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) </code></pre>
+<div class="figure">
+<img src="figure/wholething2.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># at lambda1/4 all curves cross: p*(3/4-p)^2+(1-p)*(1/4-p)^2 = 1/16</span>
+
+
+<span class="co"># l1 error (notice no all-crossing)</span>
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">lambda=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))
+pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.05</span>)
+l1ErrP &lt;-<span class="st"> </span>function(lambda,p) { p*<span class="kw">abs</span>(<span class="dv">1</span>-lambda-p) +<span class="st"> </span>(<span class="dv">1</span>-p)*<span class="kw">abs</span>(lambda-p) }
+l1ErrM &lt;-<span class="st"> </span>function(lambda) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq,function(p) <span class="kw">l1ErrP</span>(lambda,p))) }
+lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">l1ErrP</span>(d$lambda,p)})
+<span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
+d$pmax &lt;-<span class="st"> </span><span class="kw">sapply</span>(d$lambda,l1ErrM)
+dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;lambda&#39;</span>),<span class="dt">variable.name=</span><span class="st">&#39;p&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;l1_loss&#39;</span>)
+<span class="kw">ggplot</span>() +
+<span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>lambda,<span class="dt">y=</span>l1_loss,<span class="dt">color=</span>p)) +
+<span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>lambda,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>l1_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) </code></pre>
+<div class="figure">
+<img src="figure/wholething3.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r">powseq &lt;-<span class="st"> </span>function(n) {
+   <span class="kw">sort</span>(<span class="kw">unique</span>(<span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1-2</span>^(-{<span class="dv">1</span>:n}),<span class="dv">2</span>^(-{<span class="dv">1</span>:n}))))
+}
+
+<span class="co"># l1 notice flat region</span>
+<span class="co"># l1 problem - adding error same no matter who gets it</span>
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">phi21=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))
+pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>/<span class="dv">6</span>)
+pseq2 &lt;-<span class="st"> </span>pseq
+l1ErrP &lt;-<span class="st"> </span>function(phi21,p) { (<span class="dv">1</span>-p)^<span class="dv">2</span>*<span class="kw">abs</span>(p<span class="fl">-0.207106781187</span>) +<span class="st"> </span><span class="dv">2</span>*p*(<span class="dv">1</span>-p)*<span class="kw">abs</span>(phi21-p)  +<span class="st"> </span>p^<span class="dv">2</span>*<span class="kw">abs</span>(p<span class="fl">-0.792893218813</span>) }
+l1ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq2,function(p) <span class="kw">l1ErrP</span>(phi21,p))) }
+lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">l1ErrP</span>(d$phi21,p)})
+<span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
+d$pmax &lt;-<span class="st"> </span><span class="kw">sapply</span>(d$phi21,l1ErrM)
+dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;phi21&#39;</span>),<span class="dt">variable.name=</span><span class="st">&#39;p&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;l1_loss&#39;</span>)
+<span class="kw">ggplot</span>() +
+<span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">y=</span>l1_loss,<span class="dt">color=</span>p)) +
+<span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>l1_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) </code></pre>
+<div class="figure">
+<img src="figure/wholething4.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># l2 no flat</span>
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">phi21=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))
+pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>/<span class="dv">6</span>)
+pseq2 &lt;-<span class="st"> </span>pseq
+l2ErrP &lt;-<span class="st"> </span>function(phi21,p) { (<span class="dv">1</span>-p)^<span class="dv">2</span>*(p<span class="fl">-0.207106781187</span>)^<span class="dv">2</span> +<span class="st"> </span><span class="dv">2</span>*p*(<span class="dv">1</span>-p)*(phi21-p)^<span class="dv">2</span>  +<span class="st"> </span>p^<span class="dv">2</span>*(p<span class="fl">-0.792893218813</span>)^<span class="dv">2</span> }
+l2ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq2,function(p) <span class="kw">l2ErrP</span>(phi21,p))) }
+lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">l2ErrP</span>(d$phi21,p)})
+<span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
+d$pmax &lt;-<span class="st"> </span><span class="kw">sapply</span>(d$phi21,l2ErrM)
+dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;phi21&#39;</span>),<span class="dt">variable.name=</span><span class="st">&#39;p&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;l2_loss&#39;</span>)
+<span class="kw">ggplot</span>() +
+<span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">y=</span>l2_loss,<span class="dt">color=</span>p)) +
+<span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>l2_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) </code></pre>
+<div class="figure">
+<img src="figure/wholething5.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+</div>

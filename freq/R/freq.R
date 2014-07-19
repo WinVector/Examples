@@ -259,26 +259,26 @@ ggplot() +
 # lambda = 2*p*(1-p) = 10/36 is optimal solution
 # at lambda1/4 all curves cross: p*(3/4-p)^2+(1-p)*(1/4-p)^2 = 1/16
 
-lambda <- 2*pseq[1]*(1-pseq[1])
 print('Null estimate')
 nullEst <- c(0.5,0.5)
 print(nullEst)
 print(losses(6,nullEst))
+
 print('Empirical frequency estimate')
 empEst <- empiricalMeansEstimates(6,1)
 print(empEst)
 print(losses(6,empEst))
+
 print('Bayes estimate')
 print(bayesMeansEstimates(6,1))
 print(losses(6,bayesMeansEstimates(6,1)))
-print('Symmetric estimate')
-symmetryEst <- c(0.25,0.75)
-print(symmetryEst)
-print(losses(6,symmetryEst))
-print('Game theory estimate')
-gameTheoryEst <- c(lambda,1-lambda)
-print(gameTheoryEst)
-print(losses(6,gameTheoryEst))
+
+print('collared estimate')
+collaredEst <- c(1/6,5/6)
+print(collaredEst)
+print(losses(6,collaredEst))
+
+
 
 # l2 all crossing
 d <- data.frame(lambda=seq(0,1,0.01))
