@@ -1858,6 +1858,27 @@ In&nbsp;[1]:
    <span class="n">hmat</span> <span class="o">=</span> <span class="n">cvxopt</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
    <span class="n">sol</span> <span class="o">=</span> <span class="n">cvxopt</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">lp</span><span class="p">(</span><span class="n">cmat</span><span class="p">,</span><span class="n">gmat</span><span class="p">,</span><span class="n">hmat</span><span class="p">)</span> <span class="c"># solve gmax * x &lt;= hmat minimizing cmat</span>
    <span class="k">return</span> <span class="p">[</span> <span class="n">sol</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphis</span><span class="p">)</span> <span class="p">]</span>
+            
+<span class="c"># Build the Bayes estimate of expected values from uniform priors</span>
+<span class="c"># on the unknown probability pWin in the set phis</span>
+<span class="c"># seen in kFlips trials</span>
+<span class="k">def</span> <span class="nf">bayesMeansEstimates</span><span class="p">(</span><span class="n">phis</span><span class="p">,</span><span class="n">priors</span><span class="p">,</span><span class="n">kFlips</span><span class="p">):</span>
+  <span class="n">nphis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">phis</span><span class="p">)</span>
+  <span class="k">if</span> <span class="n">priors</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+     <span class="n">priors</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nphis</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+     <span class="n">priors</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">priors</span><span class="p">)</span>
+  <span class="n">priors</span> <span class="o">=</span> <span class="n">priors</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">priors</span><span class="p">)</span>
+  <span class="n">e</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">kFlips</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">for</span> <span class="n">winsSeen</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">kFlips</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">posteriorProbs</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nphis</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nphis</span><span class="p">):</span>
+      <span class="n">pWin</span> <span class="o">=</span> <span class="n">phis</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+      <span class="n">posteriorProbs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">*</span><span class="n">ncr</span><span class="p">(</span><span class="n">kFlips</span><span class="p">,</span><span class="n">winsSeen</span><span class="p">)</span> <span class="o">*</span> \
+         <span class="n">pWin</span><span class="o">**</span><span class="n">winsSeen</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">pWin</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">kFlips</span><span class="o">-</span><span class="n">winsSeen</span><span class="p">)</span>
+    <span class="n">posteriorProbs</span> <span class="o">=</span> <span class="n">posteriorProbs</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">posteriorProbs</span><span class="p">)</span>
+    <span class="n">e</span><span class="p">[</span><span class="n">winsSeen</span><span class="p">]</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">posteriorProbs</span><span class="o">*</span><span class="n">phis</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -2049,8 +2070,17 @@ In&nbsp;[3]:
 <div class="highlight"><pre><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">11</span><span class="p">):</span>
     <span class="k">print</span>
     <span class="k">print</span> <span class="s">&#39;l1 solution to coingame (all-heads, fair, or all-tails):&#39;</span><span class="p">,</span><span class="n">k</span>
-    <span class="k">print</span> <span class="n">solveL1Problem</span><span class="p">(</span><span class="n">k</span><span class="p">,(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">))</span>
-    <span class="k">print</span>
+    <span class="n">l1Soln</span> <span class="o">=</span> <span class="n">solveL1Problem</span><span class="p">(</span><span class="n">k</span><span class="p">,(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">print</span> <span class="n">l1Soln</span>
+    <span class="k">print</span> <span class="s">&#39;uniform Bayes solution to coingame (all-heads, fair, or all-tails):&#39;</span><span class="p">,</span><span class="n">k</span>
+    <span class="n">bmSoln</span> <span class="o">=</span> <span class="n">bayesMeansEstimates</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),</span><span class="bp">None</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
+    <span class="k">print</span> <span class="n">bmSoln</span>
+    <span class="k">def</span> <span class="nf">eP</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+         <span class="k">return</span> <span class="n">bayesMeansEstimates</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),[</span><span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="mf">2.0</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="n">z</span> <span class="p">],</span><span class="n">k</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">l1Soln</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">brentq</span><span class="p">(</span><span class="n">eP</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">effectivePriors</span> <span class="o">=</span> <span class="p">[</span> <span class="n">z</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="mf">2.0</span><span class="o">*</span><span class="n">z</span><span class="p">,</span> <span class="n">z</span> <span class="p">]</span>
+    <span class="k">print</span> <span class="s">&#39;effective priors&#39;</span><span class="p">,</span><span class="n">effectivePriors</span>
+    <span class="k">print</span> <span class="s">&#39;Bayes check&#39;</span><span class="p">,</span><span class="n">bayesMeansEstimates</span><span class="p">((</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">),</span><span class="n">effectivePriors</span><span class="p">,</span><span class="n">k</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -2076,7 +2106,10 @@ l1 solution to coingame (all-heads, fair, or all-tails): 1
  6:  2.5000e-01  2.5000e-01  5e-09  1e-09  3e-09  9e-10
 Optimal solution found.
 [0.24999999945491402, 0.7500000005450859]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 1
+[ 0.16666667  0.83333333]
+effective priors [0.250000000545086, 0.49999999890982805, 0.250000000545086]
+Bayes check [ 0.25  0.75]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 2
      pcost       dcost       gap    pres   dres   k/t
@@ -2089,7 +2122,10 @@ l1 solution to coingame (all-heads, fair, or all-tails): 2
  6:  1.6667e-01  1.6667e-01  3e-08  6e-09  1e-08  3e-09
 Optimal solution found.
 [0.1666666568485795, 0.5000000000000001, 0.8333333431514207]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 2
+[ 0.1  0.5  0.9]
+effective priors [0.25000001104535186, 0.4999999779092963, 0.25000001104535186]
+Bayes check [ 0.16666666  0.5         0.83333334]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 3
      pcost       dcost       gap    pres   dres   k/t
@@ -2103,7 +2139,10 @@ l1 solution to coingame (all-heads, fair, or all-tails): 3
  7:  1.0000e-01  1.0000e-01  1e-09  2e-10  6e-10  8e-11
 Optimal solution found.
 [0.09999999969515637, 0.5000000000000001, 0.5000000000000001, 0.9000000003048437]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 3
+[ 0.05555556  0.5         0.5         0.94444444]
+effective priors [0.25000000047631815, 0.4999999990473637, 0.25000000047631815]
+Bayes check [ 0.1  0.5  0.5  0.9]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 4
      pcost       dcost       gap    pres   dres   k/t
@@ -2117,7 +2156,10 @@ l1 solution to coingame (all-heads, fair, or all-tails): 4
  7:  5.5556e-02  5.5556e-02  5e-08  7e-09  2e-08  2e-09
 Optimal solution found.
 [0.05555552934981534, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9444444706501847]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 4
+[ 0.02941176  0.5         0.5         0.5         0.97058824]
+effective priors [0.2500000663328986, 0.49999986733420276, 0.2500000663328986]
+Bayes check [ 0.05555553  0.5         0.5         0.5         0.94444447]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 5
      pcost       dcost       gap    pres   dres   k/t
@@ -2132,7 +2174,10 @@ l1 solution to coingame (all-heads, fair, or all-tails): 5
  8:  2.9412e-02  2.9412e-02  3e-08  4e-09  1e-08  1e-09
 Optimal solution found.
 [0.02941168066781756, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9705883193321826]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 5
+[ 0.01515152  0.5         0.5         0.5         0.5         0.98484848]
+effective priors [0.2500003794849061, 0.4999992410301878, 0.2500003794849061]
+Bayes check [ 0.02941168  0.5         0.5         0.5         0.5         0.97058832]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 6
      pcost       dcost       gap    pres   dres   k/t
@@ -2147,7 +2192,12 @@ l1 solution to coingame (all-heads, fair, or all-tails): 6
  8:  1.5152e-02  1.5152e-02  9e-09  8e-10  3e-09  2e-10
 Optimal solution found.
 [0.015151464835256744, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9848485351647435]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 6
+[ 0.00769231  0.5         0.5         0.5         0.5         0.5
+  0.99230769]
+effective priors [0.25000042808198086, 0.4999991438360383, 0.25000042808198086]
+Bayes check [ 0.01515146  0.5         0.5         0.5         0.5         0.5
+  0.98484854]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 7
      pcost       dcost       gap    pres   dres   k/t
@@ -2163,7 +2213,12 @@ l1 solution to coingame (all-heads, fair, or all-tails): 7
  9:  7.6923e-03  7.6923e-03  2e-09  2e-10  7e-10  3e-11
 Optimal solution found.
 [0.007692283124038655, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9923077168759615]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 7
+[ 0.00387597  0.5         0.5         0.5         0.5         0.5         0.5
+  0.99612403]
+effective priors [0.2500004054730463, 0.4999991890539074, 0.2500004054730463]
+Bayes check [ 0.00769228  0.5         0.5         0.5         0.5         0.5         0.5
+  0.99230772]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 8
      pcost       dcost       gap    pres   dres   k/t
@@ -2178,7 +2233,12 @@ l1 solution to coingame (all-heads, fair, or all-tails): 8
  8:  3.8760e-03  3.8760e-03  2e-08  1e-09  5e-09  2e-10
 Optimal solution found.
 [0.003875857178041267, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.996124142821959]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 8
+[ 0.00194553  0.5         0.5         0.5         0.5         0.5         0.5
+  0.5         0.99805447]
+effective priors [0.25000363423216493, 0.49999273153567014, 0.25000363423216493]
+Bayes check [ 0.00387586  0.5         0.5         0.5         0.5         0.5         0.5
+  0.5         0.99612414]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 9
      pcost       dcost       gap    pres   dres   k/t
@@ -2193,7 +2253,13 @@ l1 solution to coingame (all-heads, fair, or all-tails): 9
  8:  1.9455e-03  1.9455e-03  9e-08  6e-09  3e-08  1e-09
 Optimal solution found.
 [0.0019448294819158865, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9980551705180841]
-
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 9
+[  9.74658869e-04   5.00000000e-01   5.00000000e-01   5.00000000e-01
+   5.00000000e-01   5.00000000e-01   5.00000000e-01   5.00000000e-01
+   5.00000000e-01   9.99025341e-01]
+effective priors [0.2500448884146172, 0.4999102231707656, 0.2500448884146172]
+Bayes check [ 0.00194483  0.5         0.5         0.5         0.5         0.5         0.5
+  0.5         0.5         0.99805517]
 
 l1 solution to coingame (all-heads, fair, or all-tails): 10
      pcost       dcost       gap    pres   dres   k/t
@@ -2209,7 +2275,23 @@ l1 solution to coingame (all-heads, fair, or all-tails): 10
  9:  9.7466e-04  9.7466e-04  2e-09  1e-10  5e-10  2e-11
 Optimal solution found.
 [0.0009745043896464365, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.9990254956103537]
+uniform Bayes solution to coingame (all-heads, fair, or all-tails): 10
+[  4.87804878e-04   5.00000000e-01   5.00000000e-01   5.00000000e-01
+   5.00000000e-01   5.00000000e-01   5.00000000e-01   5.00000000e-01
+   5.00000000e-01   5.00000000e-01   9.99512195e-01]
+effective priors [0.2500198522933954, 0.4999602954132092, 0.2500198522933954]
+Bayes check [  9.74504390e-04   5.00000000e-01   5.00000000e-01   5.00000000e-01
+   5.00000000e-01   5.00000000e-01   5.00000000e-01   5.00000000e-01
+   5.00000000e-01   5.00000000e-01   9.99025496e-01]
 
+</pre>
+</div>
+</div>
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>
+-c:194: RuntimeWarning: invalid value encountered in divide
 
 </pre>
 </div>
