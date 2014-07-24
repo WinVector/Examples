@@ -651,13 +651,32 @@ dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="
    <span class="kw">sort</span>(<span class="kw">unique</span>(<span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1-2</span>^(-{<span class="dv">1</span>:n}),<span class="dv">2</span>^(-{<span class="dv">1</span>:n}))))
 }
 
+
 <span class="co"># l1 notice flat region</span>
+<span class="co"># l1 problem - adding error same no matter who gets it</span>
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">phi21=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.1</span>))
+pseq &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>,<span class="fl">0.5</span>,<span class="dv">1</span>)
+proposedSoln &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="fl">0.2</span>, <span class="fl">0.5</span>, <span class="fl">0.8</span>)
+l1ErrP &lt;-<span class="st"> </span>function(phi21,p) { (<span class="dv">1</span>-p)^<span class="dv">2</span>*<span class="kw">abs</span>(p-proposedSoln[<span class="dv">1</span>]) +<span class="st"> </span><span class="dv">2</span>*p*(<span class="dv">1</span>-p)*<span class="kw">abs</span>(phi21-p)  +<span class="st"> </span>p^<span class="dv">2</span>*<span class="kw">abs</span>(p-proposedSoln[<span class="dv">3</span>]) }
+l1ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq,function(p) <span class="kw">l1ErrP</span>(phi21,p))) }
+lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">l1ErrP</span>(d$phi21,p)})
+<span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
+d$pmax &lt;-<span class="st"> </span><span class="kw">sapply</span>(d$phi21,l1ErrM)
+dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;phi21&#39;</span>),<span class="dt">variable.name=</span><span class="st">&#39;p&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;l1_loss&#39;</span>)
+<span class="kw">ggplot</span>() +
+<span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">y=</span>l1_loss,<span class="dt">color=</span>p)) +
+<span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>l1_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) +
+<span class="st">  </span><span class="kw">ggtitle</span>(<span class="kw">paste</span>(<span class="st">&#39;l1 costs for (&#39;</span>,proposedSoln[<span class="dv">1</span>],<span class="st">&#39;,phi21,&#39;</span>,proposedSoln[<span class="dv">1</span>],<span class="st">&#39;)&#39;</span>,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>))</code></pre>
+<div class="figure">
+<img src="figure/wholething4.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># l1 notice flat region</span>
 <span class="co"># l1 problem - adding error same no matter who gets it</span>
 d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">phi21=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))
 pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>/<span class="dv">6</span>)
-pseq2 &lt;-<span class="st"> </span>pseq
 l1ErrP &lt;-<span class="st"> </span>function(phi21,p) { (<span class="dv">1</span>-p)^<span class="dv">2</span>*<span class="kw">abs</span>(p<span class="fl">-0.207106781187</span>) +<span class="st"> </span><span class="dv">2</span>*p*(<span class="dv">1</span>-p)*<span class="kw">abs</span>(phi21-p)  +<span class="st"> </span>p^<span class="dv">2</span>*<span class="kw">abs</span>(p<span class="fl">-0.792893218813</span>) }
-l1ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq2,function(p) <span class="kw">l1ErrP</span>(phi21,p))) }
+l1ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq,function(p) <span class="kw">l1ErrP</span>(phi21,p))) }
 lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">l1ErrP</span>(d$phi21,p)})
 <span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
 d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
@@ -667,14 +686,13 @@ dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="
 <span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">y=</span>l1_loss,<span class="dt">color=</span>p)) +
 <span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>l1_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) </code></pre>
 <div class="figure">
-<img src="figure/wholething4.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+<img src="figure/wholething5.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
 </div>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># l2 no flat</span>
 d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">phi21=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.01</span>))
 pseq &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1</span>/<span class="dv">6</span>)
-pseq2 &lt;-<span class="st"> </span>pseq
 l2ErrP &lt;-<span class="st"> </span>function(phi21,p) { (<span class="dv">1</span>-p)^<span class="dv">2</span>*(p<span class="fl">-0.207106781187</span>)^<span class="dv">2</span> +<span class="st"> </span><span class="dv">2</span>*p*(<span class="dv">1</span>-p)*(phi21-p)^<span class="dv">2</span>  +<span class="st"> </span>p^<span class="dv">2</span>*(p<span class="fl">-0.792893218813</span>)^<span class="dv">2</span> }
-l2ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq2,function(p) <span class="kw">l2ErrP</span>(phi21,p))) }
+l2ErrM &lt;-<span class="st"> </span>function(phi21) { <span class="kw">max</span>(<span class="kw">sapply</span>(pseq,function(p) <span class="kw">l2ErrP</span>(phi21,p))) }
 lossM &lt;-<span class="st"> </span><span class="kw">sapply</span>(pseq,function(p) { <span class="kw">l2ErrP</span>(d$phi21,p)})
 <span class="kw">colnames</span>(lossM) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;p&#39;</span>,pseq,<span class="dt">sep=</span><span class="st">&#39;_&#39;</span>)
 d &lt;-<span class="st"> </span><span class="kw">cbind</span>(d,lossM)
@@ -684,7 +702,7 @@ dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="
 <span class="st">   </span><span class="kw">geom_line</span>(<span class="dt">data=</span>dplot,<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">y=</span>l2_loss,<span class="dt">color=</span>p)) +
 <span class="st">   </span><span class="kw">geom_ribbon</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,p==<span class="st">&#39;pmax&#39;</span>),<span class="kw">aes</span>(<span class="dt">x=</span>phi21,<span class="dt">ymin=</span><span class="dv">0</span>,<span class="dt">ymax=</span>l2_loss),<span class="dt">alpha=</span><span class="fl">0.3</span>) </code></pre>
 <div class="figure">
-<img src="figure/wholething5.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
+<img src="figure/wholething6.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
 </div>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># confirm Bayes estimate breaks symmetry at 9 filps</span>
 for( k in <span class="dv">1</span>:<span class="dv">10</span>) {

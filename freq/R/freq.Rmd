@@ -319,13 +319,31 @@ powseq <- function(n) {
    sort(unique(c(0,1,1-2^(-{1:n}),2^(-{1:n}))))
 }
 
+
+# l1 notice flat region
+# l1 problem - adding error same no matter who gets it
+d <- data.frame(phi21=seq(0,1,0.1))
+pseq <- c(0,0.5,1)
+proposedSoln <- c(0.2, 0.5, 0.8)
+l1ErrP <- function(phi21,p) { (1-p)^2*abs(p-proposedSoln[1]) + 2*p*(1-p)*abs(phi21-p)  + p^2*abs(p-proposedSoln[3]) }
+l1ErrM <- function(phi21) { max(sapply(pseq,function(p) l1ErrP(phi21,p))) }
+lossM <- sapply(pseq,function(p) { l1ErrP(d$phi21,p)})
+colnames(lossM) <- paste('p',pseq,sep='_')
+d <- cbind(d,lossM)
+d$pmax <- sapply(d$phi21,l1ErrM)
+dplot <- melt(d,id.vars=c('phi21'),variable.name='p',value.name='l1_loss')
+ggplot() +
+   geom_line(data=dplot,aes(x=phi21,y=l1_loss,color=p)) +
+   geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l1_loss),alpha=0.3) +
+  ggtitle(paste('l1 costs for (',proposedSoln[1],',phi21,',proposedSoln[1],')',sep=''))
+
+
 # l1 notice flat region
 # l1 problem - adding error same no matter who gets it
 d <- data.frame(phi21=seq(0,1,0.01))
 pseq <- seq(0,1,1/6)
-pseq2 <- pseq
 l1ErrP <- function(phi21,p) { (1-p)^2*abs(p-0.207106781187) + 2*p*(1-p)*abs(phi21-p)  + p^2*abs(p-0.792893218813) }
-l1ErrM <- function(phi21) { max(sapply(pseq2,function(p) l1ErrP(phi21,p))) }
+l1ErrM <- function(phi21) { max(sapply(pseq,function(p) l1ErrP(phi21,p))) }
 lossM <- sapply(pseq,function(p) { l1ErrP(d$phi21,p)})
 colnames(lossM) <- paste('p',pseq,sep='_')
 d <- cbind(d,lossM)
@@ -339,9 +357,8 @@ ggplot() +
 # l2 no flat
 d <- data.frame(phi21=seq(0,1,0.01))
 pseq <- seq(0,1,1/6)
-pseq2 <- pseq
 l2ErrP <- function(phi21,p) { (1-p)^2*(p-0.207106781187)^2 + 2*p*(1-p)*(phi21-p)^2  + p^2*(p-0.792893218813)^2 }
-l2ErrM <- function(phi21) { max(sapply(pseq2,function(p) l2ErrP(phi21,p))) }
+l2ErrM <- function(phi21) { max(sapply(pseq,function(p) l2ErrP(phi21,p))) }
 lossM <- sapply(pseq,function(p) { l2ErrP(d$phi21,p)})
 colnames(lossM) <- paste('p',pseq,sep='_')
 d <- cbind(d,lossM)
