@@ -315,9 +315,6 @@ ggplot() +
    geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
 
 
-powseq <- function(n) {
-   sort(unique(c(0,1,1-2^(-{1:n}),2^(-{1:n}))))
-}
 
 
 # l1 notice flat region
@@ -369,7 +366,7 @@ ggplot() +
    geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
 
 
-# confirm Bayes estimate breaks symmetry at 9 filps
+
 for( k in 1:10) {
   print(paste('solving dice game for k-rolls',k))
   print(bayesMeansEstimates(6,k))

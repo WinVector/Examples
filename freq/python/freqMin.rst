@@ -1,6 +1,8 @@
 
 .. code:: python
 
+    %load_ext rpy2.ipython
+    
     import sympy
     import numpy
     import scipy
@@ -121,7 +123,7 @@
         reg = max([ f(p) for p in pseq ])
         return reg
     
-    # approximate l1 loss for using phis as our estimate when prob is one of pseq
+    # approximate l2 loss for using phis as our estimate when prob is one of pseq
     def l2Loss(phis,pseq):
         k = len(phis)-1
         kchoose = [ float(ncr(k,h)) for h in range(k+1) ]
@@ -275,20 +277,27 @@
 
 .. code:: python
 
+    def reportSoln(x,pTrue):
+        return '[' + ' '.join([str(xi) for xi in x]) + '] l2Loss ' + str(l2Loss(x,pTrue)) + ', l1Loss ' + str(l1Cost(x,pTrue))
+    
     for k in range(1,11):
         print
         print 'solutions for k-rolls:',k
-        print '\tempirical frequentist solution:',[ h/float(k) for h in range(k+1)]
+        obliviousSoln = [0.5 for h in range(k+1)]
+        efSoln = [ h/float(k) for h in range(k+1)]
+        print '\tempirical frequentist solution:',efSoln
         print '\tJeffries prior Bayes solution:',[ (h+0.5)/(k+1.0) for h in range(k+1)]
         print '\tl1 solution for general coin game:',solveL1ProblemByCuts(k)
         l2soln = solveForKN(k)
         print '\tnumeric l2 for general coin game:',l2soln
         for pTrue in [(0.0,0.5,1.0),(1/6.0,2/6.0,3/6.0,4/6.0,5/6.0)]:
             print '\tsolutions for for k-roll games restricted to probs',pTrue
-            print '\t\tuniform prior restricted Bayes soln:',bayesMeansEstimates(pTrue,None,k)
-            print '\t\tl1 solution for restrited dice game:',solveL1Problem(k,pTrue)
+            print '\t\tempirical frequentist solution:',reportSoln(efSoln,pTrue)
+            print '\t\tobvlivious solution',reportSoln(obliviousSoln,pTrue)
+            print '\t\tuniform prior restricted Bayes soln:',reportSoln(bayesMeansEstimates(pTrue,None,k),pTrue)
+            print '\t\tl1 solution for restrited dice game:',reportSoln(solveL1Problem(k,pTrue),pTrue)
             l2solnP = solveL2Problem(k,pTrue)
-            print '\t\tl2 solution for restrited dice game:',l2solnP
+            print '\t\tl2 solution for restrited dice game:',reportSoln(l2solnP,pTrue)
             print '\t\t\tl2 restricted loss of last soln:',l2Loss(l2solnP,pTrue),'(and for general l2 solution)',l2Loss(l2soln,pTrue)
         print
 
@@ -301,14 +310,18 @@
     	l1 solution for general coin game: [0.24999999945491402, 0.7500000005450859]
     	numeric l2 for general coin game: [0.25, 0.75]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.16666667  0.83333333]
-    		l1 solution for restrited dice game: [0.24999999945491402, 0.7500000005450859]
-    		l2 solution for restrited dice game: [ 0.25  0.75]
+    		empirical frequentist solution: [0.0 1.0] l2Loss 0.25, l1Loss 0.5
+    		obvlivious solution [0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.166666666667 0.833333333333] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		l1 solution for restrited dice game: [0.249999999455 0.750000000545] l2Loss 0.0625000002725, l1Loss 0.250000000545
+    		l2 solution for restrited dice game: [0.25 0.75] l2Loss 0.0625, l1Loss 0.25
     			l2 restricted loss of last soln: 0.0625 (and for general l2 solution) 0.0625
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.38888889  0.61111111]
-    		l1 solution for restrited dice game: [0.30000000025554363, 0.6999999997444564]
-    		l2 solution for restrited dice game: [ 0.25  0.75]
+    		empirical frequentist solution: [0.0 1.0] l2Loss 0.25, l1Loss 0.5
+    		obvlivious solution [0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.388888888889 0.611111111111] l2Loss 0.0740740740741, l1Loss 0.259259259259
+    		l1 solution for restrited dice game: [0.300000000256 0.699999999744] l2Loss 0.0622222222336, l1Loss 0.20000000017
+    		l2 solution for restrited dice game: [0.25 0.75] l2Loss 0.0625, l1Loss 0.25
     			l2 restricted loss of last soln: 0.0625 (and for general l2 solution) 0.0625
     
     
@@ -318,14 +331,18 @@
     	l1 solution for general coin game: [0.19160259253220915, 0.5000000066330934, 0.808397407210937]
     	numeric l2 for general coin game: [0.20710678118654738, 0.49999999999999983, 0.79289321881345221]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.1  0.5  0.9]
-    		l1 solution for restrited dice game: [0.1666666568485795, 0.5000000000000001, 0.8333333431514207]
-    		l2 solution for restrited dice game: [ 0.20710678  0.5         0.79289322]
+    		empirical frequentist solution: [0.0 0.5 1.0] l2Loss 0.125, l1Loss 0.25
+    		obvlivious solution [0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.1 0.5 0.9] l2Loss 0.08, l1Loss 0.2
+    		l1 solution for restrited dice game: [0.166666656849 0.5 0.833333343151] l2Loss 0.0555555588283, l1Loss 0.166666671576
+    		l2 solution for restrited dice game: [0.207106781187 0.500000000041 0.792893218813] l2Loss 0.0428932188135, l1Loss 0.207106781187
     			l2 restricted loss of last soln: 0.0428932188135 (and for general l2 solution) 0.0428932188135
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.31818182  0.5         0.68181818]
-    		l1 solution for restrited dice game: [0.24242424302874574, 0.5000000000000002, 0.7575757569712546]
-    		l2 solution for restrited dice game: [ 0.20710678  0.5         0.79289322]
+    		empirical frequentist solution: [0.0 0.5 1.0] l2Loss 0.125, l1Loss 0.296296296296
+    		obvlivious solution [0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.318181818182 0.5 0.681818181818] l2Loss 0.0541781450872, l1Loss 0.212121212121
+    		l1 solution for restrited dice game: [0.242424243029 0.5 0.757575756971] l2Loss 0.0445490256534, l1Loss 0.161616162019
+    		l2 solution for restrited dice game: [0.207106781187 0.5 0.792893218813] l2Loss 0.0428932188135, l1Loss 0.181236973415
     			l2 restricted loss of last soln: 0.0428932188135 (and for general l2 solution) 0.0428932188135
     
     
@@ -335,14 +352,18 @@
     	l1 solution for general coin game: [0.16204791073717284, 0.39658683603890227, 0.6034131780361844, 0.8379520868680799]
     	numeric l2 for general coin game: [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.05555556  0.5         0.5         0.94444444]
-    		l1 solution for restrited dice game: [0.09999999969515637, 0.5000000000000001, 0.5000000000000001, 0.9000000003048437]
-    		l2 solution for restrited dice game: [ 0.1830127   0.39433757  0.50181961  0.8169873 ]
+    		empirical frequentist solution: [0.0 0.333333333333 0.666666666667 1.0] l2Loss 0.0833333333333, l1Loss 0.25
+    		obvlivious solution [0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.0555555555556 0.5 0.5 0.944444444444] l2Loss 0.0493827160494, l1Loss 0.111111111111
+    		l1 solution for restrited dice game: [0.0999999996952 0.5 0.5 0.900000000305] l2Loss 0.040000000061, l1Loss 0.100000000076
+    		l2 solution for restrited dice game: [0.183012701892 0.394337567308 0.501819605275 0.816987298125] l2Loss 0.0334936490539, l1Loss 0.183012701892
     			l2 restricted loss of last soln: 0.0334936490539 (and for general l2 solution) 0.0334936490539
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.27481481  0.41111111  0.58888889  0.72518519]
-    		l1 solution for restrited dice game: [0.21326372456875112, 0.4055813337386642, 0.5944186662613361, 0.7867362754312492]
-    		l2 solution for restrited dice game: [ 0.1830127   0.39433757  0.60566243  0.8169873 ]
+    		empirical frequentist solution: [0.0 0.333333333333 0.666666666667 1.0] l2Loss 0.0833333333333, l1Loss 0.25
+    		obvlivious solution [0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.274814814815 0.411111111111 0.588888888889 0.725185185185] l2Loss 0.0413402834934, l1Loss 0.179368998628
+    		l1 solution for restrited dice game: [0.213263724569 0.405581333739 0.594418666261 0.786736275431] l2Loss 0.0355624537193, l1Loss 0.142498068554
+    		l2 solution for restrited dice game: [0.183012701892 0.394337567297 0.605662432703 0.816987298108] l2Loss 0.0334936490539, l1Loss 0.158493649054
     			l2 restricted loss of last soln: 0.0334936490539 (and for general l2 solution) 0.0334936490539
     
     
@@ -352,14 +373,18 @@
     	l1 solution for general coin game: [0.1437480499665423, 0.33414661331872003, 0.5000000108084859, 0.6658533974417459, 0.8562519506864422]
     	numeric l2 for general coin game: [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.02941176  0.5         0.5         0.5         0.97058824]
-    		l1 solution for restrited dice game: [0.05555552934981534, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9444444706501847]
-    		l2 solution for restrited dice game: [ 0.16666667  0.33333333  0.5         0.37597682  0.84893884]
+    		empirical frequentist solution: [0.0 0.25 0.5 0.75 1.0] l2Loss 0.0625, l1Loss 0.1875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.0294117647059 0.5 0.5 0.5 0.970588235294] l2Loss 0.0276816608997, l1Loss 0.0588235294118
+    		l1 solution for restrited dice game: [0.0555555293498 0.5 0.5 0.5 0.94444447065] l2Loss 0.0246913609364, l1Loss 0.0555555588313
+    		l2 solution for restrited dice game: [0.166666666667 0.333333333346 0.500000000035 0.375976819753 0.848938836876] l2Loss 0.0277777777778, l1Loss 0.166666666667
     			l2 restricted loss of last soln: 0.0277777777778 (and for general l2 solution) 0.0277777777778
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.24668029  0.3490566   0.5         0.6509434   0.75331971]
-    		l1 solution for restrited dice game: [0.18090056258036644, 0.3393724694222323, 0.5000000000000001, 0.6606275305777679, 0.8190994374196339]
-    		l2 solution for restrited dice game: [ 0.16666667  0.33333333  0.5         0.66666667  0.83333333]
+    		empirical frequentist solution: [0.0 0.25 0.5 0.75 1.0] l2Loss 0.0625, l1Loss 0.197530864198
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.246680286006 0.349056603774 0.5 0.650943396226 0.753319713994] l2Loss 0.032666446072, l1Loss 0.155459620586
+    		l1 solution for restrited dice game: [0.18090056258 0.339372469422 0.5 0.660627530578 0.81909943742] l2Loss 0.0285590713054, l1Loss 0.120201194966
+    		l2 solution for restrited dice game: [0.166666666687 0.333333333333 0.5 0.666666666667 0.833333331503] l2Loss 0.0277777777778, l1Loss 0.124999999884
     			l2 restricted loss of last soln: 0.0277777777778 (and for general l2 solution) 0.0277777777778
     
     
@@ -369,14 +394,18 @@
     	l1 solution for general coin game: [0.13098490336276158, 0.2920833484409374, 0.4312839950164908, 0.5687160143766172, 0.7079166382343058, 0.8690150967731374]
     	numeric l2 for general coin game: [0.15450849718749732, 0.29270509831249841, 0.43090169943749956, 0.56909830056250077, 0.70729490168750231, 0.84549150281250485]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.01515152  0.5         0.5         0.5         0.5         0.98484848]
-    		l1 solution for restrited dice game: [0.02941168066781756, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9705883193321826]
-    		l2 solution for restrited dice game: [ 0.1545085   0.2927051   0.4309017   0.50118994  0.40905175  0.8454915 ]
+    		empirical frequentist solution: [0.0 0.2 0.4 0.6 0.8 1.0] l2Loss 0.05, l1Loss 0.1875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.0151515151515 0.5 0.5 0.5 0.5 0.984848484848] l2Loss 0.0146923783287, l1Loss 0.030303030303
+    		l1 solution for restrited dice game: [0.0294116806678 0.5 0.5 0.5 0.5 0.970588319332] l2Loss 0.0138408353932, l1Loss 0.0294117699583
+    		l2 solution for restrited dice game: [0.154508497187 0.29270509833 0.430901699449 0.501189936964 0.409051751075 0.845491502831] l2Loss 0.0238728757031, l1Loss 0.154508497187
     			l2 restricted loss of last soln: 0.0238728757031 (and for general l2 solution) 0.0238728757031
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.22730697  0.30584311  0.42964393  0.57035607  0.69415689  0.77269303]
-    		l1 solution for restrited dice game: [0.16666666791208357, 0.313638256874728, 0.4388931407533864, 0.5611068592466135, 0.686361743125272, 0.8333333320879165]
-    		l2 solution for restrited dice game: [ 0.16666667  0.2927051   0.4309017   0.5690983   0.7072949   0.83333333]
+    		empirical frequentist solution: [0.0 0.2 0.4 0.6 0.8 1.0] l2Loss 0.05, l1Loss 0.1875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.227306967985 0.305843110191 0.429643929644 0.570356070356 0.694156889809 0.772693032015] l2Loss 0.0265604298945, l1Loss 0.137328258645
+    		l1 solution for restrited dice game: [0.166666667912 0.313638256875 0.438893140753 0.561106859247 0.686361743125 0.833333332088] l2Loss 0.0265211391016, l1Loss 0.117263169705
+    		l2 solution for restrited dice game: [0.166666666699 0.292705098312 0.430901699437 0.569098300563 0.707294901688 0.833333331939] l2Loss 0.0238113659803, l1Loss 0.128799427918
     			l2 restricted loss of last soln: 0.0238113659803 (and for general l2 solution) 0.0238728757031
     
     
@@ -386,18 +415,18 @@
     	l1 solution for general coin game: [0.12142009485229471, 0.2614791473652508, 0.381968919790032, 0.5000000013880771, 0.6180310808444995, 0.7385208401419168, 0.8785799047877464]
     	numeric l2 for general coin game: [0.14494897427875081, 0.26329931618583163, 0.38164965809291207, 0.49999999999999173, 0.61835034190706983, 0.736700683814145, 0.85505102572121505]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.00769231  0.5         0.5         0.5         0.5         0.5
-      0.99230769]
-    		l1 solution for restrited dice game: [0.015151464835256744, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9848485351647435]
-    		l2 solution for restrited dice game: [ 0.14494897  0.63868751  0.38164966  0.5         0.47715297  0.43354229
-      0.88321054]
+    		empirical frequentist solution: [0.0 0.166666666667 0.333333333333 0.5 0.666666666667 0.833333333333 1.0] l2Loss 0.0416666666667, l1Loss 0.15625
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.00769230769231 0.5 0.5 0.5 0.5 0.5 0.992307692308] l2Loss 0.00757396449704, l1Loss 0.0153846153846
+    		l1 solution for restrited dice game: [0.0151514648353 0.5 0.5 0.5 0.5 0.5 0.984848535165] l2Loss 0.00734619068911, l1Loss 0.0151515167239
+    		l2 solution for restrited dice game: [0.144948974265 0.638687506793 0.381649658105 0.500000000011 0.477152966367 0.433542290064 0.88321053905] l2Loss 0.0210102051406, l1Loss 0.144948974265
     			l2 restricted loss of last soln: 0.0210102051406 (and for general l2 solution) 0.0210102051445
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.21338045  0.27464789  0.37664536  0.5         0.62335464  0.72535211
-      0.78661955]
-    		l1 solution for restrited dice game: [0.16666666730865295, 0.2810765242229833, 0.3754580498073887, 0.5000000000000001, 0.6245419501926115, 0.7189234757770169, 0.8333333326913474]
-    		l2 solution for restrited dice game: [ 0.16666667  0.26329932  0.38164966  0.5         0.61835034  0.73670068
-      0.83333328]
+    		empirical frequentist solution: [0.0 0.166666666667 0.333333333333 0.5 0.666666666667 0.833333333333 1.0] l2Loss 0.0416666666667, l1Loss 0.15625
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.213380453327 0.274647887324 0.376645355397 0.5 0.623354644603 0.725352112676 0.786619546673] l2Loss 0.0221153021832, l1Loss 0.123136849538
+    		l1 solution for restrited dice game: [0.166666667309 0.281076524223 0.375458049807 0.5 0.624541950193 0.718923475777 0.833333332691] l2Loss 0.0218645634403, l1Loss 0.109843857508
+    		l2 solution for restrited dice game: [0.166666667927 0.263299316172 0.381649658103 0.5 0.618350341907 0.736700683833 0.833333283647] l2Loss 0.0208516170218, l1Loss 0.116347340416
     			l2 restricted loss of last soln: 0.0208516170218 (and for general l2 solution) 0.0210102051444
     
     
@@ -407,18 +436,18 @@
     	l1 solution for general coin game: [0.11389668220373642, 0.23800677135528683, 0.34455955305729236, 0.4484262174837331, 0.5515737795175774, 0.6554404386257229, 0.761993226542064, 0.8861033175135918]
     	numeric l2 for general coin game: [0.13714594258870808, 0.24081853042050227, 0.344491118252296, 0.44816370608408912, 0.55183629391588152, 0.65550888174767297, 0.75918146957946298, 0.86285405741124843]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.00387597  0.5         0.5         0.5         0.5         0.5         0.5
-      0.99612403]
-    		l1 solution for restrited dice game: [0.007692283124038655, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9923077168759615]
-    		l2 solution for restrited dice game: [ 0.13714594  0.61620672  0.34449112  0.44816371  0.54919021  0.36020809
-      0.15179061  0.89758596]
+    		empirical frequentist solution: [0.0 0.142857142857 0.285714285714 0.428571428571 0.571428571429 0.714285714286 0.857142857143 1.0] l2Loss 0.0357142857143, l1Loss 0.15625
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.00387596899225 0.5 0.5 0.5 0.5 0.5 0.5 0.996124031008] l2Loss 0.00384592272099, l1Loss 0.0077519379845
+    		l1 solution for restrited dice game: [0.00769228312404 0.5 0.5 0.5 0.5 0.5 0.5 0.992307716876] l2Loss 0.00378698262649, l1Loss 0.00769230807619
+    		l2 solution for restrited dice game: [0.137145942589 0.616206721028 0.344491118265 0.4481637061 0.549190214366 0.360208088664 0.151790613978 0.897585955074] l2Loss 0.0188090095685, l1Loss 0.137145942589
     			l2 restricted loss of last soln: 0.0188090095685 (and for general l2 solution) 0.0188090095686
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.20306567  0.25140555  0.33603151  0.44386198  0.55613802  0.66396849
-      0.74859445  0.79693433]
-    		l1 solution for restrited dice game: [0.16666667287996165, 0.25129079795016174, 0.3333333333253158, 0.4715996013407066, 0.5284003986592933, 0.6666666666746843, 0.7487092020498383, 0.8333333271200385]
-    		l2 solution for restrited dice game: [ 0.16666667  0.24081853  0.34449112  0.44816371  0.55183629  0.65550888
-      0.75918147  0.83333311]
+    		empirical frequentist solution: [0.0 0.142857142857 0.285714285714 0.428571428571 0.571428571429 0.714285714286 0.857142857143 1.0] l2Loss 0.0357142857143, l1Loss 0.15625
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.203065668302 0.251405546037 0.33603150662 0.443861984801 0.556138015199 0.66396849338 0.748594453963 0.796934331698] l2Loss 0.0187823171961, l1Loss 0.116332256288
+    		l1 solution for restrited dice game: [0.16666667288 0.25129079795 0.333333333325 0.471599601341 0.528400398659 0.666666666675 0.74870920205 0.83333332712] l2Loss 0.0191337687145, l1Loss 0.102629876053
+    		l2 solution for restrited dice game: [0.166666668796 0.240818530411 0.344491118252 0.448163706094 0.551836293916 0.655508881748 0.759181469599 0.833333105106] l2Loss 0.0185656536849, l1Loss 0.112930629826
     			l2 restricted loss of last soln: 0.0185656536849 (and for general l2 solution) 0.0188090095686
     
     
@@ -428,18 +457,18 @@
     	l1 solution for general coin game: [0.10776815910577336, 0.21931788597075733, 0.3150231044641331, 0.40802482807595886, 0.5000000178264737, 0.5919751551011433, 0.6849768906352142, 0.7806821441202999, 0.8922318393100427]
     	numeric l2 for general coin game: [0.13060193748186366, 0.22295145311139491, 0.31530096874092589, 0.40765048437045631, 0.49999999999998584, 0.59234951562951332, 0.68469903125903675, 0.77704854688855263, 0.8693980625180614]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [ 0.00194553  0.5         0.5         0.5         0.5         0.5         0.5
-      0.5         0.99805447]
-    		l1 solution for restrited dice game: [0.003875857178041267, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.996124142821959]
-    		l2 solution for restrited dice game: [ 0.13060194  0.59833964  0.69068916  0.40765048  0.5         0.54560668
-      0.38508333  0.16965769  0.93582357]
+    		empirical frequentist solution: [0.0 0.125 0.25 0.375 0.5 0.625 0.75 0.875 1.0] l2Loss 0.03125, l1Loss 0.13671875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.00194552529183 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.998054474708] l2Loss 0.00193795515451, l1Loss 0.00389105058366
+    		l1 solution for restrited dice game: [0.00387585717804 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.996124142822] l2Loss 0.00192296222727, l1Loss 0.0038759698658
+    		l2 solution for restrited dice game: [0.130601937482 0.598339643719 0.690689159348 0.407650484382 0.500000000012 0.545606675665 0.385083332668 0.169657691287 0.93582357461] l2Loss 0.017056866074, l1Loss 0.130601937482
     			l2 restricted loss of last soln: 0.017056866074 (and for general l2 solution) 0.017056866074
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.19526048  0.23369726  0.30413438  0.3990574   0.5         0.6009426
-      0.69586562  0.76630274  0.80473952]
-    		l1 solution for restrited dice game: [0.16666666883414594, 0.21679824970018224, 0.33333333372250007, 0.40636702014862486, 0.5000000000000002, 0.5936329798513754, 0.6666666662775, 0.7832017502998184, 0.8333333311658545]
-    		l2 solution for restrited dice game: [ 0.18301654  0.2229652   0.31530102  0.40765049  0.5         0.59118737
-      0.68469718  0.7770485   0.8333283 ]
+    		empirical frequentist solution: [0.0 0.125 0.25 0.375 0.5 0.625 0.75 0.875 1.0] l2Loss 0.03125, l1Loss 0.13671875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.195260476177 0.233697264582 0.304134379969 0.399057403621 0.5 0.600942596379 0.695865620031 0.766302735418 0.804739523823] l2Loss 0.018007685456, l1Loss 0.106032688791
+    		l1 solution for restrited dice game: [0.166666668834 0.2167982497 0.333333333723 0.406367020149 0.5 0.593632979851 0.666666666278 0.7832017503 0.833333331166] l2Loss 0.0179244659521, l1Loss 0.0977270379767
+    		l2 solution for restrited dice game: [0.183016542704 0.222965203022 0.315301022824 0.407650485111 0.50000000003 0.591187370225 0.684697182283 0.777048502329 0.833328303315] l2Loss 0.0168129749519, l1Loss 0.102561759416
     			l2 restricted loss of last soln: 0.0168129749519 (and for general l2 solution) 0.017056866074
     
     
@@ -449,19 +478,18 @@
     	l1 solution for general coin game: [0.10264212621699102, 0.20401368743209025, 0.29100220820592976, 0.37535486781436966, 0.45856319881937446, 0.5414368060381072, 0.6246451289384446, 0.708997795691393, 0.7959863249607008, 0.8973578740006296]
     	numeric l2 for general coin game: [0.12499999999993124, 0.20833333333325538, 0.29166666666657692, 0.37499999999989464, 0.45833333333320636, 0.54166666666650842, 0.62499999999979383, 0.70833333333304671, 0.79166666666622476, 0.87499999999922329]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [  9.74658869e-04   5.00000000e-01   5.00000000e-01   5.00000000e-01
-       5.00000000e-01   5.00000000e-01   5.00000000e-01   5.00000000e-01
-       5.00000000e-01   9.99025341e-01]
-    		l1 solution for restrited dice game: [0.0019448294819158865, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.5000000000000001, 0.9980551705180841]
-    		l2 solution for restrited dice game: [ 0.125       0.20833333  0.29166667  0.375       0.45833333  0.50071754
-      0.49758974  0.70833333  0.18427581  0.93857631]
+    		empirical frequentist solution: [0.0 0.111111111111 0.222222222222 0.333333333333 0.444444444444 0.555555555556 0.666666666667 0.777777777778 0.888888888889 1.0] l2Loss 0.0277777777778, l1Loss 0.13671875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.000974658869396 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.999025341131] l2Loss 0.000972758949572, l1Loss 0.00194931773879
+    		l1 solution for restrited dice game: [0.00194482948192 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.998055170518] l2Loss 0.000968980284687, l1Loss 0.00194552800984
+    		l2 solution for restrited dice game: [0.124999999934 0.208333333351 0.291666666684 0.375000000012 0.458333333344 0.500717538743 0.497589740717 0.70833333332 0.184275811065 0.938576308113] l2Loss 0.0156249999836, l1Loss 0.124999999934
     			l2 restricted loss of last soln: 0.0156249999836 (and for general l2 solution) 0.0156250000002
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.18926077  0.21998744  0.27865234  0.36243781  0.45420303  0.54579697
-      0.63756219  0.72134766  0.78001256  0.81073923]
-    		l1 solution for restrited dice game: [0.16666666901939056, 0.17839485069204533, 0.3333333327163271, 0.3381984815899825, 0.49999999929048483, 0.5000000007095147, 0.6618015184100171, 0.6666666672836725, 0.8216051493079544, 0.8333333309806091]
-    		l2 solution for restrited dice game: [ 0.19699659  0.20846479  0.291667    0.375       0.45833333  0.53726999
-      0.62495098  0.70758756  0.79164641  0.83321857]
+    		empirical frequentist solution: [0.0 0.111111111111 0.222222222222 0.333333333333 0.444444444444 0.555555555556 0.666666666667 0.777777777778 0.888888888889 1.0] l2Loss 0.0277777777778, l1Loss 0.13671875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.18926077274 0.219987438753 0.278652335209 0.362437814386 0.454203031376 0.545796968624 0.637562185614 0.721347664791 0.780012561247 0.81073922726] l2Loss 0.0172650938973, l1Loss 0.109863319723
+    		l1 solution for restrited dice game: [0.166666669019 0.178394850692 0.333333332716 0.33819848159 0.49999999929 0.50000000071 0.66180151841 0.666666667284 0.821605149308 0.833333330981] l2Loss 0.0171215115142, l1Loss 0.0891371380188
+    		l2 solution for restrited dice game: [0.196996585469 0.208464792041 0.291666997531 0.374999999481 0.458333333322 0.537269985903 0.624950975144 0.707587563013 0.791646405912 0.833218570067] l2Loss 0.0154449229399, l1Loss 0.101171673921
     			l2 restricted loss of last soln: 0.0154449229399 (and for general l2 solution) 0.015625
     
     
@@ -471,19 +499,18 @@
     	l1 solution for general coin game: [0.098265268762728, 0.1912031284733685, 0.2710157596937475, 0.34829222852616387, 0.4243922542801517, 0.5000000411954196, 0.5756077287713842, 0.6517077467601304, 0.728984249803712, 0.808796889221568, 0.9017347317099305]
     	numeric l2 for general coin game: [0.12012653667611538, 0.19610122934092272, 0.27207592200573305, 0.3480506146705476, 0.42402530733536842, 0.50000000000019862, 0.5759746926650432, 0.65194938532990943, 0.72792407799480374, 0.80389877065973081, 0.87987346332470762]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
-    		uniform prior restricted Bayes soln: [  4.87804878e-04   5.00000000e-01   5.00000000e-01   5.00000000e-01
-       5.00000000e-01   5.00000000e-01   5.00000000e-01   5.00000000e-01
-       5.00000000e-01   5.00000000e-01   9.99512195e-01]
-    		l1 solution for restrited dice game: [0.0009745043896464365, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.9990254956103537]
-    		l2 solution for restrited dice game: [ 0.12012654  0.57148942  0.64746411  0.34805061  0.42402531  0.5
-      0.55165176  0.35423462  0.42464535  0.19650792  0.99793131]
+    		empirical frequentist solution: [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0] l2Loss 0.025, l1Loss 0.123046875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
+    		uniform prior restricted Bayes soln: [0.000487804878049 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.999512195122] l2Loss 0.000487328970851, l1Loss 0.000975609756098
+    		l1 solution for restrited dice game: [0.000974504389646 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.99902549561] l2Loss 0.000486379775916, l1Loss 0.000974659171114
+    		l2 solution for restrited dice game: [0.120126536676 0.571489419948 0.647464112613 0.348050614683 0.424025307347 0.500000000018 0.551651759149 0.354234619838 0.4246453469 0.196507915059 0.997931309432] l2Loss 0.0144303848138, l1Loss 0.120126536676
     			l2 restricted loss of last soln: 0.0144303848138 (and for general l2 solution) 0.0144303848138
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
-    		uniform prior restricted Bayes soln: [ 0.18459506  0.20924734  0.25806877  0.33193703  0.41609157  0.5
-      0.58390843  0.66806297  0.74193123  0.79075266  0.81540494]
-    		l1 solution for restrited dice game: [0.1666666665277379, 0.1666666670780608, 0.31137820730300036, 0.33333333320176733, 0.43857086996118483, 0.49999999999999994, 0.5614291300388151, 0.6666666667982325, 0.6886217926969995, 0.833333332921939, 0.833333333472262]
-    		l2 solution for restrited dice game: [ 0.20644812  0.19630245  0.27207604  0.34805061  0.42402531  0.5
-      0.57110783  0.65159771  0.72642174  0.80384798  0.83312806]
+    		empirical frequentist solution: [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0] l2Loss 0.025, l1Loss 0.123046875
+    		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
+    		uniform prior restricted Bayes soln: [0.184595064958 0.209247335549 0.258068774016 0.331937027007 0.416091566541 0.5 0.583908433459 0.668062972993 0.741931225984 0.790752664451 0.815404935042] l2Loss 0.0164974307555, l1Loss 0.101363602606
+    		l1 solution for restrited dice game: [0.166666666528 0.166666667078 0.311378207303 0.333333333202 0.438570869961 0.5 0.561429130039 0.666666666798 0.688621792697 0.833333332922 0.833333333472] l2Loss 0.0162594967291, l1Loss 0.0879975872226
+    		l2 solution for restrited dice game: [0.206448115119 0.196302450351 0.272076043217 0.348050614582 0.424025307335 0.499999997496 0.57110782512 0.651597705182 0.726421736255 0.803847976124 0.833128057554] l2Loss 0.0143312922912, l1Loss 0.0952262267234
     			l2 restricted loss of last soln: 0.0143312922912 (and for general l2 solution) 0.0144303848138
     
 
@@ -687,7 +714,7 @@
 
 .. parsed-literal::
 
-    -c:268: RuntimeWarning: invalid value encountered in divide
+    -c:270: RuntimeWarning: invalid value encountered in divide
 
 
 .. code:: python
@@ -814,4 +841,146 @@
     numeric l2 solution for k= 4
     [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
     
+
+
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+    d <- data.frame(lambda=seq(.2,.3,0.001))
+    pseq <- seq(1/6,5/6,1/6)
+    sqErrP <- function(lambda,p) { p*(1-lambda-p)^2 + (1-p)*(lambda-p)^2 }
+    sqErrM <- function(lambda) { max(sapply(pseq,function(p) sqErrP(lambda,p))) }
+    lossM <- sapply(pseq,function(p) { sqErrP(d$lambda,p)})
+    colnames(lossM) <- paste('p',pseq,sep='_')
+    d <- cbind(d,lossM)
+    d$pmax <- sapply(d$lambda,sqErrM)
+    dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='sq_loss')
+    print(ggplot() +
+       geom_line(data=dplot,aes(x=lambda,y=sq_loss,color=p)) +
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) +
+       coord_cartesian(ylim = c(0.05,0.07)))
+
+
+.. image:: output_5_0.png
+
+
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+    # l2 all crossing
+    d <- data.frame(lambda=seq(0,1,0.01))
+    pseq <- seq(0,1,0.05)
+    sqErrP <- function(lambda,p) { p*(1-lambda-p)^2 + (1-p)*(lambda-p)^2 }
+    sqErrM <- function(lambda) { max(sapply(pseq,function(p) sqErrP(lambda,p))) }
+    lossM <- sapply(pseq,function(p) { sqErrP(d$lambda,p)})
+    colnames(lossM) <- paste('p',pseq,sep='_')
+    d <- cbind(d,lossM)
+    d$pmax <- sapply(d$lambda,sqErrM)
+    dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='sq_loss')
+    ggplot() +
+       geom_line(data=dplot,aes(x=lambda,y=sq_loss,color=p)) +
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) 
+
+
+.. image:: output_6_0.png
+
+
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+    # l1 error (notice no all-crossing)
+    d <- data.frame(lambda=seq(0,1,0.01))
+    pseq <- seq(0,1,0.05)
+    l1ErrP <- function(lambda,p) { p*abs(1-lambda-p) + (1-p)*abs(lambda-p) }
+    l1ErrM <- function(lambda) { max(sapply(pseq,function(p) l1ErrP(lambda,p))) }
+    lossM <- sapply(pseq,function(p) { l1ErrP(d$lambda,p)})
+    colnames(lossM) <- paste('p',pseq,sep='_')
+    d <- cbind(d,lossM)
+    d$pmax <- sapply(d$lambda,l1ErrM)
+    dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='l1_loss')
+    ggplot() +
+       geom_line(data=dplot,aes(x=lambda,y=l1_loss,color=p)) +
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
+
+
+.. image:: output_7_0.png
+
+
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+    # l1 notice flat region
+    # l1 problem - adding error same no matter who gets it
+    d <- data.frame(phi21=seq(0,1,0.1))
+    pseq <- c(0,0.5,1)
+    proposedSoln <- c(0.2, 0.5, 0.8)
+    l1ErrP <- function(phi21,p) { (1-p)^2*abs(p-proposedSoln[1]) + 2*p*(1-p)*abs(phi21-p)  + p^2*abs(p-proposedSoln[3]) }
+    l1ErrM <- function(phi21) { max(sapply(pseq,function(p) l1ErrP(phi21,p))) }
+    lossM <- sapply(pseq,function(p) { l1ErrP(d$phi21,p)})
+    colnames(lossM) <- paste('p',pseq,sep='_')
+    d <- cbind(d,lossM)
+    d$pmax <- sapply(d$phi21,l1ErrM)
+    dplot <- melt(d,id.vars=c('phi21'),variable.name='p',value.name='l1_loss')
+    ggplot() +
+       geom_line(data=dplot,aes(x=phi21,y=l1_loss,color=p)) +
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l1_loss),alpha=0.3) +
+      ggtitle(paste('l1 costs for (',proposedSoln[1],',phi21,',proposedSoln[1],')',sep=''))
+
+
+.. image:: output_8_0.png
+
+
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+    # l1 notice flat region
+    # l1 problem - adding error same no matter who gets it
+    d <- data.frame(phi21=seq(0,1,0.01))
+    pseq <- seq(0,1,1/6)
+    l1ErrP <- function(phi21,p) { (1-p)^2*abs(p-0.207106781187) + 2*p*(1-p)*abs(phi21-p)  + p^2*abs(p-0.792893218813) }
+    l1ErrM <- function(phi21) { max(sapply(pseq,function(p) l1ErrP(phi21,p))) }
+    lossM <- sapply(pseq,function(p) { l1ErrP(d$phi21,p)})
+    colnames(lossM) <- paste('p',pseq,sep='_')
+    d <- cbind(d,lossM)
+    d$pmax <- sapply(d$phi21,l1ErrM)
+    dplot <- melt(d,id.vars=c('phi21'),variable.name='p',value.name='l1_loss')
+    ggplot() +
+       geom_line(data=dplot,aes(x=phi21,y=l1_loss,color=p)) +
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l1_loss),alpha=0.3) 
+
+
+.. image:: output_9_0.png
+
+
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+    # l2 no flat
+    d <- data.frame(phi21=seq(0,1,0.01))
+    pseq <- seq(0,1,1/6)
+    l2ErrP <- function(phi21,p) { (1-p)^2*(p-0.207106781187)^2 + 2*p*(1-p)*(phi21-p)^2  + p^2*(p-0.792893218813)^2 }
+    l2ErrM <- function(phi21) { max(sapply(pseq,function(p) l2ErrP(phi21,p))) }
+    lossM <- sapply(pseq,function(p) { l2ErrP(d$phi21,p)})
+    colnames(lossM) <- paste('p',pseq,sep='_')
+    d <- cbind(d,lossM)
+    d$pmax <- sapply(d$phi21,l2ErrM)
+    dplot <- melt(d,id.vars=c('phi21'),variable.name='p',value.name='l2_loss')
+    ggplot() +
+       geom_line(data=dplot,aes(x=phi21,y=l2_loss,color=p)) +
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
+
+
+.. image:: output_10_0.png
 

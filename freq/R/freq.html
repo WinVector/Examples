@@ -647,12 +647,7 @@ dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="
 <div class="figure">
 <img src="figure/wholething3.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
 </div>
-<pre class="sourceCode r"><code class="sourceCode r">powseq &lt;-<span class="st"> </span>function(n) {
-   <span class="kw">sort</span>(<span class="kw">unique</span>(<span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">1-2</span>^(-{<span class="dv">1</span>:n}),<span class="dv">2</span>^(-{<span class="dv">1</span>:n}))))
-}
-
-
-<span class="co"># l1 notice flat region</span>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># l1 notice flat region</span>
 <span class="co"># l1 problem - adding error same no matter who gets it</span>
 d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">phi21=</span><span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="fl">0.1</span>))
 pseq &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="dv">0</span>,<span class="fl">0.5</span>,<span class="dv">1</span>)
@@ -704,8 +699,7 @@ dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(d,<span class="
 <div class="figure">
 <img src="figure/wholething6.png" alt="plot of chunk wholething" /><p class="caption">plot of chunk wholething</p>
 </div>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># confirm Bayes estimate breaks symmetry at 9 filps</span>
-for( k in <span class="dv">1</span>:<span class="dv">10</span>) {
+<pre class="sourceCode r"><code class="sourceCode r">for( k in <span class="dv">1</span>:<span class="dv">10</span>) {
   <span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;solving dice game for k-rolls&#39;</span>,k))
   <span class="kw">print</span>(<span class="kw">bayesMeansEstimates</span>(<span class="dv">6</span>,k))
 }</code></pre>

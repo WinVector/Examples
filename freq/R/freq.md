@@ -1111,11 +1111,6 @@ ggplot() +
 ![plot of chunk wholething](figure/wholething3.png) 
 
 ```r
-powseq <- function(n) {
-   sort(unique(c(0,1,1-2^(-{1:n}),2^(-{1:n}))))
-}
-
-
 # l1 notice flat region
 # l1 problem - adding error same no matter who gets it
 d <- data.frame(phi21=seq(0,1,0.1))
@@ -1174,7 +1169,6 @@ ggplot() +
 ![plot of chunk wholething](figure/wholething6.png) 
 
 ```r
-# confirm Bayes estimate breaks symmetry at 9 filps
 for( k in 1:10) {
   print(paste('solving dice game for k-rolls',k))
   print(bayesMeansEstimates(6,k))
