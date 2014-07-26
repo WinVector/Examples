@@ -59,7 +59,7 @@
     # for k flips of unknown coin solve for minimal max variance estimate schedule
     def solveForK(k):
        print '*******************'
-       print k
+       print 'k',k
        p = sympy.symbols('p')
        phis = [ sympy.symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
        poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
@@ -75,19 +75,20 @@
        viol = [ max([ abs(sympy.expand(eij.subs(si))) for eij in eqns ]) for si in numSoln ]
        isReal = [ isRealSoln(si) for si in soln1 ]
        costs = { i:abs(sympy.expand(poly.subs(numSoln[i]).subs({p:0}))) for i in range(len(numSoln)) if isReal[i] and viol[i]<1.0e-8 }
-       print costs
+       print 'costs',costs
        minCost = min(costs.values())
        index = [ i for i in costs.keys() if costs[i] <= minCost ][0]
        soln = soln1[index]
+       losspoly = sympy.simplify(sympy.expand(poly.subs(soln)))
+       print 'loss poly',losspoly
        printsolnN(phis,soln)
-       print 'loss',abs(complex(sympy.expand(poly.subs(soln).subs({p:0}))))
+       print 'loss',abs(complex(losspoly.subs({p:0})))  # the p->0 subs is to get rid of rounding error if we were working over floating point
        # check if gradient is p-free (or even zero) at our fixed point
        checks = []
        for phi in phis:
             checki = sympy.expand(sympy.diff(poly,phi).subs(soln))
             print 'd',phi,checki,checkForSignsIn01(p,checki)
             checks.append(checki)
-       print sympy.solve(checks,p)
        print '*******************'
        ns = numericSoln(soln)
        return [ ns[phi] for phi in phis ]
@@ -714,12 +715,12 @@
 
 .. parsed-literal::
 
-    -c:270: RuntimeWarning: invalid value encountered in divide
+    -c:271: RuntimeWarning: invalid value encountered in divide
 
 
 .. code:: python
 
-    k=2
+    k=1
     print 'analytic l2 solution for k=',k
     nSoln = solveForK(k)
     print nSoln
@@ -735,25 +736,23 @@
 
 .. parsed-literal::
 
-    analytic l2 solution for k= 2
+    analytic l2 solution for k= 1
     *******************
-    2
-    {0: 0.0428932188134525}
-    	phi_0_2 	-1/2 + sqrt(2)/2 	0.207106781187
-    	phi_1_2 	1/2 	0.5
-    	phi_2_2 	-sqrt(2)/2 + 3/2 	0.792893218813
-    loss 0.0428932188135
-    d phi_0_2 -2*p**3 + sqrt(2)*p**2 + 3*p**2 - 2*sqrt(2)*p - 1 + sqrt(2) +-
-    d phi_1_2 4*p**3 - 6*p**2 + 2*p +-
-    d phi_2_2 -2*p**3 - sqrt(2)*p**2 + 3*p**2 +-
-    []
+    k 1
+    costs {0: 0.0625000000000000}
+    loss poly 1/16
+    	phi_0_1 	1/4 	0.25
+    	phi_1_1 	3/4 	0.75
+    loss 0.0625
+    d phi_0_1 2*p**2 - 5*p/2 + 1/2 +-
+    d phi_1_1 -2*p**2 + 3*p/2 +-
     *******************
-    [0.20710678118654752, 0.5, 0.7928932188134524]
-    approximate numeric l1 solution for k= 2
-    initial l1 loss 0.207106781187
-    [0.20710678118654752, 0.55, 0.7928932188134524]
-    adjusted l1 loss 0.207106781187
-    difference 0.0
+    [0.25, 0.75]
+    approximate numeric l1 solution for k= 1
+    initial l1 loss 0.25
+    [0.25, 0.55]
+    adjusted l1 loss 0.45
+    difference -0.2
 
 
 .. code:: python
@@ -772,14 +771,14 @@
     
     analytic l2 solution for k= 1
     *******************
-    1
-    {0: 0.0625000000000000}
+    k 1
+    costs {0: 0.0625000000000000}
+    loss poly 1/16
     	phi_0_1 	1/4 	0.25
     	phi_1_1 	3/4 	0.75
     loss 0.0625
     d phi_0_1 2*p**2 - 5*p/2 + 1/2 +-
     d phi_1_1 -2*p**2 + 3*p/2 +-
-    []
     *******************
     numeric l2 solution for k= 1
     [0.25, 0.75]
@@ -787,8 +786,9 @@
     
     analytic l2 solution for k= 2
     *******************
-    2
-    {0: 0.0428932188134525}
+    k 2
+    costs {0: 0.0428932188134525}
+    loss poly -sqrt(2)/2 + 3/4
     	phi_0_2 	-1/2 + sqrt(2)/2 	0.207106781187
     	phi_1_2 	1/2 	0.5
     	phi_2_2 	-sqrt(2)/2 + 3/2 	0.792893218813
@@ -796,7 +796,6 @@
     d phi_0_2 -2*p**3 + sqrt(2)*p**2 + 3*p**2 - 2*sqrt(2)*p - 1 + sqrt(2) +-
     d phi_1_2 4*p**3 - 6*p**2 + 2*p +-
     d phi_2_2 -2*p**3 - sqrt(2)*p**2 + 3*p**2 +-
-    []
     *******************
     numeric l2 solution for k= 2
     [0.20710678118654738, 0.49999999999999983, 0.79289321881345221]
@@ -804,8 +803,9 @@
     
     analytic l2 solution for k= 3
     *******************
-    3
-    {2: 0.0334936490538903}
+    k 3
+    costs {2: 0.0334936490538903}
+    loss poly -sqrt(3)/8 + 1/4
     	phi_0_3 	-1/4 + sqrt(3)/4 	0.183012701892
     	phi_1_3 	sqrt(3)/12 + 1/4 	0.394337567297
     	phi_2_3 	-sqrt(3)/12 + 3/4 	0.605662432703
@@ -815,7 +815,6 @@
     d phi_1_3 -6*p**4 + sqrt(3)*p**3/2 + 27*p**3/2 - 9*p**2 - sqrt(3)*p**2 + sqrt(3)*p/2 + 3*p/2 +-
     d phi_2_3 6*p**4 - 21*p**3/2 + sqrt(3)*p**3/2 - sqrt(3)*p**2/2 + 9*p**2/2 +-
     d phi_3_3 -2*p**4 - sqrt(3)*p**3/2 + 5*p**3/2 +-
-    []
     *******************
     numeric l2 solution for k= 3
     [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
@@ -823,8 +822,9 @@
     
     analytic l2 solution for k= 4
     *******************
-    4
-    {3: 0.0277777777777778}
+    k 4
+    costs {3: 0.0277777777777778}
+    loss poly 1/36
     	phi_0_4 	1/6 	0.166666666667
     	phi_1_4 	1/3 	0.333333333333
     	phi_2_4 	1/2 	0.5
@@ -836,7 +836,6 @@
     d phi_2_4 -12*p**5 + 30*p**4 - 24*p**3 + 6*p**2 +-
     d phi_3_4 8*p**5 - 40*p**4/3 + 16*p**3/3 +-
     d phi_4_4 -2*p**5 + 5*p**4/3 +-
-    []
     *******************
     numeric l2 solution for k= 4
     [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
