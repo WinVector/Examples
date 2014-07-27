@@ -10,8 +10,13 @@
     import scipy.special
     import scipy.optimize
     import cvxopt
-    
-    
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+.. code:: python
+
     def ncr(n, r):
         s = scipy.special.binom(n,r)
         return int(round(s)) # scipy special function return is not always an integer
@@ -239,9 +244,29 @@
                 optF = fi
         return optX
     
+    # return which ps are approximately diverse active constrains on the current phis
+    def activeL1Constraints(phis,ps):
+        k = len(phis)-1
+        choose = [ ncr(k,j) for j in range(len(phis)) ]
+        def f(p):
+            return sum([ choose[j] *  p**j * (1.0-p)**(k-j) * abs(phis[j]-p) for j in range(len(phis)) ])
+        losses = [ f(p) for p in ps ]
+        maxloss = max(losses)
+        indices = sorted(range(len(losses)),key=lambda i: -losses[i])
+        active = set()
+        for idx in indices:
+            pi = ps[idx]
+            lossi = losses[idx]
+            if lossi<maxloss-1.0e-6:
+                break
+            if len(active)<=0 or min([ abs(pi-aj) for aj in active])>1.0e-3:
+                active.add(pi)
+        return sorted(active)
+    
+    
     # solve L1 problem over 0<=p<=1 using crude column generation method
     def solveL1ProblemByCuts(k):
-       ps = [0.0,0.5,1.0]
+       ps = [ i/20.0 for i in range(21) ]
        done = False
        while not done:
           phis = solveL1Problem(k,ps)
@@ -253,7 +278,7 @@
           # print 'cost1,cost2',cost1,cost2
           if not cost1+1.0e-8<cost2:
              done = True
-       return phis
+       return phis,activeL1Constraints(phis,ps)
     
                 
     # Build the Bayes estimate of expected values from uniform priors
@@ -301,9 +326,10 @@
         bjSoln = [ (h+0.5)/(k+1.0) for h in range(k+1)]
         addToFrame(k,'Bayes (Jeffreys)',bjSoln)
         print '\tJeffries prior Bayes solution:',bjSoln
-        l1soln = solveL1ProblemByCuts(k)
+        l1soln,activePs = solveL1ProblemByCuts(k)
         addToFrame(k,'l1 minimax',l1soln)
         print '\tl1 solution for general coin game:',l1soln
+        print '\tl1 solution active ps:',activePs
         l2soln = solveForKN(k)
         addToFrame(k,'l2 minimax',l2soln)
         print '\tnumeric l2 for general coin game:',l2soln
@@ -324,7 +350,8 @@
     solutions for k-rolls: 1
     	empirical frequentist solution: [0.0, 1.0]
     	Jeffries prior Bayes solution: [0.25, 0.75]
-    	l1 solution for general coin game: [0.24999999945491402, 0.7500000005450859]
+    	l1 solution for general coin game: [0.25000000053084404, 0.7499999994691557]
+    	l1 solution active ps: [0.0, 0.5, 1.0]
     	numeric l2 for general coin game: [0.25, 0.75]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 1.0] l2Loss 0.25, l1Loss 0.5
@@ -345,7 +372,8 @@
     solutions for k-rolls: 2
     	empirical frequentist solution: [0.0, 0.5, 1.0]
     	Jeffries prior Bayes solution: [0.16666666666666666, 0.5, 0.8333333333333334]
-    	l1 solution for general coin game: [0.19160259253220915, 0.5000000066330934, 0.808397407210937]
+    	l1 solution for general coin game: [0.1916025849097775, 0.5000000003927415, 0.8083974150901696]
+    	l1 solution active ps: [0.0, 0.36110277018834125, 0.63891962123298907, 1.0]
     	numeric l2 for general coin game: [0.20710678118654738, 0.49999999999999983, 0.79289321881345221]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.5 1.0] l2Loss 0.125, l1Loss 0.25
@@ -366,7 +394,8 @@
     solutions for k-rolls: 3
     	empirical frequentist solution: [0.0, 0.3333333333333333, 0.6666666666666666, 1.0]
     	Jeffries prior Bayes solution: [0.125, 0.375, 0.625, 0.875]
-    	l1 solution for general coin game: [0.16204791073717284, 0.39658683603890227, 0.6034131780361844, 0.8379520868680799]
+    	l1 solution for general coin game: [0.16204790029316266, 0.39658685219868767, 0.6034131464669085, 0.8379520999487733]
+    	l1 solution active ps: [0.0, 0.28964153346034199, 0.5, 0.71035846884017806, 1.0]
     	numeric l2 for general coin game: [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.333333333333 0.666666666667 1.0] l2Loss 0.0833333333333, l1Loss 0.25
@@ -387,7 +416,8 @@
     solutions for k-rolls: 4
     	empirical frequentist solution: [0.0, 0.25, 0.5, 0.75, 1.0]
     	Jeffries prior Bayes solution: [0.1, 0.3, 0.5, 0.7, 0.9]
-    	l1 solution for general coin game: [0.1437480499665423, 0.33414661331872003, 0.5000000108084859, 0.6658533974417459, 0.8562519506864422]
+    	l1 solution for general coin game: [0.14374804852360978, 0.33414659684052456, 0.5000000111050183, 0.6658533929161125, 0.8562519514766311]
+    	l1 solution active ps: [0.0, 0.24648851416142309, 0.41668579647889104, 0.58333969037069322, 0.75352095187829315, 1.0]
     	numeric l2 for general coin game: [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.25 0.5 0.75 1.0] l2Loss 0.0625, l1Loss 0.1875
@@ -408,7 +438,8 @@
     solutions for k-rolls: 5
     	empirical frequentist solution: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
     	Jeffries prior Bayes solution: [0.08333333333333333, 0.25, 0.4166666666666667, 0.5833333333333334, 0.75, 0.9166666666666666]
-    	l1 solution for general coin game: [0.13098490336276158, 0.2920833484409374, 0.4312839950164908, 0.5687160143766172, 0.7079166382343058, 0.8690150967731374]
+    	l1 solution for general coin game: [0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757]
+    	l1 solution active ps: [0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0]
     	numeric l2 for general coin game: [0.15450849718749732, 0.29270509831249841, 0.43090169943749956, 0.56909830056250077, 0.70729490168750231, 0.84549150281250485]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.2 0.4 0.6 0.8 1.0] l2Loss 0.05, l1Loss 0.1875
@@ -429,7 +460,8 @@
     solutions for k-rolls: 6
     	empirical frequentist solution: [0.0, 0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334, 1.0]
     	Jeffries prior Bayes solution: [0.07142857142857142, 0.21428571428571427, 0.35714285714285715, 0.5, 0.6428571428571429, 0.7857142857142857, 0.9285714285714286]
-    	l1 solution for general coin game: [0.12142009485229471, 0.2614791473652508, 0.381968919790032, 0.5000000013880771, 0.6180310808444995, 0.7385208401419168, 0.8785799047877464]
+    	l1 solution for general coin game: [0.12142009384240575, 0.26147915987431153, 0.38196891625959106, 0.5000000008783331, 0.6180310826982969, 0.7385208414882181, 0.8785799061574862]
+    	l1 solution active ps: [0.0, 0.19572689615946981, 0.32082600384142879, 0.4406873722280974, 0.55931640725187781, 0.67917412508742425, 0.80426215306549531, 1.0]
     	numeric l2 for general coin game: [0.14494897427875081, 0.26329931618583163, 0.38164965809291207, 0.49999999999999173, 0.61835034190706983, 0.736700683814145, 0.85505102572121505]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.166666666667 0.333333333333 0.5 0.666666666667 0.833333333333 1.0] l2Loss 0.0416666666667, l1Loss 0.15625
@@ -450,7 +482,8 @@
     solutions for k-rolls: 7
     	empirical frequentist solution: [0.0, 0.14285714285714285, 0.2857142857142857, 0.42857142857142855, 0.5714285714285714, 0.7142857142857143, 0.8571428571428571, 1.0]
     	Jeffries prior Bayes solution: [0.0625, 0.1875, 0.3125, 0.4375, 0.5625, 0.6875, 0.8125, 0.9375]
-    	l1 solution for general coin game: [0.11389668220373642, 0.23800677135528683, 0.34455955305729236, 0.4484262174837331, 0.5515737795175774, 0.6554404386257229, 0.761993226542064, 0.8861033175135918]
+    	l1 solution for general coin game: [0.11389668038692093, 0.23800677021159725, 0.3445595652004531, 0.4484262201771256, 0.5515737833622973, 0.6554404375929243, 0.7619932366731346, 0.8861033196781587]
+    	l1 solution active ps: [0.0, 0.1792273951645626, 0.29022140501876265, 0.3959745050203069, 0.5, 0.60401725386111538, 0.70977860104156332, 0.82079342150007151, 1.0]
     	numeric l2 for general coin game: [0.13714594258870808, 0.24081853042050227, 0.344491118252296, 0.44816370608408912, 0.55183629391588152, 0.65550888174767297, 0.75918146957946298, 0.86285405741124843]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.142857142857 0.285714285714 0.428571428571 0.571428571429 0.714285714286 0.857142857143 1.0] l2Loss 0.0357142857143, l1Loss 0.15625
@@ -471,7 +504,8 @@
     solutions for k-rolls: 8
     	empirical frequentist solution: [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0]
     	Jeffries prior Bayes solution: [0.05555555555555555, 0.16666666666666666, 0.2777777777777778, 0.3888888888888889, 0.5, 0.6111111111111112, 0.7222222222222222, 0.8333333333333334, 0.9444444444444444]
-    	l1 solution for general coin game: [0.10776815910577336, 0.21931788597075733, 0.3150231044641331, 0.40802482807595886, 0.5000000178264737, 0.5919751551011433, 0.6849768906352142, 0.7806821441202999, 0.8922318393100427]
+    	l1 solution for general coin game: [0.10776815608075044, 0.21931787739327863, 0.3150231129755032, 0.40802485346404505, 0.5000000013251399, 0.5919751463672478, 0.6849768800373918, 0.7806821494767411, 0.8922318434004618]
+    	l1 solution active ps: [0.0, 0.16599851137446592, 0.26598799144202911, 0.36082665593891317, 0.45380106497798162, 0.54619454816237634, 0.63913646551673864, 0.73401189056232763, 0.83400143995418163, 1.0]
     	numeric l2 for general coin game: [0.13060193748186366, 0.22295145311139491, 0.31530096874092589, 0.40765048437045631, 0.49999999999998584, 0.59234951562951332, 0.68469903125903675, 0.77704854688855263, 0.8693980625180614]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.125 0.25 0.375 0.5 0.625 0.75 0.875 1.0] l2Loss 0.03125, l1Loss 0.13671875
@@ -492,7 +526,8 @@
     solutions for k-rolls: 9
     	empirical frequentist solution: [0.0, 0.1111111111111111, 0.2222222222222222, 0.3333333333333333, 0.4444444444444444, 0.5555555555555556, 0.6666666666666666, 0.7777777777777778, 0.8888888888888888, 1.0]
     	Jeffries prior Bayes solution: [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]
-    	l1 solution for general coin game: [0.10264212621699102, 0.20401368743209025, 0.29100220820592976, 0.37535486781436966, 0.45856319881937446, 0.5414368060381072, 0.6246451289384446, 0.708997795691393, 0.7959863249607008, 0.8973578740006296]
+    	l1 solution for general coin game: [0.10264212529939748, 0.2040136741160041, 0.2910022084311352, 0.37535485210598, 0.4585632093716296, 0.5414368038761673, 0.6246451401774117, 0.7089977938670285, 0.7959863262489215, 0.8973578746853068]
+    	l1 solution active ps: [0.0, 0.15515985040672431, 0.24621623700708614, 0.33240558574383688, 0.41659630380607671, 0.5, 0.58340370518012885, 0.66759443436233634, 0.75377819753100983, 0.84485136947884865, 1.0]
     	numeric l2 for general coin game: [0.12499999999993124, 0.20833333333325538, 0.29166666666657692, 0.37499999999989464, 0.45833333333320636, 0.54166666666650842, 0.62499999999979383, 0.70833333333304671, 0.79166666666622476, 0.87499999999922329]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.111111111111 0.222222222222 0.333333333333 0.444444444444 0.555555555556 0.666666666667 0.777777777778 0.888888888889 1.0] l2Loss 0.0277777777778, l1Loss 0.13671875
@@ -513,7 +548,8 @@
     solutions for k-rolls: 10
     	empirical frequentist solution: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     	Jeffries prior Bayes solution: [0.045454545454545456, 0.13636363636363635, 0.22727272727272727, 0.3181818181818182, 0.4090909090909091, 0.5, 0.5909090909090909, 0.6818181818181818, 0.7727272727272727, 0.8636363636363636, 0.9545454545454546]
-    	l1 solution for general coin game: [0.098265268762728, 0.1912031284733685, 0.2710157596937475, 0.34829222852616387, 0.4243922542801517, 0.5000000411954196, 0.5756077287713842, 0.6517077467601304, 0.728984249803712, 0.808796889221568, 0.9017347317099305]
+    	l1 solution for general coin game: [0.09826526400582009, 0.19120312092499994, 0.271015741090656, 0.3482922467591192, 0.4243922695084243, 0.4999999963063106, 0.5756077322703826, 0.6517077576515427, 0.7289842560026036, 0.808796881071396, 0.9017347360452662]
+    	l1 solution active ps: [0.0, 0.14602970052725917, 0.22977773950594638, 0.30876671085544621, 0.38586688004136338, 0.46202154146925511, 0.53795675202860249, 0.61415884787859898, 0.69120080213558366, 0.77022276873398221, 0.85396381493049334, 1.0]
     	numeric l2 for general coin game: [0.12012653667611538, 0.19610122934092272, 0.27207592200573305, 0.3480506146705476, 0.42402530733536842, 0.50000000000019862, 0.5759746926650432, 0.65194938532990943, 0.72792407799480374, 0.80389877065973081, 0.87987346332470762]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0] l2Loss 0.025, l1Loss 0.123046875
@@ -535,7 +571,6 @@
 .. code:: python
 
     %%R -i df
-    library(ggplot2)
     df = as.data.frame(df)
     df$group = as.factor(pmin(df$h,df$n-df$h))
     df$up = 2*df$h>=df$n
@@ -564,7 +599,7 @@
     #df <- read.table('dfFrame.tsv',sep='\t',header=TRUE)
 
 
-.. image:: output_2_0.png
+.. image:: output_4_0.png
 
 
 .. code:: python
@@ -891,8 +926,6 @@
 .. code:: python
 
     %%R
-    library(ggplot2)
-    library(reshape2)
     d <- data.frame(lambda=seq(.2,.3,0.001))
     pseq <- seq(1/6,5/6,1/6)
     sqErrP <- function(lambda,p) { p*(1-lambda-p)^2 + (1-p)*(lambda-p)^2 }
@@ -908,14 +941,12 @@
        coord_cartesian(ylim = c(0.05,0.07)))
 
 
-.. image:: output_6_0.png
+.. image:: output_8_0.png
 
 
 .. code:: python
 
     %%R
-    library(ggplot2)
-    library(reshape2)
     # l2 all crossing
     d <- data.frame(lambda=seq(0,1,0.01))
     pseq <- seq(0,1,0.05)
@@ -931,14 +962,12 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) 
 
 
-.. image:: output_7_0.png
+.. image:: output_9_0.png
 
 
 .. code:: python
 
     %%R
-    library(ggplot2)
-    library(reshape2)
     # l1 error (notice no all-crossing)
     d <- data.frame(lambda=seq(0,1,0.01))
     pseq <- seq(0,1,0.05)
@@ -954,64 +983,68 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
 
 
-.. image:: output_8_0.png
-
-
-.. code:: python
-
-    %%R
-    library(ggplot2)
-    library(reshape2)
-    # l1 notice flat region
-    # l1 problem - adding error same no matter who gets it
-    d <- data.frame(phi21=seq(0,1,0.1))
-    pseq <- c(0,0.5,1)
-    proposedSoln <- c(0.2, 0.5, 0.8)
-    l1ErrP <- function(phi21,p) { (1-p)^2*abs(p-proposedSoln[1]) + 2*p*(1-p)*abs(phi21-p)  + p^2*abs(p-proposedSoln[3]) }
-    l1ErrM <- function(phi21) { max(sapply(pseq,function(p) l1ErrP(phi21,p))) }
-    lossM <- sapply(pseq,function(p) { l1ErrP(d$phi21,p)})
-    colnames(lossM) <- paste('p',pseq,sep='_')
-    d <- cbind(d,lossM)
-    d$pmax <- sapply(d$phi21,l1ErrM)
-    dplot <- melt(d,id.vars=c('phi21'),variable.name='p',value.name='l1_loss')
-    ggplot() +
-       geom_line(data=dplot,aes(x=phi21,y=l1_loss,color=p)) +
-       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l1_loss),alpha=0.3) +
-      ggtitle(paste('l1 costs for (',proposedSoln[1],',phi21,',proposedSoln[1],')',sep=''))
-
-
-.. image:: output_9_0.png
-
-
-.. code:: python
-
-    %%R
-    library(ggplot2)
-    library(reshape2)
-    # l1 notice flat region
-    # l1 problem - adding error same no matter who gets it
-    d <- data.frame(phi21=seq(0,1,0.01))
-    pseq <- seq(0,1,1/6)
-    l1ErrP <- function(phi21,p) { (1-p)^2*abs(p-0.207106781187) + 2*p*(1-p)*abs(phi21-p)  + p^2*abs(p-0.792893218813) }
-    l1ErrM <- function(phi21) { max(sapply(pseq,function(p) l1ErrP(phi21,p))) }
-    lossM <- sapply(pseq,function(p) { l1ErrP(d$phi21,p)})
-    colnames(lossM) <- paste('p',pseq,sep='_')
-    d <- cbind(d,lossM)
-    d$pmax <- sapply(d$phi21,l1ErrM)
-    dplot <- melt(d,id.vars=c('phi21'),variable.name='p',value.name='l1_loss')
-    ggplot() +
-       geom_line(data=dplot,aes(x=phi21,y=l1_loss,color=p)) +
-       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l1_loss),alpha=0.3) 
-
-
 .. image:: output_10_0.png
 
 
 .. code:: python
 
     %%R
-    library(ggplot2)
-    library(reshape2)
+    plotL1Shapes <- function(phis,phiXH,pseq=seq(0,1,1/6),onlyActive=FALSE) {
+       d <- data.frame(phiX=seq(0,1,0.01))
+       k = length(phis)-1
+       combs = sapply(0:k,function(h) choose(k,h))
+       phiXname = paste('phi',k,phiXH,sep='_')
+       l1ErrP <- function(phiX,p) {
+           loss <- 0.0
+           for(h in 0:k) {
+               if(h!=phiXH) {
+                  loss = loss + combs[h+1]*p^h*(1-p)^(k-h)*abs(phis[h+1]-p)
+               } else {
+                  loss = loss + combs[h+1]*p^h*(1-p)^(k-h)*abs(phiX-p)
+               }
+           }
+           loss
+       }
+       l1ErrM <- function(phiX) { max(sapply(pseq,function(p) l1ErrP(phiX,p))) }
+       lossM <- sapply(pseq,function(p) { l1ErrP(d$phiX,p)})
+       pNames <- paste('p',pseq,sep='_')
+       colnames(lossM) <- pNames
+       d <- cbind(d,lossM)
+       d$pmax <- sapply(d$phiX,l1ErrM)
+       if(onlyActive) {
+         isActive <- sapply(pNames,function(x) { sum(d[,x]>=d[,'pmax'])>0 })
+         keep <- setdiff(colnames(d),pNames[!isActive])
+         d <- d[,keep]
+       }
+       dplot <- melt(d,id.vars=c('phiX'),variable.name='p',value.name='l1_loss')
+       vChar <- format(phis,digits=4)
+       vChar[phiXH+1] = phiXname
+       vName <- paste('l1 loss for estimates\n(',paste(vChar,collapse=','),')',sep='')
+       ggplot() +
+          geom_line(data=dplot,aes(x=phiX,y=l1_loss,color=p)) +
+          geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phiX,ymin=0,ymax=l1_loss),alpha=0.3) +
+          xlab(phiXname) +
+          ggtitle(vName)
+    }
+    
+    plotL1Shapes(c(0.2, 0.5, 0.8),pseq=c(0,0.5,1),1)
+
+
+.. image:: output_11_0.png
+
+
+.. code:: python
+
+    %%R
+    plotL1Shapes(c(0.20710678118654738, 0.49999999999999983, 0.79289321881345221),1)
+
+
+.. image:: output_12_0.png
+
+
+.. code:: python
+
+    %%R
     # l2 no flat
     d <- data.frame(phi21=seq(0,1,0.01))
     pseq <- seq(0,1,1/6)
@@ -1027,5 +1060,75 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
 
 
-.. image:: output_11_0.png
+.. image:: output_13_0.png
+
+
+.. code:: python
+
+    %%R
+    l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
+    activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
+    #activePs <- seq(0,1,0.05)
+    plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
+    for(i in 0:(length(l1Soln)-1)) { 
+        print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
+    }
+
+
+.. image:: output_14_0.png
+
+
+
+.. image:: output_14_1.png
+
+
+
+.. image:: output_14_2.png
+
+
+
+.. image:: output_14_3.png
+
+
+
+.. image:: output_14_4.png
+
+
+
+.. image:: output_14_5.png
+
+
+.. code:: python
+
+    %%R
+    l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
+    activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
+    activePs <- sort(union(activePs,seq(0,1,0.1)))
+    plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
+    for(i in 0:(length(l1Soln)-1)) { 
+        print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
+    }
+
+
+.. image:: output_15_0.png
+
+
+
+.. image:: output_15_1.png
+
+
+
+.. image:: output_15_2.png
+
+
+
+.. image:: output_15_3.png
+
+
+
+.. image:: output_15_4.png
+
+
+
+.. image:: output_15_5.png
 
