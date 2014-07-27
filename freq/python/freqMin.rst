@@ -5,6 +5,7 @@
     
     import sympy
     import numpy
+    import pandas
     import scipy
     import scipy.special
     import scipy.optimize
@@ -281,15 +282,30 @@
     def reportSoln(x,pTrue):
         return '[' + ' '.join([str(xi) for xi in x]) + '] l2Loss ' + str(l2Loss(x,pTrue)) + ', l1Loss ' + str(l1Cost(x,pTrue))
     
+    df = pandas.DataFrame(columns=['n','h','estName','phi'])
+    df[['n','h']] = df[['n','h']].astype(float)
+    df[['estName']] = df[['estName']].astype(str)
+    df[['phi']] = df[['phi']].astype(float)
+    
+    def addToFrame(n,estName,phis):
+        for h in range(len(phis)):
+            df.loc[df.shape[0]+1] = [n,h,estName,phis[h]]
+    
     for k in range(1,11):
         print
         print 'solutions for k-rolls:',k
         obliviousSoln = [0.5 for h in range(k+1)]
         efSoln = [ h/float(k) for h in range(k+1)]
+        addToFrame(k,'Frequentist',efSoln)
         print '\tempirical frequentist solution:',efSoln
-        print '\tJeffries prior Bayes solution:',[ (h+0.5)/(k+1.0) for h in range(k+1)]
-        print '\tl1 solution for general coin game:',solveL1ProblemByCuts(k)
+        bjSoln = [ (h+0.5)/(k+1.0) for h in range(k+1)]
+        addToFrame(k,'Bayes (Jeffreys)',bjSoln)
+        print '\tJeffries prior Bayes solution:',bjSoln
+        l1soln = solveL1ProblemByCuts(k)
+        addToFrame(k,'l1 minimax',l1soln)
+        print '\tl1 solution for general coin game:',l1soln
         l2soln = solveForKN(k)
+        addToFrame(k,'l2 minimax',l2soln)
         print '\tnumeric l2 for general coin game:',l2soln
         for pTrue in [(0.0,0.5,1.0),(1/6.0,2/6.0,3/6.0,4/6.0,5/6.0)]:
             print '\tsolutions for for k-roll games restricted to probs',pTrue
@@ -518,6 +534,41 @@
 
 .. code:: python
 
+    %%R -i df
+    library(ggplot2)
+    df = as.data.frame(df)
+    df$group = as.factor(pmin(df$h,df$n-df$h))
+    df$up = 2*df$h>=df$n
+    df$down = 2*df$h<=df$n
+    pieces = list()
+    for(e in unique(df$estName)) {
+      pieces[[length(pieces)+1]] = 
+        geom_text(data=subset(df,estName==e & up),
+                  aes(x=n,y=phi,group=group,color=estName,label=paste(h,n,sep='/')))
+      pieces[[length(pieces)+1]] = 
+        geom_line(data=subset(df,estName==e & up),
+                  aes(x=n,y=phi,group=group,color=estName,linetype=estName))
+      pieces[[length(pieces)+1]] = 
+        geom_text(data=subset(df,estName==e & down),
+                  aes(x=n,y=phi,group=group,color=estName,label=paste(h,n,sep='/')))
+      pieces[[length(pieces)+1]] = 
+        geom_line(data=subset(df,estName==e & down),
+                  aes(x=n,y=phi,group=group,color=estName,linetype=estName))
+    }
+    ns = sort(unique(df$n))
+    print(ggplot() + pieces + 
+          scale_x_continuous(labels=ns,breaks=ns) +
+          scale_y_continuous(labels=seq(0,1,0.1),breaks=seq(0,1,0.1))
+         )
+    #write.table(df,file='dfFrame.tsv',sep='\t',row.names=FALSE)
+    #df <- read.table('dfFrame.tsv',sep='\t',header=TRUE)
+
+
+.. image:: output_2_0.png
+
+
+.. code:: python
+
     pTrue = (0.0,0.5,1.0)
     for k in range(1,11):
         print
@@ -713,11 +764,6 @@
       0.5         0.5         0.5         0.87987346]
 
 
-.. parsed-literal::
-
-    -c:271: RuntimeWarning: invalid value encountered in divide
-
-
 .. code:: python
 
     k=1
@@ -862,7 +908,7 @@
        coord_cartesian(ylim = c(0.05,0.07)))
 
 
-.. image:: output_5_0.png
+.. image:: output_6_0.png
 
 
 .. code:: python
@@ -885,7 +931,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) 
 
 
-.. image:: output_6_0.png
+.. image:: output_7_0.png
 
 
 .. code:: python
@@ -908,7 +954,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
 
 
-.. image:: output_7_0.png
+.. image:: output_8_0.png
 
 
 .. code:: python
@@ -934,7 +980,7 @@
       ggtitle(paste('l1 costs for (',proposedSoln[1],',phi21,',proposedSoln[1],')',sep=''))
 
 
-.. image:: output_8_0.png
+.. image:: output_9_0.png
 
 
 .. code:: python
@@ -958,7 +1004,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l1_loss),alpha=0.3) 
 
 
-.. image:: output_9_0.png
+.. image:: output_10_0.png
 
 
 .. code:: python
@@ -981,5 +1027,5 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
 
 
-.. image:: output_10_0.png
+.. image:: output_11_0.png
 
