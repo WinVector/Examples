@@ -2024,7 +2024,7 @@ In&nbsp;[4]:
     <span class="k">return</span> <span class="s">&#39;[&#39;</span> <span class="o">+</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">xi</span><span class="p">)</span> <span class="k">for</span> <span class="n">xi</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39;] l2Loss &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">l2Loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">pTrue</span><span class="p">))</span> <span class="o">+</span> <span class="s">&#39;, l1Loss &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">l1Cost</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">pTrue</span><span class="p">))</span>
 
 <span class="n">df</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;n&#39;</span><span class="p">,</span><span class="s">&#39;h&#39;</span><span class="p">,</span><span class="s">&#39;estName&#39;</span><span class="p">,</span><span class="s">&#39;phi&#39;</span><span class="p">])</span>
-<span class="n">df</span><span class="p">[[</span><span class="s">&#39;n&#39;</span><span class="p">,</span><span class="s">&#39;h&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s">&#39;n&#39;</span><span class="p">,</span><span class="s">&#39;h&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[[</span><span class="s">&#39;n&#39;</span><span class="p">,</span><span class="s">&#39;h&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s">&#39;n&#39;</span><span class="p">,</span><span class="s">&#39;h&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 <span class="n">df</span><span class="p">[[</span><span class="s">&#39;estName&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s">&#39;estName&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 <span class="n">df</span><span class="p">[[</span><span class="s">&#39;phi&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[[</span><span class="s">&#39;phi&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 
@@ -2304,7 +2304,7 @@ solutions for k-rolls: 10
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[5]:
+In&nbsp;[17]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
@@ -2335,6 +2335,21 @@ print<span class="p">(</span>ggplot<span class="p">()</span> <span class="o">+</
      <span class="p">)</span>
 <span class="c1">#write.table(df,file=&#39;dfFrame.tsv&#39;,sep=&#39;\t&#39;,row.names=FALSE)</span>
 <span class="c1">#df &lt;- read.table(&#39;dfFrame.tsv&#39;,sep=&#39;\t&#39;,header=TRUE)</span>
+
+<span class="c1"># print the decision tables</span>
+options<span class="p">(</span>width <span class="o">=</span> <span class="m">160</span><span class="p">)</span>
+<span class="kr">for</span><span class="p">(</span>eName <span class="kr">in</span> unique<span class="p">(</span>df<span class="o">$</span>estName<span class="p">))</span> <span class="p">{</span> 
+   print<span class="p">(</span>eName<span class="p">)</span>
+   tab <span class="o">&lt;-</span> xtabs<span class="p">(</span>phi<span class="o">~</span>n<span class="o">+</span>h<span class="p">,</span>data<span class="o">=</span>subset<span class="p">(</span>df<span class="p">,</span>estName<span class="o">==</span>eName<span class="p">))</span>
+   <span class="kr">for</span><span class="p">(</span>n <span class="kr">in</span> <span class="m">1</span><span class="o">:</span>dim<span class="p">(</span>tab<span class="p">)[[</span><span class="m">1</span><span class="p">]])</span> <span class="p">{</span>
+     <span class="kr">if</span><span class="p">((</span>n<span class="m">+2</span><span class="p">)</span><span class="o">&lt;=</span>dim<span class="p">(</span>tab<span class="p">)[[</span><span class="m">2</span><span class="p">]])</span> <span class="p">{</span> <span class="c1"># R doesn&#39;t have empty : operator</span>
+        <span class="kr">for</span><span class="p">(</span>h <span class="kr">in</span> <span class="p">(</span>n<span class="m">+2</span><span class="p">)</span><span class="o">:</span>dim<span class="p">(</span>tab<span class="p">)[[</span><span class="m">2</span><span class="p">]])</span> <span class="p">{</span>
+          tab<span class="p">[</span>n<span class="p">,</span>h<span class="p">]</span> <span class="o">=</span> <span class="kc">NA</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+   <span class="p">}</span>
+   print<span class="p">(</span>tab<span class="p">)</span>
+<span class="p">}</span>
 </pre></div>
 
 </div>
@@ -2344,6 +2359,69 @@ print<span class="p">(</span>ggplot<span class="p">()</span> <span class="o">+</
 <div class="output_wrapper">
 <div class="output">
 
+
+<div class="output_area"><div class="prompt"></div>
+
+
+<div class="output_text output_subarea ">
+<pre>
+[1] &quot;Frequentist&quot;
+    h
+n            0         1         2         3         4         5         6         7         8         9        10
+  1  0.0000000 1.0000000                                                                                          
+  2  0.0000000 0.5000000 1.0000000                                                                                
+  3  0.0000000 0.3333333 0.6666667 1.0000000                                                                      
+  4  0.0000000 0.2500000 0.5000000 0.7500000 1.0000000                                                            
+  5  0.0000000 0.2000000 0.4000000 0.6000000 0.8000000 1.0000000                                                  
+  6  0.0000000 0.1666667 0.3333333 0.5000000 0.6666667 0.8333333 1.0000000                                        
+  7  0.0000000 0.1428571 0.2857143 0.4285714 0.5714286 0.7142857 0.8571429 1.0000000                              
+  8  0.0000000 0.1250000 0.2500000 0.3750000 0.5000000 0.6250000 0.7500000 0.8750000 1.0000000                    
+  9  0.0000000 0.1111111 0.2222222 0.3333333 0.4444444 0.5555556 0.6666667 0.7777778 0.8888889 1.0000000          
+  10 0.0000000 0.1000000 0.2000000 0.3000000 0.4000000 0.5000000 0.6000000 0.7000000 0.8000000 0.9000000 1.0000000
+[1] &quot;Bayes (Jeffreys)&quot;
+    h
+n             0          1          2          3          4          5          6          7          8          9         10
+  1  0.25000000 0.75000000                                                                                                   
+  2  0.16666667 0.50000000 0.83333333                                                                                        
+  3  0.12500000 0.37500000 0.62500000 0.87500000                                                                             
+  4  0.10000000 0.30000000 0.50000000 0.70000000 0.90000000                                                                  
+  5  0.08333333 0.25000000 0.41666667 0.58333333 0.75000000 0.91666667                                                       
+  6  0.07142857 0.21428571 0.35714286 0.50000000 0.64285714 0.78571429 0.92857143                                            
+  7  0.06250000 0.18750000 0.31250000 0.43750000 0.56250000 0.68750000 0.81250000 0.93750000                                 
+  8  0.05555556 0.16666667 0.27777778 0.38888889 0.50000000 0.61111111 0.72222222 0.83333333 0.94444444                      
+  9  0.05000000 0.15000000 0.25000000 0.35000000 0.45000000 0.55000000 0.65000000 0.75000000 0.85000000 0.95000000           
+  10 0.04545455 0.13636364 0.22727273 0.31818182 0.40909091 0.50000000 0.59090909 0.68181818 0.77272727 0.86363636 0.95454545
+[1] &quot;l1 minimax&quot;
+    h
+n             0          1          2          3          4          5          6          7          8          9         10
+  1  0.25000000 0.75000000                                                                                                   
+  2  0.19160258 0.50000000 0.80839742                                                                                        
+  3  0.16204790 0.39658685 0.60341315 0.83795210                                                                             
+  4  0.14374805 0.33414660 0.50000001 0.66585339 0.85625195                                                                  
+  5  0.13098490 0.29208336 0.43128400 0.56871601 0.70791662 0.86901510                                                       
+  6  0.12142009 0.26147916 0.38196892 0.50000000 0.61803108 0.73852084 0.87857991                                            
+  7  0.11389668 0.23800677 0.34455957 0.44842622 0.55157378 0.65544044 0.76199324 0.88610332                                 
+  8  0.10776816 0.21931788 0.31502311 0.40802485 0.50000000 0.59197515 0.68497688 0.78068215 0.89223184                      
+  9  0.10264213 0.20401367 0.29100221 0.37535485 0.45856321 0.54143680 0.62464514 0.70899779 0.79598633 0.89735787           
+  10 0.09826526 0.19120312 0.27101574 0.34829225 0.42439227 0.50000000 0.57560773 0.65170776 0.72898426 0.80879688 0.90173474
+[1] &quot;l2 minimax&quot;
+    h
+n            0         1         2         3         4         5         6         7         8         9        10
+  1  0.2500000 0.7500000                                                                                          
+  2  0.2071068 0.5000000 0.7928932                                                                                
+  3  0.1830127 0.3943376 0.6056624 0.8169873                                                                      
+  4  0.1666667 0.3333333 0.5000000 0.6666667 0.8333333                                                            
+  5  0.1545085 0.2927051 0.4309017 0.5690983 0.7072949 0.8454915                                                  
+  6  0.1449490 0.2632993 0.3816497 0.5000000 0.6183503 0.7367007 0.8550510                                        
+  7  0.1371459 0.2408185 0.3444911 0.4481637 0.5518363 0.6555089 0.7591815 0.8628541                              
+  8  0.1306019 0.2229515 0.3153010 0.4076505 0.5000000 0.5923495 0.6846990 0.7770485 0.8693981                    
+  9  0.1250000 0.2083333 0.2916667 0.3750000 0.4583333 0.5416667 0.6250000 0.7083333 0.7916667 0.8750000          
+  10 0.1201265 0.1961012 0.2720759 0.3480506 0.4240253 0.5000000 0.5759747 0.6519494 0.7279241 0.8038988 0.8798735
+
+</pre>
+</div>
+
+</div>
 
 <div class="output_area"><div class="prompt"></div>
 
@@ -15797,7 +15875,7 @@ ElACSkAJxCHw/wEDRyMzuXMCpwAAAABJRU5ErkJggg==
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">
-In&nbsp;[17]:
+In&nbsp;[16]:
 </div>
 <div class="inner_cell">
     <div class="input_area">
