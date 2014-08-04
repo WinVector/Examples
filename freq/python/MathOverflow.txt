@@ -1,0 +1,80 @@
+http://mathoverflow.net/questions/177574/existence-of-solutions-of-a-polynomial-system
+
+
+
+Fix $k \in \mathbb{N}$, $k \geq 1$. Let $p \in [0,1]$ and $x = (x_0, \ldots, x_k)$ be a $(k+1)$-dimensional *real* vector, and define
+$$S_k(p,x) = -x_0^2 + \sum_{i=0}^k {k \choose i} p^i (1 - p)^{k - i} \cdot (x_i - p)^2.$$
+Experiments show that for small values of $k$
+$$\exists x \in \text{ interior of } [0,1]^{k+1} \,.\, \forall p \in [0,1] \,.\, S_k(p,x) = 0.$$
+In other words, there are $x_i$'s such that $S_k(x,p)$ is identically zero as a polynomial in $p$.
+
+For a given $k$ we can expand $S_k(x,p)$ as a polynomial in $p$ and equate the coefficients to $0$. For $k = 2$ we get
+\begin{align*}
+ 0&=0 \\
+ -x_0^2-2 x_0+x_1^2&=0 \\
+ 2 x_0-2 x_1+1&=0 \\
+\end{align*}
+and this has two solutions:
+$$x = (\frac{1}{2} (-1-\sqrt{2}),\frac{1}{2},\frac{1}{2} (3+\sqrt{2}))$$
+and
+$$x = (\frac{1}{2} (-1+\sqrt{2}),\frac{1}{2},\frac{1}{2} (3-\sqrt{2})).$$
+For $k = 1, 2, 3, 4, 5, 6, 7$ there are $1, 2, 4, 8, 14, 28, 48$ solutions respectively, according to Mathematica. [According to OEIS][1] this is [A068912][2], "the number of $n$ step walks (each step $\pm 1$ starting from $0$) which are never more than $3$ or less than $-3$." This is kind of interesting because the problem arises in statistics, see [John Mount's blog post][3] for background.
+
+**Question:** Is there a solution for every $k$?
+
+**Addendum:** John says he wants soltions in $[0,1]^{k+1}$...
+
+----
+
+Here is the relevant Mathematica code:
+
+    s[k_, p_, x_] := Sum[Binomial[k, i] * p^i* (1 - p)^(k - i)* (Subscript[x, i] - p)^2, {i, 0, k}]  Subscript[x, 0]^2
+    xs[k_] := Table[Subscript[x, i], {i, 0, k}]
+    system[k_, p_, x_] := Thread[CoefficientList[s[k, p, x], p] == 0]
+    solutions[k_] := Solve[system[k, p, x], xs[k], Reals]
+
+To see the system of equations for $k = 4$, type
+
+    system[4, p, x] // ColumnForm
+
+To see the solutions for $k = 4$, type
+
+    solutions[4]
+
+To make a table of counts of solutions up to $k = 7$, type
+
+    Table[{k, Length@solutions[k]}, {k, 1, 7}] // ColumnForm
+
+
+  [1]: https://oeis.org/search?q=1%2C%202%2C%204%2C%208%2C%2014%2C%2028%2C%2048
+  [2]: https://oeis.org/A068912
+  [3]: http://www.win-vector.com/blog/2014/07/frequenstist-inference-only-seems-easy/
+
+
+
+
+
+
+
+
+This is some background to the question and the solution (minus one check mentioned at the end).
+
+Define $$S(k,p,x) = \sum_{i=0}^k {k \choose i} p^i (1-p)^{k-i} (x_i-p)^2.$$
+Define $$f_k(k) = \mathrm{argmin}_x \max_p S(k,p,x).$$
+Then $f_k(k)$ is the minimax square-loss solution to trying to estimate the win rate of a random process by observing $k$ results (Wald wrote on this). The neat thing is: we can show if there is a real solution $x$ in $[0,1]^{k+1}$ to $S(k,p,x) = x_0^2$ then $x=f_k(k)$.  Meaning we avoided two nasty quantifiers.  See [this file][1] for some experimental examples.  The proof this is optimal (not just extremal involves using $p - f_k(h)$ to show when curves are coincident we have a diversity of signs of gradients in various directions.
+
+From the original problem we expect a lot of symmetries.  Also, a change of variables $z = p/(1-p)$ makes collecting terms easier.  In fact I now have a conjectured exact solution, I now only need a proof that it always works (cancels the p's, is real and in the interior of $[0,1]^{k+1}$; I already have a proof that such a solution when it exists solves the original estimation problem).  The conjectured solution for $k>1$ (for $k=1$ the solution is $[1/4,3/4]$) is:
+
+\begin{align}
+   f_k(0) &= (\sqrt{k}-1)/(2 (k-1)) \\
+   f_k(1) &= \sqrt{f_k(0)^2+2 f_k(0)/k} \\
+   &  \text{ for } h>1 \\
+   f_k(h)^2 &= (k+2) (k+1) (f_k(0)^2)/((k+2-h) (k+1-h)) + \\
+        &   2 h f_k(h-1) (1-f_k(h-1))/(k+1-h) \\
+        &  - h (h-1) ((f_k(h-2)-1)^2)/((k+2-h) (k+1-h)) 
+\end{align}
+
+A Python implementation, demonstration and check of this solution up through $k=8$ is [given here][2].  So really all that is left to prove is the right hand side of $f_k(h)^2$ is always positive and in the interior of $[0,1]$ for all $k,h$.
+
+  [1]: https://github.com/WinVector/Examples/blob/master/freq/python/freqMin.rst
+  [2]: https://github.com/WinVector/Examples/blob/master/freq/python/explicitSolution.rst
