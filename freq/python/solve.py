@@ -11,7 +11,7 @@ def isGoodSoln(si):
    return all([ isGoodVal(xi) for xi in si.values() ])
 
 
-
+# only good for k>=1
 def solveKz(k):
    vars = sympy.symbols(['phi' + str(i) for i in range((k+1)/2)])
    if k%2!=0:
@@ -31,11 +31,27 @@ def solveKz(k):
       xs = solnv + [sympy.Rational(1,2)] + [1-solni for solni in reversed(solnv) ]
    return xs
 
+# only good for k>=1
+def conjectureK(k):
+   if k<=1:
+      return [sympy.Rational(1,4),sympy.Rational(3,4)]
+   phi = [ 0 for i in range(k+1) ]
+   phi[0] = (sympy.sqrt(k)-1)/(2*(k-1))
+   phi[1] = sympy.sqrt((phi[0]**2+2*phi[0]/k).expand()).simplify()
+   for h in range(2,(k+1)):
+      phi[h] = sympy.sqrt(( (k+2)*(k+1)*(phi[0]**2)/((k+2-h)*(k+1-h)) + 2*h*phi[h-1]*(1-phi[h-1])/(k+1-h) - h*(h-1)*((phi[h-2]-1)**2)/((k+2-h)*(k+1-h)) ).expand()).simplify()
+   return phi
+
+
 
 for k in range(1,9):
    print
-   print k
-   print solveKz(k)
+   print 'k',k
+   solnk = solveKz(k)
+   print 'soln       ',solnk
+   conjk = conjectureK(k)
+   print 'conjecture:',conjk
+   print 'difference:',[ complex(solnk[i]-conjk[i]) for i in range(len(solnk)) ]
    print
 
 
