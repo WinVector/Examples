@@ -1702,16 +1702,40 @@ solutions[k_] := Solve[system[k, p, x], xs[k], Reals]</code></pre>
 </div>
 </div>
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[0]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
 <div class="cell border-box-sizing text_cell rendered">
 <div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Solution submitted by John Mount 8-4-2014, not accepted for reasons unique to MathOverflow. Done messing with that so I publish it here.</p>
+<p>Solution submitted 8-4-2013 by me (John Mount), but not accepted by MathOverflow for reasons of links and formatting. Enough of that submitting it here.</p>
 <p>This is some background to the question and the solution (minus one check mentioned at the end).</p>
 <p>Define <span class="math">\[S(k,p,x) = \sum_{i=0}^k {k \choose i} p^i (1-p)^{k-i} (x_i-p)^2.\]</span> Define <span class="math">\[f_k(k) = \mathrm{argmin}_x \max_p S(k,p,x).\]</span> Then <span class="math">\(f_k(k)\)</span> is the minimax square-loss solution to trying to estimate the win rate of a random process by observing <span class="math">\(k\)</span> results (Wald wrote on this). The neat thing is: we can show if there is a real solution <span class="math">\(x\)</span> in <span class="math">\([0,1]^{k+1}\)</span> to <span class="math">\(S(k,p,x) = x_0^2\)</span> then <span class="math">\(x=f_k(k)\)</span>. Meaning we avoided two nasty quantifiers. See <a href="https://github.com/WinVector/Examples/blob/master/freq/python/freqMin.rst">this file</a> for some experimental examples. The proof this is optimal (not just extremal involves using <span class="math">\(p - f_k(h)\)</span> to show when curves are coincident we have a diversity of signs of gradients in various directions.</p>
 <p>From the original problem we expect a lot of symmetries. Also, a change of variables <span class="math">\(z = p/(1-p)\)</span> makes collecting terms easier. In fact I now have a conjectured exact solution, I now only need a proof that it always works (cancels the p's, is real and in the interior of <span class="math">\([0,1]^{k+1}\)</span>; I already have a proof that such a solution when it exists solves the original estimation problem). The conjectured solution for <span class="math">\(k&gt;1\)</span> (for <span class="math">\(k=1\)</span> the solution is <span class="math">\([1/4,3/4]\)</span>) is:</p>
-
+<p><span class="math">\[ 
+\begin{align}
+f_k(0) &amp;= (\sqrt{k}-1)/(2 (k-1))  \\
+f_k(1) &amp;= \sqrt{f_k(0)^2+2 f_k(0)/k}  \\
+ &amp;  \text{ for } h&gt;1: \\
+f_k(h)^2 &amp;= (k+2) (k+1) (f_k(0)^2)/((k+2-h) (k+1-h))  \\
+  &amp; + 2 h f_k(h-1) (1-f_k(h-1))/(k+1-h) \\
+  &amp; - h (h-1) ((f_k(h-2)-1)^2)/((k+2-h) (k+1-h)) 
+\end{align}
+\]</span></p>
 <p>A Python implementation, demonstration and check of this solution up through <span class="math">\(k=8\)</span> is <a href="https://github.com/WinVector/Examples/blob/master/freq/python/explicitSolution.rst">given here</a>. So really all that is left to prove is the right hand side of <span class="math">\(f_k(h)^2\)</span> is always positive and in the interior of <span class="math">\([0,1]\)</span> for all <span class="math">\(k,h\)</span>.</p>
 </div>
 </div>

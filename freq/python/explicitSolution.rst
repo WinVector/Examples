@@ -80,8 +80,10 @@ To make a table of counts of solutions up to :math:`k = 7`, type
 
     Table[{k, Length@solutions[k]}, {k, 1, 7}] // ColumnForm
 
-Solution submitted by John Mount 8-4-2014, not accepted for reasons
-unique to MathOverflow. Done messing with that so I publish it here.
+
+Solution submitted 8-4-2013 by me (John Mount), but not accepted by
+MathOverflow for reasons of links and formatting. Enough of that
+submitting it here.
 
 This is some background to the question and the solution (minus one
 check mentioned at the end).
@@ -114,15 +116,16 @@ always works (cancels the p's, is real and in the interior of
 exists solves the original estimation problem). The conjectured solution
 for :math:`k>1` (for :math:`k=1` the solution is :math:`[1/4,3/4]`) is:
 
-.. raw:: latex
+.. math::
 
+    
    \begin{align}
-      f_k(0) &= (\sqrt{k}-1)/(2 (k-1)) \\
-      f_k(1) &= \sqrt{f_k(0)^2+2 f_k(0)/k} \\
-      &  \text{ for } h>1 \\
-      f_k(h)^2 &= (k+2) (k+1) (f_k(0)^2)/((k+2-h) (k+1-h)) + \\
-           &   2 h f_k(h-1) (1-f_k(h-1))/(k+1-h) \\
-           &  - h (h-1) ((f_k(h-2)-1)^2)/((k+2-h) (k+1-h)) 
+   f_k(0) &= (\sqrt{k}-1)/(2 (k-1))  \\
+   f_k(1) &= \sqrt{f_k(0)^2+2 f_k(0)/k}  \\
+    &  \text{ for } h>1: \\
+   f_k(h)^2 &= (k+2) (k+1) (f_k(0)^2)/((k+2-h) (k+1-h))  \\
+     & + 2 h f_k(h-1) (1-f_k(h-1))/(k+1-h) \\
+     & - h (h-1) ((f_k(h-2)-1)^2)/((k+2-h) (k+1-h)) 
    \end{align}
 
 A Python implementation, demonstration and check of this solution up
