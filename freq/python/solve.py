@@ -48,16 +48,19 @@ def conjectureK(k,numeric=False):
 
 
 p = sympy.symbols('p')
-for k in range(1,5):
+for k in range(1,21):
    print
    print 'k',k
-   solnk = solveKz(k)
-   print 'soln       ',solnk
-   poly = sum([ p**h * (1-p)**(k-h) * sympy.binomial(k,h) * (solnk[h]-p)**2 for h in range(k+1) ]).expand()
-   print 'check poly',poly
+#   solnk = solveKz(k)
+#   print 'soln       ',solnk
+#   poly = sum([ p**h * (1-p)**(k-h) * sympy.binomial(k,h) * (solnk[h]-p)**2 for h in range(k+1) ]).expand()
+#   print 'check poly',poly
    conjk = conjectureK(k,numeric=True)
    print 'conjecture:',conjk
-   print 'max difference:',max([ abs(complex(solnk[i]-conjk[i])) for i in range(len(solnk)) ])
+   polyc = sum([ p**h * (1-p)**(k-h) * sympy.binomial(k,h) * (conjk[h]-p)**2 for h in range(k+1) ]).expand()
+   print 'conjecture check poly',polyc
+#   print 'max difference:',max([ abs(complex(solnk[i]-conjk[i])) for i in range(len(solnk)) ])
+   print '1/k for scale:',1/float(k)
    print
 
 
