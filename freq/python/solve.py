@@ -59,6 +59,7 @@ for k in range(1,21):
    print 'conjecture:',conjk
    polyc = sum([ p**h * (1-p)**(k-h) * sympy.binomial(k,h) * (conjk[h]-p)**2 for h in range(k+1) ]).expand()
    print 'conjecture check poly',polyc
+   print 'diffs',[conjk[i+1]-conjk[i] for i in range(k)]  # Vladimir Dotsenko finished solution, noting differences are constant http://mathoverflow.net/questions/177574/existence-of-solutions-of-a-polynomial-system/177820#177820
 #   print 'max difference:',max([ abs(complex(solnk[i]-conjk[i])) for i in range(len(solnk)) ])
    print '1/k for scale:',1/float(k)
    print
