@@ -27,7 +27,7 @@ get
     2 x_0-2 x_1+1&=0 \\
    \end{align*}
 
-and this has two solutions:
+and this has two real solutions:
 
 .. math:: x = (\frac{1}{2} (-1-\sqrt{2}),\frac{1}{2},\frac{1}{2} (3+\sqrt{2}))
 
@@ -35,55 +35,22 @@ and
 
 .. math:: x = (\frac{1}{2} (-1+\sqrt{2}),\frac{1}{2},\frac{1}{2} (3-\sqrt{2})).
 
- For :math:`k = 1, 2, 3, 4, 5, 6, 7` there are
-:math:`1, 2, 4, 8, 14, 28, 48` solutions respectively, according to
-Mathematica. `According to
-OEIS <https://oeis.org/search?q=1%2C%202%2C%204%2C%208%2C%2014%2C%2028%2C%2048>`__
-this is `A068912 <https://oeis.org/A068912>`__, "the number of :math:`n`
-step walks (each step :math:`\pm 1` starting from :math:`0`) which are
-never more than :math:`3` or less than :math:`-3`." This is kind of
-interesting because the problem arises in statistics, see `John Mount's
-blog
+One of which satisifies our conditions.
+
+The problem arises in statistics, see `John Mount's blog
 post <http://www.win-vector.com/blog/2014/07/frequenstist-inference-only-seems-easy/>`__
 for background.
 
 **Question:** Is there a solution for every :math:`k`?
 
-**Addendum:** John says he wants soltions in :math:`[0,1]^{k+1}`...
+**Addendum:** John says he wants soltions in the interor of
+:math:`[0,1]^{k+1}`...
 
 --------------
 
-Here is the relevant Mathematica code:
 
-::
-
-    s[k_, p_, x_] := Sum[Binomial[k, i] * p^i* (1 - p)^(k - i)* (Subscript[x, i] - p)^2, {i, 0, k}]  Subscript[x, 0]^2
-    xs[k_] := Table[Subscript[x, i], {i, 0, k}]
-    system[k_, p_, x_] := Thread[CoefficientList[s[k, p, x], p] == 0]
-    solutions[k_] := Solve[system[k, p, x], xs[k], Reals]
-
-To see the system of equations for :math:`k = 4`, type
-
-::
-
-    system[4, p, x] // ColumnForm
-
-To see the solutions for :math:`k = 4`, type
-
-::
-
-    solutions[4]
-
-To make a table of counts of solutions up to :math:`k = 7`, type
-
-::
-
-    Table[{k, Length@solutions[k]}, {k, 1, 7}] // ColumnForm
-
-
-Solution submitted 8-4-2013 by me (John Mount), but not accepted by
-MathOverflow for reasons of links and formatting. Enough of that
-submitting it here.
+Solution submitted 8-4-2013 by me (John Mount), having a lot of trouble
+with links and formatting. Enough of that, submitting it here.
 
 This is some background to the question and the solution (minus one
 check mentioned at the end).
@@ -103,10 +70,13 @@ solution :math:`x` in :math:`[0,1]^{k+1}` to :math:`S(k,p,x) = x_0^2`
 then :math:`x=f_k(k)`. Meaning we avoided two nasty quantifiers. See
 `this
 file <https://github.com/WinVector/Examples/blob/master/freq/python/freqMin.rst>`__
-for some experimental examples. The proof this is optimal (not just
-extremal involves using :math:`p - f_k(h)` to show when curves are
-coincident we have a diversity of signs of gradients in various
-directions.
+for some experimental examples.
+
+We know there is only one connected component of solutions in the
+interior of the unit cube because these solutions represent extreme
+points of the minimax estimation problem. We show that there is a
+diversity of gradients by reflecting coordinates of :math:`x` around
+:math:`p` (and thus we have an extreme point).
 
 From the original problem we expect a lot of symmetries. Also, a change
 of variables :math:`z = p/(1-p)` makes collecting terms easier. In fact
@@ -134,6 +104,14 @@ here <https://github.com/WinVector/Examples/blob/master/freq/python/explicitSolu
 So really all that is left to prove is the right hand side of
 :math:`f_k(h)^2` is always positive and in the interior of :math:`[0,1]`
 for all :math:`k,h`.
+
+Note 8-4-2014: Vladimir Dotsenko `finished the
+solution <http://mathoverflow.net/a/177820/56665>`__ by adding the
+important insight that the :math:`f_k(h)` are evenly spaced when
+:math:`k` is held constant. This lets him get a closed form solution for
+each :math:`f_k(h)` (without having to refer to ealier :math:`h`).
+
+--------------
 
 .. code:: python
 
@@ -402,4 +380,5 @@ for all :math:`k,h`.
     conjecture check poly -4.65661287307739e-10*p**21 + 3.72529029846191e-9*p**20 - 1.11758708953857e-8*p**19 + 2.98023223876953e-8*p**17 + 7.45058059692383e-8*p**15 - 2.98023223876953e-8*p**14 - 9.31322574615479e-9*p**13 + 3.25962901115417e-9*p**12 - 3.7325662560761e-9*p**10 + 6.98491930961609e-10*p**9 - 5.23868948221207e-10*p**8 + 1.8007995095104e-10*p**7 - 5.82076609134674e-11*p**6 + 3.63797880709171e-12*p**5 + 2.8421709430404e-14*p**3 - 8.88178419700125e-16*p**2 + 5.55111512312578e-17*p + 0.00834884216759061
     1/k for scale: 0.05
     
+
 

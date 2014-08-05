@@ -1684,21 +1684,12 @@ div#notebook {
 <p>Fix <span class="math">\(k \in \mathbb{N}\)</span>, <span class="math">\(k \geq 1\)</span>. Let <span class="math">\(p \in [0,1]\)</span> and <span class="math">\(x = (x_0, \ldots, x_k)\)</span> be a <span class="math">\((k+1)\)</span>-dimensional <em>real</em> vector, and define <span class="math">\[S_k(p,x) = -x_0^2 + \sum_{i=0}^k {k \choose i} p^i (1 - p)^{k - i} \cdot (x_i - p)^2.\]</span> Experiments show that for small values of <span class="math">\(k\)</span> <span class="math">\[\exists x \in \text{ interior of } [0,1]^{k+1} \,.\, \forall p \in [0,1] \,.\, S_k(p,x) = 0.\]</span> In other words, there are <span class="math">\(x_i\)</span>'s such that <span class="math">\(S_k(x,p)\)</span> is identically zero as a polynomial in <span class="math">\(p\)</span>.</p>
 For a given <span class="math">\(k\)</span> we can expand <span class="math">\(S_k(x,p)\)</span> as a polynomial in <span class="math">\(p\)</span> and equate the coefficients to <span class="math">\(0\)</span>. For <span class="math">\(k = 2\)</span> we get
 
-<p>and this has two solutions: <span class="math">\[x = (\frac{1}{2} (-1-\sqrt{2}),\frac{1}{2},\frac{1}{2} (3+\sqrt{2}))\]</span> and <span class="math">\[x = (\frac{1}{2} (-1+\sqrt{2}),\frac{1}{2},\frac{1}{2} (3-\sqrt{2})).\]</span> For <span class="math">\(k = 1, 2, 3, 4, 5, 6, 7\)</span> there are <span class="math">\(1, 2, 4, 8, 14, 28, 48\)</span> solutions respectively, according to Mathematica. <a href="https://oeis.org/search?q=1%2C%202%2C%204%2C%208%2C%2014%2C%2028%2C%2048">According to OEIS</a> this is <a href="https://oeis.org/A068912">A068912</a>, &quot;the number of <span class="math">\(n\)</span> step walks (each step <span class="math">\(\pm 1\)</span> starting from <span class="math">\(0\)</span>) which are never more than <span class="math">\(3\)</span> or less than <span class="math">\(-3\)</span>.&quot; This is kind of interesting because the problem arises in statistics, see <a href="http://www.win-vector.com/blog/2014/07/frequenstist-inference-only-seems-easy/">John Mount's blog post</a> for background.</p>
+<p>and this has two real solutions: <span class="math">\[x = (\frac{1}{2} (-1-\sqrt{2}),\frac{1}{2},\frac{1}{2} (3+\sqrt{2}))\]</span> and <span class="math">\[x = (\frac{1}{2} (-1+\sqrt{2}),\frac{1}{2},\frac{1}{2} (3-\sqrt{2})).\]</span></p>
+<p>One of which satisifies our conditions.</p>
+<p>The problem arises in statistics, see <a href="http://www.win-vector.com/blog/2014/07/frequenstist-inference-only-seems-easy/">John Mount's blog post</a> for background.</p>
 <p><strong>Question:</strong> Is there a solution for every <span class="math">\(k\)</span>?</p>
-<p><strong>Addendum:</strong> John says he wants soltions in <span class="math">\([0,1]^{k+1}\)</span>...</p>
+<p><strong>Addendum:</strong> John says he wants soltions in the interor of <span class="math">\([0,1]^{k+1}\)</span>...</p>
 <hr />
-<p>Here is the relevant Mathematica code:</p>
-<pre><code>s[k_, p_, x_] := Sum[Binomial[k, i] * p^i* (1 - p)^(k - i)* (Subscript[x, i] - p)^2, {i, 0, k}]  Subscript[x, 0]^2
-xs[k_] := Table[Subscript[x, i], {i, 0, k}]
-system[k_, p_, x_] := Thread[CoefficientList[s[k, p, x], p] == 0]
-solutions[k_] := Solve[system[k, p, x], xs[k], Reals]</code></pre>
-<p>To see the system of equations for <span class="math">\(k = 4\)</span>, type</p>
-<pre><code>system[4, p, x] // ColumnForm</code></pre>
-<p>To see the solutions for <span class="math">\(k = 4\)</span>, type</p>
-<pre><code>solutions[4]</code></pre>
-<p>To make a table of counts of solutions up to <span class="math">\(k = 7\)</span>, type</p>
-<pre><code>Table[{k, Length@solutions[k]}, {k, 1, 7}] // ColumnForm</code></pre>
 </div>
 </div>
 </div>
@@ -1722,9 +1713,10 @@ In&nbsp;[0]:
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Solution submitted 8-4-2013 by me (John Mount), but not accepted by MathOverflow for reasons of links and formatting. Enough of that submitting it here.</p>
+<p>Solution submitted 8-4-2013 by me (John Mount), having a lot of trouble with links and formatting. Enough of that, submitting it here.</p>
 <p>This is some background to the question and the solution (minus one check mentioned at the end).</p>
-<p>Define <span class="math">\[S(k,p,x) = \sum_{i=0}^k {k \choose i} p^i (1-p)^{k-i} (x_i-p)^2.\]</span> Define <span class="math">\[f_k(k) = \mathrm{argmin}_x \max_p S(k,p,x).\]</span> Then <span class="math">\(f_k(k)\)</span> is the minimax square-loss solution to trying to estimate the win rate of a random process by observing <span class="math">\(k\)</span> results (Wald wrote on this). The neat thing is: we can show if there is a real solution <span class="math">\(x\)</span> in <span class="math">\([0,1]^{k+1}\)</span> to <span class="math">\(S(k,p,x) = x_0^2\)</span> then <span class="math">\(x=f_k(k)\)</span>. Meaning we avoided two nasty quantifiers. See <a href="https://github.com/WinVector/Examples/blob/master/freq/python/freqMin.rst">this file</a> for some experimental examples. The proof this is optimal (not just extremal involves using <span class="math">\(p - f_k(h)\)</span> to show when curves are coincident we have a diversity of signs of gradients in various directions.</p>
+<p>Define <span class="math">\[S(k,p,x) = \sum_{i=0}^k {k \choose i} p^i (1-p)^{k-i} (x_i-p)^2.\]</span> Define <span class="math">\[f_k(k) = \mathrm{argmin}_x \max_p S(k,p,x).\]</span> Then <span class="math">\(f_k(k)\)</span> is the minimax square-loss solution to trying to estimate the win rate of a random process by observing <span class="math">\(k\)</span> results (Wald wrote on this). The neat thing is: we can show if there is a real solution <span class="math">\(x\)</span> in <span class="math">\([0,1]^{k+1}\)</span> to <span class="math">\(S(k,p,x) = x_0^2\)</span> then <span class="math">\(x=f_k(k)\)</span>. Meaning we avoided two nasty quantifiers. See <a href="https://github.com/WinVector/Examples/blob/master/freq/python/freqMin.rst">this file</a> for some experimental examples.</p>
+<p>We know there is only one connected component of solutions in the interior of the unit cube because these solutions represent extreme points of the minimax estimation problem. We show that there is a diversity of gradients by reflecting coordinates of <span class="math">\(x\)</span> around <span class="math">\(p\)</span> (and thus we have an extreme point).</p>
 <p>From the original problem we expect a lot of symmetries. Also, a change of variables <span class="math">\(z = p/(1-p)\)</span> makes collecting terms easier. In fact I now have a conjectured exact solution, I now only need a proof that it always works (cancels the p's, is real and in the interior of <span class="math">\([0,1]^{k+1}\)</span>; I already have a proof that such a solution when it exists solves the original estimation problem). The conjectured solution for <span class="math">\(k&gt;1\)</span> (for <span class="math">\(k=1\)</span> the solution is <span class="math">\([1/4,3/4]\)</span>) is:</p>
 <p><span class="math">\[ 
 \begin{align}
@@ -1737,6 +1729,8 @@ f_k(h)^2 &amp;= (k+2) (k+1) (f_k(0)^2)/((k+2-h) (k+1-h))  \\
 \end{align}
 \]</span></p>
 <p>A Python implementation, demonstration and check of this solution up through <span class="math">\(k=8\)</span> is <a href="https://github.com/WinVector/Examples/blob/master/freq/python/explicitSolution.rst">given here</a>. So really all that is left to prove is the right hand side of <span class="math">\(f_k(h)^2\)</span> is always positive and in the interior of <span class="math">\([0,1]\)</span> for all <span class="math">\(k,h\)</span>.</p>
+<p>Note 8-4-2014: Vladimir Dotsenko <a href="http://mathoverflow.net/a/177820/56665">finished the solution</a> by adding the important insight that the <span class="math">\(f_k(h)\)</span> are evenly spaced when <span class="math">\(k\)</span> is held constant. This lets him get a closed form solution for each <span class="math">\(f_k(h)\)</span> (without having to refer to ealier <span class="math">\(h\)</span>).</p>
+<hr />
 </div>
 </div>
 </div>
@@ -2061,6 +2055,21 @@ conjecture check poly -4.65661287307739e-10*p**21 + 3.72529029846191e-9*p**20 - 
 </div>
 </div>
 
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre> 
+</pre></div>
+
+</div>
 </div>
 </div>
 
