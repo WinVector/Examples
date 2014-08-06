@@ -2,7 +2,13 @@
 .. code:: python
 
     %load_ext rpy2.ipython
-    
+.. code:: python
+
+    %%R
+    library(ggplot2)
+    library(reshape2)
+.. code:: python
+
     import sympy
     import numpy
     import pandas
@@ -12,25 +18,11 @@
     import cvxopt
 .. code:: python
 
-    %%R
-    library(ggplot2)
-    library(reshape2)
-.. code:: python
-
-    def ncr(n, r):
-        s = scipy.special.binom(n,r)
-        return int(round(s)) # scipy special function return is not always an integer
-    
-    
+    def ncr(n,h):
+        return int(sympy.binomial(k,h))
     
     def numericSoln(si):
         return { k:complex(si[k]).real for k in si.keys() }
-    
-    def isRealSoln(si):
-        if not all([abs(complex(sij).imag)<1.0e-6 for sij in si.values()]):
-            return False
-        ns = numericSoln(si)
-        return all([ nij>=0 and nij<=1.0 for nij in ns.values()])
     
     def printsolnN(phis,soln):
        ns = numericSoln(soln)
@@ -38,86 +30,12 @@
           if phi in soln:
              print '\t',phi,'\t',soln[phi],'\t',ns[phi]
     
-    
-    # build equations to make polynomial p-free
-    def prepareClearingEqns(p,phis,poly):
-       polyTerms = sympy.collect(sympy.expand(poly),p,evaluate=False)
-       eqns = [ polyTerms[k] for k in polyTerms.keys() if (not k==1) ]
-       return eqns
-    
-    # crude numeric check of signs of poly
-    def checkForSignsIn01(p,poly):
-        sawPlus = False
-        sawMinus = False
-        scale = 20
-        for i in range(scale+1):
-           y = float(sympy.expand(poly.subs({p:i/float(scale)})))
-           if y>0:
-              sawPlus = True
-           if y<0:
-              sawMinus = True
-           if sawPlus and sawMinus:
-              break
-        return ('+' if sawPlus else '') + ('-' if sawMinus else '')
-    
-    explicitGradientClearingEqns = False
-    
-    # for k flips of unknown coin solve for minimal max variance estimate schedule
-    def solveForK(k):
-       print '*******************'
-       print 'k',k
-       p = sympy.symbols('p')
-       phis = [ sympy.symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
-       poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
-       eqns = []
-       if explicitGradientClearingEqns:
-           for phi in phis:
-               eqns.extend(prepareClearingEqns(p,phis,sympy.diff(poly,phi)))
-       else:
-            eqns = prepareClearingEqns(p,phis,poly)
-       soln1 = sympy.solve(eqns,phis)
-       soln1 = [ { phis[j]:si[j] for j in range(len(phis))} for si in soln1 ]
-       numSoln = [ numericSoln(si) for si in soln1 ]
-       viol = [ max([ abs(sympy.expand(eij.subs(si))) for eij in eqns ]) for si in numSoln ]
-       isReal = [ isRealSoln(si) for si in soln1 ]
-       costs = { i:abs(sympy.expand(poly.subs(numSoln[i]).subs({p:0}))) for i in range(len(numSoln)) if isReal[i] and viol[i]<1.0e-8 }
-       print 'costs',costs
-       minCost = min(costs.values())
-       index = [ i for i in costs.keys() if costs[i] <= minCost ][0]
-       soln = soln1[index]
-       losspoly = sympy.simplify(sympy.expand(poly.subs(soln)))
-       print 'loss poly',losspoly
-       printsolnN(phis,soln)
-       print 'loss',abs(complex(losspoly.subs({p:0})))  # the p->0 subs is to get rid of rounding error if we were working over floating point
-       # check if gradient is p-free (or even zero) at our fixed point
-       checks = []
-       for phi in phis:
-            checki = sympy.expand(sympy.diff(poly,phi).subs(soln))
-            print 'd',phi,checki,checkForSignsIn01(p,checki)
-            checks.append(checki)
-       print '*******************'
-       ns = numericSoln(soln)
-       return [ ns[phi] for phi in phis ]
-    
-    # solve numerically using Newton's zero finding method
-    def solveForKN(k):
-       p = sympy.symbols('p')
-       phis = [ sympy.symbols(str('phi_'+str(h) + '_' + str(k))) for h in range(k+1) ]
-       poly = sum([ p**h * (1-p)**(k-h) * ncr(k,h) * (phis[h]-p)**2 for h in range(k+1) ])
-       eqns = prepareClearingEqns(p,phis,poly)
-       jacobian = [ [ sympy.diff(eqi,phij) for phij in phis ] for eqi in eqns ]
-       nSoln = { phis[i]:((i+0.5)/(k+1.0)) for i in range(len(phis)) }
-       while True:
-          checks = numpy.array([ float(sympy.expand(ei.subs(nSoln))) for ei in eqns ])
-          if max([abs(ci) for ci in checks])<1.0e-12:
-             break
-          js = numpy.matrix([ [ float(sympy.expand(jij.subs(nSoln))) for jij in ji ] for ji in jacobian ])
-          step = numpy.linalg.solve(js,checks)
-          nSoln = { phis[i]:(nSoln[phis[i]]-step[i]) for i in range(len(phis)) }
-          if max([abs(si) for si in step])<1.0e-12:
-             break
-       return [ nSoln[phi] for phi in phis ]
-    
+    # optimal l2 loss solution
+    def l2minimaxSoln(k,numeric=False):
+        sqrtk = sympy.sqrt(k)
+        if numeric:
+            sqrtk = float(sqrtk)
+        return [(sqrtk/2 + h)/(sqrtk+k) for h in range(k+1) ]
     
     # approximate l1 loss for using phis as our estimate when prob is one of pseq
     def l1Loss(phis,pseq=[ pi/float(1000) for pi in range(1001) ]):
@@ -142,7 +60,7 @@
         return reg
     
     def solveL2Problem(k,pseq):
-        baseSoln = solveForKN(k)
+        baseSoln = l2minimaxSoln(k,numeric=True)
         l0 = l2Loss(baseSoln,pseq)
         maxP = max(pseq)
         minP = min(pseq)
@@ -159,9 +77,10 @@
     # Solve argmin_phi max_i sum_{j=0}^{k} (k choose j) p(i)^j (1-p(i))^{k-j} | p(i) - phi(j) |
     # Pick set of estimates (indexed by evidence) minimizing worse L1 loss expected for any p
     # k: number of flips
-    # p: array of probabilities to check against
+    # p: set of probabilities to check against
     def solveL1Problem(k,p):
        nphis = k+1
+       p = list(set(p))
        nps = len(p)
        # encode argmin_phi max_i sum_{j=0}^{k} (k choose j) p(i)^j (1-p(i))^{k-j} | p(i) - phi(j) |
        # solve a x <= b 
@@ -223,7 +142,8 @@
         return max([ f(p) for p in ps ])
             
     # solve argmax_p sum_{j=0}^{k} (k choose j) p^j (1-p)^{k-j} | p - phi(j) | for 0<=p<=1
-    def worstL1p(phis):
+    # allowed to return more than one violation
+    def worstL1ps(phis):
         k = len(phis)-1
         choose = [ ncr(k,j) for j in range(len(phis)) ]
         def f(p):
@@ -233,19 +153,20 @@
             if phi>0.0 and phi<1.0:
                 cuts.add(phi)
         cuts = sorted(cuts)
-        optX = None
+        optX = set()
         optF = None
         for i in range(len(cuts)-1):
            opti = scipy.optimize.minimize_scalar(f,bounds=(cuts[i],cuts[i+1]),method='Bounded')
            xi = opti['x']
            fi = -f(xi)
-           if (optX is None) or (fi>optF):
-                optX = xi
+           optX.add(xi)
+           if (optF is None) or (fi>optF):
                 optF = fi
-        return optX
+        return optX,optF
     
     # return which ps are approximately diverse active constrains on the current phis
     def activeL1Constraints(phis,ps):
+        ps = list(ps)
         k = len(phis)-1
         choose = [ ncr(k,j) for j in range(len(phis)) ]
         def f(p):
@@ -264,20 +185,20 @@
         return sorted(active)
     
     
-    # solve L1 problem over 0<=p<=1 using crude column generation method
+    # solve L1 problem over 0<=p<=1 using crude approximate column generation method
     def solveL1ProblemByCuts(k):
-       ps = [ i/20.0 for i in range(21) ]
+       ps = set([ i/100.0 for i in range(101) ])
        done = False
        while not done:
           phis = solveL1Problem(k,ps)
-          # print phis
           cost1 = l1Cost(phis,ps)
-          newP = worstL1p(phis)
-          ps.append(newP)
+          ps = ps.union(set(phis))
+          newPs,cost2 = worstL1ps(phis)
+          ps = ps.union(newPs)
           cost2 = l1Cost(phis,ps)
-          # print 'cost1,cost2',cost1,cost2
-          if not cost1+1.0e-8<cost2:
+          if not cost1+1.0e-12<cost2:
              done = True
+          #print 'l1',k,'add',newPs,'cost1',cost1,'cost2',cost2
        return phis,activeL1Constraints(phis,ps)
     
                 
@@ -301,7 +222,6 @@
         posteriorProbs = posteriorProbs/sum(posteriorProbs)
         e[winsSeen] = sum(posteriorProbs*phis)
       return numpy.array(e)
-
 .. code:: python
 
     def reportSoln(x,pTrue):
@@ -329,8 +249,9 @@
         l1soln,activePs = solveL1ProblemByCuts(k)
         addToFrame(k,'l1 minimax',l1soln)
         print '\tl1 solution for general coin game:',l1soln
+        print '\t\t l1 diffs:',[l1soln[i+1]-l1soln[i] for i in range(len(l1soln)-1)]
         print '\tl1 solution active ps:',activePs
-        l2soln = solveForKN(k)
+        l2soln = l2minimaxSoln(k,numeric=True)
         addToFrame(k,'l2 minimax',l2soln)
         print '\tnumeric l2 for general coin game:',l2soln
         for pTrue in [(0.0,0.5,1.0),(1/6.0,2/6.0,3/6.0,4/6.0,5/6.0)]:
@@ -350,7 +271,8 @@
     solutions for k-rolls: 1
     	empirical frequentist solution: [0.0, 1.0]
     	Jeffries prior Bayes solution: [0.25, 0.75]
-    	l1 solution for general coin game: [0.25000000053084404, 0.7499999994691557]
+    	l1 solution for general coin game: [0.24999999993052427, 0.7500000000694756]
+    		 l1 diffs: [0.5000000001389514]
     	l1 solution active ps: [0.0, 0.5, 1.0]
     	numeric l2 for general coin game: [0.25, 0.75]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
@@ -372,15 +294,16 @@
     solutions for k-rolls: 2
     	empirical frequentist solution: [0.0, 0.5, 1.0]
     	Jeffries prior Bayes solution: [0.16666666666666666, 0.5, 0.8333333333333334]
-    	l1 solution for general coin game: [0.1916025849097775, 0.5000000003927415, 0.8083974150901696]
-    	l1 solution active ps: [0.0, 0.36110277018834125, 0.63891962123298907, 1.0]
-    	numeric l2 for general coin game: [0.20710678118654738, 0.49999999999999983, 0.79289321881345221]
+    	l1 solution for general coin game: [0.19160258565074154, 0.49999999999753564, 0.8083974143410706]
+    		 l1 diffs: [0.30839741434679413, 0.30839741434353496]
+    	l1 solution active ps: [0.0, 0.36110277023033782, 0.63889722976534502, 1.0]
+    	numeric l2 for general coin game: [0.20710678118654754, 0.5, 0.7928932188134525]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.5 1.0] l2Loss 0.125, l1Loss 0.25
     		obvlivious solution [0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.1 0.5 0.9] l2Loss 0.08, l1Loss 0.2
     		l1 solution for restrited dice game: [0.166666656849 0.5 0.833333343151] l2Loss 0.0555555588283, l1Loss 0.166666671576
-    		l2 solution for restrited dice game: [0.207106781187 0.500000000041 0.792893218813] l2Loss 0.0428932188135, l1Loss 0.207106781187
+    		l2 solution for restrited dice game: [0.207106781187 0.499999999968 0.792893218813] l2Loss 0.0428932188135, l1Loss 0.207106781187
     			l2 restricted loss of last soln: 0.0428932188135 (and for general l2 solution) 0.0428932188135
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.5 1.0] l2Loss 0.125, l1Loss 0.296296296296
@@ -394,9 +317,10 @@
     solutions for k-rolls: 3
     	empirical frequentist solution: [0.0, 0.3333333333333333, 0.6666666666666666, 1.0]
     	Jeffries prior Bayes solution: [0.125, 0.375, 0.625, 0.875]
-    	l1 solution for general coin game: [0.16204790029316266, 0.39658685219868767, 0.6034131464669085, 0.8379520999487733]
-    	l1 solution active ps: [0.0, 0.28964153346034199, 0.5, 0.71035846884017806, 1.0]
-    	numeric l2 for general coin game: [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
+    	l1 solution for general coin game: [0.16204790198196198, 0.3965868368489873, 0.6034131631510129, 0.8379520980180379]
+    		 l1 diffs: [0.23453893486702534, 0.20682632630202558, 0.23453893486702504]
+    	l1 solution active ps: [0.0, 0.2896415337253388, 0.5, 0.71035846627466459, 1.0]
+    	numeric l2 for general coin game: [0.18301270189221933, 0.3943375672974065, 0.6056624327025936, 0.8169872981077807]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.333333333333 0.666666666667 1.0] l2Loss 0.0833333333333, l1Loss 0.25
     		obvlivious solution [0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
@@ -416,155 +340,162 @@
     solutions for k-rolls: 4
     	empirical frequentist solution: [0.0, 0.25, 0.5, 0.75, 1.0]
     	Jeffries prior Bayes solution: [0.1, 0.3, 0.5, 0.7, 0.9]
-    	l1 solution for general coin game: [0.14374804852360978, 0.33414659684052456, 0.5000000111050183, 0.6658533929161125, 0.8562519514766311]
-    	l1 solution active ps: [0.0, 0.24648851416142309, 0.41668579647889104, 0.58333969037069322, 0.75352095187829315, 1.0]
-    	numeric l2 for general coin game: [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
+    	l1 solution for general coin game: [0.143748050547601, 0.33414660810149377, 0.4999999999999999, 0.6658533918985061, 0.8562519494523989]
+    		 l1 diffs: [0.19039855755389276, 0.16585339189850612, 0.16585339189850623, 0.1903985575538928]
+    	l1 solution active ps: [0.0, 0.24648663092734108, 0.41668579736196293, 0.58331420263900069, 0.75351336907266298, 1.0]
+    	numeric l2 for general coin game: [0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.25 0.5 0.75 1.0] l2Loss 0.0625, l1Loss 0.1875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.0294117647059 0.5 0.5 0.5 0.970588235294] l2Loss 0.0276816608997, l1Loss 0.0588235294118
     		l1 solution for restrited dice game: [0.0555555293498 0.5 0.5 0.5 0.94444447065] l2Loss 0.0246913609364, l1Loss 0.0555555588313
-    		l2 solution for restrited dice game: [0.166666666667 0.333333333346 0.500000000035 0.375976819753 0.848938836876] l2Loss 0.0277777777778, l1Loss 0.166666666667
+    		l2 solution for restrited dice game: [0.166666666667 0.517362587307 0.50000000002 0.373991470843 0.833333333354] l2Loss 0.0277777777778, l1Loss 0.166666666667
     			l2 restricted loss of last soln: 0.0277777777778 (and for general l2 solution) 0.0277777777778
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.25 0.5 0.75 1.0] l2Loss 0.0625, l1Loss 0.197530864198
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.246680286006 0.349056603774 0.5 0.650943396226 0.753319713994] l2Loss 0.032666446072, l1Loss 0.155459620586
     		l1 solution for restrited dice game: [0.18090056258 0.339372469422 0.5 0.660627530578 0.81909943742] l2Loss 0.0285590713054, l1Loss 0.120201194966
-    		l2 solution for restrited dice game: [0.166666666687 0.333333333333 0.5 0.666666666667 0.833333331503] l2Loss 0.0277777777778, l1Loss 0.124999999884
-    			l2 restricted loss of last soln: 0.0277777777778 (and for general l2 solution) 0.0277777777778
+    		l2 solution for restrited dice game: [0.166666668316 0.333333333317 0.5 0.66666666668 0.833333331591] l2Loss 0.0277777777746, l1Loss 0.124999999796
+    			l2 restricted loss of last soln: 0.0277777777746 (and for general l2 solution) 0.0277777777778
     
     
     solutions for k-rolls: 5
     	empirical frequentist solution: [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
     	Jeffries prior Bayes solution: [0.08333333333333333, 0.25, 0.4166666666666667, 0.5833333333333334, 0.75, 0.9166666666666666]
-    	l1 solution for general coin game: [0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757]
-    	l1 solution active ps: [0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0]
-    	numeric l2 for general coin game: [0.15450849718749732, 0.29270509831249841, 0.43090169943749956, 0.56909830056250077, 0.70729490168750231, 0.84549150281250485]
+    	l1 solution for general coin game: [0.1309849027860669, 0.29208335490199555, 0.43128398938100926, 0.5687160106157013, 0.7079166450943544, 0.8690150972055133]
+    		 l1 diffs: [0.16109845211592866, 0.1392006344790137, 0.13743202123469206, 0.13920063447865305, 0.16109845211115892]
+    	l1 solution active ps: [0.0, 0.21719379045004072, 0.36100048826538267, 0.49999999999999983, 0.63899951585869186, 0.78280620954631819, 1.0]
+    	numeric l2 for general coin game: [0.15450849718747373, 0.29270509831248426, 0.43090169943749473, 0.5690983005625052, 0.7072949016875157, 0.8454915028125263]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.2 0.4 0.6 0.8 1.0] l2Loss 0.05, l1Loss 0.1875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.0151515151515 0.5 0.5 0.5 0.5 0.984848484848] l2Loss 0.0146923783287, l1Loss 0.030303030303
     		l1 solution for restrited dice game: [0.0294116806678 0.5 0.5 0.5 0.5 0.970588319332] l2Loss 0.0138408353932, l1Loss 0.0294117699583
-    		l2 solution for restrited dice game: [0.154508497187 0.29270509833 0.430901699449 0.501189936964 0.409051751075 0.845491502831] l2Loss 0.0238728757031, l1Loss 0.154508497187
+    		l2 solution for restrited dice game: [0.154508497187 0.66809328892 0.430901699448 0.539193879658 0.408510698599 0.845491502831] l2Loss 0.0238728757031, l1Loss 0.154508497187
     			l2 restricted loss of last soln: 0.0238728757031 (and for general l2 solution) 0.0238728757031
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.2 0.4 0.6 0.8 1.0] l2Loss 0.05, l1Loss 0.1875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.227306967985 0.305843110191 0.429643929644 0.570356070356 0.694156889809 0.772693032015] l2Loss 0.0265604298945, l1Loss 0.137328258645
     		l1 solution for restrited dice game: [0.166666667912 0.313638256875 0.438893140753 0.561106859247 0.686361743125 0.833333332088] l2Loss 0.0265211391016, l1Loss 0.117263169705
-    		l2 solution for restrited dice game: [0.166666666699 0.292705098312 0.430901699437 0.569098300563 0.707294901688 0.833333331939] l2Loss 0.0238113659803, l1Loss 0.128799427918
+    		l2 solution for restrited dice game: [0.166666666692 0.292705098312 0.430901699437 0.569098300563 0.707294901688 0.833333331847] l2Loss 0.0238113659803, l1Loss 0.128799427915
     			l2 restricted loss of last soln: 0.0238113659803 (and for general l2 solution) 0.0238728757031
     
     
     solutions for k-rolls: 6
     	empirical frequentist solution: [0.0, 0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334, 1.0]
     	Jeffries prior Bayes solution: [0.07142857142857142, 0.21428571428571427, 0.35714285714285715, 0.5, 0.6428571428571429, 0.7857142857142857, 0.9285714285714286]
-    	l1 solution for general coin game: [0.12142009384240575, 0.26147915987431153, 0.38196891625959106, 0.5000000008783331, 0.6180310826982969, 0.7385208414882181, 0.8785799061574862]
-    	l1 solution active ps: [0.0, 0.19572689615946981, 0.32082600384142879, 0.4406873722280974, 0.55931640725187781, 0.67917412508742425, 0.80426215306549531, 1.0]
-    	numeric l2 for general coin game: [0.14494897427875081, 0.26329931618583163, 0.38164965809291207, 0.49999999999999173, 0.61835034190706983, 0.736700683814145, 0.85505102572121505]
+    	l1 solution for general coin game: [0.12142009334016471, 0.2614791572136831, 0.38196891864945554, 0.5000000000008149, 0.6180310813522798, 0.738520842788359, 0.8785799066649318]
+    		 l1 diffs: [0.14005906387351838, 0.12048976143577245, 0.11803108135135937, 0.1180310813514649, 0.12048976143607926, 0.14005906387657274]
+    	l1 solution active ps: [0.0, 0.19573748515281328, 0.32082603310330932, 0.44068737189425083, 0.55931262811345639, 0.67917396673961195, 0.80426251484924949, 1.0]
+    	numeric l2 for general coin game: [0.1449489742783178, 0.2632993161855452, 0.38164965809277257, 0.5, 0.6183503419072274, 0.7367006838144547, 0.8550510257216821]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.166666666667 0.333333333333 0.5 0.666666666667 0.833333333333 1.0] l2Loss 0.0416666666667, l1Loss 0.15625
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.00769230769231 0.5 0.5 0.5 0.5 0.5 0.992307692308] l2Loss 0.00757396449704, l1Loss 0.0153846153846
     		l1 solution for restrited dice game: [0.0151514648353 0.5 0.5 0.5 0.5 0.5 0.984848535165] l2Loss 0.00734619068911, l1Loss 0.0151515167239
-    		l2 solution for restrited dice game: [0.144948974265 0.638687506793 0.381649658105 0.500000000011 0.477152966367 0.433542290064 0.88321053905] l2Loss 0.0210102051406, l1Loss 0.144948974265
-    			l2 restricted loss of last soln: 0.0210102051406 (and for general l2 solution) 0.0210102051445
+    		l2 solution for restrited dice game: [0.144948974278 0.263299316203 0.381649658105 0.500000000044 0.502038102832 0.434548705357 0.928773590863] l2Loss 0.0210102051443, l1Loss 0.144948974278
+    			l2 restricted loss of last soln: 0.0210102051443 (and for general l2 solution) 0.0210102051443
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.166666666667 0.333333333333 0.5 0.666666666667 0.833333333333 1.0] l2Loss 0.0416666666667, l1Loss 0.15625
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.213380453327 0.274647887324 0.376645355397 0.5 0.623354644603 0.725352112676 0.786619546673] l2Loss 0.0221153021832, l1Loss 0.123136849538
     		l1 solution for restrited dice game: [0.166666667309 0.281076524223 0.375458049807 0.5 0.624541950193 0.718923475777 0.833333332691] l2Loss 0.0218645634403, l1Loss 0.109843857508
-    		l2 solution for restrited dice game: [0.166666667927 0.263299316172 0.381649658103 0.5 0.618350341907 0.736700683833 0.833333283647] l2Loss 0.0208516170218, l1Loss 0.116347340416
-    			l2 restricted loss of last soln: 0.0208516170218 (and for general l2 solution) 0.0210102051444
+    		l2 solution for restrited dice game: [0.16666666669 0.263299316186 0.381649658093 0.5 0.618350341907 0.736700683814 0.833333331731] l2Loss 0.0208516170233, l1Loss 0.116347340583
+    			l2 restricted loss of last soln: 0.0208516170233 (and for general l2 solution) 0.0210102051443
     
     
     solutions for k-rolls: 7
     	empirical frequentist solution: [0.0, 0.14285714285714285, 0.2857142857142857, 0.42857142857142855, 0.5714285714285714, 0.7142857142857143, 0.8571428571428571, 1.0]
     	Jeffries prior Bayes solution: [0.0625, 0.1875, 0.3125, 0.4375, 0.5625, 0.6875, 0.8125, 0.9375]
-    	l1 solution for general coin game: [0.11389668038692093, 0.23800677021159725, 0.3445595652004531, 0.4484262201771256, 0.5515737833622973, 0.6554404375929243, 0.7619932366731346, 0.8861033196781587]
-    	l1 solution active ps: [0.0, 0.1792273951645626, 0.29022140501876265, 0.3959745050203069, 0.5, 0.60401725386111538, 0.70977860104156332, 0.82079342150007151, 1.0]
-    	numeric l2 for general coin game: [0.13714594258870808, 0.24081853042050227, 0.344491118252296, 0.44816370608408912, 0.55183629391588152, 0.65550888174767297, 0.75918146957946298, 0.86285405741124843]
+    	l1 solution for general coin game: [0.11389667932573132, 0.23800677044517282, 0.34455956082544853, 0.4484262194707839, 0.5515737805311096, 0.6554404391766782, 0.7619932295574335, 0.8861033206812472]
+    		 l1 diffs: [0.1241100911194415, 0.10655279038027571, 0.1038666586453354, 0.10314756106032569, 0.10386665864556854, 0.10655279038075538, 0.12411009112381366]
+    	l1 solution active ps: [0.0, 0.17920657990019551, 0.29022140494226539, 0.395986216835298, 0.5, 0.60401378316609622, 0.70977859505803476, 0.82079342010258294, 1.0]
+    	numeric l2 for general coin game: [0.1371459425887159, 0.24081853042051138, 0.3444911182523068, 0.4481637060841023, 0.5518362939158977, 0.6555088817476932, 0.7591814695794886, 0.8628540574112842]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.142857142857 0.285714285714 0.428571428571 0.571428571429 0.714285714286 0.857142857143 1.0] l2Loss 0.0357142857143, l1Loss 0.15625
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.00387596899225 0.5 0.5 0.5 0.5 0.5 0.5 0.996124031008] l2Loss 0.00384592272099, l1Loss 0.0077519379845
     		l1 solution for restrited dice game: [0.00769228312404 0.5 0.5 0.5 0.5 0.5 0.5 0.992307716876] l2Loss 0.00378698262649, l1Loss 0.00769230807619
-    		l2 solution for restrited dice game: [0.137145942589 0.616206721028 0.344491118265 0.4481637061 0.549190214366 0.360208088664 0.151790613978 0.897585955074] l2Loss 0.0188090095685, l1Loss 0.137145942589
-    			l2 restricted loss of last soln: 0.0188090095685 (and for general l2 solution) 0.0188090095686
+    		l2 solution for restrited dice game: [0.137145942589 0.616206721028 0.344491118265 0.4481637061 0.549190214366 0.360208088664 0.151790613978 0.862854057423] l2Loss 0.0188090095685, l1Loss 0.137145942589
+    			l2 restricted loss of last soln: 0.0188090095685 (and for general l2 solution) 0.0188090095685
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.142857142857 0.285714285714 0.428571428571 0.571428571429 0.714285714286 0.857142857143 1.0] l2Loss 0.0357142857143, l1Loss 0.15625
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.203065668302 0.251405546037 0.33603150662 0.443861984801 0.556138015199 0.66396849338 0.748594453963 0.796934331698] l2Loss 0.0187823171961, l1Loss 0.116332256288
     		l1 solution for restrited dice game: [0.16666667288 0.25129079795 0.333333333325 0.471599601341 0.528400398659 0.666666666675 0.74870920205 0.83333332712] l2Loss 0.0191337687145, l1Loss 0.102629876053
-    		l2 solution for restrited dice game: [0.166666668796 0.240818530411 0.344491118252 0.448163706094 0.551836293916 0.655508881748 0.759181469599 0.833333105106] l2Loss 0.0185656536849, l1Loss 0.112930629826
-    			l2 restricted loss of last soln: 0.0185656536849 (and for general l2 solution) 0.0188090095686
+    		l2 solution for restrited dice game: [0.1666666667 0.240818530421 0.344491118252 0.448163706084 0.551836293916 0.655508881748 0.759181469579 0.833333326791] l2Loss 0.0185656536862, l1Loss 0.112930631576
+    			l2 restricted loss of last soln: 0.0185656536862 (and for general l2 solution) 0.0188090095685
     
     
     solutions for k-rolls: 8
     	empirical frequentist solution: [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0]
     	Jeffries prior Bayes solution: [0.05555555555555555, 0.16666666666666666, 0.2777777777777778, 0.3888888888888889, 0.5, 0.6111111111111112, 0.7222222222222222, 0.8333333333333334, 0.9444444444444444]
-    	l1 solution for general coin game: [0.10776815608075044, 0.21931787739327863, 0.3150231129755032, 0.40802485346404505, 0.5000000013251399, 0.5919751463672478, 0.6849768800373918, 0.7806821494767411, 0.8922318434004618]
-    	l1 solution active ps: [0.0, 0.16599851137446592, 0.26598799144202911, 0.36082665593891317, 0.45380106497798162, 0.54619454816237634, 0.63913646551673864, 0.73401189056232763, 0.83400143995418163, 1.0]
-    	numeric l2 for general coin game: [0.13060193748186366, 0.22295145311139491, 0.31530096874092589, 0.40765048437045631, 0.49999999999998584, 0.59234951562951332, 0.68469903125903675, 0.77704854688855263, 0.8693980625180614]
+    	l1 solution for general coin game: [0.1077681543681833, 0.2193178507713117, 0.31502312214542627, 0.4080248404537603, 0.5000000000013364, 0.5919751595490542, 0.6849768778578612, 0.7806821492328738, 0.89223184564372]
+    		 l1 diffs: [0.1115496964031284, 0.09570527137411458, 0.09300171830833404, 0.09197515954757607, 0.09197515954771784, 0.09300171830880699, 0.09570527137501261, 0.11154969641084622]
+    	l1 solution active ps: [0.0, 0.1659985138817946, 0.26598812691099299, 0.36086354032834039, 0.4538026316764418, 0.54619736835169352, 0.6391364596743061, 0.73401187293804149, 0.83400148611889546, 1.0]
+    	numeric l2 for general coin game: [0.13060193748187074, 0.22295145311140305, 0.3153009687409354, 0.4076504843704677, 0.5, 0.5923495156295323, 0.6846990312590646, 0.777048546888597, 0.8693980625181293]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.125 0.25 0.375 0.5 0.625 0.75 0.875 1.0] l2Loss 0.03125, l1Loss 0.13671875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.00194552529183 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.998054474708] l2Loss 0.00193795515451, l1Loss 0.00389105058366
     		l1 solution for restrited dice game: [0.00387585717804 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.996124142822] l2Loss 0.00192296222727, l1Loss 0.0038759698658
-    		l2 solution for restrited dice game: [0.130601937482 0.598339643719 0.690689159348 0.407650484382 0.500000000012 0.545606675665 0.385083332668 0.169657691287 0.93582357461] l2Loss 0.017056866074, l1Loss 0.130601937482
+    		l2 solution for restrited dice game: [0.130601937482 0.598339643719 0.690689159348 0.407650484382 0.500000000012 0.545606675664 0.385083332668 0.169657691287 0.869398062534] l2Loss 0.017056866074, l1Loss 0.130601937482
     			l2 restricted loss of last soln: 0.017056866074 (and for general l2 solution) 0.017056866074
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.125 0.25 0.375 0.5 0.625 0.75 0.875 1.0] l2Loss 0.03125, l1Loss 0.13671875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.195260476177 0.233697264582 0.304134379969 0.399057403621 0.5 0.600942596379 0.695865620031 0.766302735418 0.804739523823] l2Loss 0.018007685456, l1Loss 0.106032688791
-    		l1 solution for restrited dice game: [0.166666668834 0.2167982497 0.333333333723 0.406367020149 0.5 0.593632979851 0.666666666278 0.7832017503 0.833333331166] l2Loss 0.0179244659521, l1Loss 0.0977270379767
-    		l2 solution for restrited dice game: [0.183016542704 0.222965203022 0.315301022824 0.407650485111 0.50000000003 0.591187370225 0.684697182283 0.777048502329 0.833328303315] l2Loss 0.0168129749519, l1Loss 0.102561759416
-    			l2 restricted loss of last soln: 0.0168129749519 (and for general l2 solution) 0.017056866074
+    		l1 solution for restrited dice game: [0.166666668834 0.2167982497 0.333333333723 0.406367020149 0.5 0.593632979851 0.666666666277 0.7832017503 0.833333331166] l2Loss 0.0179244659521, l1Loss 0.0977270379767
+    		l2 solution for restrited dice game: [0.183016542717 0.222965203022 0.315301022824 0.407650485111 0.50000000003 0.591187370225 0.684697182275 0.777048502339 0.833328347103] l2Loss 0.0168129749521, l1Loss 0.102561761124
+    			l2 restricted loss of last soln: 0.0168129749521 (and for general l2 solution) 0.017056866074
     
     
     solutions for k-rolls: 9
     	empirical frequentist solution: [0.0, 0.1111111111111111, 0.2222222222222222, 0.3333333333333333, 0.4444444444444444, 0.5555555555555556, 0.6666666666666666, 0.7777777777777778, 0.8888888888888888, 1.0]
     	Jeffries prior Bayes solution: [0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95]
-    	l1 solution for general coin game: [0.10264212529939748, 0.2040136741160041, 0.2910022084311352, 0.37535485210598, 0.4585632093716296, 0.5414368038761673, 0.6246451401774117, 0.7089977938670285, 0.7959863262489215, 0.8973578746853068]
-    	l1 solution active ps: [0.0, 0.15515985040672431, 0.24621623700708614, 0.33240558574383688, 0.41659630380607671, 0.5, 0.58340370518012885, 0.66759443436233634, 0.75377819753100983, 0.84485136947884865, 1.0]
-    	numeric l2 for general coin game: [0.12499999999993124, 0.20833333333325538, 0.29166666666657692, 0.37499999999989464, 0.45833333333320636, 0.54166666666650842, 0.62499999999979383, 0.70833333333304671, 0.79166666666622476, 0.87499999999922329]
+    	l1 solution for general coin game: [0.10264212508821931, 0.2040136749054906, 0.29100220936496646, 0.3753548633670125, 0.4585631959797285, 0.5414368040116312, 0.6246451366235155, 0.7089977906236119, 0.7959863250795016, 0.8973578748666846]
+    		 l1 diffs: [0.1013715498172713, 0.08698853445947585, 0.08435265400204606, 0.08320833261271599, 0.08287360803190269, 0.08320833261188432, 0.0843526540000964, 0.08698853445588972, 0.10137154978718299]
+    	l1 solution active ps: [0.0, 0.15514957215019079, 0.24623878124738935, 0.3324055847703502, 0.41659630413452203, 0.5, 0.58340369586499563, 0.66759441523010976, 0.75376121875278634, 0.84485042784978504, 1.0]
+    	numeric l2 for general coin game: [0.125, 0.20833333333333334, 0.2916666666666667, 0.375, 0.4583333333333333, 0.5416666666666666, 0.625, 0.7083333333333334, 0.7916666666666666, 0.875]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.111111111111 0.222222222222 0.333333333333 0.444444444444 0.555555555556 0.666666666667 0.777777777778 0.888888888889 1.0] l2Loss 0.0277777777778, l1Loss 0.13671875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.000974658869396 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.999025341131] l2Loss 0.000972758949572, l1Loss 0.00194931773879
     		l1 solution for restrited dice game: [0.00194482948192 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.998055170518] l2Loss 0.000968980284687, l1Loss 0.00194552800984
-    		l2 solution for restrited dice game: [0.124999999934 0.208333333351 0.291666666684 0.375000000012 0.458333333344 0.500717538743 0.497589740717 0.70833333332 0.184275811065 0.938576308113] l2Loss 0.0156249999836, l1Loss 0.124999999934
-    			l2 restricted loss of last soln: 0.0156249999836 (and for general l2 solution) 0.0156250000002
+    		l2 solution for restrited dice game: [0.125 0.583721523941 0.667054857274 0.375000000012 0.458333333346 0.541666666678 0.331666826727 0.407168032872 0.184275811065 0.997847383866] l2Loss 0.015625, l1Loss 0.125
+    			l2 restricted loss of last soln: 0.015625 (and for general l2 solution) 0.015625
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.111111111111 0.222222222222 0.333333333333 0.444444444444 0.555555555556 0.666666666667 0.777777777778 0.888888888889 1.0] l2Loss 0.0277777777778, l1Loss 0.13671875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.18926077274 0.219987438753 0.278652335209 0.362437814386 0.454203031376 0.545796968624 0.637562185614 0.721347664791 0.780012561247 0.81073922726] l2Loss 0.0172650938973, l1Loss 0.109863319723
     		l1 solution for restrited dice game: [0.166666669019 0.178394850692 0.333333332716 0.33819848159 0.49999999929 0.50000000071 0.66180151841 0.666666667284 0.821605149308 0.833333330981] l2Loss 0.0171215115142, l1Loss 0.0891371380188
-    		l2 solution for restrited dice game: [0.196996585469 0.208464792041 0.291666997531 0.374999999481 0.458333333322 0.537269985903 0.624950975144 0.707587563013 0.791646405912 0.833218570067] l2Loss 0.0154449229399, l1Loss 0.101171673921
-    			l2 restricted loss of last soln: 0.0154449229399 (and for general l2 solution) 0.015625
+    		l2 solution for restrited dice game: [0.196996582979 0.208464792077 0.291666997532 0.374999999481 0.458333333322 0.537269985894 0.624950975144 0.707587563013 0.791646405923 0.833219203426] l2Loss 0.0154449229117, l1Loss 0.10117167516
+    			l2 restricted loss of last soln: 0.0154449229117 (and for general l2 solution) 0.015625
     
     
     solutions for k-rolls: 10
     	empirical frequentist solution: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     	Jeffries prior Bayes solution: [0.045454545454545456, 0.13636363636363635, 0.22727272727272727, 0.3181818181818182, 0.4090909090909091, 0.5, 0.5909090909090909, 0.6818181818181818, 0.7727272727272727, 0.8636363636363636, 0.9545454545454546]
-    	l1 solution for general coin game: [0.09826526400582009, 0.19120312092499994, 0.271015741090656, 0.3482922467591192, 0.4243922695084243, 0.4999999963063106, 0.5756077322703826, 0.6517077576515427, 0.7289842560026036, 0.808796881071396, 0.9017347360452662]
-    	l1 solution active ps: [0.0, 0.14602970052725917, 0.22977773950594638, 0.30876671085544621, 0.38586688004136338, 0.46202154146925511, 0.53795675202860249, 0.61415884787859898, 0.69120080213558366, 0.77022276873398221, 0.85396381493049334, 1.0]
-    	numeric l2 for general coin game: [0.12012653667611538, 0.19610122934092272, 0.27207592200573305, 0.3480506146705476, 0.42402530733536842, 0.50000000000019862, 0.5759746926650432, 0.65194938532990943, 0.72792407799480374, 0.80389877065973081, 0.87987346332470762]
+    	l1 solution for general coin game: [0.09826526647532013, 0.1912031220657271, 0.2710157475936154, 0.3482922491114446, 0.42439226870696223, 0.5, 0.5756077312930374, 0.6517077508885554, 0.7289842524063843, 0.8087968779342726, 0.9017347335246796]
+    		 l1 diffs: [0.09293785559040696, 0.07981262552788831, 0.07727650151782917, 0.07610001959551765, 0.07560773129303777, 0.07560773129303744, 0.07610001959551793, 0.07727650151782894, 0.07981262552788826, 0.09293785559040701]
+    	l1 solution active ps: [0.0, 0.1460430548469249, 0.2297784688304183, 0.30879920080676582, 0.38586689640872041, 0.46204324882957593, 0.5379567512229938, 0.61413310359004236, 0.69120079919316557, 0.77022153116943026, 0.85395694515310194, 1.0]
+    	numeric l2 for general coin game: [0.12012653667602108, 0.19610122934081686, 0.27207592200561265, 0.34805061467040843, 0.4240253073352042, 0.5, 0.5759746926647957, 0.6519493853295915, 0.7279240779943873, 0.803898770659183, 0.8798734633239789]
     	solutions for for k-roll games restricted to probs (0.0, 0.5, 1.0)
     		empirical frequentist solution: [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0] l2Loss 0.025, l1Loss 0.123046875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.25, l1Loss 0.5
     		uniform prior restricted Bayes soln: [0.000487804878049 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.999512195122] l2Loss 0.000487328970851, l1Loss 0.000975609756098
     		l1 solution for restrited dice game: [0.000974504389646 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.99902549561] l2Loss 0.000486379775916, l1Loss 0.000974659171114
-    		l2 solution for restrited dice game: [0.120126536676 0.571489419948 0.647464112613 0.348050614683 0.424025307347 0.500000000018 0.551651759149 0.354234619838 0.4246453469 0.196507915059 0.997931309432] l2Loss 0.0144303848138, l1Loss 0.120126536676
+    		l2 solution for restrited dice game: [0.120126536676 0.571489419948 0.647464112613 0.348050614683 0.424025307347 0.500000000017 0.551651759149 0.354234619838 0.4246453469 0.196507915058 0.940971076946] l2Loss 0.0144303848138, l1Loss 0.120126536676
     			l2 restricted loss of last soln: 0.0144303848138 (and for general l2 solution) 0.0144303848138
     	solutions for for k-roll games restricted to probs (0.16666666666666666, 0.3333333333333333, 0.5, 0.6666666666666666, 0.8333333333333334)
     		empirical frequentist solution: [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0] l2Loss 0.025, l1Loss 0.123046875
     		obvlivious solution [0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5] l2Loss 0.111111111111, l1Loss 0.333333333333
     		uniform prior restricted Bayes soln: [0.184595064958 0.209247335549 0.258068774016 0.331937027007 0.416091566541 0.5 0.583908433459 0.668062972993 0.741931225984 0.790752664451 0.815404935042] l2Loss 0.0164974307555, l1Loss 0.101363602606
     		l1 solution for restrited dice game: [0.166666666528 0.166666667078 0.311378207303 0.333333333202 0.438570869961 0.5 0.561429130039 0.666666666798 0.688621792697 0.833333332922 0.833333333472] l2Loss 0.0162594967291, l1Loss 0.0879975872226
-    		l2 solution for restrited dice game: [0.206448115119 0.196302450351 0.272076043217 0.348050614582 0.424025307335 0.499999997496 0.57110782512 0.651597705182 0.726421736255 0.803847976124 0.833128057554] l2Loss 0.0143312922912, l1Loss 0.0952262267234
-    			l2 restricted loss of last soln: 0.0143312922912 (and for general l2 solution) 0.0144303848138
+    		l2 solution for restrited dice game: [0.206448101445 0.196302450374 0.272076043217 0.348050614582 0.424025307335 0.499999998882 0.571107824617 0.651597705175 0.726421739604 0.803847976053 0.833127454927] l2Loss 0.0143312921271, l1Loss 0.0952262168474
+    			l2 restricted loss of last soln: 0.0143312921271 (and for general l2 solution) 0.0144303848138
     
 
 
@@ -646,15 +577,15 @@
         h
     n             0          1          2          3          4          5          6          7          8          9         10
       1  0.25000000 0.75000000                                                                                                   
-      2  0.19160258 0.50000000 0.80839742                                                                                        
-      3  0.16204790 0.39658685 0.60341315 0.83795210                                                                             
-      4  0.14374805 0.33414660 0.50000001 0.66585339 0.85625195                                                                  
-      5  0.13098490 0.29208336 0.43128400 0.56871601 0.70791662 0.86901510                                                       
+      2  0.19160259 0.50000000 0.80839741                                                                                        
+      3  0.16204790 0.39658684 0.60341316 0.83795210                                                                             
+      4  0.14374805 0.33414661 0.50000000 0.66585339 0.85625195                                                                  
+      5  0.13098490 0.29208335 0.43128399 0.56871601 0.70791665 0.86901510                                                       
       6  0.12142009 0.26147916 0.38196892 0.50000000 0.61803108 0.73852084 0.87857991                                            
-      7  0.11389668 0.23800677 0.34455957 0.44842622 0.55157378 0.65544044 0.76199324 0.88610332                                 
-      8  0.10776816 0.21931788 0.31502311 0.40802485 0.50000000 0.59197515 0.68497688 0.78068215 0.89223184                      
-      9  0.10264213 0.20401367 0.29100221 0.37535485 0.45856321 0.54143680 0.62464514 0.70899779 0.79598633 0.89735787           
-      10 0.09826526 0.19120312 0.27101574 0.34829225 0.42439227 0.50000000 0.57560773 0.65170776 0.72898426 0.80879688 0.90173474
+      7  0.11389668 0.23800677 0.34455956 0.44842622 0.55157378 0.65544044 0.76199323 0.88610332                                 
+      8  0.10776815 0.21931785 0.31502312 0.40802484 0.50000000 0.59197516 0.68497688 0.78068215 0.89223185                      
+      9  0.10264213 0.20401367 0.29100221 0.37535486 0.45856320 0.54143680 0.62464514 0.70899779 0.79598633 0.89735787           
+      10 0.09826527 0.19120312 0.27101575 0.34829225 0.42439227 0.50000000 0.57560773 0.65170775 0.72898425 0.80879688 0.90173473
     [1] "l2 minimax"
         h
     n            0         1         2         3         4         5         6         7         8         9        10
@@ -672,7 +603,7 @@
 
 
 
-.. image:: output_4_1.png
+.. image:: output_5_1.png
 
 
 .. code:: python
@@ -734,7 +665,7 @@
     l2Soln [ 0.20710678  0.5         0.79289322]
     l1 loss 0.207106781187
     l2 loss 0.0428932188135
-    effective priors l2 (0.2071067811865605, 0.585786437626879, 0.2071067811865605)
+    effective priors l2 (0.20710678118656034, 0.5857864376268793, 0.20710678118656034)
     Bayes check l2 [ 0.20710678  0.5         0.79289322]
     
     uniform Bayes solution to coingame (all-heads, fair, or all-tails): 3
@@ -748,7 +679,7 @@
     l2Soln [ 0.1830127   0.39433757  0.50181961  0.8169873 ]
     l1 loss 0.183012701892
     l2 loss 0.0334936490539
-    effective priors l2 (0.1510847396257868, 0.6978305207484263, 0.1510847396257868)
+    effective priors l2 (0.15108473962578717, 0.6978305207484257, 0.15108473962578717)
     Bayes check l2 [ 0.1830127  0.5        0.5        0.8169873]
     
     uniform Bayes solution to coingame (all-heads, fair, or all-tails): 4
@@ -759,10 +690,10 @@
     l2 loss 0.0246913609364
     effective priors l1 (0.2500000663328986, 0.49999986733420276, 0.2500000663328986)
     Bayes check l1 [ 0.05555553  0.5         0.5         0.5         0.94444447]
-    l2Soln [ 0.16666667  0.33333333  0.5         0.37597682  0.84893884]
+    l2Soln [ 0.16666667  0.51736259  0.5         0.37399147  0.83333333]
     l1 loss 0.166666666667
     l2 loss 0.0277777777778
-    effective priors l2 (0.10000000000011512, 0.7999999999997698, 0.10000000000011512)
+    effective priors l2 (0.10000000000011507, 0.7999999999997699, 0.10000000000011507)
     Bayes check l2 [ 0.16666667  0.5         0.5         0.5         0.83333333]
     
     uniform Bayes solution to coingame (all-heads, fair, or all-tails): 5
@@ -773,10 +704,10 @@
     l2 loss 0.0138408353932
     effective priors l1 (0.2500003794849061, 0.4999992410301878, 0.2500003794849061)
     Bayes check l1 [ 0.02941168  0.5         0.5         0.5         0.5         0.97058832]
-    l2Soln [ 0.1545085   0.2927051   0.4309017   0.50118994  0.40905175  0.8454915 ]
+    l2Soln [ 0.1545085   0.66809329  0.4309017   0.53919388  0.4085107   0.8454915 ]
     l1 loss 0.154508497187
     l2 loss 0.0238728757031
-    effective priors l2 (0.06130893952188311, 0.8773821209562338, 0.06130893952188311)
+    effective priors l2 (0.061308939521894985, 0.87738212095621, 0.061308939521894985)
     Bayes check l2 [ 0.1545085  0.5        0.5        0.5        0.5        0.8454915]
     
     uniform Bayes solution to coingame (all-heads, fair, or all-tails): 6
@@ -789,11 +720,11 @@
     effective priors l1 (0.25000042808198086, 0.4999991438360383, 0.25000042808198086)
     Bayes check l1 [ 0.01515146  0.5         0.5         0.5         0.5         0.5
       0.98484854]
-    l2Soln [ 0.14494897  0.63868751  0.38164966  0.5         0.47715297  0.43354229
-      0.88321054]
-    l1 loss 0.144948974265
-    l2 loss 0.0210102051406
-    effective priors l2 (0.03555190165893773, 0.9288961966821245, 0.03555190165893773)
+    l2Soln [ 0.14494897  0.26329932  0.38164966  0.5         0.5020381   0.43454871
+      0.92877359]
+    l1 loss 0.144948974278
+    l2 loss 0.0210102051443
+    effective priors l2 (0.035551901654750494, 0.928896196690499, 0.035551901654750494)
     Bayes check l2 [ 0.14494897  0.5         0.5         0.5         0.5         0.5
       0.85505103]
     
@@ -808,10 +739,10 @@
     Bayes check l1 [ 0.00769228  0.5         0.5         0.5         0.5         0.5         0.5
       0.99230772]
     l2Soln [ 0.13714594  0.61620672  0.34449112  0.44816371  0.54919021  0.36020809
-      0.15179061  0.89758596]
+      0.15179061  0.86285406]
     l1 loss 0.137145942589
     l2 loss 0.0188090095685
-    effective priors l2 (0.019849362180012965, 0.960301275639974, 0.019849362180012965)
+    effective priors l2 (0.019849362180011466, 0.960301275639977, 0.019849362180011466)
     Bayes check l2 [ 0.13714594  0.5         0.5         0.5         0.5         0.5         0.5
       0.86285406]
     
@@ -826,10 +757,10 @@
     Bayes check l1 [ 0.00387586  0.5         0.5         0.5         0.5         0.5         0.5
       0.5         0.99612414]
     l2Soln [ 0.13060194  0.59833964  0.69068916  0.40765048  0.5         0.54560668
-      0.38508333  0.16965769  0.93582357]
+      0.38508333  0.16965769  0.86939806]
     l1 loss 0.130601937482
     l2 loss 0.017056866074
-    effective priors l2 (0.010809680995590636, 0.9783806380088187, 0.010809680995590636)
+    effective priors l2 (0.010809680995589861, 0.9783806380088202, 0.010809680995589861)
     Bayes check l2 [ 0.13060194  0.5         0.5         0.5         0.5         0.5         0.5
       0.5         0.86939806]
     
@@ -844,11 +775,11 @@
     effective priors l1 (0.2500448884146172, 0.4999102231707656, 0.2500448884146172)
     Bayes check l1 [ 0.00194483  0.5         0.5         0.5         0.5         0.5         0.5
       0.5         0.5         0.99805517]
-    l2Soln [ 0.125       0.20833333  0.29166667  0.375       0.45833333  0.50071754
-      0.49758974  0.70833333  0.18427581  0.93857631]
-    l1 loss 0.124999999934
-    l2 loss 0.0156249999836
-    effective priors l2 (0.005791505795516499, 0.988416988408967, 0.005791505795516499)
+    l2Soln [ 0.125       0.58372152  0.66705486  0.375       0.45833333  0.54166667
+      0.33166683  0.40716803  0.18427581  0.99784738]
+    l1 loss 0.125
+    l2 loss 0.015625
+    effective priors l2 (0.00579150579150542, 0.9884169884169891, 0.00579150579150542)
     Bayes check l2 [ 0.125  0.5    0.5    0.5    0.5    0.5    0.5    0.5    0.5    0.875]
     
     uniform Bayes solution to coingame (all-heads, fair, or all-tails): 10
@@ -864,136 +795,12 @@
        5.00000000e-01   5.00000000e-01   5.00000000e-01   5.00000000e-01
        5.00000000e-01   5.00000000e-01   9.99025496e-01]
     l2Soln [ 0.12012654  0.57148942  0.64746411  0.34805061  0.42402531  0.5
-      0.55165176  0.35423462  0.42464535  0.19650792  0.99793131]
+      0.55165176  0.35423462  0.42464535  0.19650792  0.94097108]
     l1 loss 0.120126536676
     l2 loss 0.0144303848138
-    effective priors l2 (0.0030692053724265004, 0.993861589255147, 0.0030692053724265004)
+    effective priors l2 (0.003069205372429653, 0.9938615892551407, 0.003069205372429653)
     Bayes check l2 [ 0.12012654  0.5         0.5         0.5         0.5         0.5         0.5
       0.5         0.5         0.5         0.87987346]
-
-
-.. code:: python
-
-    k=1
-    print 'analytic l2 solution for k=',k
-    nSoln = solveForK(k)
-    print nSoln
-    print 'approximate numeric l1 solution for k=',k
-    initialLoss = l1Loss(nSoln)
-    print 'initial l1 loss',initialLoss
-    nSoln[1] = 0.55
-    print nSoln
-    adjLoss = l1Loss(nSoln)
-    print 'adjusted l1 loss',adjLoss
-    print 'difference',initialLoss-adjLoss
-
-
-.. parsed-literal::
-
-    analytic l2 solution for k= 1
-    *******************
-    k 1
-    costs {0: 0.0625000000000000}
-    loss poly 1/16
-    	phi_0_1 	1/4 	0.25
-    	phi_1_1 	3/4 	0.75
-    loss 0.0625
-    d phi_0_1 2*p**2 - 5*p/2 + 1/2 +-
-    d phi_1_1 -2*p**2 + 3*p/2 +-
-    *******************
-    [0.25, 0.75]
-    approximate numeric l1 solution for k= 1
-    initial l1 loss 0.25
-    [0.25, 0.55]
-    adjusted l1 loss 0.45
-    difference -0.2
-
-
-.. code:: python
-
-    for k in range(1,5):
-        print
-        print 'analytic l2 solution for k=',k
-        solveForK(k)
-        print 'numeric l2 solution for k=',k
-        nSoln = solveForKN(k)
-        print nSoln
-        print
-
-.. parsed-literal::
-
-    
-    analytic l2 solution for k= 1
-    *******************
-    k 1
-    costs {0: 0.0625000000000000}
-    loss poly 1/16
-    	phi_0_1 	1/4 	0.25
-    	phi_1_1 	3/4 	0.75
-    loss 0.0625
-    d phi_0_1 2*p**2 - 5*p/2 + 1/2 +-
-    d phi_1_1 -2*p**2 + 3*p/2 +-
-    *******************
-    numeric l2 solution for k= 1
-    [0.25, 0.75]
-    
-    
-    analytic l2 solution for k= 2
-    *******************
-    k 2
-    costs {0: 0.0428932188134525}
-    loss poly -sqrt(2)/2 + 3/4
-    	phi_0_2 	-1/2 + sqrt(2)/2 	0.207106781187
-    	phi_1_2 	1/2 	0.5
-    	phi_2_2 	-sqrt(2)/2 + 3/2 	0.792893218813
-    loss 0.0428932188135
-    d phi_0_2 -2*p**3 + sqrt(2)*p**2 + 3*p**2 - 2*sqrt(2)*p - 1 + sqrt(2) +-
-    d phi_1_2 4*p**3 - 6*p**2 + 2*p +-
-    d phi_2_2 -2*p**3 - sqrt(2)*p**2 + 3*p**2 +-
-    *******************
-    numeric l2 solution for k= 2
-    [0.20710678118654738, 0.49999999999999983, 0.79289321881345221]
-    
-    
-    analytic l2 solution for k= 3
-    *******************
-    k 3
-    costs {2: 0.0334936490538903}
-    loss poly -sqrt(3)/8 + 1/4
-    	phi_0_3 	-1/4 + sqrt(3)/4 	0.183012701892
-    	phi_1_3 	sqrt(3)/12 + 1/4 	0.394337567297
-    	phi_2_3 	-sqrt(3)/12 + 3/4 	0.605662432703
-    	phi_3_3 	-sqrt(3)/4 + 5/4 	0.816987298108
-    loss 0.0334936490539
-    d phi_0_3 2*p**4 - 11*p**3/2 - sqrt(3)*p**3/2 + 3*sqrt(3)*p**2/2 + 9*p**2/2 - 3*sqrt(3)*p/2 - p/2 - 1/2 + sqrt(3)/2 +-
-    d phi_1_3 -6*p**4 + sqrt(3)*p**3/2 + 27*p**3/2 - 9*p**2 - sqrt(3)*p**2 + sqrt(3)*p/2 + 3*p/2 +-
-    d phi_2_3 6*p**4 - 21*p**3/2 + sqrt(3)*p**3/2 - sqrt(3)*p**2/2 + 9*p**2/2 +-
-    d phi_3_3 -2*p**4 - sqrt(3)*p**3/2 + 5*p**3/2 +-
-    *******************
-    numeric l2 solution for k= 3
-    [0.18301270189221974, 0.39433756729740699, 0.60566243270259423, 0.8169872981077817]
-    
-    
-    analytic l2 solution for k= 4
-    *******************
-    k 4
-    costs {3: 0.0277777777777778}
-    loss poly 1/36
-    	phi_0_4 	1/6 	0.166666666667
-    	phi_1_4 	1/3 	0.333333333333
-    	phi_2_4 	1/2 	0.5
-    	phi_3_4 	2/3 	0.666666666667
-    	phi_4_4 	5/6 	0.833333333333
-    loss 0.0277777777778
-    d phi_0_4 -2*p**5 + 25*p**4/3 - 40*p**3/3 + 10*p**2 - 10*p/3 + 1/3 +-
-    d phi_1_4 8*p**5 - 80*p**4/3 + 32*p**3 - 16*p**2 + 8*p/3 +-
-    d phi_2_4 -12*p**5 + 30*p**4 - 24*p**3 + 6*p**2 +-
-    d phi_3_4 8*p**5 - 40*p**4/3 + 16*p**3/3 +-
-    d phi_4_4 -2*p**5 + 5*p**4/3 +-
-    *******************
-    numeric l2 solution for k= 4
-    [0.16666666666666657, 0.33333333333333298, 0.49999999999999928, 0.66666666666666574, 0.83333333333333226]
-    
 
 
 .. code:: python
@@ -1014,7 +821,7 @@
        coord_cartesian(ylim = c(0.05,0.07)))
 
 
-.. image:: output_8_0.png
+.. image:: output_7_0.png
 
 
 .. code:: python
@@ -1035,7 +842,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) 
 
 
-.. image:: output_9_0.png
+.. image:: output_8_0.png
 
 
 .. code:: python
@@ -1056,7 +863,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
 
 
-.. image:: output_10_0.png
+.. image:: output_9_0.png
 
 
 .. code:: python
@@ -1103,7 +910,7 @@
     plotL1Shapes(c(0.2, 0.5, 0.8),pseq=c(0,0.5,1),1)
 
 
-.. image:: output_11_0.png
+.. image:: output_10_0.png
 
 
 .. code:: python
@@ -1112,7 +919,7 @@
     plotL1Shapes(c(0.20710678118654738, 0.49999999999999983, 0.79289321881345221),1)
 
 
-.. image:: output_12_0.png
+.. image:: output_11_0.png
 
 
 .. code:: python
@@ -1133,7 +940,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
 
 
-.. image:: output_13_0.png
+.. image:: output_12_0.png
 
 
 .. code:: python
@@ -1142,6 +949,41 @@
     l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
     activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
     #activePs <- seq(0,1,0.05)
+    plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
+    for(i in 0:(length(l1Soln)-1)) { 
+        print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
+    }
+
+
+.. image:: output_13_0.png
+
+
+
+.. image:: output_13_1.png
+
+
+
+.. image:: output_13_2.png
+
+
+
+.. image:: output_13_3.png
+
+
+
+.. image:: output_13_4.png
+
+
+
+.. image:: output_13_5.png
+
+
+.. code:: python
+
+    %%R
+    l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
+    activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
+    activePs <- sort(union(activePs,seq(0,1,0.1)))
     plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
     for(i in 0:(length(l1Soln)-1)) { 
         print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
@@ -1169,39 +1011,4 @@
 
 
 .. image:: output_14_5.png
-
-
-.. code:: python
-
-    %%R
-    l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
-    activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
-    activePs <- sort(union(activePs,seq(0,1,0.1)))
-    plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
-    for(i in 0:(length(l1Soln)-1)) { 
-        print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
-    }
-
-
-.. image:: output_15_0.png
-
-
-
-.. image:: output_15_1.png
-
-
-
-.. image:: output_15_2.png
-
-
-
-.. image:: output_15_3.png
-
-
-
-.. image:: output_15_4.png
-
-
-
-.. image:: output_15_5.png
 
