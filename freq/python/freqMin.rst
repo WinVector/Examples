@@ -1,4 +1,7 @@
 
+See http://winvector.github.io/freq/minimax.pdf for background and
+details
+
 .. code:: python
 
     %load_ext rpy2.ipython
@@ -603,7 +606,7 @@
 
 
 
-.. image:: output_5_1.png
+.. image:: output_6_1.png
 
 
 .. code:: python
@@ -821,7 +824,7 @@
        coord_cartesian(ylim = c(0.05,0.07)))
 
 
-.. image:: output_7_0.png
+.. image:: output_8_0.png
 
 
 .. code:: python
@@ -839,10 +842,11 @@
     dplot <- melt(d,id.vars=c('lambda'),variable.name='p',value.name='sq_loss')
     ggplot() +
        geom_line(data=dplot,aes(x=lambda,y=sq_loss,color=p)) +
-       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) 
+       geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=sq_loss),alpha=0.3) +
+       ggtitle('square loss of (lambda,1-lambda) for various p')
 
 
-.. image:: output_8_0.png
+.. image:: output_9_0.png
 
 
 .. code:: python
@@ -863,7 +867,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=lambda,ymin=0,ymax=l1_loss),alpha=0.3) 
 
 
-.. image:: output_9_0.png
+.. image:: output_10_0.png
 
 
 .. code:: python
@@ -910,7 +914,7 @@
     plotL1Shapes(c(0.2, 0.5, 0.8),pseq=c(0,0.5,1),1)
 
 
-.. image:: output_10_0.png
+.. image:: output_11_0.png
 
 
 .. code:: python
@@ -919,7 +923,7 @@
     plotL1Shapes(c(0.20710678118654738, 0.49999999999999983, 0.79289321881345221),1)
 
 
-.. image:: output_11_0.png
+.. image:: output_12_0.png
 
 
 .. code:: python
@@ -940,7 +944,7 @@
        geom_ribbon(data=subset(dplot,p=='pmax'),aes(x=phi21,ymin=0,ymax=l2_loss),alpha=0.3) 
 
 
-.. image:: output_12_0.png
+.. image:: output_13_0.png
 
 
 .. code:: python
@@ -949,41 +953,6 @@
     l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
     activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
     #activePs <- seq(0,1,0.05)
-    plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
-    for(i in 0:(length(l1Soln)-1)) { 
-        print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
-    }
-
-
-.. image:: output_13_0.png
-
-
-
-.. image:: output_13_1.png
-
-
-
-.. image:: output_13_2.png
-
-
-
-.. image:: output_13_3.png
-
-
-
-.. image:: output_13_4.png
-
-
-
-.. image:: output_13_5.png
-
-
-.. code:: python
-
-    %%R
-    l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
-    activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
-    activePs <- sort(union(activePs,seq(0,1,0.1)))
     plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
     for(i in 0:(length(l1Soln)-1)) { 
         print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
@@ -1011,4 +980,39 @@
 
 
 .. image:: output_14_5.png
+
+
+.. code:: python
+
+    %%R
+    l1Soln <- c(0.13098490014999317, 0.2920833550225756, 0.4312839988599481, 0.5687160116582426, 0.7079166228922025, 0.8690150999541757)
+    activePs <- c(0.0, 0.21719379706706049, 0.36099992785584262, 0.5, 0.63904680903474187, 0.78280621246077464, 1.0)
+    activePs <- sort(union(activePs,seq(0,1,0.1)))
+    plotL1Shapes(phis=l1Soln,phiX=0,pseq=activePs,onlyActive=TRUE)
+    for(i in 0:(length(l1Soln)-1)) { 
+        print(plotL1Shapes(phis=l1Soln,phiX=i,pseq=activePs,onlyActive=FALSE))
+    }
+
+
+.. image:: output_15_0.png
+
+
+
+.. image:: output_15_1.png
+
+
+
+.. image:: output_15_2.png
+
+
+
+.. image:: output_15_3.png
+
+
+
+.. image:: output_15_4.png
+
+
+
+.. image:: output_15_5.png
 

@@ -1,4 +1,7 @@
 
+See http://winvector.github.io/freq/minimax.pdf for background and
+details
+
 From:
 http://mathoverflow.net/questions/177574/existence-of-solutions-of-a-polynomial-system
 
