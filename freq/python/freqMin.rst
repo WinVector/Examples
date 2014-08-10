@@ -1016,3 +1016,93 @@ details
 
 .. image:: output_15_5.png
 
+
+.. code:: python
+
+    # look for general real solutions
+    def isRealSoln(si):
+        return all([abs(complex(sij).imag)<1.0e-6 for sij in si.values()])
+    
+    # only good for k>=1
+    def solveKz(k):
+       phis = sympy.symbols(['phi' + str(i) for i in range(k+1)])
+       z = sympy.symbols('z')
+       poly = sum([ sympy.binomial(k,h) * z**h * ((1+z)*phis[h] -z)**2 for h in range(k+1)]) - phis[0]**2 * (1+z)**(k+2)
+       polyTerms = poly.expand().collect(z,evaluate=False)
+       eqns = [ polyTerms[ki] for ki in polyTerms.keys() if (not ki==1) ]
+       solns = sympy.solve(eqns,phis,dict=True)
+       solnR = [ si for si in solns if isRealSoln(si)]
+       return phis,solnR
+    
+    p = sympy.symbols('p')
+    for k in range(1,4):
+       print
+       print k
+       phis,solnsK = solveKz(k)
+       polyK = sum([sympy.binomial(k,h) * p**h * (1-p)**(k-h) * (phis[h]-p)**2 for h in range(k+1) ]) - phis[0]**2
+       print 'poly',polyK
+       print 'number of real solutions:',len(solnsK)
+       for solnii in range(len(solnsK)):
+            solni = solnsK[solnii]
+            print '\t',k,'soln',(solnii+1),solni
+            print '\t latex: \\left(', ','.join([ sympy.printing.latex(solni[phij]) for phij in phis ]),'\\right)'
+            print '\tp-free poly check',polyK.subs(solni).expand().simplify()
+            print '\tnumeric soln',numericSoln(solni)
+            print
+       print
+                    
+
+
+.. parsed-literal::
+
+    
+    1
+    poly p*(-p + phi1)**2 - phi0**2 + (-p + 1)*(-p + phi0)**2
+    number of real solutions: 1
+    	1 soln 1 {phi0: 1/4, phi1: 3/4}
+    	 latex: \left( \frac{1}{4},\frac{3}{4} \right)
+    	p-free poly check 0
+    	numeric soln {phi0: 0.25, phi1: 0.75}
+    
+    
+    
+    2
+    poly p**2*(-p + phi2)**2 + 2*p*(-p + 1)*(-p + phi1)**2 - phi0**2 + (-p + 1)**2*(-p + phi0)**2
+    number of real solutions: 2
+    	2 soln 1 {phi0: -1/2 + sqrt(2)/2, phi1: 1/2, phi2: -sqrt(2)/2 + 3/2}
+    	 latex: \left( - \frac{1}{2} + \frac{\sqrt{2}}{2},\frac{1}{2},- \frac{\sqrt{2}}{2} + \frac{3}{2} \right)
+    	p-free poly check 0
+    	numeric soln {phi0: 0.20710678118654752, phi1: 0.5, phi2: 0.7928932188134524}
+    
+    	2 soln 2 {phi0: -sqrt(2)/2 - 1/2, phi1: 1/2, phi2: sqrt(2)/2 + 3/2}
+    	 latex: \left( - \frac{\sqrt{2}}{2} - \frac{1}{2},\frac{1}{2},\frac{\sqrt{2}}{2} + \frac{3}{2} \right)
+    	p-free poly check 0
+    	numeric soln {phi0: -1.2071067811865475, phi1: 0.5, phi2: 2.2071067811865475}
+    
+    
+    
+    3
+    poly p**3*(-p + phi3)**2 + 3*p**2*(-p + 1)*(-p + phi2)**2 + 3*p*(-p + 1)**2*(-p + phi1)**2 - phi0**2 + (-p + 1)**3*(-p + phi0)**2
+    number of real solutions: 4
+    	3 soln 1 {phi0: -1, phi3: 2, phi1: -sqrt(3)/3, phi2: -sqrt(3)/3 + 1}
+    	 latex: \left( -1,- \frac{\sqrt{3}}{3},- \frac{\sqrt{3}}{3} + 1,2 \right)
+    	p-free poly check 0
+    	numeric soln {phi0: -1.0, phi3: 2.0, phi1: -0.5773502691896257, phi2: 0.4226497308103742}
+    
+    	3 soln 2 {phi0: -1, phi3: 2, phi1: sqrt(3)/3, phi2: sqrt(3)/3 + 1}
+    	 latex: \left( -1,\frac{\sqrt{3}}{3},\frac{\sqrt{3}}{3} + 1,2 \right)
+    	p-free poly check 0
+    	numeric soln {phi0: -1.0, phi3: 2.0, phi1: 0.5773502691896257, phi2: 1.5773502691896257}
+    
+    	3 soln 3 {phi0: -1/4 + sqrt(3)/4, phi3: -sqrt(3)/4 + 5/4, phi1: sqrt(3)/12 + 1/4, phi2: -sqrt(3)/12 + 3/4}
+    	 latex: \left( - \frac{1}{4} + \frac{\sqrt{3}}{4},\frac{\sqrt{3}}{12} + \frac{1}{4},- \frac{\sqrt{3}}{12} + \frac{3}{4},- \frac{\sqrt{3}}{4} + \frac{5}{4} \right)
+    	p-free poly check 0
+    	numeric soln {phi0: 0.18301270189221933, phi3: 0.8169872981077807, phi1: 0.39433756729740643, phi2: 0.6056624327025936}
+    
+    	3 soln 4 {phi0: -sqrt(3)/4 - 1/4, phi3: sqrt(3)/4 + 5/4, phi1: -sqrt(3)/12 + 1/4, phi2: sqrt(3)/12 + 3/4}
+    	 latex: \left( - \frac{\sqrt{3}}{4} - \frac{1}{4},- \frac{\sqrt{3}}{12} + \frac{1}{4},\frac{\sqrt{3}}{12} + \frac{3}{4},\frac{\sqrt{3}}{4} + \frac{5}{4} \right)
+    	p-free poly check 0
+    	numeric soln {phi0: -0.6830127018922193, phi3: 1.6830127018922194, phi1: 0.10566243270259355, phi2: 0.8943375672974064}
+    
+    
+

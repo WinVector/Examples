@@ -22386,6 +22386,117 @@ AhKQgAQkUCYBA3CZdPUtAQlIQAISyCDwDbhC6CniEjmkAAAAAElFTkSuQmCC
 </div>
 
 </div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">
+In&nbsp;[24]:
+</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class="highlight"><pre><span class="c"># look for general real solutions</span>
+<span class="k">def</span> <span class="nf">isRealSoln</span><span class="p">(</span><span class="n">si</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">all</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="n">sij</span><span class="p">)</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1.0e-6</span> <span class="k">for</span> <span class="n">sij</span> <span class="ow">in</span> <span class="n">si</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+
+<span class="c"># only good for k&gt;=1</span>
+<span class="k">def</span> <span class="nf">solveKz</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+   <span class="n">phis</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">symbols</span><span class="p">([</span><span class="s">&#39;phi&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span>
+   <span class="n">z</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">)</span>
+   <span class="n">poly</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span> <span class="n">sympy</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="n">h</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span><span class="o">*</span><span class="n">phis</span><span class="p">[</span><span class="n">h</span><span class="p">]</span> <span class="o">-</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)])</span> <span class="o">-</span> <span class="n">phis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+   <span class="n">polyTerms</span> <span class="o">=</span> <span class="n">poly</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">collect</span><span class="p">(</span><span class="n">z</span><span class="p">,</span><span class="n">evaluate</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+   <span class="n">eqns</span> <span class="o">=</span> <span class="p">[</span> <span class="n">polyTerms</span><span class="p">[</span><span class="n">ki</span><span class="p">]</span> <span class="k">for</span> <span class="n">ki</span> <span class="ow">in</span> <span class="n">polyTerms</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ki</span><span class="o">==</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
+   <span class="n">solns</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">eqns</span><span class="p">,</span><span class="n">phis</span><span class="p">,</span><span class="nb">dict</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+   <span class="n">solnR</span> <span class="o">=</span> <span class="p">[</span> <span class="n">si</span> <span class="k">for</span> <span class="n">si</span> <span class="ow">in</span> <span class="n">solns</span> <span class="k">if</span> <span class="n">isRealSoln</span><span class="p">(</span><span class="n">si</span><span class="p">)]</span>
+   <span class="k">return</span> <span class="n">phis</span><span class="p">,</span><span class="n">solnR</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">sympy</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s">&#39;p&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
+   <span class="k">print</span>
+   <span class="k">print</span> <span class="n">k</span>
+   <span class="n">phis</span><span class="p">,</span><span class="n">solnsK</span> <span class="o">=</span> <span class="n">solveKz</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+   <span class="n">polyK</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">sympy</span><span class="o">.</span><span class="n">binomial</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span><span class="o">**</span><span class="n">h</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">h</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">phis</span><span class="p">[</span><span class="n">h</span><span class="p">]</span><span class="o">-</span><span class="n">p</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">])</span> <span class="o">-</span> <span class="n">phis</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+   <span class="k">print</span> <span class="s">&#39;poly&#39;</span><span class="p">,</span><span class="n">polyK</span>
+   <span class="k">print</span> <span class="s">&#39;number of real solutions:&#39;</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">solnsK</span><span class="p">)</span>
+   <span class="k">for</span> <span class="n">solnii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">solnsK</span><span class="p">)):</span>
+        <span class="n">solni</span> <span class="o">=</span> <span class="n">solnsK</span><span class="p">[</span><span class="n">solnii</span><span class="p">]</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="s">&#39;soln&#39;</span><span class="p">,(</span><span class="n">solnii</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">solni</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s"> latex: </span><span class="se">\\</span><span class="s">left(&#39;</span><span class="p">,</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span> <span class="n">sympy</span><span class="o">.</span><span class="n">printing</span><span class="o">.</span><span class="n">latex</span><span class="p">(</span><span class="n">solni</span><span class="p">[</span><span class="n">phij</span><span class="p">])</span> <span class="k">for</span> <span class="n">phij</span> <span class="ow">in</span> <span class="n">phis</span> <span class="p">]),</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">right)&#39;</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">p-free poly check&#39;</span><span class="p">,</span><span class="n">polyK</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">solni</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span><span class="o">.</span><span class="n">simplify</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;</span><span class="se">\t</span><span class="s">numeric soln&#39;</span><span class="p">,</span><span class="n">numericSoln</span><span class="p">(</span><span class="n">solni</span><span class="p">)</span>
+        <span class="k">print</span>
+   <span class="k">print</span>
+                
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+
+1
+poly p*(-p + phi1)**2 - phi0**2 + (-p + 1)*(-p + phi0)**2
+number of real solutions: 1
+	1 soln 1 {phi0: 1/4, phi1: 3/4}
+	 latex: \left( \frac{1}{4},\frac{3}{4} \right)
+	p-free poly check 0
+	numeric soln {phi0: 0.25, phi1: 0.75}
+
+
+
+2
+poly p**2*(-p + phi2)**2 + 2*p*(-p + 1)*(-p + phi1)**2 - phi0**2 + (-p + 1)**2*(-p + phi0)**2
+number of real solutions: 2
+	2 soln 1 {phi0: -1/2 + sqrt(2)/2, phi1: 1/2, phi2: -sqrt(2)/2 + 3/2}
+	 latex: \left( - \frac{1}{2} + \frac{\sqrt{2}}{2},\frac{1}{2},- \frac{\sqrt{2}}{2} + \frac{3}{2} \right)
+	p-free poly check 0
+	numeric soln {phi0: 0.20710678118654752, phi1: 0.5, phi2: 0.7928932188134524}
+
+	2 soln 2 {phi0: -sqrt(2)/2 - 1/2, phi1: 1/2, phi2: sqrt(2)/2 + 3/2}
+	 latex: \left( - \frac{\sqrt{2}}{2} - \frac{1}{2},\frac{1}{2},\frac{\sqrt{2}}{2} + \frac{3}{2} \right)
+	p-free poly check 0
+	numeric soln {phi0: -1.2071067811865475, phi1: 0.5, phi2: 2.2071067811865475}
+
+
+
+3
+poly p**3*(-p + phi3)**2 + 3*p**2*(-p + 1)*(-p + phi2)**2 + 3*p*(-p + 1)**2*(-p + phi1)**2 - phi0**2 + (-p + 1)**3*(-p + phi0)**2
+number of real solutions: 4
+	3 soln 1 {phi0: -1, phi3: 2, phi1: -sqrt(3)/3, phi2: -sqrt(3)/3 + 1}
+	 latex: \left( -1,- \frac{\sqrt{3}}{3},- \frac{\sqrt{3}}{3} + 1,2 \right)
+	p-free poly check 0
+	numeric soln {phi0: -1.0, phi3: 2.0, phi1: -0.5773502691896257, phi2: 0.4226497308103742}
+
+	3 soln 2 {phi0: -1, phi3: 2, phi1: sqrt(3)/3, phi2: sqrt(3)/3 + 1}
+	 latex: \left( -1,\frac{\sqrt{3}}{3},\frac{\sqrt{3}}{3} + 1,2 \right)
+	p-free poly check 0
+	numeric soln {phi0: -1.0, phi3: 2.0, phi1: 0.5773502691896257, phi2: 1.5773502691896257}
+
+	3 soln 3 {phi0: -1/4 + sqrt(3)/4, phi3: -sqrt(3)/4 + 5/4, phi1: sqrt(3)/12 + 1/4, phi2: -sqrt(3)/12 + 3/4}
+	 latex: \left( - \frac{1}{4} + \frac{\sqrt{3}}{4},\frac{\sqrt{3}}{12} + \frac{1}{4},- \frac{\sqrt{3}}{12} + \frac{3}{4},- \frac{\sqrt{3}}{4} + \frac{5}{4} \right)
+	p-free poly check 0
+	numeric soln {phi0: 0.18301270189221933, phi3: 0.8169872981077807, phi1: 0.39433756729740643, phi2: 0.6056624327025936}
+
+	3 soln 4 {phi0: -sqrt(3)/4 - 1/4, phi3: sqrt(3)/4 + 5/4, phi1: -sqrt(3)/12 + 1/4, phi2: sqrt(3)/12 + 3/4}
+	 latex: \left( - \frac{\sqrt{3}}{4} - \frac{1}{4},- \frac{\sqrt{3}}{12} + \frac{1}{4},\frac{\sqrt{3}}{12} + \frac{3}{4},\frac{\sqrt{3}}{4} + \frac{5}{4} \right)
+	p-free poly check 0
+	numeric soln {phi0: -0.6830127018922193, phi3: 1.6830127018922194, phi1: 0.10566243270259355, phi2: 0.8943375672974064}
+
+
+
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
     </div>
   </div>
 </body>
