@@ -1,0 +1,82 @@
+
+```{r hetexample, tidy=FALSE}
+# To make the html: echo "library(knitr); knit('het.Rmd')" | R --vanilla ; pandoc het.md -o het.html
+
+library(ggplot2)
+
+workProblem <- function(dAll,nreps,name,sampleSize=10) {
+   xAll <- matrix(data=c(dAll$x0,dAll$x1),ncol=2)
+   cAll <- solve(t(xAll) %*% xAll) %*% t(xAll)
+   beta <- as.numeric(cAll %*% dAll$y)
+
+   betaSamples <- matrix(data=0,nrow=2,ncol=nreps)
+   nrows <- dim(dAll)[[1]]
+   for(i in 1:nreps) {
+      dSample <- dAll[sample.int(nrows,sampleSize,replace=TRUE),]
+      individualError <- rnorm(sampleSize)
+      dSample$y <- dSample$y + individualError
+      dSample$e <- dSample$z + individualError
+      xSample <- matrix(data=c(dSample$x0,dSample$x1),ncol=2)
+      cSample <- solve(t(xSample) %*% xSample) %*% t(xSample)
+      betaS <- as.numeric(cSample %*% dSample$y)
+      betaSamples[,i] <- betaS
+   }
+   d <- c()
+   for(i in 1:(dim(betaSamples)[[1]])) {
+      coef <- paste('beta',(i-1),sep='')
+      mean <- mean(betaSamples[i,])
+      dev <- sqrt(var(betaSamples[i,])/nreps)
+      d <- rbind(d,data.frame(nsamples=nreps,model=name,coef=coef,
+         actual=beta[i],est=mean,estP=mean+2*dev,estM=mean-2*dev))
+   }
+   d
+}
+
+repCounts <- as.integer(floor(10^(0.25*(4:24))))
+
+
+print('good example')
+set.seed(2623496)
+dGood <- data.frame(x0=1,x1=0:10)
+dGood$y <- 3*dGood$x0 + 2*dGood$x1
+dGood$z <- dGood$y - predict(lm(y~0+x0+x1,data=dGood))
+print(dGood)
+print(summary(lm(y~0+x0+x1,data=dGood)))
+print(workProblem(dGood,10,'good/works',10000))
+
+pGood <- c()
+set.seed(2623496)
+for(reps in repCounts) {
+  pGood <- rbind(pGood,workProblem(dGood,reps,'goodData'))
+}
+ggplot(data=pGood,aes(x=nsamples)) +
+  geom_line(aes(y=actual)) +
+  geom_line(aes(y=est),linetype=2,color='blue') +
+  geom_ribbon(aes(ymax=estP,ymin=estM),alpha=0.2,fill='blue') +
+  facet_wrap(~coef,ncol=1,scales='free_y') + scale_x_log10() +
+  theme(axis.title.y=element_blank())
+
+
+dBad <- data.frame(x0=1,x1=0:10)
+dBad$y <- dBad$x1^2 # or y = -15 + 10*x1 with structured error
+dBad$z <- dBad$y - predict(lm(y~0+x0+x1,data=dBad))
+print('bad example')
+print(dBad)
+print(summary(lm(y~0+x0+x1,data=dBad)))
+print(workProblem(dBad,10,'bad/works',10000))
+print(sum(dBad$z*dBad$x0))
+print(sum(dBad$z*dBad$x1))
+
+pBad <- c()
+set.seed(2623496)
+for(reps in repCounts) {
+  pBad <- rbind(pBad,workProblem(dBad,reps,'badData'))
+}
+ggplot(data=pBad,aes(x=nsamples)) +
+  geom_line(aes(y=actual)) +
+  geom_line(aes(y=est),linetype=2,color='blue') +
+  geom_ribbon(aes(ymax=estP,ymin=estM),alpha=0.2,fill='blue') +
+  facet_wrap(~coef,ncol=1,scales='free_y') + scale_x_log10() +
+  theme(axis.title.y=element_blank())
+
+```

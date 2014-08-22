@@ -1,0 +1,151 @@
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># To make the html: echo &quot;library(knitr); knit(&#39;het.Rmd&#39;)&quot; | R --vanilla ; pandoc het.md -o het.html</span>
+
+<span class="kw">library</span>(ggplot2)
+
+workProblem &lt;-<span class="st"> </span>function(dAll,nreps,name,<span class="dt">sampleSize=</span><span class="dv">10</span>) {
+   xAll &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dt">data=</span><span class="kw">c</span>(dAll$x0,dAll$x1),<span class="dt">ncol=</span><span class="dv">2</span>)
+   cAll &lt;-<span class="st"> </span><span class="kw">solve</span>(<span class="kw">t</span>(xAll) %*%<span class="st"> </span>xAll) %*%<span class="st"> </span><span class="kw">t</span>(xAll)
+   beta &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(cAll %*%<span class="st"> </span>dAll$y)
+
+   betaSamples &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dt">data=</span><span class="dv">0</span>,<span class="dt">nrow=</span><span class="dv">2</span>,<span class="dt">ncol=</span>nreps)
+   nrows &lt;-<span class="st"> </span><span class="kw">dim</span>(dAll)[[<span class="dv">1</span>]]
+   for(i in <span class="dv">1</span>:nreps) {
+      dSample &lt;-<span class="st"> </span>dAll[<span class="kw">sample.int</span>(nrows,sampleSize,<span class="dt">replace=</span><span class="ot">TRUE</span>),]
+      individualError &lt;-<span class="st"> </span><span class="kw">rnorm</span>(sampleSize)
+      dSample$y &lt;-<span class="st"> </span>dSample$y +<span class="st"> </span>individualError
+      dSample$e &lt;-<span class="st"> </span>dSample$z +<span class="st"> </span>individualError
+      xSample &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dt">data=</span><span class="kw">c</span>(dSample$x0,dSample$x1),<span class="dt">ncol=</span><span class="dv">2</span>)
+      cSample &lt;-<span class="st"> </span><span class="kw">solve</span>(<span class="kw">t</span>(xSample) %*%<span class="st"> </span>xSample) %*%<span class="st"> </span><span class="kw">t</span>(xSample)
+      betaS &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(cSample %*%<span class="st"> </span>dSample$y)
+      betaSamples[,i] &lt;-<span class="st"> </span>betaS
+   }
+   d &lt;-<span class="st"> </span><span class="kw">c</span>()
+   for(i in <span class="dv">1</span>:(<span class="kw">dim</span>(betaSamples)[[<span class="dv">1</span>]])) {
+      coef &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;beta&#39;</span>,(i<span class="dv">-1</span>),<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+      mean &lt;-<span class="st"> </span><span class="kw">mean</span>(betaSamples[i,])
+      dev &lt;-<span class="st"> </span><span class="kw">sqrt</span>(<span class="kw">var</span>(betaSamples[i,])/nreps)
+      d &lt;-<span class="st"> </span><span class="kw">rbind</span>(d,<span class="kw">data.frame</span>(<span class="dt">nsamples=</span>nreps,<span class="dt">model=</span>name,<span class="dt">coef=</span>coef,
+         <span class="dt">actual=</span>beta[i],<span class="dt">est=</span>mean,<span class="dt">estP=</span>mean<span class="dv">+2</span>*dev,<span class="dt">estM=</span>mean<span class="dv">-2</span>*dev))
+   }
+   d
+}
+
+repCounts &lt;-<span class="st"> </span><span class="kw">as.integer</span>(<span class="kw">floor</span>(<span class="dv">10</span>^(<span class="fl">0.25</span>*(<span class="dv">4</span>:<span class="dv">24</span>))))
+
+
+<span class="kw">print</span>(<span class="st">&#39;good example&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;good example&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">2623496</span>)
+dGood &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x0=</span><span class="dv">1</span>,<span class="dt">x1=</span><span class="dv">0</span>:<span class="dv">10</span>)
+dGood$y &lt;-<span class="st"> </span><span class="dv">3</span>*dGood$x0 +<span class="st"> </span><span class="dv">2</span>*dGood$x1
+dGood$z &lt;-<span class="st"> </span>dGood$y -<span class="st"> </span><span class="kw">predict</span>(<span class="kw">lm</span>(y~<span class="dv">0</span>+x0+x1,<span class="dt">data=</span>dGood))
+<span class="kw">print</span>(dGood)</code></pre>
+<pre><code>##    x0 x1  y          z
+## 1   1  0  3 -9.326e-15
+## 2   1  1  5 -7.994e-15
+## 3   1  2  7 -7.105e-15
+## 4   1  3  9 -5.329e-15
+## 5   1  4 11 -5.329e-15
+## 6   1  5 13 -3.553e-15
+## 7   1  6 15 -1.776e-15
+## 8   1  7 17 -3.553e-15
+## 9   1  8 19  0.000e+00
+## 10  1  9 21  0.000e+00
+## 11  1 10 23  0.000e+00</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">summary</span>(<span class="kw">lm</span>(y~<span class="dv">0</span>+x0+x1,<span class="dt">data=</span>dGood)))</code></pre>
+<pre><code>## Warning: essentially perfect fit: summary may be unreliable</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ 0 + x0 + x1, data = dGood)
+## 
+## Residuals:
+##       Min        1Q    Median        3Q       Max 
+## -2.77e-15 -1.69e-15 -5.22e-16  4.48e-16  6.53e-15 
+## 
+## Coefficients:
+##    Estimate Std. Error t value Pr(&gt;|t|)    
+## x0 3.00e+00   1.58e-15 1.9e+15   &lt;2e-16 ***
+## x1 2.00e+00   2.67e-16 7.5e+15   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 2.8e-15 on 9 degrees of freedom
+## Multiple R-squared:     1,   Adjusted R-squared:     1 
+## F-statistic: 1.47e+32 on 2 and 9 DF,  p-value: &lt;2e-16</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">workProblem</span>(dGood,<span class="dv">10</span>,<span class="st">&#39;good/works&#39;</span>,<span class="dv">10000</span>))</code></pre>
+<pre><code>##   nsamples      model  coef actual   est  estP  estM
+## 1       10 good/works beta0      3 3.006 3.016 2.995
+## 2       10 good/works beta1      2 1.999 2.001 1.997</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">pGood &lt;-<span class="st"> </span><span class="kw">c</span>()
+<span class="kw">set.seed</span>(<span class="dv">2623496</span>)
+for(reps in repCounts) {
+  pGood &lt;-<span class="st"> </span><span class="kw">rbind</span>(pGood,<span class="kw">workProblem</span>(dGood,reps,<span class="st">&#39;goodData&#39;</span>))
+}
+<span class="kw">ggplot</span>(<span class="dt">data=</span>pGood,<span class="kw">aes</span>(<span class="dt">x=</span>nsamples)) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y=</span>actual)) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y=</span>est),<span class="dt">linetype=</span><span class="dv">2</span>,<span class="dt">color=</span><span class="st">&#39;blue&#39;</span>) +
+<span class="st">  </span><span class="kw">geom_ribbon</span>(<span class="kw">aes</span>(<span class="dt">ymax=</span>estP,<span class="dt">ymin=</span>estM),<span class="dt">alpha=</span><span class="fl">0.2</span>,<span class="dt">fill=</span><span class="st">&#39;blue&#39;</span>) +
+<span class="st">  </span><span class="kw">facet_wrap</span>(~coef,<span class="dt">ncol=</span><span class="dv">1</span>,<span class="dt">scales=</span><span class="st">&#39;free_y&#39;</span>) +<span class="st"> </span><span class="kw">scale_x_log10</span>() +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.title.y=</span><span class="kw">element_blank</span>())</code></pre>
+<div class="figure">
+<img src="figure/hetexample1.png" alt="plot of chunk hetexample" /><p class="caption">plot of chunk hetexample</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r">dBad &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x0=</span><span class="dv">1</span>,<span class="dt">x1=</span><span class="dv">0</span>:<span class="dv">10</span>)
+dBad$y &lt;-<span class="st"> </span>dBad$x1^<span class="dv">2</span> <span class="co"># or y = -15 + 10*x1 with structured error</span>
+dBad$z &lt;-<span class="st"> </span>dBad$y -<span class="st"> </span><span class="kw">predict</span>(<span class="kw">lm</span>(y~<span class="dv">0</span>+x0+x1,<span class="dt">data=</span>dBad))
+<span class="kw">print</span>(<span class="st">&#39;bad example&#39;</span>)</code></pre>
+<pre><code>## [1] &quot;bad example&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(dBad)</code></pre>
+<pre><code>##    x0 x1   y   z
+## 1   1  0   0  15
+## 2   1  1   1   6
+## 3   1  2   4  -1
+## 4   1  3   9  -6
+## 5   1  4  16  -9
+## 6   1  5  25 -10
+## 7   1  6  36  -9
+## 8   1  7  49  -6
+## 9   1  8  64  -1
+## 10  1  9  81   6
+## 11  1 10 100  15</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">summary</span>(<span class="kw">lm</span>(y~<span class="dv">0</span>+x0+x1,<span class="dt">data=</span>dBad)))</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ 0 + x0 + x1, data = dBad)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+##  -10.0   -7.5   -1.0    6.0   15.0 
+## 
+## Coefficients:
+##    Estimate Std. Error t value Pr(&gt;|t|)    
+## x0  -15.000      5.508   -2.72    0.023 *  
+## x1   10.000      0.931   10.74    2e-06 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 9.76 on 9 degrees of freedom
+## Multiple R-squared:  0.966,  Adjusted R-squared:  0.959 
+## F-statistic:  128 on 2 and 9 DF,  p-value: 2.42e-07</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">workProblem</span>(dBad,<span class="dv">10</span>,<span class="st">&#39;bad/works&#39;</span>,<span class="dv">10000</span>))</code></pre>
+<pre><code>##   nsamples     model  coef actual    est   estP    estM
+## 1       10 bad/works beta0    -15 -14.92 -14.81 -15.023
+## 2       10 bad/works beta1     10   9.99  10.01   9.971</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(dBad$z*dBad$x0))</code></pre>
+<pre><code>## [1] -7.816e-14</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">sum</span>(dBad$z*dBad$x1))</code></pre>
+<pre><code>## [1] -1.013e-13</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">pBad &lt;-<span class="st"> </span><span class="kw">c</span>()
+<span class="kw">set.seed</span>(<span class="dv">2623496</span>)
+for(reps in repCounts) {
+  pBad &lt;-<span class="st"> </span><span class="kw">rbind</span>(pBad,<span class="kw">workProblem</span>(dBad,reps,<span class="st">&#39;badData&#39;</span>))
+}
+<span class="kw">ggplot</span>(<span class="dt">data=</span>pBad,<span class="kw">aes</span>(<span class="dt">x=</span>nsamples)) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y=</span>actual)) +
+<span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y=</span>est),<span class="dt">linetype=</span><span class="dv">2</span>,<span class="dt">color=</span><span class="st">&#39;blue&#39;</span>) +
+<span class="st">  </span><span class="kw">geom_ribbon</span>(<span class="kw">aes</span>(<span class="dt">ymax=</span>estP,<span class="dt">ymin=</span>estM),<span class="dt">alpha=</span><span class="fl">0.2</span>,<span class="dt">fill=</span><span class="st">&#39;blue&#39;</span>) +
+<span class="st">  </span><span class="kw">facet_wrap</span>(~coef,<span class="dt">ncol=</span><span class="dv">1</span>,<span class="dt">scales=</span><span class="st">&#39;free_y&#39;</span>) +<span class="st"> </span><span class="kw">scale_x_log10</span>() +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.title.y=</span><span class="kw">element_blank</span>())</code></pre>
+<div class="figure">
+<img src="figure/hetexample2.png" alt="plot of chunk hetexample" /><p class="caption">plot of chunk hetexample</p>
+</div>
