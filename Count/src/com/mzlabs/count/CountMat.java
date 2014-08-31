@@ -2,7 +2,9 @@ package com.mzlabs.count;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+//import java.util.HashSet;
 import java.util.Map;
+//import java.util.Set;
 
 /**
  * Count number of non-negative integer solutions to a linear system of equalities using
@@ -154,7 +156,11 @@ public final class CountMat {
 				throw new IllegalArgumentException("negative b entry");
 			}
 		}
-		return countNonNegativeSolutions(new IntVec(b),new HashMap<IntVec,BigInteger>(10000));
+		final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
+		final BigInteger result = countNonNegativeSolutions(new IntVec(b),cache);
+		//final Set<BigInteger> values = new HashSet<BigInteger>(cache.values());
+		//System.out.println("cached " + cache.size() + " keys for " + values.size() + " values");
+		return result;
 	}
 
 	/**
