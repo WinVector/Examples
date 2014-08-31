@@ -28,7 +28,7 @@ public final class CountMat {
 	
 	private final int m;
 	private final int n;
-	private final Map<IntVec,BigInteger> zeroOneCounts = new HashMap<IntVec,BigInteger>(10000);
+	private final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
 	
 	/**
 	 * 
@@ -61,14 +61,29 @@ public final class CountMat {
 		do {
 			Aop.mult(z,r);
 			final IntVec rvec = new IntVec(r);
-			BigInteger nzone = zeroOneCounts.get(rvec);
+			final IntVec groupVec = modKVec(2,rvec);
+			Map<IntVec,BigInteger> rgroup = zeroOneCounts.get(groupVec);
+			if(null==rgroup) {
+				rgroup = new HashMap<IntVec,BigInteger>();
+				zeroOneCounts.put(groupVec,rgroup);
+			}
+			BigInteger nzone = rgroup.get(rvec);
 			if(null==nzone) {
 				nzone = BigInteger.ONE;
 			} else {
 				nzone = nzone.add(BigInteger.ONE);
 			}
-			zeroOneCounts.put(rvec,nzone);
+			rgroup.put(rvec,nzone);
 		} while(advance(2,z));
+	}
+	
+	private static IntVec modKVec(final int k, final IntVec x) {
+		final int n = x.dim();
+		final int[] xm = new int[n];
+		for(int i=0;i<n;++i) {
+			xm[i] = x.get(i)%k;			
+		}
+		return new IntVec(xm);
 	}
 	
 	/**
@@ -103,28 +118,32 @@ public final class CountMat {
 		BigInteger cached = nonnegCounts.get(b);
 		if(null==cached) {
 			cached = BigInteger.ZERO;
-			final int[] bprime = new int[m];
-			for(final Map.Entry<IntVec,BigInteger> me: zeroOneCounts.entrySet()) {
-				final IntVec r = me.getKey();
-				boolean goodR = true;
-				for(int i=0;i<m;++i) {
-					final int diff = b.get(i) - r.get(i);
-					if((diff<0)||((diff&0x1)!=0)) {
-						goodR = false;
-						break;
-					}
-				}
-				if(goodR) {
-					final BigInteger nzone = me.getValue();
+			final IntVec groupVec = modKVec(2,b);
+			final Map<IntVec,BigInteger> group = zeroOneCounts.get(groupVec);
+			if((null!=group)&&(!group.isEmpty())) {
+				final int[] bprime = new int[m];
+				for(final Map.Entry<IntVec,BigInteger> me: group.entrySet()) {
+					final IntVec r = me.getKey();
+					boolean goodR = true;
 					for(int i=0;i<m;++i) {
-						bprime[i] = (b.get(i) - r.get(i))/2;
+						final int diff = b.get(i) - r.get(i);
+						if((diff<0)||((diff&0x1)!=0)) {
+							goodR = false;
+							break;
+						}
 					}
-					final BigInteger subsoln = countNonNegativeSolutions(new IntVec(bprime),nonnegCounts);
-					cached = cached.add(nzone.multiply(subsoln));
+					if(goodR) {
+						final BigInteger nzone = me.getValue();
+						for(int i=0;i<m;++i) {
+							bprime[i] = (b.get(i) - r.get(i))/2;
+						}
+						final BigInteger subsoln = countNonNegativeSolutions(new IntVec(bprime),nonnegCounts);
+						cached = cached.add(nzone.multiply(subsoln));
+					}
 				}
+				nonnegCounts.put(b,cached);
+				//System.out.println(b + " " + cached);
 			}
-			nonnegCounts.put(b,cached);
-			//System.out.println(b + " " + cached);
 		}
 		return cached;
 	}
