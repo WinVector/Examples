@@ -39,8 +39,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
 public final class CountMat {
 	
 	private final int m;
-	private final int n;
-	private final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
+	private final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts;
 	
 	/**
 	 * check that x = 0 is the unique non-negative solution to A x = 0
@@ -94,18 +93,16 @@ public final class CountMat {
 		}
 	}
 	
+	
 	/**
-	 * 
-	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
+	 * build all the zero/one lookup tables using a simple enumerate all zero one interiors (2^n complexity, not the n^m we want)
+	 * @param A
+	 * @return
 	 */
-	public CountMat(final int[][] A) {
-		m = A.length;
-		n = A[0].length;
-		// check conditions
-		final String problem = matrixFlaw(JBlasMatrix.factory,A);
-		if(null!=problem) {
-			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
-		}
+	private static Map<IntVec,Map<IntVec,BigInteger>> buildZeroOneStructures(final int[][] A) {
+		final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
+		final int m = A.length;
+		final int n = A[0].length;
 		// build all possible zero/one sub-problems
 		final IntLinOp Aop = new IntLinOp(A);
 		final int[] z = new int[n];
@@ -127,6 +124,22 @@ public final class CountMat {
 			}
 			rgroup.put(rvec,nzone);
 		} while(advance(2,z));
+		return zeroOneCounts;
+	}
+	
+	/**
+	 * 
+	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
+	 */
+	public CountMat(final int[][] A) {
+		m = A.length;
+		// check conditions
+		final String problem = matrixFlaw(JBlasMatrix.factory,A);
+		if(null!=problem) {
+			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
+		}
+		// build all possible zero/one sub-problems
+		zeroOneCounts = buildZeroOneStructures(A);
 	}
 	
 	private static IntVec modKVec(final int k, final IntVec x) {
