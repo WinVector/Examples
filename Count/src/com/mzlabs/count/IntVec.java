@@ -3,7 +3,7 @@ package com.mzlabs.count;
 import java.util.Arrays;
 
 
-public final class IntVec implements Comparable<IntVec> {
+final class IntVec implements Comparable<IntVec> {
 	private final int hashCode;
 	private final int[] b;
 	
@@ -29,6 +29,27 @@ public final class IntVec implements Comparable<IntVec> {
 		return b[i];
 	}
 	
+	public static int compare(final int[] x, final int[] y) {
+		final int m = x.length;
+		if(m!=y.length) {
+			if(m>=y.length) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
+		for(int i=0;i<m;++i) {
+			if(x[i]!=y[i]) {
+				if(x[i]>=y[i]) {
+					return 1;
+				} else {
+					return -1;
+				}
+			}
+		}
+		return 0;		
+	}
+	
 	@Override
 	public int compareTo(final IntVec o) {
 		if(hashCode!=o.hashCode) {
@@ -38,24 +59,7 @@ public final class IntVec implements Comparable<IntVec> {
 				return -1;
 			}
 		}	
-		final int m = b.length;
-		if(m!=o.b.length) {
-			if(m>=o.b.length) {
-				return 1;
-			} else {
-				return -1;
-			}
-		}
-		for(int i=0;i<m;++i) {
-			if(b[i]!=o.b[i]) {
-				if(b[i]>=o.b[i]) {
-					return 1;
-				} else {
-					return -1;
-				}
-			}
-		}
-		return 0;
+		return compare(b,o.b);
 	}
 	
 	@Override
@@ -68,15 +72,22 @@ public final class IntVec implements Comparable<IntVec> {
 		return hashCode;
 	}
 	
+	public static String toString(final int[] x) {
+		final StringBuilder bstr = new StringBuilder();
+		boolean first = true;
+		for(final int xi: x) {
+			if(first) {
+				first = false;
+			} else {
+				bstr.append(", ");
+			}
+			bstr.append(xi);
+		}
+		return bstr.toString();
+	}
+	
 	@Override 
 	public String toString() {
-		final StringBuilder bstr = new StringBuilder();
-		bstr.append("{ ");
-		for(final int bi: b) {
-			bstr.append(bi);
-			bstr.append(" ");
-		}
-		bstr.append("}");
-		return bstr.toString();
+		return "[" + toString(b) + "]";
 	}
 }

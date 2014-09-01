@@ -97,10 +97,10 @@ public final class CountMat {
 	/**
 	 * build all the zero/one lookup tables using a simple enumerate all zero one interiors (2^n complexity, not the n^m we want)
 	 * @param A
-	 * @return
+	 * @return map from modul-2 class of rhs to rhs to count
 	 */
-	private static Map<IntVec,Map<IntVec,BigInteger>> buildZeroOneStructures(final int[][] A) {
-		final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
+	public static Map<IntVec,BigInteger> buildZeroOneStructures(final int[][] A) {
+		final Map<IntVec,BigInteger> zeroOneCounts = new HashMap<IntVec,BigInteger>(10000);
 		final int m = A.length;
 		final int n = A[0].length;
 		// build all possible zero/one sub-problems
@@ -110,20 +110,37 @@ public final class CountMat {
 		do {
 			Aop.mult(z,r);
 			final IntVec rvec = new IntVec(r);
-			final IntVec groupVec = modKVec(2,rvec);
-			Map<IntVec,BigInteger> rgroup = zeroOneCounts.get(groupVec);
-			if(null==rgroup) {
-				rgroup = new HashMap<IntVec,BigInteger>();
-				zeroOneCounts.put(groupVec,rgroup);
-			}
-			BigInteger nzone = rgroup.get(rvec);
+			BigInteger nzone = zeroOneCounts.get(rvec);
 			if(null==nzone) {
 				nzone = BigInteger.ONE;
 			} else {
 				nzone = nzone.add(BigInteger.ONE);
 			}
-			rgroup.put(rvec,nzone);
+			zeroOneCounts.put(rvec,nzone);
 		} while(advance(2,z));
+		return zeroOneCounts;
+	}
+	
+	/**
+	 * 
+	 * @param counts Map b to number of solutions to A z = b for z zero/one (okay to omit unsolvable systems)
+	 * @return Map from (b mod 2) to b to number of solutions to A z = b (all unsolvable combination omitted)
+	 */
+	private static Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final Map<IntVec,BigInteger> counts) {
+		final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
+		for(final Map.Entry<IntVec,BigInteger> me: counts.entrySet()) {
+			final IntVec b = me.getKey();
+			final BigInteger c = me.getValue();
+			if(c.compareTo(BigInteger.ZERO)>0) {
+				final IntVec groupVec = modKVec(2,b);
+				Map<IntVec,BigInteger> bgroup = zeroOneCounts.get(groupVec);
+				if(null==bgroup) {
+					bgroup = new HashMap<IntVec,BigInteger>();
+					zeroOneCounts.put(groupVec,bgroup);
+				}
+				bgroup.put(b,c);
+			}
+		}
 		return zeroOneCounts;
 	}
 	
@@ -139,7 +156,8 @@ public final class CountMat {
 			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
 		}
 		// build all possible zero/one sub-problems
-		zeroOneCounts = buildZeroOneStructures(A);
+		final Map<IntVec,BigInteger> countsByB = buildZeroOneStructures(A);
+		zeroOneCounts = organizeZeroOneStructures(countsByB);
 	}
 	
 	private static IntVec modKVec(final int k, final IntVec x) {
