@@ -1,14 +1,24 @@
 package com.mzlabs.count;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 //import java.util.HashSet;
 import java.util.Map;
 //import java.util.Set;
 
+import com.winvector.linalg.DenseVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.jblas.JBlasMatrix;
+import com.winvector.lp.LPEQProb;
+import com.winvector.lp.LPException;
+import com.winvector.lp.LPSoln;
+import com.winvector.lp.impl.RevisedSimplexSolver;
+
 /**
  * Count number of non-negative integer solutions to a linear system of equalities using
- * the even/odd method from 
+ * the even/odd method from:
  * @article{CPC:54639,
  * author = {MOUNT,JOHN},
  * title = {Fast Unimodular Counting},
@@ -17,12 +27,14 @@ import java.util.Map;
  * issue = {03},
  * month = {5},
  * year = {2000},
- * issn = {1469-2163},
+ * issn = {1469--2163},
  * pages = {277--285},
  * numpages = {9},
- * doi = {null},
- * URL = {http://journals.cambridge.org/article_S0963548300004193},
+ * doi = {null}
  * }
+ * 
+ * Linear system must be such that x=0 is unique non-negative solution to A x = 0.
+ * 
  * @author johnmount
  *
  */
@@ -33,28 +45,55 @@ public final class CountMat {
 	private final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
 	
 	/**
+	 * check that x = 0 is the unique non-negative solution to A x = 0
+	 * @param A
+	 * @throws LPException 
+	 */
+	private static <Z extends Matrix<Z>> String matrixFlaw(final LinalgFactory<Z> factory, final int[][] A) {
+		try {
+			final int m = A.length;
+			final int n = A[0].length;
+			final Z am = factory.newMatrix(m,n,false);
+			for(int i=0;i<m;++i) {
+				for(int j=0;j<n;++j) {
+					if(A[i][j]!=0) {
+						am.set(i, j, A[i][j]);
+					}
+				}
+			}
+			final double[] c = new double[n];
+			Arrays.fill(c,-1.0);
+			final LPEQProb prob = new LPEQProb(am.columnMatrix(),new double[m],new DenseVec(c));
+			final RevisedSimplexSolver solver = new RevisedSimplexSolver();
+			final LPSoln soln = solver.solve(prob, null, 0.0, 1000, factory);
+			final double[] x = soln.primalSolution.toArray(n);
+			boolean bad = false;
+			for(final double xi: x) {
+				if(Math.abs(xi)>1.0e-6) {
+					bad = true;
+					break;
+				}
+			}
+			if(bad) {
+				return "strictly positive solution to A x = 0: ";
+			}
+			return null; // no problem
+		} catch (LPException ex) {
+			return ex.toString();
+		}
+	}
+	
+	/**
 	 * 
-	 * @param A a non-negative matrix with no zero columns
+	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
 	 */
 	public CountMat(final int[][] A) {
 		m = A.length;
 		n = A[0].length;
 		// check conditions
-		final boolean[] sawNZ = new boolean[n];
-		for(int i=0;i<m;++i) {
-			for(int j=0;j<n;++j) {
-				if(A[i][j]<0) {
-					throw new IllegalArgumentException("negative matrix entry");
-				}
-				if(A[i][j]>0) {
-					sawNZ[j] = true;
-				}
-			}
-		}
-		for(int j=0;j<n;++j) {
-			if(!sawNZ[j]) {
-				throw new IllegalArgumentException("zero column in matrix");
-			}
+		final String problem = matrixFlaw(JBlasMatrix.factory,A);
+		if(null!=problem) {
+			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
 		}
 		// build all possible zero/one sub-problems
 		final IntLinOp Aop = new IntLinOp(A);
