@@ -1,4 +1,6 @@
 
+Support materials for http://www.win-vector.com/blog/2014/09/what-is-a-win-vector/
+
 Java code implementing the zero/one (or even/odd) integer solution counting technique from:
 
 @article{CPC:54639,
@@ -12,7 +14,7 @@ year = {2000},
 issn = {1469--2163},
 pages = {277--285},
 numpages = {9},
-doi = {null},
+doi = {null}
 }
 
 See RunTime.pdf for a fixed bounding argument about the zero/one even/odd algorithm's runtime.
