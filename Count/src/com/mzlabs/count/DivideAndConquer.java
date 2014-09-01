@@ -5,6 +5,11 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.Matrix;
+import com.winvector.linalg.jblas.JBlasMatrix;
 
 /**
  * build every possible b such that A z = b is solvable for z in zero/one for zero/one matrix A with no zero columns
@@ -16,8 +21,20 @@ import java.util.Map;
  *
  */
 
-final class DivideAndConquer {
+final class DivideAndConquer<Z extends Matrix<Z>> {
+	private final LinalgFactory<Z> factory;
 	private final int[][] A;
+	
+	private static final class LinOpCarrier<Q extends Matrix<Q>> {
+		public final Q fwd;
+		public Q inv = null;
+		
+		public LinOpCarrier(final Q fwd) {
+			this.fwd = fwd;
+		}
+	}
+	
+	private Map<IntVec,LinOpCarrier<Z>> inverseOp = new HashMap<IntVec,LinOpCarrier<Z>>();
 	private final Map<DKey,BigInteger> cache = new HashMap<DKey,BigInteger>(1000);
 	
 	
@@ -45,8 +62,9 @@ final class DivideAndConquer {
 	 * 
 	 * @param A non-negative zero/one matrix with no zero columns
 	 */
-	private DivideAndConquer(final int[][] A) {
+	private DivideAndConquer(final int[][] A, final LinalgFactory<Z> factory) {
 		this.A = A;
+		this.factory = factory;
 		if(!acceptableA(A)) {
 			throw new IllegalArgumentException("unaccaptable matrix");
 		}
@@ -69,6 +87,80 @@ final class DivideAndConquer {
 		}
 		return false;
 	}
+	
+	/**
+	 * 
+	 * @param key
+	 * @return non-null on any base-case (which must include all cases where key.columnSet.dim()<2)
+	 */
+	private BigInteger baseCases(final DKey key) {
+		final int m = A.length;
+		final int np = key.columnSet.dim();
+		if(np<=0) {
+			throw new IllegalArgumentException("empty column set");
+		}
+		// If we are full column rank then we either have one or zero solutions.
+		// We eventually hit this case as we have no empty columns, so all single column systems are full column rank.
+		if(np<=m) {
+			final double epsilon = 1.0e-8;
+			LinOpCarrier<Z> op = inverseOp.get(key.columnSet);
+			if(null==op) {
+				final Z amat = factory.newMatrix(m,np,false);
+				final Z amatT = factory.newMatrix(np,m,false);
+				for(int i=0;i<m;++i) {
+					for(int jj=0;jj<np;++jj) {
+						amat.set(i,jj,A[i][key.columnSet.get(jj)]);
+						amatT.set(jj,i,A[i][key.columnSet.get(jj)]);
+					}
+				}
+				op = new LinOpCarrier<Z>(amat);
+				final Z aTa = amatT.multMat(amat);
+				try {
+					final Z aTaI = aTa.inverse();
+					boolean goodMat = true;
+					final Z check = aTaI.multMat(aTa);
+					final int k = check.rows();
+					for(int i=0;(i<k)&&(goodMat);++i) {
+						for(int j=0;(j<k)&&(goodMat);++j) {
+							if(i==j) {
+								if(Math.abs(check.get(i,j)-1.0)>epsilon) {
+									goodMat = false;
+								}
+							} else {
+								if(Math.abs(check.get(i,j))>epsilon) {
+									goodMat = false;
+								}
+							}
+						}
+					}
+					if(goodMat) {
+						op.inv = aTaI.multMat(amatT);
+					}
+				} catch (Exception ex) {
+				}
+				inverseOp.put(key.columnSet,op);
+			}
+			if(null!=op.inv) {
+				final double[] soln = op.inv.mult(key.b.asDouble());
+				for(final double si: soln) {
+					if((si<-epsilon)||(si>1+epsilon)||(Math.abs(si-Math.round(si))>epsilon)) {
+						return BigInteger.ZERO;
+					}
+				}
+				final double[] recovered = op.fwd.mult(soln);
+				for(int i=0;i<m;++i) {
+					if(Math.abs(recovered[i]-key.b.get(i))>epsilon) {
+						return BigInteger.ZERO;
+					}
+				}
+				return BigInteger.ONE;
+			}
+		}
+		if(np<=1) {
+			throw new IllegalStateException("single column not treated as full rank");
+		}
+		return null;
+	}
 
 	/**
 	 * return number of solutions to A[colset] z = b with z zero/one
@@ -76,49 +168,18 @@ final class DivideAndConquer {
 	 * @return
 	 */
 	private BigInteger solutionCount(final DKey key) {
-		// check for base cases
-		final int m = A.length;
-		if(key.b.isZero()) {
-			return BigInteger.ONE;
-		}
-		if(key.columnSet.dim()<=0) {
-			if(key.b.isZero()) {
-				return BigInteger.ONE;
-			} else {
-				return BigInteger.ZERO;
+		{ // check for base cases
+			final BigInteger baseSoln = baseCases(key);
+			if(null!=baseSoln) {
+				return baseSoln;
 			}
-		}
-		if(key.columnSet.dim()==1) {
-			final int j = key.columnSet.get(0);
-			boolean sawSoln = false;
-			int soln = 0;
-			for(int i=0;i<m;++i) {
-				if(A[i][j]!=0) {
-					final int x = key.b.get(i)/A[i][j];
-					if((x<0)||(x>1)||(x*A[i][j]!=key.b.get(i))) {
-						return BigInteger.ZERO;
-					}
-					if(!sawSoln) {
-						sawSoln = true;
-						soln = x;
-					} else {
-						if(x!=soln) {
-							return BigInteger.ZERO;
-						}
-					}
-				} else {
-					if(key.b.get(i)!=0) {
-						return BigInteger.ZERO;
-					}
-				}
-			}
-			return BigInteger.ONE;
 		}
 		BigInteger cached = cache.get(key);
 		if(null==cached) {
-			//System.out.println(key);
 			// know we have at least 2 columns
 			cached = BigInteger.ZERO;
+			final int m = A.length;
+			//System.out.println(key);
 			final int n1 = key.columnSet.dim()/2;
 			final int n2 = key.columnSet.dim() - n1;
 			final IntVec c1;
@@ -179,7 +240,7 @@ final class DivideAndConquer {
 	 * @return map from every b such that A z = b is solvable for z zero/one to how many such z there are
 	 */
 	public static Map<IntVec,BigInteger> solutionCounts(final int[][] A) {
-		final DivideAndConquer dc = new DivideAndConquer(A);
+		final DivideAndConquer<JBlasMatrix> dc = new DivideAndConquer<JBlasMatrix>(A,JBlasMatrix.factory);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
 		final int m = A.length;
 		final int n = A[0].length;
@@ -205,11 +266,17 @@ final class DivideAndConquer {
 		}
 		System.out.println("dc total solns: " + total);
 		System.out.println("dc m,n,2^n: " + m + " " + n + " " + Math.pow(2,n));
+		System.out.println("base cases");
+		for(final Entry<IntVec, LinOpCarrier<JBlasMatrix>> me: dc.inverseOp.entrySet()) {
+			if(me.getValue().inv!=null) {
+				System.out.println("\t" + me.getKey());
+			}
+		}
 		return solnCounts;
 	}
 	
 	public static void main(final String[] args) {
-		final int[][] A = CountExample.contingencyTable(3,3);
+		final int[][] A = CountExample.contingencyTable(4,3);
 		final Map<IntVec,BigInteger> z1 = CountMat.buildZeroOneStructures(A);
 		final Map<IntVec,BigInteger> z2 = DivideAndConquer.solutionCounts(A);
 		assertEquals(z1.size(),z2.size());

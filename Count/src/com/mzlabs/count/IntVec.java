@@ -90,4 +90,13 @@ final class IntVec implements Comparable<IntVec> {
 	public String toString() {
 		return "[" + toString(b) + "]";
 	}
+	
+	public double[] asDouble() {
+		final int m = b.length;
+		final double[] x = new double[m];
+		for(int i=0;i<m;++i) {
+			x[i] = b[i];
+		}
+		return x;
+	}
 }
