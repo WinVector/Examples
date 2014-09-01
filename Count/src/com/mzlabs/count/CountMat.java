@@ -3,9 +3,7 @@ package com.mzlabs.count;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
-//import java.util.HashSet;
 import java.util.Map;
-//import java.util.Set;
 
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
@@ -50,9 +48,22 @@ public final class CountMat {
 	 * @throws LPException 
 	 */
 	private static <Z extends Matrix<Z>> String matrixFlaw(final LinalgFactory<Z> factory, final int[][] A) {
+		final int m = A.length;
+		final int n = A[0].length;
+		// check for empty columns (LP does catch these, but easier to read message if we get them here)
+		for(int j=0;j<n;++j) {
+			boolean sawNZValue = false;
+			for(int i=0;i<m;++i) {
+				if(A[i][j]!=0) {
+					sawNZValue = true;
+					break;
+				}
+			}
+			if(!sawNZValue) {
+				return "matrix column " + j + " is all zero (unbounded or empty system)";
+			}
+		}
 		try {
-			final int m = A.length;
-			final int n = A[0].length;
 			final Z am = factory.newMatrix(m,n,false);
 			for(int i=0;i<m;++i) {
 				for(int j=0;j<n;++j) {
@@ -182,9 +193,9 @@ public final class CountMat {
 						cached = cached.add(nzone.multiply(subsoln));
 					}
 				}
-				nonnegCounts.put(b,cached);
-				//System.out.println(b + " " + cached);
 			}
+			nonnegCounts.put(b,cached);
+			//System.out.println(b + " " + cached);
 		}
 		return cached;
 	}
@@ -203,19 +214,36 @@ public final class CountMat {
 	}
 
 	/**
-	 * assumes all variables involved and A non-negative
+	 * assumes all variables involved and A non-negative and no empty columns
 	 * @param A
 	 * @param b
 	 * @return number of non-negative integer solutions of A x = b
 	 */
 	public static BigInteger bruteForceSolnDebug(final int[][] A, final int[] b) {
+		final int m = A.length;
+		final int n = A[0].length;
+		// inspect that A meets assumed conditions
+		final boolean[] sawPos = new boolean[n];
+		for(int i=0;i<m;++i) {
+			for(int j=0;j<n;++j) {
+				if(A[i][j]<0) {
+					throw new IllegalArgumentException("negative matrix entry");
+				}
+				if(A[i][j]>0) {
+					sawPos[j] = true;
+				}
+			}
+		}
+		for(final boolean pi: sawPos) {
+			if(!pi) {
+				throw new IllegalArgumentException("empty matrix column");
+			}
+		}
 		int bound = 0;
 		for(final int bi: b) {
 			bound = Math.max(bound,bi+1);
 		}
 		BigInteger count = BigInteger.ZERO;
-		final int m = A.length;
-		final int n = A[0].length;
 		final int[] x = new int[n];
 		final int[] r = new int[m];
 		do {
