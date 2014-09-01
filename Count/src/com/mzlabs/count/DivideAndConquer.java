@@ -1,6 +1,7 @@
 package com.mzlabs.count;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -198,6 +199,19 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 				}
 				c2 = new IntVec(cset2);				
 			}
+			final IntVec bd1;
+			{
+				final int[] bound1 = new int[m];
+				for(int i=0;i<m;++i) {
+					for(int jj=0;jj<n1;++jj) {
+						bound1[i] += A[i][c1.get(jj)];
+					}
+				}
+				for(int i=0;i<m;++i) {
+					bound1[i] = Math.min(bound1[i],key.b.get(i));
+				}
+				bd1 = new IntVec(bound1);
+			}
 			final int[] b1 = new int[m];
 			final int[] b2 = new int[m];
 			do {
@@ -213,7 +227,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 						cached = cached.add(sub1.multiply(sub2));
 					}
 				}
-			} while(advanceEq(key.b,b1));
+			} while(advanceEq(bd1,b1));
 			cache.put(key,cached);
 		}
 		return cached;
@@ -284,6 +298,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 			final IntVec b = me.getKey();
 			final BigInteger c1 = me.getValue();
 			final BigInteger c2 = z2.get(b);
+			assertNotNull(c2);
 			assertEquals(0,c1.compareTo(c2));
 		}
 	}
