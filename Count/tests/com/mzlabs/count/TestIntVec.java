@@ -47,4 +47,35 @@ public class TestIntVec {
 		assertFalse(iv0.equals(ivnz));
 		assertFalse(iv0.toString().compareTo(ivnz.toString())==0);
 	}
+	
+	@Test
+	public void testAdvance() {
+		final int[] x = new int[3];
+		int n = 0;
+		do {
+			for(int i=0;i<x.length;++i) {
+				assertTrue((x[i]>=0)&&(x[i]<4));
+			}
+			++n;
+		} while(IntVec.advanceLT(4,x));
+		assertEquals(64,n);
+	}
+	
+	@Test
+	public void testAdvanceV() {
+		final int[] b = new int[3];
+		for(int i=0;i<3;++i) {
+			b[i] = i+1;
+		}
+		final IntVec bv = new IntVec(b);
+		final int[] x = new int[3];
+		int n = 0;
+		do {
+			for(int i=0;i<x.length;++i) {
+				assertTrue((x[i]>=0)&&(x[i]<=bv.get(i)));
+			}
+			++n;
+		} while(bv.advanceLE(x));
+		assertEquals(24,n);
+	}
 }

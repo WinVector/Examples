@@ -35,7 +35,7 @@ public final class CountExample {
 				nError = nError.add(BigInteger.ONE);
 			}
 			nRun = nRun.add(BigInteger.ONE);
-		} while(CountMat.advance(7,b));
+		} while(IntVec.advanceLT(7,b));
 		System.out.println(nError + " errors out of " + nRun + " examples");
 		System.out.println();
 		return nError.compareTo(BigInteger.ZERO)==0;

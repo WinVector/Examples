@@ -91,6 +91,7 @@ final class IntVec implements Comparable<IntVec> {
 		return "[" + toString(b) + "]";
 	}
 	
+	
 	public double[] asDouble() {
 		final int m = b.length;
 		final double[] x = new double[m];
@@ -98,5 +99,42 @@ final class IntVec implements Comparable<IntVec> {
 			x[i] = b[i];
 		}
 		return x;
+	}
+	
+	/**
+	 * advance a non-negative through all non-negative combinations less than bound, (starting at all zeros)
+	 * @param bvec
+	 * @return true if we haven't wrapped around to all zeros
+	 */
+	public static boolean advanceLT(final int bound, final int[] bvec) {
+		final int n = bvec.length;
+		final int boundMinus1 = bound-1;
+		// look for right-most advancable item
+		for(int i=n-1;i>=0;--i) {
+			if(bvec[i]<boundMinus1) {
+				bvec[i] += 1;
+				return true;
+			}
+			bvec[i] = 0;
+		}
+		return false;
+	}
+
+	/**
+	 * advance a non-negative through all non-negative combinations less than equal to bound, (starting at all zeros)
+	 * @param bvec
+	 * @return true if we haven't wrapped around to all zeros
+	 */
+	public boolean advanceLE(final int[] bvec) {
+		final int n = bvec.length;
+		// look for right-most incrementable item
+		for(int i=n-1;i>=0;--i) {
+			if(bvec[i]<get(i)) {
+				bvec[i] += 1;
+				return true;
+			}
+			bvec[i] = 0;
+		}
+		return false;
 	}
 }

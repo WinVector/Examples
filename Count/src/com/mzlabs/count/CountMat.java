@@ -117,7 +117,7 @@ public final class CountMat {
 				nzone = nzone.add(BigInteger.ONE);
 			}
 			zeroOneCounts.put(rvec,nzone);
-		} while(advance(2,z));
+		} while(IntVec.advanceLT(2,z));
 		return zeroOneCounts;
 	}
 	
@@ -169,24 +169,7 @@ public final class CountMat {
 		return new IntVec(xm);
 	}
 	
-	/**
-	 * advance a non-negative through all non-negative combinations less than bound, (starting at all zeros)
-	 * @param bvec
-	 * @return true if we haven't wrapped around to all zeros
-	 */
-	public static boolean advance(final int bound, final int[] bvec) {
-		final int n = bvec.length;
-		final int boundMinus1 = bound-1;
-		// look for right-most advancable item
-		for(int i=n-1;i>=0;--i) {
-			if(bvec[i]<boundMinus1) {
-				bvec[i] += 1;
-				return true;
-			}
-			bvec[i] = 0;
-		}
-		return false;
-	}
+
 	
 	/**
 	 * assumes finite number of solutions (all variables involved) and A non-negative
@@ -243,6 +226,10 @@ public final class CountMat {
 		//System.out.println("cached " + cache.size() + " keys for " + values.size() + " values");
 		return result;
 	}
+	
+
+
+
 
 	/**
 	 * assumes all variables involved and A non-negative and no empty columns
@@ -270,10 +257,16 @@ public final class CountMat {
 				throw new IllegalArgumentException("empty matrix column");
 			}
 		}
-		int bound = 0;
-		for(final int bi: b) {
-			bound = Math.max(bound,bi+1);
+		final int[] bounds = new int[n];
+		Arrays.fill(bounds,Integer.MAX_VALUE);
+		for(int i=0;i<m;++i) {
+			for(int j=0;j<n;++j) {
+				if(A[i][j]>0) {
+					bounds[j] = Math.min(bounds[j],b[i]/A[i][j]);
+				}
+			}
 		}
+		final IntVec boundsV = new IntVec(bounds);
 		BigInteger count = BigInteger.ZERO;
 		final int[] x = new int[n];
 		final int[] r = new int[m];
@@ -289,7 +282,7 @@ public final class CountMat {
 			if(goodR) {
 				count = count.add(BigInteger.ONE);
 			}
-		} while(advance(bound,x));
+		} while(boundsV.advanceLE(x));
 		return count;
 	}
 	

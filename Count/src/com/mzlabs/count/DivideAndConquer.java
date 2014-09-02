@@ -72,24 +72,6 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	}
 	
 	/**
-	 * advance a non-negative through all non-negative combinations less than equal to bound, (starting at all zeros)
-	 * @param bvec
-	 * @return true if we haven't wrapped around to all zeros
-	 */
-	private static boolean advanceEq(final IntVec bound, final int[] bvec) {
-		final int n = bvec.length;
-		// look for right-most advancable item
-		for(int i=n-1;i>=0;--i) {
-			if(bvec[i]<bound.get(i)) {
-				bvec[i] += 1;
-				return true;
-			}
-			bvec[i] = 0;
-		}
-		return false;
-	}
-	
-	/**
 	 * 
 	 * @param key
 	 * @return non-null on any base-case (which must include all cases where key.columnSet.dim()<2)
@@ -227,7 +209,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 						cached = cached.add(sub1.multiply(sub2));
 					}
 				}
-			} while(advanceEq(bd1,b1));
+			} while(bd1.advanceLE(b1));
 			cache.put(key,cached);
 		}
 		return cached;
@@ -271,7 +253,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 			if(nsolns.compareTo(BigInteger.ZERO)>0) {
 				solnCounts.put(new IntVec(b),nsolns);
 			}
-		} while(advanceEq(boundsVec,b));
+		} while(boundsVec.advanceLE(b));
 		System.out.println("dc cache size: " + dc.cache.size());
 		System.out.println("dc result size: " + solnCounts.size());
 		BigInteger total = BigInteger.ZERO;

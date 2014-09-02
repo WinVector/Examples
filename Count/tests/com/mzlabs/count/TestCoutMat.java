@@ -1,6 +1,5 @@
 package com.mzlabs.count;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
@@ -9,18 +8,7 @@ import java.util.Random;
 import org.junit.Test;
 
 public class TestCoutMat {
-	@Test
-	public void testAdvance() {
-		final int[] x = new int[3];
-		int n = 0;
-		do {
-			for(int i=0;i<x.length;++i) {
-				assertTrue((x[i]>=0)&&(x[i]<4));
-			}
-			++n;
-		} while(CountMat.advance(4,x));
-		assertEquals(n,64);
-	}
+
 	
 	@Test
 	public void runEx1() {
@@ -36,7 +24,7 @@ public class TestCoutMat {
 				nError = nError.add(BigInteger.ONE);
 			}
 			nRun = nRun.add(BigInteger.ONE);
-		} while(CountMat.advance(5,b));
+		} while(IntVec.advanceLT(5,b));
 		assertTrue(nError.compareTo(BigInteger.ZERO)==0);
 	}
 	
