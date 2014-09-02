@@ -63,12 +63,12 @@ public class TestIntVec {
 	
 	@Test
 	public void testAdvanceV() {
-		final int[] b = new int[3];
+		final int[] b = new int[5];
 		for(int i=0;i<3;++i) {
-			b[i] = i+1;
+			b[i+1] = i+1;
 		}
 		final IntVec bv = new IntVec(b);
-		final int[] x = new int[3];
+		final int[] x = new int[5];
 		int n = 0;
 		do {
 			for(int i=0;i<x.length;++i) {

@@ -126,7 +126,7 @@ final class IntVec implements Comparable<IntVec> {
 	 * @return true if we haven't wrapped around to all zeros
 	 */
 	public boolean advanceLE(final int[] bvec) {
-		final int n = bvec.length;
+		final int n = b.length;
 		// look for right-most incrementable item
 		for(int i=n-1;i>=0;--i) {
 			if(bvec[i]<get(i)) {
