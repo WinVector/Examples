@@ -142,21 +142,17 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 		if(np<=1) {
 			throw new IllegalStateException("single column not treated as full rank");
 		}
-		return null;
+		// steal from cache if possible (consider any cheap calculation base)
+		return cache.get(key);
 	}
 
 	/**
+	 * assumes we have already checked for basecase solutions (so in particular key.columnSet.length>1)
 	 * return number of solutions to A[colset] z = b with z zero/one
-	 * @param b
+	 * @param key
 	 * @return
 	 */
-	private BigInteger solutionCount(final DKey key) {
-		{ // check for base cases
-			final BigInteger baseSoln = baseCases(key);
-			if(null!=baseSoln) {
-				return baseSoln;
-			}
-		}
+	private BigInteger solutionCountBySplit(final DKey key) {
 		BigInteger cached = cache.get(key);
 		if(null==cached) {
 			// know we have at least 2 columns
@@ -197,16 +193,33 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 			final int[] b1 = new int[m];
 			final int[] b2 = new int[m];
 			do {
+				// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
 				final DKey k1 = new DKey(c1,new IntVec(b1));
-				final BigInteger sub1 = solutionCount(k1);
-				if(sub1.compareTo(BigInteger.ZERO)>0) {
+				final BigInteger base1 = baseCases(k1);
+				if((null==base1)||(base1.compareTo(BigInteger.ZERO)>0)) {
 					for(int i=0;i<m;++i) {
 						b2[i] = key.b.get(i) - b1[i];
 					}
 					final DKey k2 = new DKey(c2,new IntVec(b2));
-					final BigInteger sub2 = solutionCount(k2);
-					if(sub2.compareTo(BigInteger.ZERO)>0) {
-						cached = cached.add(sub1.multiply(sub2));
+					final BigInteger base2 = baseCases(k2);
+					if((null==base2)||(base2.compareTo(BigInteger.ZERO)>0)) {
+						final BigInteger sub1;
+						if(null!=base1) {
+							sub1 = base1;
+						} else {
+							sub1 = solutionCountBySplit(k1);
+						}
+						if(sub1.compareTo(BigInteger.ZERO)>0) {
+							final BigInteger sub2;
+							if(null!=base2) {
+								sub2 = base2;
+							} else {
+								sub2 = solutionCountBySplit(k2);
+							}
+							if(sub2.compareTo(BigInteger.ZERO)>0) {
+								cached = cached.add(sub1.multiply(sub2));
+							}
+						}
 					}
 				}
 			} while(bd1.advanceLE(b1));
@@ -228,7 +241,11 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 			colset[i] = i;
 		}
 		final DKey key = new DKey(new IntVec(colset),bvec);
-		return solutionCount(key);
+		final BigInteger baseSoln = baseCases(key);
+		if(null!=baseSoln) {
+			return baseSoln;
+		}
+		return solutionCountBySplit(key);
 	}
 	
 	/**
