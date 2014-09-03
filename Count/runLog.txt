@@ -2,11 +2,11 @@
 0 errors out of 16807 examples
 
 
-Wed Sep 03 08:31:29 PDT 2014
+Wed Sep 03 09:13:36 PDT 2014
 [2, 6, 2, 5, 2, 3]	even odd solution	30
-Wed Sep 03 08:31:29 PDT 2014
+Wed Sep 03 09:13:36 PDT 2014
 [2, 6, 2, 5, 2, 3]	brute force solution	30
-Wed Sep 03 08:31:29 PDT 2014
+Wed Sep 03 09:13:36 PDT 2014
 equal: true
 
 
@@ -15,7 +15,237 @@ equal: true
 	x(2,0)	x(2,1)	x(2,2)	x(2,3)	277000
 	x(3,0)	x(3,1)	x(3,2)	x(3,3)	160179
 	191780	288348	165221	201433
-Wed Sep 03 08:31:29 PDT 2014
+Wed Sep 03 09:13:36 PDT 2014
 [154179, 255424, 277000, 160179, 191780, 288348, 165221, 201433]	even odd solution	350854066054593772938684218633979710637454260
-Wed Sep 03 08:31:33 PDT 2014
+Wed Sep 03 09:13:40 PDT 2014
 
+contingencyTable(1,1;0)= 1
+	poly(1,1;0)= 1.0
+contingencyTable(1,1;1)= 1
+	poly(1,1;1)= 1.0
+contingencyTable(1,1;2)= 1
+	poly(1,1;2)= 1.0
+contingencyTable(2,2;0)= 1
+	poly(2,2;0)= 1.0
+contingencyTable(2,2;1)= 2
+	poly(2,2;1)= 2.0
+contingencyTable(2,2;2)= 3
+	poly(2,2;2)= 3.0
+contingencyTable(2,2;3)= 4
+	poly(2,2;3)= 4.0
+contingencyTable(2,2;4)= 5
+	poly(2,2;4)= 5.0
+contingencyTable(2,2;5)= 6
+	poly(2,2;5)= 6.0
+contingencyTable(2,2;6)= 7
+	poly(2,2;6)= 7.0
+contingencyTable(2,2;7)= 8
+	poly(2,2;7)= 8.0
+contingencyTable(2,2;8)= 9
+	poly(2,2;8)= 9.0
+contingencyTable(3,3;0)= 1
+	poly(3,3;0)= 1.0
+contingencyTable(3,3;1)= 6
+	poly(3,3;1)= 6.0
+contingencyTable(3,3;2)= 21
+	poly(3,3;2)= 21.0
+contingencyTable(3,3;3)= 55
+	poly(3,3;3)= 55.0
+contingencyTable(3,3;4)= 120
+	poly(3,3;4)= 120.0
+contingencyTable(3,3;5)= 231
+	poly(3,3;5)= 231.0
+contingencyTable(3,3;6)= 406
+	poly(3,3;6)= 406.0
+contingencyTable(3,3;7)= 666
+	poly(3,3;7)= 666.0
+contingencyTable(3,3;8)= 1035
+	poly(3,3;8)= 1035.0000000000018
+contingencyTable(3,3;9)= 1540
+	poly(3,3;9)= 1540.0
+contingencyTable(3,3;10)= 2211
+	poly(3,3;10)= 2211.0
+contingencyTable(3,3;11)= 3081
+	poly(3,3;11)= 3081.0000000000073
+contingencyTable(3,3;12)= 4186
+	poly(3,3;12)= 4186.0
+contingencyTable(3,3;13)= 5565
+	poly(3,3;13)= 5565.0
+contingencyTable(3,3;14)= 7260
+	poly(3,3;14)= 7260.0
+contingencyTable(3,3;15)= 9316
+	poly(3,3;15)= 9316.0
+contingencyTable(3,3;16)= 11781
+	poly(3,3;16)= 11781.0
+contingencyTable(3,3;17)= 14706
+	poly(3,3;17)= 14705.999999999942
+contingencyTable(3,3;18)= 18145
+	poly(3,3;18)= 18145.0
+contingencyTable(4,4;0)= 1
+	poly(4,4;0)= 1.0
+contingencyTable(4,4;1)= 24
+	poly(4,4;1)= 24.0
+contingencyTable(4,4;2)= 282
+	poly(4,4;2)= 282.0
+contingencyTable(4,4;3)= 2008
+	poly(4,4;3)= 2008.0
+contingencyTable(4,4;4)= 10147
+	poly(4,4;4)= 10147.0
+contingencyTable(4,4;5)= 40176
+	poly(4,4;5)= 40176.0
+contingencyTable(4,4;6)= 132724
+	poly(4,4;6)= 132724.0
+contingencyTable(4,4;7)= 381424
+	poly(4,4;7)= 381424.0
+contingencyTable(4,4;8)= 981541
+	poly(4,4;8)= 981541.0
+contingencyTable(4,4;9)= 2309384
+	poly(4,4;9)= 2309384.0
+contingencyTable(4,4;10)= 5045326
+	poly(4,4;10)= 5045326.000000004
+contingencyTable(4,4;11)= 10356424
+	poly(4,4;11)= 1.0356424000000075E7
+contingencyTable(4,4;12)= 20158151
+	poly(4,4;12)= 2.0158150999998868E7
+contingencyTable(4,4;13)= 37478624
+	poly(4,4;13)= 3.7478624000003815E7
+contingencyTable(4,4;14)= 66952936
+	poly(4,4;14)= 6.695293599999523E7
+contingencyTable(4,4;15)= 115479776
+	poly(4,4;15)= 1.154797760000019E8
+contingencyTable(4,4;16)= 193077449
+	poly(4,4;16)= 1.9307744899998474E8
+contingencyTable(4,4;17)= 313981688
+	poly(4,4;17)= 3.139816879999695E8
+contingencyTable(4,4;18)= 498033282
+	poly(4,4;18)= 4.980332820002289E8
+contingencyTable(4,4;19)= 772409528
+	poly(4,4;19)= 7.724095279996948E8
+contingencyTable(4,4;20)= 1173759851
+	poly(4,4;20)= 1.173759850999878E9
+contingencyTable(4,4;21)= 1750812624
+	poly(4,4;21)= 1.750812624000122E9
+contingencyTable(4,4;22)= 2567527260
+	poly(4,4;22)= 2.5675272600004883E9
+contingencyTable(4,4;23)= 3706873040
+	poly(4,4;23)= 3.706873040001953E9
+contingencyTable(4,4;24)= 5275323885
+	poly(4,4;24)= 5.275323885003418E9
+contingencyTable(4,4;25)= 7408166376
+	poly(4,4;25)= 7.408166375995117E9
+contingencyTable(4,4;26)= 10275726774
+	poly(4,4;26)= 1.0275726774E10
+contingencyTable(4,4;27)= 14090631592
+	poly(4,4;27)= 1.4090631592003906E10
+contingencyTable(4,4;28)= 19116225423
+	poly(4,4;28)= 1.9116225422992188E10
+contingencyTable(4,4;29)= 25676279232
+	poly(4,4;29)= 2.5676279232058594E10
+contingencyTable(4,4;30)= 34166132176
+	poly(4,4;30)= 3.4166132175890625E10
+contingencyTable(4,4;31)= 45065420224
+	poly(4,4;31)= 4.5065420224078125E10
+contingencyTable(4,4;32)= 58952555409
+	poly(4,4;32)= 5.895255540913281E10
+contingencyTable(5,5;0)= 1
+	poly(5,5;0)= 1.0
+contingencyTable(5,5;1)= 120
+	poly(5,5;1)= 120.0
+contingencyTable(5,5;2)= 6210
+	poly(5,5;2)= 6210.0
+contingencyTable(5,5;3)= 153040
+	poly(5,5;3)= 153040.0
+contingencyTable(5,5;4)= 2224955
+	poly(5,5;4)= 2224955.0
+contingencyTable(5,5;5)= 22069251
+	poly(5,5;5)= 2.2069251E7
+contingencyTable(5,5;6)= 164176640
+	poly(5,5;6)= 1.6417664E8
+contingencyTable(5,5;7)= 976395820
+	poly(5,5;7)= 9.7639582E8
+contingencyTable(5,5;8)= 4855258305
+	poly(5,5;8)= 4.855258305E9
+contingencyTable(5,5;9)= 20856798285
+	poly(5,5;9)= 2.0856798285E10
+contingencyTable(5,5;10)= 79315936751
+	poly(5,5;10)= 7.9315936751E10
+contingencyTable(5,5;11)= 272095118010
+	poly(5,5;11)= 2.7209511801E11
+contingencyTable(5,5;12)= 854560160105
+	poly(5,5;12)= 8.54560160105E11
+contingencyTable(5,5;13)= 2486299719645
+	poly(5,5;13)= 2.486299719645E12
+contingencyTable(5,5;14)= 6765755480415
+	poly(5,5;14)= 6.765755480415E12
+contingencyTable(5,5;15)= 17356306529251
+	poly(5,5;15)= 1.7356306529251E13
+contingencyTable(5,5;16)= 42250330784180
+	poly(5,5;16)= 4.225033078418E13
+contingencyTable(5,5;17)= 98137852369965
+	poly(5,5;17)= 9.813785236996338E13
+contingencyTable(5,5;18)= 218533141458035
+	poly(5,5;18)= 2.18533141458107E14
+contingencyTable(5,5;19)= 468404315606395
+	poly(5,5;19)= 4.68404315606128E14
+contingencyTable(5,5;20)= 969743428893126
+	poly(5,5;20)= 9.69743428895104E14
+contingencyTable(5,5;21)= 1945079927912850
+	poly(5,5;21)= 1.945079927903104E15
+contingencyTable(5,5;22)= 3789750699488425
+	poly(5,5;22)= 3.789750699495424E15
+contingencyTable(5,5;23)= 7189295895192825
+	poly(5,5;23)= 7.189295895175168E15
+contingencyTable(5,5;24)= 13306315826367150
+	poly(5,5;24)= 1.3306315826634752E16
+contingencyTable(5,5;25)= 24072371430381876
+	poly(5,5;25)= 2.4072371431653376E16
+contingencyTable(5,5;26)= 42636167453081970
+	poly(5,5;26)= 4.2636167456096256E16
+contingencyTable(5,5;27)= 74040769898683135
+	poly(5,5;27)= 7.4040769902280704E16
+contingencyTable(5,5;28)= 126231813306972990
+	poly(5,5;28)= 1.26231813300682752E17
+contingencyTable(5,5;29)= 211537858262278230
+	poly(5,5;29)= 2.11537858285010944E17
+contingencyTable(5,5;30)= 348816145611593626
+	poly(5,5;30)= 3.4881614557531341E17
+contingencyTable(5,5;31)= 566525526032053490
+	poly(5,5;31)= 5.6652552584613069E17
+contingencyTable(5,5;32)= 907077701814466995
+	poly(5,5;32)= 9.0707770164956365E17
+contingencyTable(5,5;33)= 1432933447000739630
+	poly(5,5;33)= 1.43293344674480128E18
+contingencyTable(5,5;34)= 2235058653517898560
+	poly(5,5;34)= 2.23505865395247514E18
+contingencyTable(5,5;35)= 3444543696793558626
+	poly(5,5;35)= 3.4445436953055724E18
+contingencyTable(5,5;36)= 5248428088088101485
+	poly(5,5;36)= 5.2484280956097659E18
+contingencyTable(5,5;37)= 7911071846371979405
+	poly(5,5;37)= 7.9110718455063511E18
+contingencyTable(5,5;38)= 11802788724198013470
+	poly(5,5;38)= 1.1802788718949958E19
+contingencyTable(5,5;39)= 17437919997795986690
+	poly(5,5;39)= 1.7437919983798583E19
+contingencyTable(5,5;40)= 25525099364089301751
+	poly(5,5;40)= 2.55250993672251E19
+contingencyTable(5,5;41)= 37033161093844949655
+	poly(5,5;41)= 3.703316099337552E19
+contingencyTable(5,5;42)= 53277000056505111265
+	poly(5,5;42)= 5.327699996586698E19
+contingencyTable(5,5;43)= 76028732693021957360
+	poly(5,5;43)= 7.602873302113898E19
+contingencyTable(5,5;44)= 107660766182469563295
+	poly(5,5;44)= 1.0766076580651755E20
+contingencyTable(5,5;45)= 151328897805321186251
+	poly(5,5;45)= 1.513288982457976E20
+contingencyTable(5,5;46)= 211205382538251583825
+	poly(5,5;46)= 2.1120538237700617E20
+contingencyTable(5,5;47)= 292774075423660723725
+	poly(5,5;47)= 2.9277407441839142E20
+contingencyTable(5,5;48)= 403202334730834173150
+	poly(5,5;48)= 4.0320233379400253E20
+contingencyTable(5,5;49)= 551807428986247723675
+	poly(5,5;49)= 5.518074309453755E20
+contingencyTable(5,5;50)= 750638801273575445001
+	poly(5,5;50)= 7.506387988508028E20

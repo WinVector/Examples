@@ -1,6 +1,7 @@
 package com.mzlabs.count;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 
@@ -81,11 +82,48 @@ public final class CountExample {
 		System.out.println();
 		return evenOddSoln.compareTo(BigInteger.ZERO)>0;
 	}
+	
+	private static double evalPoly(final BigInteger[] ys, final double x) {
+		final int k = ys.length;
+		double sum = 0.0;
+		for(int i=0;i<k;++i) {
+			double prod = 1.0;
+			for(int j=0;j<k;++j) {
+				if(j!=i) {
+					final double term = (x-j)/(double)(i-j);
+					prod *= term;
+				}
+			}
+			sum += ys[i].doubleValue()*prod;
+		}
+		return sum;
+	}
+	
+	public static void runEx4(final int n) {
+		final CountingProblem prob = new ContingencyTableProblem(n,n);
+		final CountMat cm = new CountMat(prob);
+		final int[] b = new int[prob.A.length];
+		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
+		for(int i= 0;i<ys.length;++i) {
+			Arrays.fill(b,i);
+			ys[i] = cm.countNonNegativeSolutions(b);
+		}
+		for(int i= 0;i<=2*n*n;++i) {
+			Arrays.fill(b,i);
+			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
+			final double polyEval = evalPoly(ys,i);
+			System.out.println("contingencyTable(" + n + "," + n + ";" + i +")= " + evenOddSoln);
+			System.out.println("\tpoly(" + n + "," + n + ";" + i +")= " + polyEval);
+		}
+	}
 
 	
 	public static void main(String[] args) {
 		runEx1();
 		runEx2();
 		runEx3();
+		for(int n=1;n<=5;++n) {
+			runEx4(n);
+		}
 	}
 }
