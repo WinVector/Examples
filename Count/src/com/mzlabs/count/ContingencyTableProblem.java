@@ -40,8 +40,8 @@ public final class ContingencyTableProblem extends CountingProblem {
 	@Override
 	public int[] normalForm(int[] b) {
 		final int[] bsort = Arrays.copyOf(b,b.length);
-		Arrays.sort(b,0,rows);
-		Arrays.sort(b,rows,rows+cols);
+		Arrays.sort(bsort,0,rows);
+		Arrays.sort(bsort,rows,rows+cols);
 		return bsort;
 	}
 

@@ -37,7 +37,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
  *
  */
 public final class CountMat {
-	
+	private final CountingProblem prob;
 	private final int m;
 	private final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts;
 	
@@ -149,6 +149,7 @@ public final class CountMat {
 	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
 	 */
 	public CountMat(final CountingProblem prob) {
+		this.prob = prob;
 		m = prob.A.length;
 		// check conditions
 		final String problem = matrixFlaw(JBlasMatrix.factory,prob.A);
@@ -176,12 +177,22 @@ public final class CountMat {
 	 * @param b non-negative vector
 	 * @return number of non-negative integer solutions x to A x == b
 	 */
-	private BigInteger countNonNegativeSolutions(final IntVec b, final Map<IntVec,BigInteger> nonnegCounts) {
+	private BigInteger countNonNegativeSolutions(final int[] bIn, final Map<IntVec,BigInteger> nonnegCounts) {
 		// check for base case
-		if(b.isZero()) {
+		boolean allZero = true;
+		for(final int bi: bIn) {
+			if(bi!=0) {
+				allZero = false;
+				break;
+			}
+		}
+		if(allZero) {
 			return BigInteger.ONE;
 		}
-		BigInteger cached = nonnegCounts.get(b);
+		final IntVec b = new IntVec(bIn);
+		final IntVec bNormal = new IntVec(prob.normalForm(bIn));
+		System.out.println("\t" + b + "\t" + bNormal);
+		BigInteger cached = nonnegCounts.get(bNormal);
 		if(null==cached) {
 			cached = BigInteger.ZERO;
 			final IntVec groupVec = modKVec(2,b);
@@ -203,12 +214,12 @@ public final class CountMat {
 						for(int i=0;i<m;++i) {
 							bprime[i] = (b.get(i) - r.get(i))/2;
 						}
-						final BigInteger subsoln = countNonNegativeSolutions(new IntVec(bprime),nonnegCounts);
+						final BigInteger subsoln = countNonNegativeSolutions(bprime,nonnegCounts);
 						cached = cached.add(nzone.multiply(subsoln));
 					}
 				}
 			}
-			nonnegCounts.put(b,cached);
+			nonnegCounts.put(bNormal,cached);
 			//System.out.println(b + " " + cached);
 		}
 		return cached;
@@ -221,7 +232,7 @@ public final class CountMat {
 			}
 		}
 		final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
-		final BigInteger result = countNonNegativeSolutions(new IntVec(b),cache);
+		final BigInteger result = countNonNegativeSolutions(b,cache);
 		//final Set<BigInteger> values = new HashSet<BigInteger>(cache.values());
 		//System.out.println("cached " + cache.size() + " keys for " + values.size() + " values");
 		return result;
