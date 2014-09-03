@@ -10,7 +10,7 @@ public final class CountExample {
 	public static boolean runEx1() {
 		System.out.println();
 		final CountingProblem prob = new ContingencyTableProblem(3,2);
-		final CountMat cm = new CountMat(prob);
+		final CountMat cm = new CountMat(prob,false);
 		final int[] b = new int[prob.A.length];
 		BigInteger nRun = BigInteger.ZERO;
 		BigInteger nError = BigInteger.ZERO;
@@ -31,7 +31,7 @@ public final class CountExample {
 	public static boolean runEx2() {
 		System.out.println();
 		final CountingProblem prob  = new ContingencyTableProblem(3,3);
-		final CountMat cm = new CountMat(prob);
+		final CountMat cm = new CountMat(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -57,7 +57,7 @@ public final class CountExample {
 		final int m = 4;
 		final int n = 4;
 		final CountingProblem prob = new ContingencyTableProblem(m,n);
-		final CountMat cm = new CountMat(prob);
+		final CountMat cm = new CountMat(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -99,9 +99,9 @@ public final class CountExample {
 		return sum;
 	}
 	
-	public static void runEx4(final int n) {
+	public static void runEx4(final int n, final boolean useDCZO) {
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final CountMat cm = new CountMat(prob);
+		final CountMat cm = new CountMat(prob,useDCZO);
 		final int[] b = new int[prob.A.length];
 		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
 		for(int i= 0;i<ys.length;++i) {
@@ -123,7 +123,7 @@ public final class CountExample {
 		runEx2();
 		runEx3();
 		for(int n=1;n<=5;++n) {
-			runEx4(n);
+			runEx4(n,false);
 		}
 	}
 }

@@ -271,20 +271,20 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 				solnCounts.put(new IntVec(b),nsolns);
 			}
 		} while(boundsVec.advanceLE(b));
-		System.out.println("dc cache size: " + dc.cache.size());
-		System.out.println("dc result size: " + solnCounts.size());
-		BigInteger total = BigInteger.ZERO;
-		for(final BigInteger ci: solnCounts.values()) {
-			total = total.add(ci);
-		}
-		System.out.println("dc total solns: " + total);
-		System.out.println("dc m,n,2^n: " + m + " " + n + " " + Math.pow(2,n));
-		System.out.println("base cases");
-		for(final Entry<IntVec, LinOpCarrier<JBlasMatrix>> me: dc.inverseOp.entrySet()) {
-			if(me.getValue().inv!=null) {
-				System.out.println("\t" + me.getKey());
-			}
-		}
+//		System.out.println("dc cache size: " + dc.cache.size());
+//		System.out.println("dc result size: " + solnCounts.size());
+//		BigInteger total = BigInteger.ZERO;
+//		for(final BigInteger ci: solnCounts.values()) {
+//			total = total.add(ci);
+//		}
+//		System.out.println("dc total solns: " + total);
+//		System.out.println("dc m,n,2^n: " + m + " " + n + " " + Math.pow(2,n));
+//		System.out.println("base cases");
+//		for(final Entry<IntVec, LinOpCarrier<JBlasMatrix>> me: dc.inverseOp.entrySet()) {
+//			if(me.getValue().inv!=null) {
+//				System.out.println("\t" + me.getKey());
+//			}
+//		}
 		return solnCounts;
 	}
 	

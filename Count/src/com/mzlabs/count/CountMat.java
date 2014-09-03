@@ -155,7 +155,7 @@ public final class CountMat {
 	 * 
 	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
 	 */
-	public CountMat(final CountingProblem prob) {
+	public CountMat(final CountingProblem prob, boolean useDCZO) {
 		this.prob = prob;
 		m = prob.A.length;
 		// check conditions
@@ -164,7 +164,12 @@ public final class CountMat {
 			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
 		}
 		// build all possible zero/one sub-problems
-		final Map<IntVec,BigInteger> countsByB = zeroOneSolutionCounts(prob.A);
+		final Map<IntVec,BigInteger> countsByB;
+		if(useDCZO) {
+			countsByB = DivideAndConquer.zeroOneSolutionCounts(prob.A);
+		} else {
+			countsByB = zeroOneSolutionCounts(prob.A);
+		}
 		zeroOneCounts = organizeZeroOneStructures(countsByB);
 	}
 	
