@@ -24,7 +24,7 @@ import com.winvector.linalg.jblas.JBlasMatrix;
 
 final class DivideAndConquer<Z extends Matrix<Z>> {
 	private final LinalgFactory<Z> factory;
-	private final int[][] A;
+	private final CountingProblem prob;
 	
 	private static final class LinOpCarrier<Q extends Matrix<Q>> {
 		public final Q fwd;
@@ -63,10 +63,10 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	 * 
 	 * @param A non-negative zero/one matrix with no zero columns
 	 */
-	private DivideAndConquer(final int[][] A, final LinalgFactory<Z> factory) {
-		this.A = A;
+	private DivideAndConquer(final CountingProblem prob, final LinalgFactory<Z> factory) {
+		this.prob = prob;
 		this.factory = factory;
-		if(!acceptableA(A)) {
+		if(!acceptableA(prob.A)) {
 			throw new IllegalArgumentException("unaccaptable matrix");
 		}
 	}
@@ -77,7 +77,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	 * @return non-null on any base-case (which must include all cases where key.columnSet.dim()<2)
 	 */
 	private BigInteger baseCases(final DKey key) {
-		final int m = A.length;
+		final int m = prob.A.length;
 		final int np = key.columnSet.dim();
 		if(np<=0) {
 			throw new IllegalArgumentException("empty column set");
@@ -92,8 +92,8 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 				final Z amatT = factory.newMatrix(np,m,false);
 				for(int i=0;i<m;++i) {
 					for(int jj=0;jj<np;++jj) {
-						amat.set(i,jj,A[i][key.columnSet.get(jj)]);
-						amatT.set(jj,i,A[i][key.columnSet.get(jj)]);
+						amat.set(i,jj,prob.A[i][key.columnSet.get(jj)]);
+						amatT.set(jj,i,prob.A[i][key.columnSet.get(jj)]);
 					}
 				}
 				op = new LinOpCarrier<Z>(amat);
@@ -157,7 +157,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 		if(null==cached) {
 			// know we have at least 2 columns
 			cached = BigInteger.ZERO;
-			final int m = A.length;
+			final int m = prob.A.length;
 			//System.out.println(key);
 			final int n1 = key.columnSet.dim()/2;
 			final int n2 = key.columnSet.dim() - n1;
@@ -182,7 +182,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 				final int[] bound1 = new int[m];
 				for(int i=0;i<m;++i) {
 					for(int jj=0;jj<n1;++jj) {
-						bound1[i] += A[i][c1.get(jj)];
+						bound1[i] += prob.A[i][c1.get(jj)];
 					}
 				}
 				for(int i=0;i<m;++i) {
@@ -234,7 +234,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	 * @return
 	 */
 	private BigInteger solutionCount(final int[] b) {
-		final int n = A[0].length;
+		final int n = prob.A[0].length;
 		final IntVec bvec = new IntVec(b);
 		final int[] colset = new int[n];
 		for(int i=0;i<n;++i) {
@@ -252,15 +252,15 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	 * 
 	 * @return map from every b such that A z = b is solvable for z zero/one to how many such z there are
 	 */
-	public static Map<IntVec,BigInteger> solutionCounts(final int[][] A) {
-		final DivideAndConquer<JBlasMatrix> dc = new DivideAndConquer<JBlasMatrix>(A,JBlasMatrix.factory);
+	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final CountingProblem prob) {
+		final DivideAndConquer<JBlasMatrix> dc = new DivideAndConquer<JBlasMatrix>(prob,JBlasMatrix.factory);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
-		final int m = A.length;
-		final int n = A[0].length;
+		final int m = prob.A.length;
+		final int n = prob.A[0].length;
 		final int[] bounds = new int[m];
 		for(int i=0;i<m;++i) {
 			for(int j=0;j<n;++j) {
-				bounds[i] += A[i][j];
+				bounds[i] += prob.A[i][j];
 			}
 		}
 		final IntVec boundsVec = new IntVec(bounds);
@@ -289,9 +289,9 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	}
 	
 	public static void main(final String[] args) {
-		final int[][] A = CountExample.contingencyTable(4,3);
-		final Map<IntVec,BigInteger> z1 = CountMat.buildZeroOneStructures(A);
-		final Map<IntVec,BigInteger> z2 = DivideAndConquer.solutionCounts(A);
+		final CountingProblem prob = new ContingencyTableProblem(4,3);
+		final Map<IntVec,BigInteger> z1 = CountMat.zeroOneSolutionCounts(prob.A);
+		final Map<IntVec,BigInteger> z2 = DivideAndConquer.zeroOneSolutionCounts(prob);
 		assertEquals(z1.size(),z2.size());
 		for(final Map.Entry<IntVec,BigInteger> me: z1.entrySet()) {
 			final IntVec b = me.getKey();

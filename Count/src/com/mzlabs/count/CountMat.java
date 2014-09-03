@@ -99,7 +99,7 @@ public final class CountMat {
 	 * @param A
 	 * @return map from modul-2 class of rhs to rhs to count
 	 */
-	public static Map<IntVec,BigInteger> buildZeroOneStructures(final int[][] A) {
+	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final int[][] A) {
 		final Map<IntVec,BigInteger> zeroOneCounts = new HashMap<IntVec,BigInteger>(10000);
 		final int m = A.length;
 		final int n = A[0].length;
@@ -148,15 +148,15 @@ public final class CountMat {
 	 * 
 	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
 	 */
-	public CountMat(final int[][] A) {
-		m = A.length;
+	public CountMat(final CountingProblem prob) {
+		m = prob.A.length;
 		// check conditions
-		final String problem = matrixFlaw(JBlasMatrix.factory,A);
+		final String problem = matrixFlaw(JBlasMatrix.factory,prob.A);
 		if(null!=problem) {
 			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
 		}
 		// build all possible zero/one sub-problems
-		final Map<IntVec,BigInteger> countsByB = buildZeroOneStructures(A);
+		final Map<IntVec,BigInteger> countsByB = zeroOneSolutionCounts(prob.A);
 		zeroOneCounts = organizeZeroOneStructures(countsByB);
 	}
 	
