@@ -126,7 +126,7 @@ public final class CountMat {
 	 * @param counts Map b to number of solutions to A z = b for z zero/one (okay to omit unsolvable systems)
 	 * @return Map from (b mod 2) to b to number of solutions to A z = b (all unsolvable combination omitted)
 	 */
-	private static Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final Map<IntVec,BigInteger> counts) {
+	private Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final Map<IntVec,BigInteger> counts) {
 		final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
 		for(final Map.Entry<IntVec,BigInteger> me: counts.entrySet()) {
 			final IntVec b = me.getKey();
@@ -138,7 +138,14 @@ public final class CountMat {
 					bgroup = new HashMap<IntVec,BigInteger>();
 					zeroOneCounts.put(groupVec,bgroup);
 				}
-				bgroup.put(b,c);
+				final BigInteger ov = bgroup.get(b);
+				if(null==ov) {
+					bgroup.put(b,c);
+				} else {
+					if(ov.compareTo(c)!=0) {
+						throw new IllegalArgumentException("zero one data doesn't obey expected symmetries");
+					}
+				}
 			}
 		}
 		return zeroOneCounts;
@@ -190,13 +197,11 @@ public final class CountMat {
 			return BigInteger.ONE;
 		}
 		final IntVec b = new IntVec(bIn);
-		final IntVec bNormal = new IntVec(prob.normalForm(bIn));
-		System.out.println("\t" + b + "\t" + bNormal);
+		final IntVec bNormal = prob.normalForm(b);
 		BigInteger cached = nonnegCounts.get(bNormal);
 		if(null==cached) {
 			cached = BigInteger.ZERO;
-			final IntVec groupVec = modKVec(2,b);
-			final Map<IntVec,BigInteger> group = zeroOneCounts.get(groupVec);
+			final Map<IntVec,BigInteger> group = zeroOneCounts.get(modKVec(2,b));
 			if((null!=group)&&(!group.isEmpty())) {
 				final int[] bprime = new int[m];
 				for(final Map.Entry<IntVec,BigInteger> me: group.entrySet()) {

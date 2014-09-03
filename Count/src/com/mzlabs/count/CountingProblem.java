@@ -1,6 +1,5 @@
 package com.mzlabs.count;
 
-import java.util.Arrays;
 
 /**
  * count A x = b x integral >= 0
@@ -14,7 +13,7 @@ public class CountingProblem {
 		this.A = A;
 	}
 	
-	public int[] normalForm(final int[] b) {
-		return Arrays.copyOf(b,b.length);
+	public IntVec normalForm(final IntVec b) {
+		return b;
 	}
 }

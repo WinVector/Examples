@@ -38,11 +38,15 @@ public final class ContingencyTableProblem extends CountingProblem {
 	}
 	
 	@Override
-	public int[] normalForm(int[] b) {
-		final int[] bsort = Arrays.copyOf(b,b.length);
+	public IntVec normalForm(final IntVec b) {
+		final int n = b.dim();
+		final int[] bsort = new int[n];
+		for(int i=0;i<n;++i) {
+			bsort[i] = b.get(i);
+		}
 		Arrays.sort(bsort,0,rows);
 		Arrays.sort(bsort,rows,rows+cols);
-		return bsort;
+		return new IntVec(bsort);
 	}
 
 }
