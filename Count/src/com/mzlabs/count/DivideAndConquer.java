@@ -1,30 +1,29 @@
 package com.mzlabs.count;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
 import com.winvector.linalg.jblas.JBlasMatrix;
 
 /**
- * build every possible b such that A z = b is solvable for z in zero/one for zero/one matrix A with no zero columns
+ * build every possible b such that A z = b is solvable for z in zero/one or non-negative integer for zero/one matrix A with no zero columns
  * useful when there are many more columns than rows
  * 
- * Not practical- slower than the naive method of enumerating all zero/one z's for contingency tables until we get to probably around 20 by 20 tables.
+ * Not practical- slower than the naive method of enumerating all e/one z's for contingency tables until we get to probably around 20 by 20 tables.
  * 
  * @author johnmount
  *
  */
 
-final class DivideAndConquer<Z extends Matrix<Z>> {
-	private final LinalgFactory<Z> factory;
+final class DivideAndConquer {
+	private final LinalgFactory<JBlasMatrix> factory = JBlasMatrix.factory;
 	private final int[][] A;
+	private final boolean zeroOne;
+	private Map<IntVec,LinOpCarrier<JBlasMatrix>> inverseOp = new HashMap<IntVec,LinOpCarrier<JBlasMatrix>>();
 	
 	private static final class LinOpCarrier<Q extends Matrix<Q>> {
 		public final Q fwd;
@@ -35,7 +34,6 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 		}
 	}
 	
-	private Map<IntVec,LinOpCarrier<Z>> inverseOp = new HashMap<IntVec,LinOpCarrier<Z>>();
 	private final Map<DKey,BigInteger> cache = new HashMap<DKey,BigInteger>(1000);
 	
 	
@@ -62,10 +60,11 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	/**
 	 * 
 	 * @param A non-negative zero/one matrix with no zero columns
+	 * @param zeroOne if true we only consider zero/one solutions, otherwise we consider non-negative integer solutions
 	 */
-	private DivideAndConquer(final int[][] A, final LinalgFactory<Z> factory) {
+	public DivideAndConquer(final int[][] A, final boolean zeroOne) {
 		this.A = A;
-		this.factory = factory;
+		this.zeroOne = zeroOne;
 		if(!acceptableA(A)) {
 			throw new IllegalArgumentException("unaccaptable matrix");
 		}
@@ -86,22 +85,22 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 		// We eventually hit this case as we have no empty columns, so all single column systems are full column rank.
 		if(np<=m) {
 			final double epsilon = 1.0e-8;
-			LinOpCarrier<Z> op = inverseOp.get(key.columnSet);
+			LinOpCarrier<JBlasMatrix> op = inverseOp.get(key.columnSet);
 			if(null==op) {
-				final Z amat = factory.newMatrix(m,np,false);
-				final Z amatT = factory.newMatrix(np,m,false);
+				final JBlasMatrix amat = factory.newMatrix(m,np,false);
+				final JBlasMatrix amatT = factory.newMatrix(np,m,false);
 				for(int i=0;i<m;++i) {
 					for(int jj=0;jj<np;++jj) {
 						amat.set(i,jj,A[i][key.columnSet.get(jj)]);
 						amatT.set(jj,i,A[i][key.columnSet.get(jj)]);
 					}
 				}
-				op = new LinOpCarrier<Z>(amat);
-				final Z aTa = amatT.multMat(amat);
+				op = new LinOpCarrier<JBlasMatrix>(amat);
+				final JBlasMatrix aTa = amatT.multMat(amat);
 				try {
-					final Z aTaI = aTa.inverse();
+					final JBlasMatrix aTaI = aTa.inverse();
 					boolean goodMat = true;
-					final Z check = aTaI.multMat(aTa);
+					final JBlasMatrix check = aTaI.multMat(aTa);
 					final int k = check.rows();
 					for(int i=0;(i<k)&&(goodMat);++i) {
 						for(int j=0;(j<k)&&(goodMat);++j) {
@@ -126,8 +125,13 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 			if(null!=op.inv) {
 				final double[] soln = op.inv.mult(key.b.asDouble());
 				for(final double si: soln) {
-					if((si<-epsilon)||(si>1+epsilon)||(Math.abs(si-Math.round(si))>epsilon)) {
+					if((si<-epsilon)||(Math.abs(si-Math.round(si))>epsilon)) {
 						return BigInteger.ZERO;
+					}
+					if(zeroOne) {
+						if(si>1+epsilon) {
+							return BigInteger.ZERO;
+						}
 					}
 				}
 				final double[] recovered = op.fwd.mult(soln);
@@ -148,7 +152,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 
 	/**
 	 * assumes we have already checked for basecase solutions (so in particular key.columnSet.length>1)
-	 * return number of solutions to A[colset] z = b with z zero/one
+	 * return number of solutions to A[colset] z = b with z zero/one or integer (depending on control)
 	 * @param key
 	 * @return
 	 */
@@ -178,7 +182,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 				c2 = new IntVec(cset2);				
 			}
 			final IntVec bd1;
-			{
+			if(zeroOne) {
 				final int[] bound1 = new int[m];
 				for(int i=0;i<m;++i) {
 					for(int jj=0;jj<n1;++jj) {
@@ -189,6 +193,8 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 					bound1[i] = Math.min(bound1[i],key.b.get(i));
 				}
 				bd1 = new IntVec(bound1);
+			} else {
+				bd1 = key.b;
 			}
 			final int[] b1 = new int[m];
 			final int[] b2 = new int[m];
@@ -229,11 +235,11 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	}
 	
 	/**
-	 * return number of solutions to A z = b with z zero/one
+	 * return number of solutions to A z = b with z zero/one or non-negative integer (depending on control)
 	 * @param b
 	 * @return
 	 */
-	private BigInteger solutionCount(final int[] b) {
+	public BigInteger solutionCount(final int[] b) {
 		final int n = A[0].length;
 		final IntVec bvec = new IntVec(b);
 		final int[] colset = new int[n];
@@ -253,7 +259,7 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 	 * @return map from every b such that A z = b is solvable for z zero/one to how many such z there are
 	 */
 	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final int[][] A) {
-		final DivideAndConquer<JBlasMatrix> dc = new DivideAndConquer<JBlasMatrix>(A,JBlasMatrix.factory);
+		final DivideAndConquer dc = new DivideAndConquer(A,true);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
 		final int m = A.length;
 		final int n = A[0].length;
@@ -288,17 +294,30 @@ final class DivideAndConquer<Z extends Matrix<Z>> {
 		return solnCounts;
 	}
 	
+
+	
+	public static void workProb(final int n) {
+		final CountingProblem prob = new ContingencyTableProblem(n,n);
+		final DivideAndConquer dc = new DivideAndConquer(prob.A,false);
+		final int[] b = new int[prob.A.length];
+		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
+		for(int i= 0;i<ys.length;++i) {
+			Arrays.fill(b,i);
+			ys[i] = dc.solutionCount(b);
+		}
+		for(int i= 0;i<=2*n*n;++i) {
+			Arrays.fill(b,i);
+			final double polyEval = CountExample.evalPoly(ys,i);
+			if(i<ys.length) {
+				System.out.println("divideConquer(" + n + "," + n + ";" + i +")= " + ys[i]);
+			}
+			System.out.println("\tpoly(" + n + "," + n + ";" + i +")= " + polyEval);
+		}
+	}
+
 	public static void main(final String[] args) {
-		final CountingProblem prob = new ContingencyTableProblem(4,3);
-		final Map<IntVec,BigInteger> z1 = CountMat.zeroOneSolutionCounts(prob.A);
-		final Map<IntVec,BigInteger> z2 = DivideAndConquer.zeroOneSolutionCounts(prob.A);
-		assertEquals(z1.size(),z2.size());
-		for(final Map.Entry<IntVec,BigInteger> me: z1.entrySet()) {
-			final IntVec b = me.getKey();
-			final BigInteger c1 = me.getValue();
-			final BigInteger c2 = z2.get(b);
-			assertNotNull(c2);
-			assertEquals(0,c1.compareTo(c2));
+		for(int n=1;n<=3;++n) {
+			workProb(n);
 		}
 	}
 }

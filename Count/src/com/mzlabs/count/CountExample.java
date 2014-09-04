@@ -83,7 +83,7 @@ public final class CountExample {
 		return evenOddSoln.compareTo(BigInteger.ZERO)>0;
 	}
 	
-	private static double evalPoly(final BigInteger[] ys, final double x) {
+	static double evalPoly(final BigInteger[] ys, final double x) {
 		final int k = ys.length;
 		double sum = 0.0;
 		for(int i=0;i<k;++i) {
@@ -110,9 +110,10 @@ public final class CountExample {
 		}
 		for(int i= 0;i<=2*n*n;++i) {
 			Arrays.fill(b,i);
-			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 			final double polyEval = evalPoly(ys,i);
-			System.out.println("contingencyTable(" + n + "," + n + ";" + i +")= " + evenOddSoln);
+			if(i<ys.length) {
+				System.out.println("evenOdd(" + n + "," + n + ";" + i +")= " + ys[i]);
+			}
 			System.out.println("\tpoly(" + n + "," + n + ";" + i +")= " + polyEval);
 		}
 	}
