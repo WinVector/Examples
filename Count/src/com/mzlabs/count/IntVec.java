@@ -139,7 +139,7 @@ public final class IntVec implements Comparable<IntVec> {
 	}
 	
 	/**
-	 * 
+	 * // TODO: add test
 	 * @param A m by n matrix (m,n>0)
 	 * @return
 	 */
@@ -174,6 +174,7 @@ public final class IntVec implements Comparable<IntVec> {
 		return nzRows;
 	}
 	
+	// TODO: add test
 	public static int[][] rowRestrict(final int[][] A, final int[] rows) {
 		final int n = A[0].length;
 		final int m2 = rows.length;
@@ -187,6 +188,7 @@ public final class IntVec implements Comparable<IntVec> {
 		return A2;
 	}
 	
+	// TODO: add test
 	public static int[][] colRestrict(final int[][] A, final int[] cols) {
 		final int m = A.length;
 		final int n2 = cols.length;

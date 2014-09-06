@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-public class TestDivideAndConquer {
+public class TestSimpleDivideAndConquer {
 	@Test
 	public void testZO() {
 		final CountingProblem prob = new ContingencyTableProblem(4,3);

@@ -12,7 +12,7 @@ import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.ZeroOneCounter;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
-	static boolean debug = true;
+	static boolean debug = false;
 
 	private static boolean acceptableA(final int[][] A) {
 		final int m = A.length;
@@ -54,7 +54,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 				return new RowDropNode(A,nzRows,buildSolnTree(Adrop));
 			}
 		}
-		{   // see if there are any terminal case (full column rank sub-systems)
+		{   // see we have a terminal case (full column rank sub-systems)
 			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(A);
 			if(null!=nd) {
 				return nd;
@@ -113,9 +113,9 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		final CountingProblem prob  = new ContingencyTableProblem(3,3);
+		final CountingProblem prob  = new ContingencyTableProblem(4,4);
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
-		final ZeroOneCounter zo = new ZeroOneCounter(prob,false);
+		final ZeroOneCounter zo = new ZeroOneCounter(prob);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -124,13 +124,13 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		}
 		IntLinOp.mult(prob.A,interior,b);
 		System.out.println(new Date());
-		final BigInteger evenOddSoln = dc.countNonNegativeSolutions(b);
-		System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + evenOddSoln);
+		final BigInteger dqSoln = dc.countNonNegativeSolutions(b);
+		System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + dqSoln);
 		System.out.println(new Date());
-		final BigInteger bruteForceSoln = zo.countNonNegativeSolutions(b);
-		System.out.println(new IntVec(b) + "\tzero one solution\t" + bruteForceSoln);
+		final BigInteger eoSoln = zo.countNonNegativeSolutions(b);
+		System.out.println(new IntVec(b) + "\tzero one solution\t" + eoSoln);
 		System.out.println(new Date());
-		final boolean eq = (evenOddSoln.compareTo(bruteForceSoln)==0);
+		final boolean eq = (dqSoln.compareTo(eoSoln)==0);
 		System.out.println("equal: " + eq);
 		System.out.println();
 	}
