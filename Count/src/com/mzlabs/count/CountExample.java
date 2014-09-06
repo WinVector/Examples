@@ -57,7 +57,7 @@ public final class CountExample {
 		final int m = 4;
 		final int n = 4;
 		final CountingProblem prob = new ContingencyTableProblem(m,n);
-		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
+		final ZeroOneCounter zo = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -76,7 +76,7 @@ public final class CountExample {
 		}
 		System.out.println();
 		System.out.println(new Date());
-		final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
+		final BigInteger evenOddSoln = zo.countNonNegativeSolutions(b);
 		System.out.println(new IntVec(b) + "\teven odd solution\t" + evenOddSoln);
 		System.out.println(new Date());
 		System.out.println();

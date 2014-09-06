@@ -12,6 +12,7 @@ import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.ZeroOneCounter;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
+	static final boolean debug = false;
 
 	private static boolean acceptableA(final int[][] A) {
 		final int m = A.length;
@@ -54,19 +55,28 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		// TODO: don't copy out zeroed rows
 		final int n1 = n/2;
 		final int n2 = n - n1;
-		final int[][] A1 = new int[m][n1];
-		final int[][] A2 = new int[m][n2];
+		final int[][][] Asub = new int[2][][];
+		Asub[0] = new int[m][n1];
+		Asub[1] = new int[m][n2];
 		for(int i=0;i<m;++i) {
 			for(int j=0;j<n1;++j) {
-				A1[i][j] = A[i][j];
+				Asub[0][i][j] = A[i][j];
 			}
 			for(int j=0;j<n2;++j) {
-				A2[i][j] = A[i][n1+j];
+				Asub[1][i][j] = A[i][n1+j];
 			}
 		}
-		final NonNegativeIntegralCounter leftSubsystem = buildSolnTree(A1);
-		final NonNegativeIntegralCounter rightSubsystem = buildSolnTree(A2);
-		return new SplitNode(A,leftSubsystem,rightSubsystem);
+		final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
+		for(int sub=0;sub<2;++sub) {
+			final int[] nzRows = RowDropNode.nonZeroRows(Asub[sub]);
+			if(nzRows.length<m) {
+				final int[][] Adrop = RowDropNode.rowRestrict(Asub[sub],nzRows);
+				subsystem[sub] = new RowDropNode(Asub[sub],nzRows,buildSolnTree(Adrop));
+			} else {
+				subsystem[sub] = buildSolnTree(Asub[sub]);
+			}
+		}
+		return new SplitNode(A,subsystem[0],subsystem[1]);
 	}
 	
 	public DivideAndConquerCounter(final int[][] A) {
@@ -89,8 +99,9 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		final CountingProblem prob  = new ContingencyTableProblem(3,3);
+		final CountingProblem prob  = new ContingencyTableProblem(4,4);
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
+		final ZeroOneCounter zo = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -102,8 +113,8 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		final BigInteger evenOddSoln = dc.countNonNegativeSolutions(b);
 		System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + evenOddSoln);
 		System.out.println(new Date());
-		final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
-		System.out.println(new IntVec(b) + "\tbrute force solution\t" + bruteForceSoln);
+		final BigInteger bruteForceSoln = zo.countNonNegativeSolutions(b);
+		System.out.println(new IntVec(b) + "\tzero one solution\t" + bruteForceSoln);
 		System.out.println(new Date());
 		final boolean eq = (evenOddSoln.compareTo(bruteForceSoln)==0);
 		System.out.println("equal: " + eq);

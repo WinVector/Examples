@@ -9,7 +9,6 @@ import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.ZeroOneCounter;
 
 final class SplitNode implements NonNegativeIntegralCounter {
-	private static final boolean debug = true;
 	private final NonNegativeIntegralCounter leftSubSystem;
 	private final NonNegativeIntegralCounter rightSubSystem;
 	private final int[][] A;
@@ -47,7 +46,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 			} while(bd1.advanceLE(b1));
 			cache.put(bd1,count);
 		}
-		if(debug) {
+		if(DivideAndConquerCounter.debug) {
 			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
 			if(check.compareTo(count)!=0) {
 				throw new IllegalStateException("got wrong answer");

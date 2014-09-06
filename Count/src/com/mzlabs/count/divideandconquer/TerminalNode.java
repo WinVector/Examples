@@ -9,7 +9,6 @@ import com.winvector.linalg.colt.ColtMatrix;
 
 final class TerminalNode implements NonNegativeIntegralCounter {
 	private final static LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-	private static final boolean debug = true;
 	private static final double epsilon = 1.0e-8;
 	private final int[][] A;
 	private final ColtMatrix fwd;
@@ -81,7 +80,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 		for(final double si: soln) {
 			if((si<-epsilon)||(Math.abs(si-Math.round(si))>epsilon)) {
 				final BigInteger count = BigInteger.ZERO;
-				if(debug) {
+				if(DivideAndConquerCounter.debug) {
 					final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
 					if(check.compareTo(count)!=0) {
 						throw new IllegalStateException("got wrong answer");
@@ -94,7 +93,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 		for(int i=0;i<m;++i) {
 			if(Math.abs(recovered[i]-b[i])>epsilon) {
 				final BigInteger count = BigInteger.ZERO;
-				if(debug) {
+				if(DivideAndConquerCounter.debug) {
 					final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
 					if(check.compareTo(count)!=0) {
 						throw new IllegalStateException("got wrong answer");
@@ -104,7 +103,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 			}
 		}
 		final BigInteger count = BigInteger.ONE;
-		if(debug) {
+		if(DivideAndConquerCounter.debug) {
 			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
 			if(check.compareTo(count)!=0) {
 				throw new IllegalStateException("got wrong answer");
