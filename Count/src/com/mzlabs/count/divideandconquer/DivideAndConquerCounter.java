@@ -43,12 +43,24 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	private final NonNegativeIntegralCounter underlying;
 	
 	private static final NonNegativeIntegralCounter buildSolnTree(final int[][] A) {
-		final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(A);
-		if(null!=nd) {
-			return nd;
+		final int m = A.length;
+		if(m<1) {
+			throw new IllegalArgumentException("called on zero-row system");
+		}
+		{   // see if there any zero rows to drop
+			final int[] nzRows = IntVec.nonZeroRows(A);
+			if(nzRows.length<m) {
+				final int[][] Adrop = IntVec.rowRestrict(A,nzRows);
+				return new RowDropNode(A,nzRows,buildSolnTree(Adrop));
+			}
+		}
+		{   // see if there are any terminal case (full column rank sub-systems)
+			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(A);
+			if(null!=nd) {
+				return nd;
+			}
 		}
 		final int n = A[0].length;
-		final int m = A.length;
 		if(n<=1) {
 			throw new IllegalStateException("terminal case didn't catch single column case");
 		}
@@ -76,13 +88,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		}
 		final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
 		for(int sub=0;sub<2;++sub) {
-			final int[] nzRows = IntVec.nonZeroRows(Asub[sub]);
-			if(nzRows.length<m) {
-				final int[][] Adrop = IntVec.rowRestrict(Asub[sub],nzRows);
-				subsystem[sub] = new RowDropNode(Asub[sub],nzRows,buildSolnTree(Adrop));
-			} else {
-				subsystem[sub] = buildSolnTree(Asub[sub]);
-			}
+			subsystem[sub] = buildSolnTree(Asub[sub]);
 		}
 		return new SplitNode(A,usesRow,subsystem[0],subsystem[1]);
 	}
