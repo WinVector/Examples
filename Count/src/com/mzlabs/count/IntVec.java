@@ -3,7 +3,7 @@ package com.mzlabs.count;
 import java.util.Arrays;
 
 
-final class IntVec implements Comparable<IntVec> {
+public final class IntVec implements Comparable<IntVec> {
 	private final int hashCode;
 	private final int[] b;
 	

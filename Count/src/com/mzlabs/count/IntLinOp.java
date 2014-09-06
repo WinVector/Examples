@@ -7,7 +7,7 @@ import java.util.Arrays;
  * @author johnmount
  *
  */
-final class IntLinOp {
+public final class IntLinOp {
 	private final int[] is;
 	private final int[] js;
 	private final int[] Aijs;
