@@ -134,7 +134,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		System.out.println();
 		for(int n=1;n<=10;++n) {
 			System.out.println();
-			for(int t=0;t<=n*n;++t) {
+			for(int t=0;t<=1+(n-1)*(n-1);++t) {
 				System.out.println();
 				System.out.println("" + n + " by " + n + " contingency tables with all rows/columns summing to " + t);
 				final CountingProblem prob  = new ContingencyTableProblem(n,n);
