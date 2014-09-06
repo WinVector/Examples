@@ -92,6 +92,6 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	
 	@Override
 	public String toString() {
-		return "split(" + leftSubSystem + "," + rightSubSystem + ")";
+		return "split(" + A.length + "," + A[0].length + ";" + leftSubSystem + "," + rightSubSystem + ")";
 	}
 }

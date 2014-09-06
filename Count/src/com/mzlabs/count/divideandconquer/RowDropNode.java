@@ -66,6 +66,6 @@ final class RowDropNode implements NonNegativeIntegralCounter {
 	
 	@Override
 	public String toString() {
-		return "drop(" + underlying + ")";
+		return "drop([" + A.length + "," + A[0].length + ":" + nzRows.length + "," + A[0].length + ";" + underlying + ")";
 	}
 }

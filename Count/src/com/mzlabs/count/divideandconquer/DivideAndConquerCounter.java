@@ -42,6 +42,20 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	private final NonNegativeIntegralCounter underlying;
 	
+	private static int[][] pickSplitSimple(final int[][] A) {
+		final int n = A[0].length;
+		final int[][] variableSplit = new int[2][];
+		variableSplit[0] = new int[n/2];
+		variableSplit[1] = new int[n-n/2];
+		for(int j=0;j<variableSplit[0].length;++j) {
+			variableSplit[0][j] = j;
+		}
+		for(int j=0;j<variableSplit[1].length;++j) {
+			variableSplit[1][j] = variableSplit[0].length + j;
+		}
+		return variableSplit;
+	}
+	
 	private static final NonNegativeIntegralCounter buildSolnTree(final int[][] A) {
 		final int m = A.length;
 		if(m<1) {
@@ -65,15 +79,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			throw new IllegalStateException("terminal case didn't catch single column case");
 		}
 		// TODO: pick optimal splits
-		final int[][] variableSplit = new int[2][];
-		variableSplit[0] = new int[n/2];
-		variableSplit[1] = new int[n-n/2];
-		for(int j=0;j<variableSplit[0].length;++j) {
-			variableSplit[0][j] = j;
-		}
-		for(int j=0;j<variableSplit[1].length;++j) {
-			variableSplit[1][j] = variableSplit[0].length + j;
-		}
+		final int[][] variableSplit = pickSplitSimple(A);
 		final boolean[][] usesRow = new boolean[2][m];
 		final int[][][] Asub = new int[2][][];
 		for(int sub=0;sub<2;++sub) {
@@ -113,7 +119,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		final CountingProblem prob  = new ContingencyTableProblem(4,4);
+		final CountingProblem prob  = new ContingencyTableProblem(5,5);
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
 		final ZeroOneCounter zo = new ZeroOneCounter(prob);
 		final int[] b = new int[prob.A.length];
