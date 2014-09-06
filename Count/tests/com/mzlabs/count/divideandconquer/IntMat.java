@@ -91,10 +91,10 @@ public final class IntMat implements Comparable<IntMat> {
 		}
 	}
 	
-	public static RowDescription[] buildMapToCannon(final int[][] A) {
+	public static RowDescription[] buildMapToCannon(final int[][] A, boolean sort) {
 		final int m = A.length;
 		final Map<IntVec,Integer> indexMap = new HashMap<IntVec,Integer>();
-		{
+		if(sort) {
 			final SortedSet<IntVec> orderedSet = new TreeSet<IntVec>();
 			for(int i=0;i<m;++i) {
 				final IntVec key = new IntVec(A[i]);
@@ -104,6 +104,13 @@ public final class IntMat implements Comparable<IntMat> {
 			}
 			for(final IntVec v: orderedSet) {
 				indexMap.put(v,indexMap.size());
+			}
+		} else {
+			for(int i=0;i<m;++i) {
+				final IntVec key = new IntVec(A[i]);
+				if((!key.isZero())&&(!indexMap.containsKey(key))) {
+					indexMap.put(key,indexMap.size());
+				}
 			}
 		}
 		final Map<IntVec,RowDescription> rowMap = new HashMap<IntVec,RowDescription>();

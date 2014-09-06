@@ -72,7 +72,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 		}
 		// Canonicalize matrix rows
-		final RowDescription[] rowDescr = IntMat.buildMapToCannon(Ain);
+		final RowDescription[] rowDescr = IntMat.buildMapToCannon(Ain,false);
 		final int[][] A = IntMat.rowRestrict(Ain,rowDescr);
 		{   // check again if we have a terminal case (full column rank sub-systems)
 			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain);
@@ -145,7 +145,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 				final BigInteger dqSoln = dc.countNonNegativeSolutions(b);
 				System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + dqSoln);
 				System.out.println(new Date());
-				if(n<=5) {
+				if(n<=4) {
 					final ZeroOneCounter zo = new ZeroOneCounter(prob);
 					final BigInteger eoSoln = zo.countNonNegativeSolutions(b);
 					System.out.println(new IntVec(b) + "\tzero one solution\t" + eoSoln);
