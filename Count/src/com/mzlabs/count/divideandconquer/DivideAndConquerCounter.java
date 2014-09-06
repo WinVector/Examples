@@ -12,7 +12,7 @@ import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.ZeroOneCounter;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
-	static final boolean debug = false;
+	static boolean debug = true;
 
 	private static boolean acceptableA(final int[][] A) {
 		final int m = A.length;
@@ -52,31 +52,39 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		if(n<=1) {
 			throw new IllegalStateException("terminal case didn't catch single column case");
 		}
-		// TODO: don't copy out zeroed rows
-		final int n1 = n/2;
-		final int n2 = n - n1;
+		// TODO: pick optimal splits
+		final int[][] variableSplit = new int[2][];
+		variableSplit[0] = new int[n/2];
+		variableSplit[1] = new int[n-n/2];
+		for(int j=0;j<variableSplit[0].length;++j) {
+			variableSplit[0][j] = j;
+		}
+		for(int j=0;j<variableSplit[1].length;++j) {
+			variableSplit[1][j] = variableSplit[0].length + j;
+		}
+		final boolean[][] usesRow = new boolean[2][m];
 		final int[][][] Asub = new int[2][][];
-		Asub[0] = new int[m][n1];
-		Asub[1] = new int[m][n2];
-		for(int i=0;i<m;++i) {
-			for(int j=0;j<n1;++j) {
-				Asub[0][i][j] = A[i][j];
-			}
-			for(int j=0;j<n2;++j) {
-				Asub[1][i][j] = A[i][n1+j];
+		for(int sub=0;sub<2;++sub) {
+			Asub[sub] = IntVec.colRestrict(A,variableSplit[sub]);
+			for(int i=0;i<m;++i) {
+				for(final int j: variableSplit[sub]) {
+					if(A[i][j]!=0) {
+						usesRow[sub][i] = true;
+					}
+				}
 			}
 		}
 		final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
 		for(int sub=0;sub<2;++sub) {
-			final int[] nzRows = RowDropNode.nonZeroRows(Asub[sub]);
+			final int[] nzRows = IntVec.nonZeroRows(Asub[sub]);
 			if(nzRows.length<m) {
-				final int[][] Adrop = RowDropNode.rowRestrict(Asub[sub],nzRows);
+				final int[][] Adrop = IntVec.rowRestrict(Asub[sub],nzRows);
 				subsystem[sub] = new RowDropNode(Asub[sub],nzRows,buildSolnTree(Adrop));
 			} else {
 				subsystem[sub] = buildSolnTree(Asub[sub]);
 			}
 		}
-		return new SplitNode(A,subsystem[0],subsystem[1]);
+		return new SplitNode(A,usesRow,subsystem[0],subsystem[1]);
 	}
 	
 	public DivideAndConquerCounter(final int[][] A) {
@@ -99,7 +107,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		final CountingProblem prob  = new ContingencyTableProblem(4,4);
+		final CountingProblem prob  = new ContingencyTableProblem(3,3);
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
 		final ZeroOneCounter zo = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
