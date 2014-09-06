@@ -1,15 +1,17 @@
 package com.mzlabs.count.divideandconquer;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.Random;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
-import com.mzlabs.count.IntLinOp;
 import com.mzlabs.count.IntVec;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.ZeroOneCounter;
+import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
 	static boolean debug = false;
@@ -56,54 +58,65 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		return variableSplit;
 	}
 	
-	private static final NonNegativeIntegralCounter buildSolnTree(final int[][] A) {
-		final int m = A.length;
-		if(m<1) {
+	private static final NonNegativeIntegralCounter buildSolnTree(final int[][] Ain, Map<IntMat,SplitNode> cannonSolns) {
+		if(Ain.length<1) {
 			throw new IllegalArgumentException("called on zero-row system");
 		}
-		{   // see if there any zero rows to drop
-			final int[] nzRows = IntVec.nonZeroRows(A);
-			if(nzRows.length<m) {
-				final int[][] Adrop = IntVec.rowRestrict(A,nzRows);
-				return new RowDropNode(A,nzRows,buildSolnTree(Adrop));
-			}
+		if(Ain[0].length<1) {
+			throw new IllegalArgumentException("called on zero-column system");
 		}
 		{   // see we have a terminal case (full column rank sub-systems)
-			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(A);
+			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain);
 			if(null!=nd) {
 				return nd;
 			}
 		}
-		final int n = A[0].length;
-		if(n<=1) {
-			throw new IllegalStateException("terminal case didn't catch single column case");
+		// Canonicalize matrix rows
+		final RowDescription[] rowDescr = IntMat.buildMapToCannon(Ain);
+		final int[][] A = IntMat.rowRestrict(Ain,rowDescr);
+		{   // check again if we have a terminal case (full column rank sub-systems)
+			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain);
+			if(null!=nd) {
+				return new RowCannonNode(Ain,rowDescr,nd);
+			}
 		}
-		// TODO: pick optimal splits
-		final int[][] variableSplit = pickSplitSimple(A);
-		final boolean[][] usesRow = new boolean[2][m];
-		final int[][][] Asub = new int[2][][];
-		for(int sub=0;sub<2;++sub) {
-			Asub[sub] = IntVec.colRestrict(A,variableSplit[sub]);
-			for(int i=0;i<m;++i) {
-				for(final int j: variableSplit[sub]) {
-					if(A[i][j]!=0) {
-						usesRow[sub][i] = true;
+		final IntMat matKey = new IntMat(A);
+		SplitNode subTree = cannonSolns.get(matKey);
+		if(null==subTree) {
+			final int m = A.length;
+			final int n = A[0].length;
+			if(n<=1) {
+				throw new IllegalStateException("terminal case didn't catch single column case");
+			}
+			// TODO: pick optimal splits
+			final int[][] variableSplit = pickSplitSimple(A);
+			final boolean[][] usesRow = new boolean[2][m];
+			final int[][][] Asub = new int[2][][];
+			for(int sub=0;sub<2;++sub) {
+				Asub[sub] = IntMat.colRestrict(A,variableSplit[sub]);
+				for(int i=0;i<m;++i) {
+					for(final int j: variableSplit[sub]) {
+						if(A[i][j]!=0) {
+							usesRow[sub][i] = true;
+						}
 					}
 				}
 			}
+			final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
+			for(int sub=0;sub<2;++sub) {
+				subsystem[sub] = buildSolnTree(Asub[sub],cannonSolns);
+			}
+			subTree = new SplitNode(A,usesRow,subsystem[0],subsystem[1]);
+			cannonSolns.put(matKey,subTree);
 		}
-		final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
-		for(int sub=0;sub<2;++sub) {
-			subsystem[sub] = buildSolnTree(Asub[sub]);
-		}
-		return new SplitNode(A,usesRow,subsystem[0],subsystem[1]);
+		return new RowCannonNode(Ain,rowDescr,subTree);
 	}
 	
 	public DivideAndConquerCounter(final int[][] A) {
 		if(!acceptableA(A)) {
 			throw new IllegalArgumentException("non-acceptable A");
 		}
-		underlying = buildSolnTree(A);
+		underlying = buildSolnTree(A,new HashMap<IntMat,SplitNode>(1000));
 	}
 	
 
@@ -119,26 +132,33 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		final CountingProblem prob  = new ContingencyTableProblem(5,5);
-		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
-		final ZeroOneCounter zo = new ZeroOneCounter(prob);
-		final int[] b = new int[prob.A.length];
-		final int[] interior = new int[prob.A[0].length];
-		final Random rand = new Random(2426236);
-		for(int i=0;i<interior.length;++i) {
-			interior[i] = rand.nextInt(3);
+		for(int n=1;n<=10;++n) {
+			System.out.println();
+			for(int t=0;t<=n*n;++t) {
+				System.out.println();
+				System.out.println("" + n + " by " + n + " contingency tables with all rows/columns summing to " + t);
+				final CountingProblem prob  = new ContingencyTableProblem(n,n);
+				final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
+				final int[] b = new int[prob.A.length];
+				Arrays.fill(b,t);
+				System.out.println(new Date());
+				final BigInteger dqSoln = dc.countNonNegativeSolutions(b);
+				System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + dqSoln);
+				System.out.println(new Date());
+				if(n<=5) {
+					final ZeroOneCounter zo = new ZeroOneCounter(prob);
+					final BigInteger eoSoln = zo.countNonNegativeSolutions(b);
+					System.out.println(new IntVec(b) + "\tzero one solution\t" + eoSoln);
+					System.out.println(new Date());
+					final boolean eq = (dqSoln.compareTo(eoSoln)==0);
+					System.out.println("equal: " + eq);
+					System.out.println();
+					if(!eq) {
+						throw new IllegalStateException("answers did not match");
+					}
+				}
+			}
 		}
-		IntLinOp.mult(prob.A,interior,b);
-		System.out.println(new Date());
-		final BigInteger dqSoln = dc.countNonNegativeSolutions(b);
-		System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + dqSoln);
-		System.out.println(new Date());
-		final BigInteger eoSoln = zo.countNonNegativeSolutions(b);
-		System.out.println(new IntVec(b) + "\tzero one solution\t" + eoSoln);
-		System.out.println(new Date());
-		final boolean eq = (dqSoln.compareTo(eoSoln)==0);
-		System.out.println("equal: " + eq);
-		System.out.println();
 	}
 
 }
