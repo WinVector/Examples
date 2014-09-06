@@ -10,12 +10,12 @@ public final class CountExample {
 	public static boolean runEx1() {
 		System.out.println();
 		final CountingProblem prob = new ContingencyTableProblem(3,2);
-		final CountMat cm = new CountMat(prob,false);
+		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		BigInteger nRun = BigInteger.ZERO;
 		BigInteger nError = BigInteger.ZERO;
 		do {
-			final BigInteger bruteForceSoln = CountMat.bruteForceSolnDebug(prob.A,b);
+			final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
 			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 			if(bruteForceSoln.compareTo(evenOddSoln)!=0) {
 				System.out.println(new IntVec(b) + "\t" + bruteForceSoln + "\t" + evenOddSoln);
@@ -31,7 +31,7 @@ public final class CountExample {
 	public static boolean runEx2() {
 		System.out.println();
 		final CountingProblem prob  = new ContingencyTableProblem(3,3);
-		final CountMat cm = new CountMat(prob,false);
+		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -43,7 +43,7 @@ public final class CountExample {
 		final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 		System.out.println(new IntVec(b) + "\teven odd solution\t" + evenOddSoln);
 		System.out.println(new Date());
-		final BigInteger bruteForceSoln = CountMat.bruteForceSolnDebug(prob.A,b);
+		final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
 		System.out.println(new IntVec(b) + "\tbrute force solution\t" + bruteForceSoln);
 		System.out.println(new Date());
 		final boolean eq = (evenOddSoln.compareTo(bruteForceSoln)==0);
@@ -57,7 +57,7 @@ public final class CountExample {
 		final int m = 4;
 		final int n = 4;
 		final CountingProblem prob = new ContingencyTableProblem(m,n);
-		final CountMat cm = new CountMat(prob,false);
+		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);
@@ -101,7 +101,7 @@ public final class CountExample {
 	
 	public static void runEx4(final int n, final boolean useDCZO) {
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final CountMat cm = new CountMat(prob,useDCZO);
+		final ZeroOneCounter cm = new ZeroOneCounter(prob,useDCZO);
 		final int[] b = new int[prob.A.length];
 		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
 		for(int i= 0;i<ys.length;++i) {

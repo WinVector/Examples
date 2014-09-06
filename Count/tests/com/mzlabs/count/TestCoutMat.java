@@ -15,12 +15,12 @@ public class TestCoutMat {
 	public void runEx1() {
 		final CountingProblem prob = new ContingencyTableProblem(3,2);
 		for(final boolean useDCZO: new boolean[] { false, true }) {
-			final CountMat cm = new CountMat(prob,useDCZO);
+			final ZeroOneCounter cm = new ZeroOneCounter(prob,useDCZO);
 			final int[] b = new int[prob.A.length];
 			BigInteger nRun = BigInteger.ZERO;
 			BigInteger nError = BigInteger.ZERO;
 			do {
-				final BigInteger bruteForceSoln = CountMat.bruteForceSolnDebug(prob.A,b);
+				final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
 				final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 				if(bruteForceSoln.compareTo(evenOddSoln)!=0) {
 					nError = nError.add(BigInteger.ONE);
@@ -35,7 +35,7 @@ public class TestCoutMat {
 	public void runEx2() {
 		final CountingProblem prob = new ContingencyTableProblem(3,3);
 		for(final boolean useDCZO: new boolean[] { false, true }) {
-			final CountMat cm = new CountMat(prob,useDCZO);
+			final ZeroOneCounter cm = new ZeroOneCounter(prob,useDCZO);
 			final int[] b = new int[prob.A.length];
 			final int[] interior = new int[prob.A[0].length];
 			final Random rand = new Random(2426236);
@@ -44,7 +44,7 @@ public class TestCoutMat {
 			}
 			IntLinOp.mult(prob.A,interior,b);
 			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
-			final BigInteger bruteForceSoln = CountMat.bruteForceSolnDebug(prob.A,b);
+			final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
 			final boolean eq = (evenOddSoln.compareTo(bruteForceSoln)==0);
 			assertTrue(eq);
 		}
@@ -57,7 +57,7 @@ public class TestCoutMat {
 		final CountingProblem prob = new ContingencyTableProblem(m,n);
 		BigInteger prevSoln = null;
 		for(final boolean useDCZO: new boolean[] { false, true }) {
-			final CountMat cm = new CountMat(prob,useDCZO);
+			final ZeroOneCounter cm = new ZeroOneCounter(prob,useDCZO);
 			final int[] b = new int[prob.A.length];
 			final int[] interior = new int[prob.A[0].length];
 			final Random rand = new Random(2426236);

@@ -19,7 +19,7 @@ import com.winvector.linalg.jblas.JBlasMatrix;
  *
  */
 
-final class DivideAndConquer {
+final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	private final LinalgFactory<JBlasMatrix> factory = JBlasMatrix.factory;
 	private final int[][] A;
 	private final boolean zeroOne;
@@ -62,7 +62,7 @@ final class DivideAndConquer {
 	 * @param A non-negative zero/one matrix with no zero columns
 	 * @param zeroOne if true we only consider zero/one solutions, otherwise we consider non-negative integer solutions
 	 */
-	public DivideAndConquer(final int[][] A, final boolean zeroOne) {
+	public SimpleDivideAndConquer(final int[][] A, final boolean zeroOne) {
 		this.A = A;
 		this.zeroOne = zeroOne;
 		if(!acceptableA(A)) {
@@ -239,7 +239,7 @@ final class DivideAndConquer {
 	 * @param b
 	 * @return
 	 */
-	public BigInteger solutionCount(final int[] b) {
+	public BigInteger countNonNegativeSolutions(final int[] b) {
 		final int n = A[0].length;
 		final IntVec bvec = new IntVec(b);
 		final int[] colset = new int[n];
@@ -259,7 +259,7 @@ final class DivideAndConquer {
 	 * @return map from every b such that A z = b is solvable for z zero/one to how many such z there are
 	 */
 	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final int[][] A) {
-		final DivideAndConquer dc = new DivideAndConquer(A,true);
+		final SimpleDivideAndConquer dc = new SimpleDivideAndConquer(A,true);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
 		final int m = A.length;
 		final int n = A[0].length;
@@ -272,7 +272,7 @@ final class DivideAndConquer {
 		final IntVec boundsVec = new IntVec(bounds);
 		final int[] b = new int[m];
 		do {
-			final BigInteger nsolns = dc.solutionCount(b);
+			final BigInteger nsolns = dc.countNonNegativeSolutions(b);
 			if(nsolns.compareTo(BigInteger.ZERO)>0) {
 				solnCounts.put(new IntVec(b),nsolns);
 			}
@@ -298,12 +298,12 @@ final class DivideAndConquer {
 	
 	public static void workProb(final int n) {
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final DivideAndConquer dc = new DivideAndConquer(prob.A,false);
+		final SimpleDivideAndConquer dc = new SimpleDivideAndConquer(prob.A,false);
 		final int[] b = new int[prob.A.length];
 		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
 		for(int i= 0;i<ys.length;++i) {
 			Arrays.fill(b,i);
-			ys[i] = dc.solutionCount(b);
+			ys[i] = dc.countNonNegativeSolutions(b);
 		}
 		for(int i= 0;i<=2*n*n;++i) {
 			Arrays.fill(b,i);
