@@ -2,7 +2,8 @@
 *~
 .Rhistory
 .RHistory
-.*
 !.gitignore
 \#*
 .Rproj.user
+.Rapp.history
+.ipynb_checkpoints
