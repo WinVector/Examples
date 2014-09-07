@@ -16,4 +16,13 @@ public class CountingProblem {
 	public IntVec normalForm(final IntVec b) {
 		return b;
 	}
+	
+	/**
+	 * 
+	 * @param curVarSet set of current variables
+	 * @return two arrays which partition the integers 0...curVarSet.length (i representing curVarSet[i]) in an efficient manner, neither set empty, can return null to avoid choosing
+	 */
+	public int[][] splitVarsByRef(final int[] curVarSet) {
+		return null;
+	}
 }

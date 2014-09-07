@@ -18,7 +18,7 @@ public class TestDQ {
 		final CountingProblem prob  = new ContingencyTableProblem(3,3);
 		final boolean origDebug = DivideAndConquerCounter.debug;
 		DivideAndConquerCounter.debug = true;
-		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
+		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob);
 		final ZeroOneCounter zo = new ZeroOneCounter(prob);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];

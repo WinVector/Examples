@@ -1,0 +1,236 @@
+
+
+1 by 1 contingency tables
+Sat Sep 06 19:05:43 PDT 2014
+dc counter initted
+Sat Sep 06 19:05:43 PDT 2014
+zo counter initted
+Sat Sep 06 19:05:43 PDT 2014
+
+Sat Sep 06 19:05:43 PDT 2014
+[0, 0]	divide and conquer solution	1
+Sat Sep 06 19:05:43 PDT 2014
+[0, 0]	zero one solution	1
+Sat Sep 06 19:05:43 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:43 PDT 2014
+[1, 1]	divide and conquer solution	1
+Sat Sep 06 19:05:43 PDT 2014
+[1, 1]	zero one solution	1
+Sat Sep 06 19:05:43 PDT 2014
+equal: true
+
+
+2 by 2 contingency tables
+Sat Sep 06 19:05:43 PDT 2014
+dc counter initted
+Sat Sep 06 19:05:44 PDT 2014
+zo counter initted
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0]	divide and conquer solution	1
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0]	zero one solution	1
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1]	divide and conquer solution	2
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1]	zero one solution	2
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2]	divide and conquer solution	3
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2]	zero one solution	3
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+3 by 3 contingency tables
+Sat Sep 06 19:05:44 PDT 2014
+dc counter initted
+Sat Sep 06 19:05:44 PDT 2014
+zo counter initted
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0, 0, 0]	zero one solution	1
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1, 1, 1]	divide and conquer solution	6
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1, 1, 1]	zero one solution	6
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2, 2, 2]	divide and conquer solution	21
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2, 2, 2]	zero one solution	21
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[3, 3, 3, 3, 3, 3]	divide and conquer solution	55
+Sat Sep 06 19:05:44 PDT 2014
+[3, 3, 3, 3, 3, 3]	zero one solution	55
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[4, 4, 4, 4, 4, 4]	divide and conquer solution	120
+Sat Sep 06 19:05:44 PDT 2014
+[4, 4, 4, 4, 4, 4]	zero one solution	120
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[5, 5, 5, 5, 5, 5]	divide and conquer solution	231
+Sat Sep 06 19:05:44 PDT 2014
+[5, 5, 5, 5, 5, 5]	zero one solution	231
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+4 by 4 contingency tables
+Sat Sep 06 19:05:44 PDT 2014
+dc counter initted
+Sat Sep 06 19:05:44 PDT 2014
+zo counter initted
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0]	zero one solution	1
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1]	divide and conquer solution	24
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1]	zero one solution	24
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2]	divide and conquer solution	282
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2]	zero one solution	282
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3]	divide and conquer solution	2008
+Sat Sep 06 19:05:44 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3]	zero one solution	2008
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[4, 4, 4, 4, 4, 4, 4, 4]	divide and conquer solution	10147
+Sat Sep 06 19:05:44 PDT 2014
+[4, 4, 4, 4, 4, 4, 4, 4]	zero one solution	10147
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[5, 5, 5, 5, 5, 5, 5, 5]	divide and conquer solution	40176
+Sat Sep 06 19:05:44 PDT 2014
+[5, 5, 5, 5, 5, 5, 5, 5]	zero one solution	40176
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[6, 6, 6, 6, 6, 6, 6, 6]	divide and conquer solution	132724
+Sat Sep 06 19:05:44 PDT 2014
+[6, 6, 6, 6, 6, 6, 6, 6]	zero one solution	132724
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[7, 7, 7, 7, 7, 7, 7, 7]	divide and conquer solution	381424
+Sat Sep 06 19:05:44 PDT 2014
+[7, 7, 7, 7, 7, 7, 7, 7]	zero one solution	381424
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[8, 8, 8, 8, 8, 8, 8, 8]	divide and conquer solution	981541
+Sat Sep 06 19:05:44 PDT 2014
+[8, 8, 8, 8, 8, 8, 8, 8]	zero one solution	981541
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[9, 9, 9, 9, 9, 9, 9, 9]	divide and conquer solution	2309384
+Sat Sep 06 19:05:44 PDT 2014
+[9, 9, 9, 9, 9, 9, 9, 9]	zero one solution	2309384
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+Sat Sep 06 19:05:44 PDT 2014
+[10, 10, 10, 10, 10, 10, 10, 10]	divide and conquer solution	5045326
+Sat Sep 06 19:05:44 PDT 2014
+[10, 10, 10, 10, 10, 10, 10, 10]	zero one solution	5045326
+Sat Sep 06 19:05:44 PDT 2014
+equal: true
+
+
+5 by 5 contingency tables
+Sat Sep 06 19:05:44 PDT 2014
+dc counter initted
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]	divide and conquer solution	120
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]	divide and conquer solution	6210
+Sat Sep 06 19:05:44 PDT 2014
+
+Sat Sep 06 19:05:44 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3, 3, 3]	divide and conquer solution	153040
+Sat Sep 06 19:05:45 PDT 2014
+
+Sat Sep 06 19:05:45 PDT 2014
+[4, 4, 4, 4, 4, 4, 4, 4, 4, 4]	divide and conquer solution	2224955
+Sat Sep 06 19:05:46 PDT 2014
+
+Sat Sep 06 19:05:46 PDT 2014
+[5, 5, 5, 5, 5, 5, 5, 5, 5, 5]	divide and conquer solution	22069251
+Sat Sep 06 19:05:51 PDT 2014
+
+Sat Sep 06 19:05:51 PDT 2014
