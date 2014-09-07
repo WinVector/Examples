@@ -3,7 +3,7 @@ package com.mzlabs.count.divideandconquer;
 import java.math.BigInteger;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
-import com.mzlabs.count.ZeroOneCounter;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;
 

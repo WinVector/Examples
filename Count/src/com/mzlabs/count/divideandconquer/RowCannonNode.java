@@ -3,8 +3,8 @@ package com.mzlabs.count.divideandconquer;
 import java.math.BigInteger;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
-import com.mzlabs.count.ZeroOneCounter;
 import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 /**
  * Map A to a cannonical A with no zero rows, no duplicate rows and rows in a canonical order.

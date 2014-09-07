@@ -117,7 +117,7 @@ public class Permutation {
 	}
 	
 	/**
-	 * 
+	 * TODO: check Herstein for correct compose/circle notation
 	 * @param p permutation on with p.length=o.p.length
 	 * @return new perm r s.t. r(x) = this(p(x))
 	 */

@@ -8,9 +8,9 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.mzlabs.count.IntVec;
 import com.mzlabs.count.NonNegativeIntegralCounter;
-import com.mzlabs.count.ZeroOneCounter;
+import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 final class SplitNode implements NonNegativeIntegralCounter {
 	private final NonNegativeIntegralCounter leftSubSystem;

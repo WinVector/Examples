@@ -1,12 +1,16 @@
-package com.mzlabs.count;
+package com.mzlabs.count.zeroone;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mzlabs.count.CountingProblem;
+import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
 import com.mzlabs.count.perm.Permutation;
+import com.mzlabs.count.util.IntLinOp;
+import com.mzlabs.count.util.IntVec;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;

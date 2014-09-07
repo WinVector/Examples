@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.mzlabs.count.util.IntVec;
+
 public class TestIntVec {
 	@Test
 	public void testZero() {

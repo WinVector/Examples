@@ -1,4 +1,4 @@
-package com.mzlabs.count;
+package com.mzlabs.count.util;
 
 import java.util.Arrays;
 

@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 
+import com.mzlabs.count.util.IntLinOp;
+import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
+
 public final class CountExample {
 	
 	public static boolean runEx1() {

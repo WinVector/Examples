@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import com.mzlabs.count.util.IntLinOp;
+
 public class TestIntLinOp {
 	@Test
 	public void testFn() {

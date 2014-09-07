@@ -7,6 +7,10 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import com.mzlabs.count.util.IntLinOp;
+import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
+
 public class TestZeroOneCounter {
 
 

@@ -8,11 +8,11 @@ import java.util.Map;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
-import com.mzlabs.count.IntVec;
 import com.mzlabs.count.NonNegativeIntegralCounter;
-import com.mzlabs.count.ZeroOneCounter;
 import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
 import com.mzlabs.count.perm.Permutation;
+import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
 	static boolean debug = false;
