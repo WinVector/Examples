@@ -187,27 +187,21 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	
 	/**
 	 * assumes finite number of solutions (all variables involved) and A non-negative
-	 * @param b non-negative vector
+	 * @param b non-negative vector already in normal problem normal form
 	 * @return number of non-negative integer solutions x to A x == b
 	 */
-	private BigInteger countNonNegativeSolutions(final int[] bIn, final Map<IntVec,BigInteger> nonnegCounts) {
-		// check for base case
-		boolean allZero = true;
-		for(final int bi: bIn) {
-			if(bi!=0) {
-				allZero = false;
-				break;
-			}
+	private BigInteger countNonNegativeSolutionsR(final IntVec b, final Map<IntVec,BigInteger> nonnegCounts) {
+		// check for base cases
+		if(!prob.admissableB(b.asVec())) {
+			return BigInteger.ZERO;
 		}
-		if(allZero) {
+		if(b.isZero()) {
 			return BigInteger.ONE;
 		}
-		final IntVec b = new IntVec(bIn);
-		final IntVec bNormal = prob.normalForm(b);
-		BigInteger cached = nonnegCounts.get(bNormal);
+		BigInteger cached = nonnegCounts.get(b);
 		if(null==cached) {
 			cached = BigInteger.ZERO;
-			final Map<IntVec,BigInteger> group = zeroOneCounts.get(modKVec(2,b));
+			final Map<IntVec,BigInteger> group = zeroOneCounts.get(modKVec(2,b));  // this is the gotcha- the modK and sub-keys are not in normal form
 			if((null!=group)&&(!group.isEmpty())) {
 				final int[] bprime = new int[m];
 				for(final Map.Entry<IntVec,BigInteger> me: group.entrySet()) {
@@ -225,25 +219,30 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 						for(int i=0;i<m;++i) {
 							bprime[i] = (b.get(i) - r.get(i))/2;
 						}
-						final BigInteger subsoln = countNonNegativeSolutions(bprime,nonnegCounts);
+						final IntVec bprimeNorm = prob.normalForm(bprime);
+						final BigInteger subsoln = countNonNegativeSolutionsR(bprimeNorm,nonnegCounts);
 						cached = cached.add(nzone.multiply(subsoln));
 					}
 				}
 			}
-			nonnegCounts.put(bNormal,cached);
+			nonnegCounts.put(b,cached);
 			//System.out.println(b + " " + cached);
 		}
 		return cached;
 	}
 	
-	public BigInteger countNonNegativeSolutions(final int[] b) {
-		for(final int bi: b) {
+	public BigInteger countNonNegativeSolutions(final int[] bIn) {
+		for(final int bi: bIn) {
 			if(bi<0) {
 				throw new IllegalArgumentException("negative b entry");
 			}
 		}
+		if(!prob.admissableB(bIn)) {
+			return BigInteger.ZERO;
+		}
+		final IntVec bNormal = prob.normalForm(bIn);
 		final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
-		final BigInteger result = countNonNegativeSolutions(b,cache);
+		final BigInteger result = countNonNegativeSolutionsR(bNormal,cache);
 		//final Set<BigInteger> values = new HashSet<BigInteger>(cache.values());
 		//System.out.println("cached " + cache.size() + " keys for " + values.size() + " values");
 		return result;

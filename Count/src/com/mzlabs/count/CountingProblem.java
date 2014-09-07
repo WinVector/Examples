@@ -13,8 +13,12 @@ public class CountingProblem {
 		this.A = A;
 	}
 	
-	public IntVec normalForm(final IntVec b) {
-		return b;
+	public boolean admissableB(final int[] b) {
+		return true;
+	}
+	
+	public IntVec normalForm(final int[] b) {
+		return new IntVec(b);
 	}
 	
 	/**

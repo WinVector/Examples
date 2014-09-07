@@ -54,12 +54,33 @@ public final class ContingencyTableProblem extends CountingProblem {
 	}
 	
 	@Override
-	public IntVec normalForm(final IntVec b) {
-		final int n = b.dim();
-		final int[] bsort = new int[n];
-		for(int i=0;i<n;++i) {
-			bsort[i] = b.get(i);
+	public boolean admissableB(final int[] b) {
+		if(b.length!=rows+cols) {
+			return false;
 		}
+		for(final int bi: b) {
+			if(bi<0) {
+				return false;
+			}
+		}
+		int sum1 = 0;
+		for(int i=0;i<rows;++i) {
+			sum1 += b[i];
+		}
+		int sum2 = 0;
+		for(int i=rows;i<rows+cols;++i) {
+			sum2 += b[i];
+		}
+		if(sum1!=sum2) {
+			return false;
+		}
+		return true;
+	}
+	
+	@Override
+	public IntVec normalForm(final int[] b) {
+		final int n = b.length;
+		final int[] bsort = Arrays.copyOf(b,n);
 		Arrays.sort(bsort,0,rows);
 		Arrays.sort(bsort,rows,rows+cols);
 		return new IntVec(bsort);

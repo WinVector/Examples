@@ -146,8 +146,16 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] bIn) {
-		final IntVec bvec = problem.normalForm(new IntVec(bIn));
-		return underlying.countNonNegativeSolutions(bvec.asVec());
+		for(final int bi: bIn) {
+			if(bi<0) {
+				throw new IllegalArgumentException("negative b entry");
+			}
+		}
+		if(!problem.admissableB(bIn)) {
+			return BigInteger.ZERO;
+		}
+		final IntVec bNormal = problem.normalForm(bIn);
+		return underlying.countNonNegativeSolutions(bNormal.asVec());
 	}
 	
 	@Override
