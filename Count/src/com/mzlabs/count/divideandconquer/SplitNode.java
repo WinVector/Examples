@@ -16,6 +16,9 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	private final NonNegativeIntegralCounter leftSubSystem;
 	private final NonNegativeIntegralCounter rightSubSystem;
 	private final int[][] A;
+	private final int m;
+	private final int n;
+	private final int nEntangled;
 	private final boolean[][] usesRow;
 	private final int[] entangledRows;
 	private final boolean runParallel;
@@ -29,21 +32,23 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		this.runParallel = runParallel;
 		this.leftSubSystem = leftSubSystem;
 		this.rightSubSystem = rightSubSystem;
-		final int m = A.length;
-		int nEntangled = 0;
+		m = A.length;
+		n = A[0].length;
+		int nE = 0;
 		for(int i=0;i<m;++i) {
 			if(usesRow[0][i]&&usesRow[1][i]) {
-				++nEntangled;
+				++nE;
 			}
 		}
+		nEntangled = nE;
 		//System.out.println("split node m:" + m + ", n: " + A[0].length + ", nEntangled:" + nEntangled +
 		//		", rank:" + IntMat.rowBasis(A).length);
 		entangledRows = new int[nEntangled];
-		nEntangled = 0;
+		nE = 0;
 		for(int i=0;i<m;++i) {
 			if(usesRow[0][i]&&usesRow[1][i]) {
-				entangledRows[nEntangled] = i;
-				++nEntangled;
+				entangledRows[nE] = i;
+				++nE;
 			}
 		}
 	}
@@ -51,8 +56,6 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	private class StepOrg {
 		public final int[] b;
 		public BigInteger accumulator = BigInteger.ZERO; // use b to sync access to accumulator
-		final int m = A.length;
-		final int nEntangled = entangledRows.length;
 		
 		public StepOrg(final int[] b) {
 			this.b = b;
@@ -74,6 +77,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				b1[i] = counter[ii];
 				b2[i] = b[i] - counter[ii];
 			}
+			// b1 + b2 == b
 			// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
 			final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
 			if(sub1.compareTo(BigInteger.ZERO)>0) {
@@ -116,20 +120,23 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				return count;
 			}
 		}
-		final int nEntangled = entangledRows.length;
 		final int[] bound = new int[nEntangled];
 		for(int ii=0;ii<nEntangled;++ii) {
 			bound[ii] = b[entangledRows[ii]];
 		}
 		final IntVec bdE = new IntVec(bound);
-		final  int[] counter = new int[nEntangled];
+		final int[] counter = new int[nEntangled];
 		final StepOrg stepOrg = new StepOrg(b);
 		if(runParallel) {
 			final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1000);
-			final ThreadPoolExecutor ex = new ThreadPoolExecutor(8,8,1000,TimeUnit.SECONDS,workQueue);
+			final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
 			do {
-				final StepOrg.StepJob job = stepOrg.stepJob(counter);
-				ex.execute(job);
+				if(workQueue.size()>=100) {
+					stepOrg.runStep(counter);
+				} else {
+					final StepOrg.StepJob job = stepOrg.stepJob(counter);
+					ex.execute(job);
+				}
 			} while(bdE.advanceLE(counter));
 			ex.shutdown();
 			while(!ex.isTerminated()) {
@@ -158,6 +165,6 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	
 	@Override
 	public String toString() {
-		return "split(" + A.length + "," + A[0].length + ";" + leftSubSystem + "," + rightSubSystem + ")";
+		return "split(" + A.length + ":" + nEntangled + "," + n  + ";" + leftSubSystem + "," + rightSubSystem + ")";
 	}
 }

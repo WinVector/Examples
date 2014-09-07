@@ -61,7 +61,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	
 	private final NonNegativeIntegralCounter buildSolnTree(final int[][] Ain, final int[] origVarIndices,
-			final Map<IntMat,SplitNode> cannonSolns, final boolean runParallel) {
+			final Map<IntMat,SplitNode> cannonSolns, final boolean runParrallel) {
 		if(Ain.length<1) {
 			throw new IllegalArgumentException("called on zero-row system");
 		}
@@ -94,7 +94,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 			int[][] variableSplit = problem.splitVarsByRef(origVarIndices);
 			if(null==variableSplit) {
-				// TODO: pick optimal splits
+				// TODO: pick optimal splits in this case
 				variableSplit = pickSplitSimple(origVarIndices.length);
 			}
 			final int[][] subIndices = new int[2][];
@@ -119,7 +119,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			for(int sub=0;sub<2;++sub) {
 				subsystem[sub] = buildSolnTree(Asub[sub],subIndices[sub],cannonSolns,false);
 			}
-			subTree = new SplitNode(A,usesRow,false,subsystem[0],subsystem[1]);
+			subTree = new SplitNode(A,usesRow,runParrallel,subsystem[0],subsystem[1]);
 			cannonSolns.put(matKey,subTree);
 		}
 		return new RowCannonNode(Ain,rowDescr,subTree);
@@ -151,13 +151,14 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		for(int n=1;n<=10;++n) {
+		for(int n=1;n<=9;++n) {
 			System.out.println();
 			System.out.println("" + n + " by " + n + " contingency tables");
 			final CountingProblem prob  = new ContingencyTableProblem(n,n);
 			System.out.println(new Date());
 			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob);
 			System.out.println("dc counter initted");
+			System.out.println("\t" + dc);
 			System.out.println(new Date());
 			final ZeroOneCounter zo;
 			if(n<=4) {
@@ -167,7 +168,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			} else {
 				zo = null;
 			}
-			for(int t=0;t<=1+(n-1)*(n-1);++t) {
+			for(int t=0;t<=(n*n-3*n+2)/2;++t) {
 				System.out.println();
 				final int[] b = new int[prob.A.length];
 				Arrays.fill(b,t);
