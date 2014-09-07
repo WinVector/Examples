@@ -30,6 +30,8 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				++nEntangled;
 			}
 		}
+		//System.out.println("split node m:" + m + ", n: " + A[0].length + ", nEntangled:" + nEntangled +
+		//		", rank:" + IntMat.rowBasis(A).length);
 		entangledRows = new int[nEntangled];
 		nEntangled = 0;
 		for(int i=0;i<m;++i) {

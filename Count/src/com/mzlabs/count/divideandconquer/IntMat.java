@@ -1,12 +1,11 @@
 package com.mzlabs.count.divideandconquer;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
-import com.mzlabs.count.IntVec;
+import com.winvector.linalg.LinalgFactory;
+import com.winvector.linalg.colt.ColtMatrix;
 
 public final class IntMat implements Comparable<IntMat> {
 	private final int hashCode;
@@ -75,58 +74,54 @@ public final class IntMat implements Comparable<IntMat> {
 
 	public static final class RowDescription {
 		public final int origIndex;  
-		public final boolean isZeroRow;
 		public final int newIndex; // -1 for all non-primary rows
-		public final int matchingOldIndex; // where primary row is mapped from, -1 for zero and primary rows
-		public RowDescription(final int origIndex, final boolean isZeroRow, final int newIndex, final int matchingOldIndex) {
+		public double[] soln = null;
+		
+		public RowDescription(final int origIndex, 
+				final int newIndex, final double[] soln) {
 			this.origIndex = origIndex;
-			this.isZeroRow = isZeroRow;
 			this.newIndex = newIndex;
-			this.matchingOldIndex = matchingOldIndex;
+			this.soln = soln;
 		}
 		
 		@Override
 		public String toString() {
-			return "(" + origIndex + ":" + isZeroRow + ";" + newIndex + "," + matchingOldIndex + ")";
+			return "(" + origIndex + ":" + newIndex + ")";
 		}
 	}
 	
-	public static RowDescription[] buildMapToCannon(final int[][] A, boolean sort) {
+	public static RowDescription[] buildMapToCannon(final int[][] A) {
+		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
 		final int m = A.length;
-		final Map<IntVec,Integer> indexMap = new HashMap<IntVec,Integer>();
-		if(sort) {
-			final SortedSet<IntVec> orderedSet = new TreeSet<IntVec>();
-			for(int i=0;i<m;++i) {
-				final IntVec key = new IntVec(A[i]);
-				if((!key.isZero())&&(!orderedSet.contains(key))) {
-					orderedSet.add(key);
-				}
-			}
-			for(final IntVec v: orderedSet) {
-				indexMap.put(v,indexMap.size());
-			}
-		} else {
-			for(int i=0;i<m;++i) {
-				final IntVec key = new IntVec(A[i]);
-				if((!key.isZero())&&(!indexMap.containsKey(key))) {
-					indexMap.put(key,indexMap.size());
-				}
+		final int n = A[0].length;
+		final SortedMap<Integer,Integer> orderingMap = new TreeMap<Integer,Integer>();
+		final int[] rowBasis = IntMat.rowBasis(A);
+		for(final int i: rowBasis) {
+			orderingMap.put(i,orderingMap.size());
+		}
+		final int n2 = rowBasis.length;
+		final ColtMatrix mat = factory.newMatrix(n,n2, false);
+		for(int j=0;j<n;++j) {
+			for(int jj=0;jj<n2;++jj) {
+				mat.set(j,jj,A[rowBasis[jj]][j]);
 			}
 		}
-		final Map<IntVec,RowDescription> rowMap = new HashMap<IntVec,RowDescription>();
 		final RowDescription[] descr = new RowDescription[m];
 		for(int i=0;i<m;++i) {
-			final IntVec key = new IntVec(A[i]);
-			if(key.isZero()) {
-				descr[i] = new RowDescription(i,true,-1,-1);
+			final Integer newIndex = orderingMap.get(i);
+			if(null!=newIndex) {
+				descr[i] = new RowDescription(i,newIndex,null);
 			} else {
-				RowDescription peerDescr = rowMap.get(key);
-				if(null==peerDescr) {
-					descr[i] = new RowDescription(i,false,indexMap.get(key),-1);
-					rowMap.put(key,descr[i]);
-				} else {
-					descr[i] = new RowDescription(i,false,-1,peerDescr.origIndex);
+				final double[] v = new double[n];
+				for(int j=0;j<n;++j) {
+					v[j] = A[i][j];
 				}
+				final double[] soln = mat.solve(v);
+				final double[] expandedSoln = new double[m];
+				for(int ii=0;ii<rowBasis.length;++ii) {
+					expandedSoln[rowBasis[ii]] = soln[ii];
+				}
+				descr[i] = new RowDescription(i,-1,expandedSoln);
 			}
 		}
 		return descr;
@@ -214,5 +209,19 @@ public final class IntMat implements Comparable<IntMat> {
 			}
 		}
 		return A2;
+	}
+	
+	// TODO: add test
+	public static int[] rowBasis(final int[][] A) {
+		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
+		final int m = A.length;
+		final int n = A[0].length;
+		ColtMatrix mat = factory.newMatrix(n, m, false);
+		for(int i=0;i<m;++i) {
+			for(int j=0;j<n;++j) {
+				mat.set(j,i,A[i][j]);
+			}
+		}
+		return mat.columnMatrix().colBasis(null, 1.0e-8);
 	}
 }

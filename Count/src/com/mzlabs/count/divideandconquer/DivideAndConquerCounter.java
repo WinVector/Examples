@@ -58,6 +58,8 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		return variableSplit;
 	}
 	
+	
+	
 	private static final NonNegativeIntegralCounter buildSolnTree(final int[][] Ain, Map<IntMat,SplitNode> cannonSolns) {
 		if(Ain.length<1) {
 			throw new IllegalArgumentException("called on zero-row system");
@@ -72,7 +74,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 		}
 		// Canonicalize matrix rows
-		final RowDescription[] rowDescr = IntMat.buildMapToCannon(Ain,false);
+		final RowDescription[] rowDescr = IntMat.buildMapToCannon(Ain);
 		final int[][] A = IntMat.rowRestrict(Ain,rowDescr);
 		{   // check again if we have a terminal case (full column rank sub-systems)
 			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain);
@@ -134,19 +136,29 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		System.out.println();
 		for(int n=1;n<=10;++n) {
 			System.out.println();
+			System.out.println("" + n + " by " + n + " contingency tables");
+			final CountingProblem prob  = new ContingencyTableProblem(n,n);
+			System.out.println(new Date());
+			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
+			System.out.println("dc counter initted");
+			System.out.println(new Date());
+			final ZeroOneCounter zo;
+			if(n<=4) {
+				System.out.println("zo counter initted");
+				zo = new ZeroOneCounter(prob);
+				System.out.println(new Date());
+			} else {
+				zo = null;
+			}
 			for(int t=0;t<=1+(n-1)*(n-1);++t) {
 				System.out.println();
-				System.out.println("" + n + " by " + n + " contingency tables with all rows/columns summing to " + t);
-				final CountingProblem prob  = new ContingencyTableProblem(n,n);
-				final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob.A);
 				final int[] b = new int[prob.A.length];
 				Arrays.fill(b,t);
 				System.out.println(new Date());
 				final BigInteger dqSoln = dc.countNonNegativeSolutions(b);
 				System.out.println(new IntVec(b) + "\tdivide and conquer solution\t" + dqSoln);
 				System.out.println(new Date());
-				if(n<=4) {
-					final ZeroOneCounter zo = new ZeroOneCounter(prob);
+				if(null!=zo) {
 					final BigInteger eoSoln = zo.countNonNegativeSolutions(b);
 					System.out.println(new IntVec(b) + "\tzero one solution\t" + eoSoln);
 					System.out.println(new Date());

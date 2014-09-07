@@ -26,16 +26,15 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] b) {
 		// check if b obeys the implied symmetries of the homomorphism
+		final int m = b.length;
 		BigInteger count = null;
 		for(final RowDescription di: rowDescr) {
-			if(di.isZeroRow) {
-				if(b[di.origIndex]!=0) {
-					count = BigInteger.ZERO;
-					break;
+			if(di.newIndex<0) {
+				double impliedB = 0.0;
+				for(int j=0;j<m;++j) {
+					impliedB += di.soln[j]*b[j];
 				}
-			}
-			if(di.matchingOldIndex>=0) {
-				if(b[di.origIndex]!=b[di.matchingOldIndex]) {
+				if(Math.abs(impliedB-b[di.origIndex])>1.0e-6) {
 					count = BigInteger.ZERO;
 					break;
 				}
