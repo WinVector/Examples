@@ -46,14 +46,17 @@ public class TestPerm {
 	
 	@Test
 	public void testComp() {
-		final Permutation p1 = new Permutation(new int[] {1, 0, 2});
-		final Permutation p2 = new Permutation(new int[] {0, 2, 1});
+		//  Herstein circle notation (T o P)(x) = P(T(x)) (p. 13, Topics in Algebra 2nd edition)
+		final Permutation T = new Permutation(new int[] {1, 0, 2});
+		final Permutation P = new Permutation(new int[] {0, 2, 1});
 		final int[] x = { 0, 1, 2};
-		final Permutation comp = p1.compose(p2);
+		final Permutation comp = T.compose(P);
+		final Permutation other = P.compose(T);
+		assertTrue(comp.compareTo(other)!=0); // check our test is strong enought to check the effect we want
 		final int[] map = comp.apply(x);
 		assertNotNull(map);
 		assertEquals(x.length,map.length);
-		final int[] check = p1.apply(p2.apply(x));
+		final int[] check = P.apply(T.apply(x));
 		assertNotNull(check);
 		assertEquals(x.length,check.length);
 		for(int i=0;i<check.length;++i) {

@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public final class Permutation {
+public final class Permutation implements Comparable<Permutation> {
 	private final int[] perm;
 	
 	public Permutation(final int[] perm) {
@@ -62,6 +62,32 @@ public final class Permutation {
 		}
 	}
 	
+	public final int dim() {
+		return perm.length;
+	}
+	
+	@Override
+	public int compareTo(final Permutation o) {
+		if(perm.length!=o.perm.length) {
+			if(perm.length>=o.perm.length) {
+				return 1;
+			} else {
+				return -1;
+			}
+		}
+		return IntVec.compare(perm,o.perm);
+	}
+	
+	@Override
+	public boolean equals(final Object o) {
+		return compareTo((Permutation)o)==0;
+	}
+	
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(perm);
+	}
+	
 	@Override
 	public String toString() {
 		final StringBuilder b = new StringBuilder();
@@ -117,13 +143,12 @@ public final class Permutation {
 	}
 	
 	/**
-	 * TODO: check Herstein for correct compose/circle notation
 	 * @param p permutation on with p.length=o.p.length
-	 * @return new perm r s.t. r(x) = this(p(x))
+	 * @return new perm r s.t. r(x) = p(this(x)), compatible with Herstein circle notation (T o P)(x) = P(T(x)) (p. 13, Topics in Algebra 2nd edition)
 	 */
 	public Permutation compose(final Permutation p) {
-		final int[] r = Arrays.copyOf(perm,perm.length);
-		return new Permutation(p.apply(r));
+		final int[] r = Arrays.copyOf(p.perm,perm.length);
+		return new Permutation(apply(r));
 	}
 	
 	/**
