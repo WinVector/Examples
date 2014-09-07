@@ -12,6 +12,7 @@ import com.mzlabs.count.IntVec;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.ZeroOneCounter;
 import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
+import com.mzlabs.count.perm.Permutation;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
 	static boolean debug = false;
@@ -154,7 +155,8 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		if(!problem.admissableB(bIn)) {
 			return BigInteger.ZERO;
 		}
-		final IntVec bNormal = problem.normalForm(bIn);
+		final Permutation perm = problem.toNormalForm(bIn);
+		final IntVec bNormal = new IntVec(perm.apply(bIn));
 		return underlying.countNonNegativeSolutions(bNormal.asVec());
 	}
 	

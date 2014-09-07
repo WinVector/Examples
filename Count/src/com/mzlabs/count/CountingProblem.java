@@ -1,5 +1,7 @@
 package com.mzlabs.count;
 
+import com.mzlabs.count.perm.Permutation;
+
 
 /**
  * count A x = b x integral >= 0
@@ -17,8 +19,8 @@ public class CountingProblem {
 		return true;
 	}
 	
-	public IntVec normalForm(final int[] b) {
-		return new IntVec(b);
+	public Permutation toNormalForm(final int[] b) {
+		return new Permutation(A.length);
 	}
 	
 	/**

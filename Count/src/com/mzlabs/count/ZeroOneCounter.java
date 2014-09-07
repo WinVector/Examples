@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
+import com.mzlabs.count.perm.Permutation;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
@@ -219,7 +220,8 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 						for(int i=0;i<m;++i) {
 							bprime[i] = (b.get(i) - r.get(i))/2;
 						}
-						final IntVec bprimeNorm = prob.normalForm(bprime);
+						final Permutation tobprimeNorm = prob.toNormalForm(bprime);
+						final IntVec bprimeNorm = new IntVec(tobprimeNorm.apply(bprime));
 						final BigInteger subsoln = countNonNegativeSolutionsR(bprimeNorm,nonnegCounts);
 						cached = cached.add(nzone.multiply(subsoln));
 					}
@@ -240,7 +242,8 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		if(!prob.admissableB(bIn)) {
 			return BigInteger.ZERO;
 		}
-		final IntVec bNormal = prob.normalForm(bIn);
+		final Permutation perm = prob.toNormalForm(bIn);
+		final IntVec bNormal = new IntVec(perm.apply(bIn));
 		final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
 		final BigInteger result = countNonNegativeSolutionsR(bNormal,cache);
 		//final Set<BigInteger> values = new HashSet<BigInteger>(cache.values());

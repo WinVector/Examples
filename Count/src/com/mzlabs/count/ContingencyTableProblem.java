@@ -2,6 +2,8 @@ package com.mzlabs.count;
 
 import java.util.Arrays;
 
+import com.mzlabs.count.perm.Permutation;
+
 public final class ContingencyTableProblem extends CountingProblem {
 	private final int rows;
 	private final int cols;
@@ -78,12 +80,11 @@ public final class ContingencyTableProblem extends CountingProblem {
 	}
 	
 	@Override
-	public IntVec normalForm(final int[] b) {
+	public Permutation toNormalForm(final int[] b) {
 		final int n = b.length;
-		final int[] bsort = Arrays.copyOf(b,n);
-		Arrays.sort(bsort,0,rows);
-		Arrays.sort(bsort,rows,rows+cols);
-		return new IntVec(bsort);
+		final Permutation p1 = Permutation.sortingPerm(b, 0, rows, n);
+		final Permutation p2 = Permutation.sortingPerm(b, rows, rows+cols, n);
+		return p1.compose(p2); // disjoint indices in perms, so doesn't matter which order we compose
 	}
 	
 	@Override
