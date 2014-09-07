@@ -92,9 +92,9 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			if(n<=1) {
 				throw new IllegalStateException("terminal case didn't catch single column case");
 			}
-			// TODO: pick optimal splits
 			int[][] variableSplit = problem.splitVarsByRef(origVarIndices);
 			if(null==variableSplit) {
+				// TODO: pick optimal splits
 				variableSplit = pickSplitSimple(origVarIndices.length);
 			}
 			final int[][] subIndices = new int[2][];

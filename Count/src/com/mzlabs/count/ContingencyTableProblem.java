@@ -5,7 +5,19 @@ import java.util.Arrays;
 public final class ContingencyTableProblem extends CountingProblem {
 	private final int rows;
 	private final int cols;
+	
 
+	private static int[] coords(final int rows, final int cols, final int index) {
+		final int coords[] = new int[2];
+		coords[0] = index%cols;
+		coords[1] = (index - coords[0])/cols;
+		return coords;
+	}
+	
+	private int[] coords(final int index) {
+		return coords(rows,cols,index);
+	}
+	
 	/**
 	 * 
 	 * @param rows >0
@@ -21,6 +33,10 @@ public final class ContingencyTableProblem extends CountingProblem {
 				final int cell = i*cols+j;
 				A[i][cell] = 1;
 				A[j+rows][cell] = 1;
+				final int[] coords = coords(rows,cols,cell);
+				if((j!=coords[0])||(i!=coords[1])) {
+					throw new IllegalStateException("coords are wrong");
+				}
 			}
 		}
 		return A;
@@ -47,6 +63,62 @@ public final class ContingencyTableProblem extends CountingProblem {
 		Arrays.sort(bsort,0,rows);
 		Arrays.sort(bsort,rows,rows+cols);
 		return new IntVec(bsort);
+	}
+	
+	@Override
+	public int[][] splitVarsByRef(final int[] curVarSet) {
+		final int nVar = curVarSet.length;
+		if(nVar<=1) {
+			throw new IllegalArgumentException("called on unsplittable set");
+		}
+		final int nCoords = 2;
+		final double[] min = new double[nCoords];
+		Arrays.fill(min,Double.POSITIVE_INFINITY);
+		final double[] max = new double[nCoords];
+		Arrays.fill(max,Double.NEGATIVE_INFINITY);
+		final double[] sum = new double[min.length];
+		for(final int idx: curVarSet) {
+			final int[] coords = coords(idx);
+			for(int jj=0;jj<nCoords;++jj) {
+				min[jj] = Math.min(min[jj],coords[jj]);
+				max[jj] = Math.max(max[jj],coords[jj]);
+				sum[jj] += coords[jj];
+			}
+		}
+		int widestJ = 0;
+		for(int j=1;j<nCoords;++j) {
+			if((max[j]-min[j])>(max[widestJ]-min[widestJ])) {
+				widestJ = j;
+			}
+		}
+		final double mean = sum[widestJ]/(double)nVar;
+		final boolean[] left = new boolean[nVar];
+		int nLeft = 0;
+		for(int i=0;i<nVar;++i) {
+			final int[] coords = coords(curVarSet[i]);
+			if(coords[widestJ]<mean) {
+				left[i] = true;  // store in a boolean to work around floating point non-determinism
+				++nLeft;
+			}
+		}
+		final int[][] split = new int[2][];
+		if((nLeft<=0)||(nLeft>=nVar)) {
+			throw new IllegalStateException("failed to split");
+		}
+		split[0] = new int[nLeft];
+		split[1] = new int[nVar-nLeft];
+		nLeft = 0;
+		int nRight = 0;
+		for(int i=0;i<nVar;++i) {
+			if(left[i]) {
+				split[0][nLeft] = i;
+				++nLeft;
+			} else {
+				split[1][nRight] = i;
+				++nRight;
+			}
+		}
+		return split;
 	}
 
 }
