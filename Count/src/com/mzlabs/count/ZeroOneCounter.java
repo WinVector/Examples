@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
@@ -166,7 +167,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		// build all possible zero/one sub-problems
 		final Map<IntVec,BigInteger> countsByB;
 		if(useSDQZO) {
-			countsByB = SimpleDivideAndConquer.zeroOneSolutionCounts(prob);
+			countsByB = DivideAndConquerCounter.zeroOneSolutionCounts(prob);
 		} else {
 			countsByB = zeroOneSolutionCounts(prob.A);
 		}
@@ -256,9 +257,9 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	 * assumes all variables involved and A non-negative and no empty columns
 	 * @param A
 	 * @param b
-	 * @return number of non-negative integer solutions of A x = b
+	 * @return number of non-negative (or zero/one) integer solutions of A x = b
 	 */
-	public static BigInteger bruteForceSolnDebug(final int[][] A, final int[] b) {
+	public static BigInteger bruteForceSolnDebug(final int[][] A, final int[] b, final boolean zeroOne) {
 		final int m = A.length;
 		final int n = A[0].length;
 		// inspect that A meets assumed conditions
@@ -285,6 +286,11 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 				if(A[i][j]>0) {
 					bounds[j] = Math.min(bounds[j],b[i]/A[i][j]);
 				}
+			}
+		}
+		if(zeroOne) {
+			for(int j=0;j<n;++j) {
+				bounds[j] = Math.min(1,bounds[j]);
 			}
 		}
 		final IntVec boundsV = new IntVec(bounds);

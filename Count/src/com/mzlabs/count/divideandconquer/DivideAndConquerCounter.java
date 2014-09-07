@@ -15,6 +15,25 @@ import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
 	static boolean debug = false;
+	static boolean allowParallel = true;
+	private final CountingProblem problem;
+	private final NonNegativeIntegralCounter underlying;
+	private final boolean zeroOne;
+	
+	public DivideAndConquerCounter(final CountingProblem problem, final boolean zeroOne) {
+		this.problem = problem;
+		this.zeroOne = zeroOne;
+		if(!acceptableA(problem.A)) {
+			throw new IllegalArgumentException("non-acceptable A");
+		}
+		final int n = problem.A[0].length;
+		final int[] origVarIndices = new int[n];
+		for(int i=0;i<n;++i) {
+			origVarIndices[i] = i;
+		}
+		underlying = buildSolnTree(problem.A,origVarIndices,new HashMap<IntMat,SplitNode>(1000),allowParallel);
+	}
+	
 
 	private static boolean acceptableA(final int[][] A) {
 		final int m = A.length;
@@ -42,8 +61,6 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		return true;
 	}
 	
-	private final CountingProblem problem;
-	private final NonNegativeIntegralCounter underlying;
 	
 	private static int[][] pickSplitSimple(final int n) {
 		final int[][] variableSplit = new int[2][];
@@ -69,7 +86,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			throw new IllegalArgumentException("called on zero-column system");
 		}
 		{   // see we have a terminal case (full column rank sub-systems)
-			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain);
+			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain,zeroOne);
 			if(null!=nd) {
 				return nd;
 			}
@@ -79,9 +96,9 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		final int[][] A = IntMat.rowRestrict(Ain,rowDescr);
 		// know A is full row rank now
 		{   // check again if we have a terminal case (full column rank sub-systems)
-			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain);
+			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain,zeroOne);
 			if(null!=nd) {
-				return new RowCannonNode(Ain,rowDescr,nd);
+				return new RowCannonNode(Ain,rowDescr,nd,zeroOne);
 			}
 		}
 		final IntMat matKey = new IntMat(A);
@@ -119,25 +136,13 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			for(int sub=0;sub<2;++sub) {
 				subsystem[sub] = buildSolnTree(Asub[sub],subIndices[sub],cannonSolns,false);
 			}
-			subTree = new SplitNode(A,usesRow,runParrallel,subsystem[0],subsystem[1]);
+			subTree = new SplitNode(A,usesRow,runParrallel,subsystem[0],subsystem[1],zeroOne);
 			cannonSolns.put(matKey,subTree);
 		}
-		return new RowCannonNode(Ain,rowDescr,subTree);
+		return new RowCannonNode(Ain,rowDescr,subTree,zeroOne);
 	}
 	
-	public DivideAndConquerCounter(final CountingProblem problem) {
-		this.problem = problem;
-		if(!acceptableA(problem.A)) {
-			throw new IllegalArgumentException("non-acceptable A");
-		}
-		final int n = problem.A[0].length;
-		final int[] origVarIndices = new int[n];
-		for(int i=0;i<n;++i) {
-			origVarIndices[i] = i;
-		}
-		underlying = buildSolnTree(problem.A,origVarIndices,new HashMap<IntMat,SplitNode>(1000),true);
-	}
-	
+
 
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] bIn) {
@@ -150,6 +155,47 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		return "dq(" + underlying + ")";
 	}
 	
+	/**
+	 * 
+	 * @return map from every b such that problem.A z = b is solvable for z zero/one to how many such z there are
+	 */
+	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final CountingProblem problem) {
+		final DivideAndConquerCounter dc = new DivideAndConquerCounter(problem,true);
+		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
+		final int m = problem.A.length;
+		final int n = problem.A[0].length;
+		final int[] bounds = new int[m];
+		for(int i=0;i<m;++i) {
+			for(int j=0;j<n;++j) {
+				bounds[i] += problem.A[i][j];
+			}
+		}
+		final IntVec boundsVec = new IntVec(bounds);
+		final int[] b = new int[m];
+		do {
+			final BigInteger nsolns = dc.countNonNegativeSolutions(b);
+			if(nsolns.compareTo(BigInteger.ZERO)>0) {
+				solnCounts.put(new IntVec(b),nsolns);
+			}
+		} while(boundsVec.advanceLE(b));
+//		System.out.println("dc cache size: " + dc.cache.size());
+//		System.out.println("dc result size: " + solnCounts.size());
+//		BigInteger total = BigInteger.ZERO;
+//		for(final BigInteger ci: solnCounts.values()) {
+//			total = total.add(ci);
+//		}
+//		System.out.println("dc total solns: " + total);
+//		System.out.println("dc m,n,2^n: " + m + " " + n + " " + Math.pow(2,n));
+//		System.out.println("base cases");
+//		for(final Entry<IntVec, LinOpCarrier<JBlasMatrix>> me: dc.inverseOp.entrySet()) {
+//			if(me.getValue().inv!=null) {
+//				System.out.println("\t" + me.getKey());
+//			}
+//		}
+		return solnCounts;
+	}
+	
+	
 	public static void main(final String[] args) {
 		System.out.println();
 		for(int n=1;n<=9;++n) {
@@ -157,7 +203,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			System.out.println("" + n + " by " + n + " contingency tables");
 			final CountingProblem prob  = new ContingencyTableProblem(n,n);
 			System.out.println(new Date());
-			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob);
+			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,false);
 			System.out.println("dc counter initted");
 			System.out.println("\t" + dc);
 			System.out.println(new Date());

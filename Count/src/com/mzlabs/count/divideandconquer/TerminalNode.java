@@ -13,12 +13,14 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 	private final int[][] A;
 	private final ColtMatrix fwd;
 	private final ColtMatrix inv;
+	private final boolean zeroOne;
 	
 
-	private TerminalNode(final int[][] A, final ColtMatrix fwd, final ColtMatrix inv) {
+	private TerminalNode(final int[][] A, final ColtMatrix fwd, final ColtMatrix inv, final boolean zeroOne) {
 		this.A = A;
 		this.fwd = fwd;
 		this.inv = inv;
+		this.zeroOne = zeroOne;
 	}
 	
 	/**
@@ -28,7 +30,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 	 * @param A
 	 * @return
 	 */
-	public static TerminalNode tryToBuildTerminalNode(final int[][] A) {
+	public static TerminalNode tryToBuildTerminalNode(final int[][] A, final boolean zeroOne) {
 		final int m = A.length;
 		final int n = A[0].length;
 		if(n>m) {
@@ -62,7 +64,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 				}
 			}
 			if(goodMat) {
-				return new TerminalNode(A,amat,aTaI.multMat(amatT));
+				return new TerminalNode(A,amat,aTaI.multMat(amatT),zeroOne);
 			}
 		} catch (Exception ex) {
 		}
@@ -78,15 +80,28 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 		}
 		final double[] soln = inv.mult(bD);
 		for(final double si: soln) {
+			// negative or non-integral solutions
 			if((si<-epsilon)||(Math.abs(si-Math.round(si))>epsilon)) {
 				final BigInteger count = BigInteger.ZERO;
 				if(DivideAndConquerCounter.debug) {
-					final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
+					final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 					if(check.compareTo(count)!=0) {
 						throw new IllegalStateException("got wrong answer");
 					}
 				}
 				return count;
+			}
+			if(zeroOne) {  // extra zero/one condition
+				if(si>1+epsilon) {
+					final BigInteger count = BigInteger.ZERO;
+					if(DivideAndConquerCounter.debug) {
+						final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
+						if(check.compareTo(count)!=0) {
+							throw new IllegalStateException("got wrong answer");
+						}
+					}
+					return count;
+				}
 			}
 		}
 		final double[] recovered = fwd.mult(soln);
@@ -94,7 +109,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 			if(Math.abs(recovered[i]-b[i])>epsilon) {
 				final BigInteger count = BigInteger.ZERO;
 				if(DivideAndConquerCounter.debug) {
-					final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
+					final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 					if(check.compareTo(count)!=0) {
 						throw new IllegalStateException("got wrong answer");
 					}
@@ -104,7 +119,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 		}
 		final BigInteger count = BigInteger.ONE;
 		if(DivideAndConquerCounter.debug) {
-			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
+			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 			if(check.compareTo(count)!=0) {
 				throw new IllegalStateException("got wrong answer");
 			}

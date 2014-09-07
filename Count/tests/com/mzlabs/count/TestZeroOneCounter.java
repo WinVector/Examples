@@ -19,7 +19,7 @@ public class TestZeroOneCounter {
 			BigInteger nRun = BigInteger.ZERO;
 			BigInteger nError = BigInteger.ZERO;
 			do {
-				final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
+				final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b,false);
 				final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 				if(bruteForceSoln.compareTo(evenOddSoln)!=0) {
 					nError = nError.add(BigInteger.ONE);
@@ -43,7 +43,7 @@ public class TestZeroOneCounter {
 			}
 			IntLinOp.mult(prob.A,interior,b);
 			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
-			final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
+			final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b,false);
 			final boolean eq = (evenOddSoln.compareTo(bruteForceSoln)==0);
 			assertTrue(eq);
 		}

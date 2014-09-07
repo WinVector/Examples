@@ -15,11 +15,13 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 	private final int[][] A;
 	private final RowDescription[] rowDescr;
 	private final NonNegativeIntegralCounter underlying;
+	private final boolean zeroOne;
 	
-	RowCannonNode(final int[][] A, final RowDescription[] rowDescr, final NonNegativeIntegralCounter underlying) {
+	RowCannonNode(final int[][] A, final RowDescription[] rowDescr, final NonNegativeIntegralCounter underlying, final boolean zeroOne) {
 		this.A = A;
 		this.rowDescr = rowDescr;
 		this.underlying = underlying;
+		this.zeroOne = zeroOne;
 	}
 	
 	
@@ -42,7 +44,7 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 		}
 		if(null!=count) {
 			if(DivideAndConquerCounter.debug) {
-				final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
+				final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 				if(check.compareTo(count)!=0) {
 					throw new IllegalStateException("got wrong answer");
 				}
@@ -53,7 +55,7 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 		final int[] b2 = IntMat.mapVector(rowDescr,b);
 		count = underlying.countNonNegativeSolutions(b2);
 		if(DivideAndConquerCounter.debug) {
-			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
+			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 			if(check.compareTo(count)!=0) {
 				throw new IllegalStateException("got wrong answer");
 			}

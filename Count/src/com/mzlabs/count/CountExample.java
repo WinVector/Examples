@@ -15,7 +15,7 @@ public final class CountExample {
 		BigInteger nRun = BigInteger.ZERO;
 		BigInteger nError = BigInteger.ZERO;
 		do {
-			final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
+			final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b,false);
 			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 			if(bruteForceSoln.compareTo(evenOddSoln)!=0) {
 				System.out.println(new IntVec(b) + "\t" + bruteForceSoln + "\t" + evenOddSoln);
@@ -43,7 +43,7 @@ public final class CountExample {
 		final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
 		System.out.println(new IntVec(b) + "\teven odd solution\t" + evenOddSoln);
 		System.out.println(new Date());
-		final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b);
+		final BigInteger bruteForceSoln = ZeroOneCounter.bruteForceSolnDebug(prob.A,b,false);
 		System.out.println(new IntVec(b) + "\tbrute force solution\t" + bruteForceSoln);
 		System.out.println(new Date());
 		final boolean eq = (evenOddSoln.compareTo(bruteForceSoln)==0);
@@ -100,22 +100,27 @@ public final class CountExample {
 	}
 	
 	public static void runEx4(final int n) {
+		System.out.println();
+		System.out.println(new Date());
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
+		final ZeroOneCounter cm = new ZeroOneCounter(prob,true);
+		System.out.println("have counter zero/one structures");
+		System.out.println(new Date());
 		final int[] b = new int[prob.A.length];
 		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
 		for(int i= 0;i<ys.length;++i) {
 			Arrays.fill(b,i);
 			ys[i] = cm.countNonNegativeSolutions(b);
+			System.out.println("evenOdd(" + n + "," + n + ";" + i +")= " + ys[i]);
+			System.out.println(new Date());
 		}
-		for(int i= 0;i<=2*n*n;++i) {
+		for(int i=0;i<=2*n*n;++i) {
 			Arrays.fill(b,i);
 			final double polyEval = evalPoly(ys,i);
-			if(i<ys.length) {
-				System.out.println("evenOdd(" + n + "," + n + ";" + i +")= " + ys[i]);
-			}
 			System.out.println("\tpoly(" + n + "," + n + ";" + i +")= " + polyEval);
 		}
+		System.out.println(new Date());
+		System.out.println();
 	}
 
 	
@@ -123,7 +128,7 @@ public final class CountExample {
 		runEx1();
 		runEx2();
 		runEx3();
-		for(int n=1;n<=5;++n) {
+		for(int n=1;n<=10;++n) {
 			runEx4(n);
 		}
 	}

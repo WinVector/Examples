@@ -22,16 +22,19 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	private final boolean[][] usesRow;
 	private final int[] entangledRows;
 	private final boolean runParallel;
+	private final boolean zeroOne;
 	private final Map<IntVec,BigInteger> cache = new HashMap<IntVec,BigInteger>(1000); // synchronize access
 	
 	public SplitNode(final int[][] A, final boolean[][] usesRow, final boolean runParallel,
 			final NonNegativeIntegralCounter leftSubSystem,
-			final NonNegativeIntegralCounter rightSubSystem) {
+			final NonNegativeIntegralCounter rightSubSystem,
+			final boolean zeroOne) {
 		this.A = A;
 		this.usesRow = usesRow;
 		this.runParallel = runParallel;
 		this.leftSubSystem = leftSubSystem;
 		this.rightSubSystem = rightSubSystem;
+		this.zeroOne = zeroOne;
 		m = A.length;
 		n = A[0].length;
 		int nE = 0;
@@ -122,7 +125,15 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		}
 		final int[] bound = new int[nEntangled];
 		for(int ii=0;ii<nEntangled;++ii) {
-			bound[ii] = b[entangledRows[ii]];
+			final int i = entangledRows[ii];
+			bound[ii] = b[i];
+			if(zeroOne) {
+				int rowSum = 0;
+				for(int j=0;j<n;++j) {
+					rowSum += A[i][j];
+				}
+				bound[ii] = Math.min(bound[ii],rowSum);
+			}
 		}
 		final IntVec bdE = new IntVec(bound);
 		final int[] counter = new int[nEntangled];
@@ -152,7 +163,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		}
 		final BigInteger count = stepOrg.accumulator;
 		if(DivideAndConquerCounter.debug) {
-			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b);
+			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 			if(check.compareTo(count)!=0) {
 				throw new IllegalStateException("got wrong answer");
 			}
