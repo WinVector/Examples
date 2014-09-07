@@ -10,8 +10,8 @@ import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
-import com.mzlabs.count.perm.Permutation;
 import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.util.Permutation;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {

@@ -1,10 +1,10 @@
-package com.mzlabs.count.perm;
+package com.mzlabs.count.util;
 
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class Permutation {
+public final class Permutation {
 	private final int[] perm;
 	
 	public Permutation(final int[] perm) {

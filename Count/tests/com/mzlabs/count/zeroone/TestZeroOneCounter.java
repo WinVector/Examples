@@ -1,4 +1,4 @@
-package com.mzlabs.count;
+package com.mzlabs.count.zeroone;
 
 import static org.junit.Assert.assertTrue;
 
@@ -7,6 +7,8 @@ import java.util.Random;
 
 import org.junit.Test;
 
+import com.mzlabs.count.ContingencyTableProblem;
+import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.util.IntLinOp;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.zeroone.ZeroOneCounter;

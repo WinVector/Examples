@@ -1,6 +1,6 @@
 package com.mzlabs.count;
 
-import com.mzlabs.count.perm.Permutation;
+import com.mzlabs.count.util.Permutation;
 
 
 /**

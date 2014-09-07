@@ -2,7 +2,7 @@ package com.mzlabs.count;
 
 import java.util.Arrays;
 
-import com.mzlabs.count.perm.Permutation;
+import com.mzlabs.count.util.Permutation;
 
 public final class ContingencyTableProblem extends CountingProblem {
 	private final int rows;
