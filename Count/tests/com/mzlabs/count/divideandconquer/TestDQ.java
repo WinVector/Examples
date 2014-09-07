@@ -19,7 +19,7 @@ public class TestDQ {
 		final boolean origDebug = DivideAndConquerCounter.debug;
 		DivideAndConquerCounter.debug = true;
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob);
-		final ZeroOneCounter zo = new ZeroOneCounter(prob);
+		final ZeroOneCounter zo = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
 		final Random rand = new Random(2426236);

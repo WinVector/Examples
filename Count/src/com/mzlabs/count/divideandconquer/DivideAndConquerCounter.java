@@ -140,8 +140,9 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 
 	@Override
-	public BigInteger countNonNegativeSolutions(final int[] b) {
-		return underlying.countNonNegativeSolutions(b);
+	public BigInteger countNonNegativeSolutions(final int[] bIn) {
+		final IntVec bvec = problem.normalForm(new IntVec(bIn));
+		return underlying.countNonNegativeSolutions(bvec.asVec());
 	}
 	
 	@Override
@@ -163,7 +164,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			final ZeroOneCounter zo;
 			if(n<=4) {
 				System.out.println("zo counter initted");
-				zo = new ZeroOneCounter(prob);
+				zo = new ZeroOneCounter(prob,true);
 				System.out.println(new Date());
 			} else {
 				zo = null;

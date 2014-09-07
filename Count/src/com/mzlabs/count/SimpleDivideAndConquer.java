@@ -21,7 +21,7 @@ import com.winvector.linalg.jblas.JBlasMatrix;
 
 final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	private final LinalgFactory<JBlasMatrix> factory = JBlasMatrix.factory;
-	private final int[][] A;
+	private final CountingProblem problem;
 	private final boolean zeroOne;
 	private Map<IntVec,LinOpCarrier<JBlasMatrix>> inverseOp = new HashMap<IntVec,LinOpCarrier<JBlasMatrix>>();
 	
@@ -62,10 +62,10 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	 * @param A non-negative zero/one matrix with no zero columns
 	 * @param zeroOne if true we only consider zero/one solutions, otherwise we consider non-negative integer solutions
 	 */
-	public SimpleDivideAndConquer(final int[][] A, final boolean zeroOne) {
-		this.A = A;
+	public SimpleDivideAndConquer(final CountingProblem problem, final boolean zeroOne) {
+		this.problem = problem;
 		this.zeroOne = zeroOne;
-		if(!acceptableA(A)) {
+		if(!acceptableA(problem.A)) {
 			throw new IllegalArgumentException("unaccaptable matrix");
 		}
 	}
@@ -76,7 +76,7 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	 * @return non-null on any base-case (which must include all cases where key.columnSet.dim()<2)
 	 */
 	private BigInteger baseCases(final DKey key) {
-		final int m = A.length;
+		final int m = problem.A.length;
 		final int np = key.columnSet.dim();
 		if(np<=0) {
 			throw new IllegalArgumentException("empty column set");
@@ -91,8 +91,8 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 				final JBlasMatrix amatT = factory.newMatrix(np,m,false);
 				for(int i=0;i<m;++i) {
 					for(int jj=0;jj<np;++jj) {
-						amat.set(i,jj,A[i][key.columnSet.get(jj)]);
-						amatT.set(jj,i,A[i][key.columnSet.get(jj)]);
+						amat.set(i,jj,problem.A[i][key.columnSet.get(jj)]);
+						amatT.set(jj,i,problem.A[i][key.columnSet.get(jj)]);
 					}
 				}
 				op = new LinOpCarrier<JBlasMatrix>(amat);
@@ -152,7 +152,7 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 
 	/**
 	 * assumes we have already checked for basecase solutions (so in particular key.columnSet.length>1)
-	 * return number of solutions to A[colset] z = b with z zero/one or integer (depending on control)
+	 * return number of solutions to problem.A[colset] z = b with z zero/one or integer (depending on control)
 	 * @param key
 	 * @return
 	 */
@@ -161,7 +161,7 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 		if(null==cached) {
 			// know we have at least 2 columns
 			cached = BigInteger.ZERO;
-			final int m = A.length;
+			final int m = problem.A.length;
 			//System.out.println(key);
 			final int n1 = key.columnSet.dim()/2;
 			final int n2 = key.columnSet.dim() - n1;
@@ -186,7 +186,7 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 				final int[] bound1 = new int[m];
 				for(int i=0;i<m;++i) {
 					for(int jj=0;jj<n1;++jj) {
-						bound1[i] += A[i][c1.get(jj)];
+						bound1[i] += problem.A[i][c1.get(jj)];
 					}
 				}
 				for(int i=0;i<m;++i) {
@@ -235,13 +235,13 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	}
 	
 	/**
-	 * return number of solutions to A z = b with z zero/one or non-negative integer (depending on control)
+	 * return number of solutions to problem.A z = b with z zero/one or non-negative integer (depending on control)
 	 * @param b
 	 * @return
 	 */
-	public BigInteger countNonNegativeSolutions(final int[] b) {
-		final int n = A[0].length;
-		final IntVec bvec = new IntVec(b);
+	public BigInteger countNonNegativeSolutions(final int[] bIn) {
+		final int n = problem.A[0].length;
+		final IntVec bvec = problem.normalForm(new IntVec(bIn));
 		final int[] colset = new int[n];
 		for(int i=0;i<n;++i) {
 			colset[i] = i;
@@ -256,17 +256,17 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	
 	/**
 	 * 
-	 * @return map from every b such that A z = b is solvable for z zero/one to how many such z there are
+	 * @return map from every b such that problem.A z = b is solvable for z zero/one to how many such z there are
 	 */
-	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final int[][] A) {
-		final SimpleDivideAndConquer dc = new SimpleDivideAndConquer(A,true);
+	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final CountingProblem problem) {
+		final SimpleDivideAndConquer dc = new SimpleDivideAndConquer(problem,true);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
-		final int m = A.length;
-		final int n = A[0].length;
+		final int m = problem.A.length;
+		final int n = problem.A[0].length;
 		final int[] bounds = new int[m];
 		for(int i=0;i<m;++i) {
 			for(int j=0;j<n;++j) {
-				bounds[i] += A[i][j];
+				bounds[i] += problem.A[i][j];
 			}
 		}
 		final IntVec boundsVec = new IntVec(bounds);
@@ -298,7 +298,7 @@ final class SimpleDivideAndConquer implements NonNegativeIntegralCounter {
 	
 	public static void workProb(final int n) {
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final SimpleDivideAndConquer dc = new SimpleDivideAndConquer(prob.A,false);
+		final SimpleDivideAndConquer dc = new SimpleDivideAndConquer(prob,false);
 		final int[] b = new int[prob.A.length];
 		final BigInteger[] ys = new BigInteger[(n-1)*(n-1)+1];
 		for(int i= 0;i<ys.length;++i) {

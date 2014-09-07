@@ -137,4 +137,8 @@ public final class IntVec implements Comparable<IntVec> {
 		}
 		return false;
 	}
+
+	public int[] asVec() {
+		return Arrays.copyOf(b,b.length);
+	}
 }

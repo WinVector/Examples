@@ -155,7 +155,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	 * 
 	 * @param A a matrix where x=0 is the unique non-negative solution to A x = 0
 	 */
-	public ZeroOneCounter(final CountingProblem prob) {
+	public ZeroOneCounter(final CountingProblem prob, final boolean useSDQZO) {
 		this.prob = prob;
 		m = prob.A.length;
 		// check conditions
@@ -164,7 +164,12 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
 		}
 		// build all possible zero/one sub-problems
-		final Map<IntVec,BigInteger> countsByB = zeroOneSolutionCounts(prob.A);
+		final Map<IntVec,BigInteger> countsByB;
+		if(useSDQZO) {
+			countsByB = SimpleDivideAndConquer.zeroOneSolutionCounts(prob);
+		} else {
+			countsByB = zeroOneSolutionCounts(prob.A);
+		}
 		zeroOneCounts = organizeZeroOneStructures(countsByB);
 	}
 	
