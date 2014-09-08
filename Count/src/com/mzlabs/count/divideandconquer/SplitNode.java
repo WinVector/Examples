@@ -1,7 +1,6 @@
 package com.mzlabs.count.divideandconquer;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -58,13 +57,15 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	
 	private class StepOrg {
 		public final int[] b;
+		public final IntVec bdE;
 		public BigInteger accumulator = BigInteger.ZERO; // use b to sync access to accumulator
 		
-		public StepOrg(final int[] b) {
+		public StepOrg(final int[] b, final IntVec bdE) {
 			this.b = b;
+			this.bdE = bdE;
 		}
 		
-		public void runStep(final int[] counter) {
+		public void runStep(final int lastVal) {
 			final int[] b1 = new int[m];
 			final int[] b2 = new int[m];
 			for(int i=0;i<m;++i) {
@@ -75,45 +76,48 @@ final class SplitNode implements NonNegativeIntegralCounter {
 					b2[i] = b[i];
 				}
 			}
-			for(int ii=0;ii<nEntangled;++ii) {
-				final int i = entangledRows[ii];
-				b1[i] = counter[ii];
-				b2[i] = b[i] - counter[ii];
-			}
-			// b1 + b2 == b
-			// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
-			final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
-			if(sub1.compareTo(BigInteger.ZERO)>0) {
-				final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
-				if(sub2.compareTo(BigInteger.ZERO)>0) {
-					final BigInteger term = sub1.multiply(sub2);
-					synchronized(b) {
-						accumulator = accumulator.add(term);
+			final int[] counter = new int[nEntangled];
+			counter[nEntangled-1] = lastVal;
+			do {
+				for(int ii=0;ii<nEntangled;++ii) {
+					final int i = entangledRows[ii];
+					b1[i] = counter[ii];
+					b2[i] = b[i] - counter[ii];
+				}
+				// b1 + b2 == b
+				// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
+				final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
+				if(sub1.compareTo(BigInteger.ZERO)>0) {
+					final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
+					if(sub2.compareTo(BigInteger.ZERO)>0) {
+						final BigInteger term = sub1.multiply(sub2);
+						synchronized(b) {
+							accumulator = accumulator.add(term);
+						}
 					}
 				}
-			}
+			} while(bdE.advanceLE(counter,nEntangled-1));
 		}
 		
 		public class StepJob implements Runnable {
-			private final int[] counter;
+			private final int lastVal;
 
-			private StepJob(final int[] counter) {
-				this.counter = Arrays.copyOf(counter,counter.length);
+			private StepJob(final int lastVal) {
+				this.lastVal = lastVal;
 			}
 
 			@Override
 			public final void run() {
-				runStep(counter);
+				runStep(lastVal);
 			}
 
 		}
 		
-		public StepJob stepJob(final int[] counter) {
-			return new StepJob(counter);
+		public StepJob stepJob(final int lastVal) {
+			return new StepJob(lastVal);
 		}
 	}
 	
-	// TODO: switch parallelism to as in DivideAndConquerCounter.zeroOneSolutionCounts()
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] b) {
 		final IntVec key = new IntVec(b);
@@ -136,19 +140,15 @@ final class SplitNode implements NonNegativeIntegralCounter {
 			}
 		}
 		final IntVec bdE = new IntVec(bound);
-		final int[] counter = new int[nEntangled];
-		final StepOrg stepOrg = new StepOrg(b);
+		final StepOrg stepOrg = new StepOrg(b,bdE);
 		if(runParallel) {
-			final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1000);
+			final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(bdE.get(nEntangled-1)+2);
 			final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
-			do {
-				if(workQueue.size()>=100) {
-					stepOrg.runStep(counter);
-				} else {
-					final StepOrg.StepJob job = stepOrg.stepJob(counter);
-					ex.execute(job);
-				}
-			} while(bdE.advanceLE(counter));
+			for(int i=0;i<bdE.get(nEntangled-1);++i) {
+				final StepOrg.StepJob job = stepOrg.stepJob(i);
+				ex.execute(job);
+			}
+			stepOrg.runStep(bdE.get(nEntangled-1));
 			ex.shutdown();
 			while(!ex.isTerminated()) {
 				try {
@@ -157,9 +157,9 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				}
 			}
 		} else {
-			do {
-				stepOrg.runStep(counter);
-			} while(bdE.advanceLE(counter));
+			for(int i=0;i<=bdE.get(nEntangled-1);++i) {
+				stepOrg.runStep(i);
+			}
 		}
 		final BigInteger count = stepOrg.accumulator;
 		if(DivideAndConquerCounter.debug) {
