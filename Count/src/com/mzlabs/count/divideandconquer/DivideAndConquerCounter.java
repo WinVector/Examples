@@ -100,7 +100,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		final int[][] A = IntMat.rowRestrict(Ain,rowDescr);
 		// know A is full row rank now
 		{   // check again if we have a terminal case (full column rank sub-systems)
-			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(Ain,zeroOne);
+			final TerminalNode nd = TerminalNode.tryToBuildTerminalNode(A,zeroOne);
 			if(null!=nd) {
 				return new RowCannonNode(Ain,rowDescr,nd,zeroOne);
 			}
