@@ -8,7 +8,7 @@ import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.Permutation;
 
-final class ZeroOneStore {
+public final class ZeroOneStore {
 	private final CountingProblem problem;
 	private final Map<IntVec,Map<IntVec,BigInteger>> modulusToRhsToZOCountThin;
 	
@@ -21,9 +21,26 @@ final class ZeroOneStore {
 		return new IntVec(xm);
 	}
 	
+	public static boolean wantB(final CountingProblem problem, final int[] b) {
+		final int n = b.length;
+		final int[] xm = new int[n];
+		for(int i=0;i<n;++i) {
+			xm[i] = b[i]%2;			
+		}
+		final Permutation perm = problem.toNormalForm(xm);
+		final int[] sorted = perm.apply(xm);
+		for(int i=0;i<n;++i) {
+			if(sorted[i]!=xm[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * 
-	 * @param counts Map b to number of solutions to A z = b for z zero/one (okay to omit unsolvable systems)
+	 * @param counts Map b to number of solutions to A z = b for z zero/one (okay to omit unsolvable systems) we only need the
+	 * 		  b such that mod2Vec(b) is already in normal form.
 	 * @return Map from (b mod 2) to b to number of solutions to A z = b (all unsolvable combination omitted)
 	 */
 	private static Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final CountingProblem problem, final boolean thin,
@@ -36,10 +53,7 @@ final class ZeroOneStore {
 				final IntVec groupVec = mod2Vec(b);
 				boolean use = true;
 				if(thin) {
-					final int[] groupVecA = groupVec.asVec();
-					final Permutation perm = problem.toNormalForm(groupVecA);
-					final IntVec sortedGroupVec = new IntVec(perm.apply(groupVecA));
-					use = groupVec.compareTo(sortedGroupVec)==0;
+					use = wantB(problem,groupVec.asVec());
 				}
 				if(use) {
 					Map<IntVec,BigInteger> bgroup = modulusToRhsToZOCount.get(groupVec);

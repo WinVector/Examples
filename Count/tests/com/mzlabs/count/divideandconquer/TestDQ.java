@@ -40,7 +40,7 @@ public class TestDQ {
 	@Test
 	public void testZO() {
 		final CountingProblem prob = new ContingencyTableProblem(4,3);
-		final Map<IntVec,BigInteger> z1 = ZeroOneCounter.zeroOneSolutionCounts(prob.A);
+		final Map<IntVec,BigInteger> z1 = ZeroOneCounter.zeroOneSolutionCounts(prob);
 		final Map<IntVec,BigInteger> z2 = DivideAndConquerCounter.zeroOneSolutionCounts(prob);
 		assertEquals(z1.size(),z2.size());
 		for(final Map.Entry<IntVec,BigInteger> me: z1.entrySet()) {

@@ -105,24 +105,26 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	 * @param A
 	 * @return map from modul-2 class of rhs to rhs to count
 	 */
-	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final int[][] A) {
+	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final CountingProblem problem) {
 		final Map<IntVec,BigInteger> zeroOneCounts = new HashMap<IntVec,BigInteger>(10000);
-		final int m = A.length;
-		final int n = A[0].length;
+		final int m = problem.A.length;
+		final int n = problem.A[0].length;
 		// build all possible zero/one sub-problems
-		final IntLinOp Aop = new IntLinOp(A);
+		final IntLinOp Aop = new IntLinOp(problem.A);
 		final int[] z = new int[n];
 		final int[] r = new int[m];
 		do {
 			Aop.mult(z,r);
-			final IntVec rvec = new IntVec(r);
-			BigInteger nzone = zeroOneCounts.get(rvec);
-			if(null==nzone) {
-				nzone = BigInteger.ONE;
-			} else {
-				nzone = nzone.add(BigInteger.ONE);
+			if(ZeroOneStore.wantB(problem,r)) {
+				final IntVec rvec = new IntVec(r);
+				BigInteger nzone = zeroOneCounts.get(rvec);
+				if(null==nzone) {
+					nzone = BigInteger.ONE;
+				} else {
+					nzone = nzone.add(BigInteger.ONE);
+				}
+				zeroOneCounts.put(rvec,nzone);
 			}
-			zeroOneCounts.put(rvec,nzone);
 		} while(IntVec.advanceLT(2,z));
 		return zeroOneCounts;
 	}
@@ -146,7 +148,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		if(useSDQZO) {
 			countsByB = DivideAndConquerCounter.zeroOneSolutionCounts(prob);
 		} else {
-			countsByB = zeroOneSolutionCounts(prob.A);
+			countsByB = zeroOneSolutionCounts(prob);
 		}
 		zeroOneCounts = new ZeroOneStore(prob,countsByB);
 	}

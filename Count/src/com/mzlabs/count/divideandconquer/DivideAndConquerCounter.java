@@ -13,6 +13,7 @@ import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.Permutation;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
+import com.mzlabs.count.zeroone.ZeroOneStore;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
 	static boolean debug = false;
@@ -183,9 +184,11 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		final IntVec boundsVec = new IntVec(bounds);
 		final int[] b = new int[m];
 		do {
-			final BigInteger nsolns = dc.countNonNegativeSolutions(b);
-			if(nsolns.compareTo(BigInteger.ZERO)>0) {
-				solnCounts.put(new IntVec(b),nsolns);
+			if(ZeroOneStore.wantB(problem,b)) {
+				final BigInteger nsolns = dc.countNonNegativeSolutions(b);
+				if(nsolns.compareTo(BigInteger.ZERO)>0) {
+					solnCounts.put(new IntVec(b),nsolns);
+				}
 			}
 		} while(boundsVec.advanceLE(b));
 //		System.out.println("dc cache size: " + dc.cache.size());

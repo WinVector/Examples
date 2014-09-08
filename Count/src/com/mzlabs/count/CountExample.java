@@ -107,7 +107,7 @@ public final class CountExample {
 		System.out.println();
 		System.out.println(new Date());
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
+		final ZeroOneCounter cm = new ZeroOneCounter(prob,true);
 		System.out.println("have counter zero/one structures");
 		System.out.println(new Date());
 		final int[] b = new int[prob.A.length];
