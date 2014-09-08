@@ -10,7 +10,6 @@ import com.mzlabs.count.util.Permutation;
 
 final class ZeroOneStore {
 	private final CountingProblem problem;
-	private final Map<IntVec,Map<IntVec,BigInteger>> modulusToRhsToZOCount;
 	private final Map<IntVec,Map<IntVec,BigInteger>> modulusToRhsToZOCountThin;
 	
 	private static IntVec mod2Vec(final IntVec x) {
@@ -64,7 +63,6 @@ final class ZeroOneStore {
 	
 	public ZeroOneStore(final CountingProblem problem, final Map<IntVec,BigInteger> counts) {
 		this.problem = problem;
-		modulusToRhsToZOCount = organizeZeroOneStructures(problem,false,counts);
 		modulusToRhsToZOCountThin = organizeZeroOneStructures(problem,true,counts);
 	}
 
@@ -85,28 +83,6 @@ final class ZeroOneStore {
 			}
 		} else {
 			mpAnswer = null;
-		}
-		{
-			final Map<IntVec,BigInteger> stdAnswer = modulusToRhsToZOCount.get(groupVec);
-			if((null==stdAnswer)!=(null==mpAnswer)) {
-				final int[] groupVecA2 = groupVec.asVec();
-				final Permutation perm2 = problem.toNormalForm(groupVecA2);
-				final IntVec sortedGroupVec2 = new IntVec(perm.apply(groupVecA2));
-				throw new IllegalStateException("different nullity");
-			}
-			if(null!=stdAnswer) {
-				if(stdAnswer.size()!=mpAnswer.size()) {
-					throw new IllegalStateException("different size");
-				}
-				for(final Map.Entry<IntVec,BigInteger> me: stdAnswer.entrySet()) {
-					final IntVec keyi = me.getKey();
-					final BigInteger vi = me.getValue();
-					final BigInteger v2 = mpAnswer.get(keyi);
-					if((null==v2)||(vi.compareTo(v2)!=0)) {
-						throw new IllegalStateException("different count");
-					}
-				}
-			}
 		}
 		return mpAnswer;
 	}
