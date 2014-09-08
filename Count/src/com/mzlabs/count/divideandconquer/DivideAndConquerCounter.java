@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
@@ -17,12 +20,11 @@ import com.mzlabs.count.zeroone.ZeroOneStore;
 
 public final class DivideAndConquerCounter implements NonNegativeIntegralCounter {
 	static boolean debug = false;
-	static boolean allowParallel = true;
 	private final CountingProblem problem;
 	private final NonNegativeIntegralCounter underlying;
 	private final boolean zeroOne;
 	
-	public DivideAndConquerCounter(final CountingProblem problem, final boolean zeroOne) {
+	public DivideAndConquerCounter(final CountingProblem problem, boolean allowParallel, final boolean zeroOne) {
 		this.problem = problem;
 		this.zeroOne = zeroOne;
 		if(!acceptableA(problem.A)) {
@@ -166,13 +168,59 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		return "dq(" + underlying + ")";
 	}
 	
+	
+	private static class StepOrg {
+		public final CountingProblem problem;
+		public final DivideAndConquerCounter dc;
+		public final IntVec boundsVec;
+		public final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>(); // synchronize access to this
+		
+		public StepOrg(final CountingProblem problem, final IntVec boundsVec) {
+			this.problem = problem;
+			this.boundsVec = boundsVec;
+			dc = new DivideAndConquerCounter(problem,false,true);
+		}
+				
+		public void runStep(final int lastValue) {
+			final int m = boundsVec.dim();
+			final int[] b = new int[m];
+			b[m-1] = lastValue;
+			do {
+				if(ZeroOneStore.wantB(problem,b)) {
+					final BigInteger nsolns = dc.countNonNegativeSolutions(b);
+					if(nsolns.compareTo(BigInteger.ZERO)>0) {
+						final IntVec key = new IntVec(b);
+						synchronized (solnCounts) {
+							solnCounts.put(key,nsolns);
+						}
+					}
+				}
+			} while(boundsVec.advanceLE(b,m-1));
+		}
+		
+		public class StepJob implements Runnable {
+			private final int lastValue;
+
+			private StepJob(final int lastValue) {
+				this.lastValue = lastValue;
+			}
+
+			@Override
+			public final void run() {
+				runStep(lastValue);
+			}
+		}
+		
+		public StepJob stepJob(final int lastValue) {
+			return new StepJob(lastValue);
+		}
+	}
+	
 	/**
 	 * 
 	 * @return map from every b such that problem.A z = b is solvable for z zero/one to how many such z there are
 	 */
 	public static Map<IntVec,BigInteger> zeroOneSolutionCounts(final CountingProblem problem) {
-		final DivideAndConquerCounter dc = new DivideAndConquerCounter(problem,true);
-		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>();
 		final int m = problem.A.length;
 		final int n = problem.A[0].length;
 		final int[] bounds = new int[m];
@@ -182,30 +230,22 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 		}
 		final IntVec boundsVec = new IntVec(bounds);
-		final int[] b = new int[m];
-		do {
-			if(ZeroOneStore.wantB(problem,b)) {
-				final BigInteger nsolns = dc.countNonNegativeSolutions(b);
-				if(nsolns.compareTo(BigInteger.ZERO)>0) {
-					solnCounts.put(new IntVec(b),nsolns);
-				}
+		final StepOrg stepOrg = new StepOrg(problem,boundsVec);
+		final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(bounds[m-1]+2);
+		final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
+		for(int i=0;i<bounds[m-1];++i) {
+			final StepOrg.StepJob job = stepOrg.stepJob(i);
+			ex.execute(job);
+		}
+		stepOrg.runStep(bounds[m-1]);
+		ex.shutdown();
+		while(!ex.isTerminated()) {
+			try {
+				ex.awaitTermination(1000, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
 			}
-		} while(boundsVec.advanceLE(b));
-//		System.out.println("dc cache size: " + dc.cache.size());
-//		System.out.println("dc result size: " + solnCounts.size());
-//		BigInteger total = BigInteger.ZERO;
-//		for(final BigInteger ci: solnCounts.values()) {
-//			total = total.add(ci);
-//		}
-//		System.out.println("dc total solns: " + total);
-//		System.out.println("dc m,n,2^n: " + m + " " + n + " " + Math.pow(2,n));
-//		System.out.println("base cases");
-//		for(final Entry<IntVec, LinOpCarrier<JBlasMatrix>> me: dc.inverseOp.entrySet()) {
-//			if(me.getValue().inv!=null) {
-//				System.out.println("\t" + me.getKey());
-//			}
-//		}
-		return solnCounts;
+		}
+		return stepOrg.solnCounts;
 	}
 	
 	
@@ -216,7 +256,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			System.out.println("" + n + " by " + n + " contingency tables");
 			final CountingProblem prob  = new ContingencyTableProblem(n,n);
 			System.out.println(new Date());
-			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,false);
+			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,true, false);
 			System.out.println("dc counter initted");
 			System.out.println("\t" + dc);
 			System.out.println(new Date());

@@ -22,6 +22,9 @@ public final class ZeroOneStore {
 	}
 	
 	public static boolean wantB(final CountingProblem problem, final int[] b) {
+		if(!problem.admissableB(b)) {
+			return false;
+		}
 		final int n = b.length;
 		final int[] xm = new int[n];
 		for(int i=0;i<n;++i) {
@@ -43,31 +46,25 @@ public final class ZeroOneStore {
 	 * 		  b such that mod2Vec(b) is already in normal form.
 	 * @return Map from (b mod 2) to b to number of solutions to A z = b (all unsolvable combination omitted)
 	 */
-	private static Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final CountingProblem problem, final boolean thin,
+	private static Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final CountingProblem problem,
 			final Map<IntVec,BigInteger> counts) {
 		final Map<IntVec,Map<IntVec,BigInteger>> modulusToRhsToZOCount = new HashMap<IntVec,Map<IntVec,BigInteger>>(1000);
 		for(final Map.Entry<IntVec,BigInteger> me: counts.entrySet()) {
 			final IntVec b = me.getKey();
 			final BigInteger c = me.getValue();
-			if(c.compareTo(BigInteger.ZERO)>0) {
+			if((c.compareTo(BigInteger.ZERO)>0)&&wantB(problem,b.asVec())) {
 				final IntVec groupVec = mod2Vec(b);
-				boolean use = true;
-				if(thin) {
-					use = wantB(problem,groupVec.asVec());
+				Map<IntVec,BigInteger> bgroup = modulusToRhsToZOCount.get(groupVec);
+				if(null==bgroup) {
+					bgroup = new HashMap<IntVec,BigInteger>();
+					modulusToRhsToZOCount.put(groupVec,bgroup);
 				}
-				if(use) {
-					Map<IntVec,BigInteger> bgroup = modulusToRhsToZOCount.get(groupVec);
-					if(null==bgroup) {
-						bgroup = new HashMap<IntVec,BigInteger>();
-						modulusToRhsToZOCount.put(groupVec,bgroup);
-					}
-					final BigInteger ov = bgroup.get(b);
-					if(null==ov) {
-						bgroup.put(b,c);
-					} else {
-						if(ov.compareTo(c)!=0) {
-							throw new IllegalArgumentException("zero one data doesn't obey expected symmetries");
-						}
+				final BigInteger ov = bgroup.get(b);
+				if(null==ov) {
+					bgroup.put(b,c);
+				} else {
+					if(ov.compareTo(c)!=0) {
+						throw new IllegalArgumentException("zero one data doesn't obey expected symmetries");
 					}
 				}
 			}
@@ -77,7 +74,7 @@ public final class ZeroOneStore {
 	
 	public ZeroOneStore(final CountingProblem problem, final Map<IntVec,BigInteger> counts) {
 		this.problem = problem;
-		modulusToRhsToZOCountThin = organizeZeroOneStructures(problem,true,counts);
+		modulusToRhsToZOCountThin = organizeZeroOneStructures(problem,counts);
 	}
 
 	public Map<IntVec, BigInteger> lookup(final IntVec b) {

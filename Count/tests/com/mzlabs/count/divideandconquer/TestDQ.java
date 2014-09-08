@@ -22,7 +22,7 @@ public class TestDQ {
 		final CountingProblem prob  = new ContingencyTableProblem(3,3);
 		final boolean origDebug = DivideAndConquerCounter.debug;
 		DivideAndConquerCounter.debug = true;
-		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,false);
+		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,true, false);
 		final ZeroOneCounter zo = new ZeroOneCounter(prob,false);
 		final int[] b = new int[prob.A.length];
 		final int[] interior = new int[prob.A[0].length];
@@ -55,7 +55,7 @@ public class TestDQ {
 	@Test
 	public void testInt() {
 		final CountingProblem prob = new ContingencyTableProblem(3,3);
-		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,false);
+		final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,true, false);
 		final int[] b = new int[6];
 		Arrays.fill(b,5);
 		final BigInteger count = dc.countNonNegativeSolutions(b);

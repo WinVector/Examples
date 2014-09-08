@@ -113,7 +113,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		}
 	}
 	
-
+	// TODO: switch parallelism to as in DivideAndConquerCounter.zeroOneSolutionCounts()
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] b) {
 		final IntVec key = new IntVec(b);
