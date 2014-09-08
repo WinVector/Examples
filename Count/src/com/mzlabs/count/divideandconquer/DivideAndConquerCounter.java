@@ -35,7 +35,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		for(int i=0;i<n;++i) {
 			origVarIndices[i] = i;
 		}
-		underlying = buildSolnTree(problem.A,origVarIndices,new HashMap<IntMat,SplitNode>(1000),allowParallel);
+		underlying = buildSolnTree(problem.A,origVarIndices,new HashMap<IntMat,NonNegativeIntegralCounter>(1000),allowParallel);
 	}
 	
 
@@ -82,7 +82,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	
 	private final NonNegativeIntegralCounter buildSolnTree(final int[][] Ain, final int[] origVarIndices,
-			final Map<IntMat,SplitNode> cannonSolns, final boolean runParrallel) {
+			final Map<IntMat,NonNegativeIntegralCounter> cannonSolns, final boolean runParrallel) {
 		if(Ain.length<1) {
 			throw new IllegalArgumentException("called on zero-row system");
 		}
@@ -106,41 +106,46 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 		}
 		final IntMat matKey = new IntMat(A);
-		SplitNode subTree = cannonSolns.get(matKey);
+		NonNegativeIntegralCounter subTree = cannonSolns.get(matKey);
 		if(null==subTree) {
 			final int m = A.length;
 			final int n = A[0].length;
 			if(n<=1) {
 				throw new IllegalStateException("terminal case didn't catch single column case");
 			}
-			int[][] variableSplit = problem.splitVarsByRef(origVarIndices);
-			if(null==variableSplit) {
-				// TODO: pick optimal splits in this case
-				variableSplit = pickSplitSimple(origVarIndices.length);
-			}
-			final int[][] subIndices = new int[2][];
-			final boolean[][] usesRow = new boolean[2][m];
-			final int[][][] Asub = new int[2][][];
-			for(int sub=0;sub<2;++sub) {
-				final int nSub = variableSplit[sub].length;
-				subIndices[sub] = new int[nSub];
-				for(int jj=0;jj<nSub;++jj) {
-					subIndices[sub][jj] = origVarIndices[variableSplit[sub][jj]];
+			if((!zeroOne)&&(n<=25)) {
+				final ZeroOneCounter zoc = new ZeroOneCounter(new CountingProblem(A),false);
+				subTree = zoc;
+			} else {
+				int[][] variableSplit = problem.splitVarsByRef(origVarIndices);
+				if(null==variableSplit) {
+					// TODO: pick optimal splits in this case
+					variableSplit = pickSplitSimple(origVarIndices.length);
 				}
-				Asub[sub] = IntMat.colRestrict(A,variableSplit[sub]);
-				for(int i=0;i<m;++i) {
-					for(final int j: variableSplit[sub]) {
-						if(A[i][j]!=0) {
-							usesRow[sub][i] = true;
+				final int[][] subIndices = new int[2][];
+				final boolean[][] usesRow = new boolean[2][m];
+				final int[][][] Asub = new int[2][][];
+				for(int sub=0;sub<2;++sub) {
+					final int nSub = variableSplit[sub].length;
+					subIndices[sub] = new int[nSub];
+					for(int jj=0;jj<nSub;++jj) {
+						subIndices[sub][jj] = origVarIndices[variableSplit[sub][jj]];
+					}
+					Asub[sub] = IntMat.colRestrict(A,variableSplit[sub]);
+					for(int i=0;i<m;++i) {
+						for(final int j: variableSplit[sub]) {
+							if(A[i][j]!=0) {
+								usesRow[sub][i] = true;
+							}
 						}
 					}
 				}
+				final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
+				for(int sub=0;sub<2;++sub) {
+					subsystem[sub] = buildSolnTree(Asub[sub],subIndices[sub],cannonSolns,false);
+				}
+				subTree = new SplitNode(A,usesRow,runParrallel,subsystem[0],subsystem[1],zeroOne);
 			}
-			final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
-			for(int sub=0;sub<2;++sub) {
-				subsystem[sub] = buildSolnTree(Asub[sub],subIndices[sub],cannonSolns,false);
-			}
-			subTree = new SplitNode(A,usesRow,runParrallel,subsystem[0],subsystem[1],zeroOne);
 			cannonSolns.put(matKey,subTree);
 		}
 		return new RowCannonNode(Ain,rowDescr,subTree,zeroOne);
@@ -165,7 +170,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	@Override
 	public String toString() {
-		return "dq(" + underlying + ")";
+		return "dc(" + underlying + ")";
 	}
 	
 	

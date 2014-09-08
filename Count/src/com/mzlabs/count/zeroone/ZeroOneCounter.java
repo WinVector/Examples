@@ -46,6 +46,8 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	private final CountingProblem prob;
 	private final int m;
 	private final ZeroOneStore zeroOneCounts;
+	private final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
+
 	
 	/**
 	 * check that x = 0 is the unique non-negative solution to A x = 0
@@ -155,14 +157,17 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	
 
 	
-
+	@Override
+	public String toString() {
+		return "zo(" + prob.A.length + "," + prob.A[0].length + ")";
+	}
 	
 	/**
 	 * assumes finite number of solutions (all variables involved) and A non-negative
 	 * @param b non-negative vector already in normal problem normal form
 	 * @return number of non-negative integer solutions x to A x == b
 	 */
-	private BigInteger countNonNegativeSolutionsR(final IntVec b, final Map<IntVec,BigInteger> nonnegCounts) {
+	private BigInteger countNonNegativeSolutionsR(final IntVec b) {
 		// check for base cases
 		if(!prob.admissableB(b.asVec())) {
 			return BigInteger.ZERO;
@@ -170,7 +175,10 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		if(b.isZero()) {
 			return BigInteger.ONE;
 		}
-		BigInteger cached = nonnegCounts.get(b);
+		BigInteger cached = null;
+		synchronized (cache) {
+			cached = cache.get(b);
+		}
 		if(null==cached) {
 			cached = BigInteger.ZERO;
 			final Map<IntVec,BigInteger> group = zeroOneCounts.lookup(b);
@@ -193,12 +201,14 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 						}
 						final Permutation tobprimeNorm = prob.toNormalForm(bprime);
 						final IntVec bprimeNorm = new IntVec(tobprimeNorm.apply(bprime));
-						final BigInteger subsoln = countNonNegativeSolutionsR(bprimeNorm,nonnegCounts);
+						final BigInteger subsoln = countNonNegativeSolutionsR(bprimeNorm);
 						cached = cached.add(nzone.multiply(subsoln));
 					}
 				}
 			}
-			nonnegCounts.put(b,cached);
+			synchronized (cache) {
+				cache.put(b,cached);
+			}
 			//System.out.println(b + " " + cached);
 		}
 		return cached;
@@ -215,10 +225,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		}
 		final Permutation perm = prob.toNormalForm(bIn);
 		final IntVec bNormal = new IntVec(perm.apply(bIn));
-		final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
-		final BigInteger result = countNonNegativeSolutionsR(bNormal,cache);
-		//final Set<BigInteger> values = new HashSet<BigInteger>(cache.values());
-		//System.out.println("cached " + cache.size() + " keys for " + values.size() + " values");
+		final BigInteger result = countNonNegativeSolutionsR(bNormal);
 		return result;
 	}
 	
