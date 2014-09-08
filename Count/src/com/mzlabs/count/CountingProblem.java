@@ -9,13 +9,25 @@ import com.mzlabs.count.util.Permutation;
  *
  */
 public class CountingProblem {
+	public final int m;
+	public final int n;
 	public final int[][] A;
 	
 	public CountingProblem(final int[][] A) {
 		this.A = A;
+		m = A.length;
+		n = A[0].length;
 	}
 	
 	public boolean admissableB(final int[] b) {
+		if(b.length!=m) {
+			return false;
+		}
+		for(final int bi: b) {
+			if(bi<0) {
+				return false;
+			}
+		}
 		return true;
 	}
 	

@@ -10,4 +10,11 @@ public interface NonNegativeIntegralCounter {
 	 * @return
 	 */
 	public BigInteger countNonNegativeSolutions(final int[] b);
+	
+	/**
+	 * Run a cheap check if the number of solutions is zero
+	 * @param b
+	 * @return true if obviously empty (always safe to return false)
+	 */
+	public boolean obviouslyEmpty(final int[] b);
 }

@@ -14,7 +14,7 @@ import com.mzlabs.count.util.Permutation;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.Matrix;
-import com.winvector.linalg.jblas.JBlasMatrix;
+import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
 import com.winvector.lp.LPSoln;
@@ -141,7 +141,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		this.prob = prob;
 		m = prob.A.length;
 		// check conditions
-		final String problem = matrixFlaw(JBlasMatrix.factory,prob.A);
+		final String problem = matrixFlaw(ColtMatrix.factory,prob.A);
 		if(null!=problem) {
 			throw new IllegalArgumentException("unnacceptable matrix: " + problem);
 		}
@@ -214,6 +214,15 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		return cached;
 	}
 	
+	@Override
+	public boolean obviouslyEmpty(final int[] bIn) {
+		if(!prob.admissableB(bIn)) {
+			return true;
+		}
+		return false;
+	}
+	
+	@Override
 	public BigInteger countNonNegativeSolutions(final int[] bIn) {
 		for(final int bi: bIn) {
 			if(bi<0) {

@@ -95,7 +95,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 				return nd;
 			}
 		}
-		// Canonicalize matrix rows
+		// Canonicalize matrix rows and ensure full row-rank
 		final RowDescription[] rowDescr = IntMat.buildMapToCannon(Ain);
 		final int[][] A = IntMat.rowRestrict(Ain,rowDescr);
 		// know A is full row rank now
@@ -171,6 +171,11 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	@Override
 	public String toString() {
 		return "dc(" + underlying + ")";
+	}
+	
+	@Override
+	public boolean obviouslyEmpty(final int[] bIn) {
+		return false;
 	}
 	
 	
@@ -256,7 +261,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		for(int n=1;n<=9;++n) {
+		for(int n=8;n<=9;++n) {
 			System.out.println();
 			System.out.println("" + n + " by " + n + " contingency tables");
 			final CountingProblem prob  = new ContingencyTableProblem(n,n);

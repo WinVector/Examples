@@ -55,6 +55,11 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		}
 	}
 	
+	@Override
+	public boolean obviouslyEmpty(final int[] bIn) {
+		return false;
+	}
+	
 	private class StepOrg {
 		public final int[] b;
 		public final IntVec bdE;
@@ -86,13 +91,15 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				}
 				// b1 + b2 == b
 				// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
-				final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
-				if(sub1.compareTo(BigInteger.ZERO)>0) {
-					final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
-					if(sub2.compareTo(BigInteger.ZERO)>0) {
-						final BigInteger term = sub1.multiply(sub2);
-						synchronized(b) {
-							accumulator = accumulator.add(term);
+				if((!leftSubSystem.obviouslyEmpty(b1))&&(!rightSubSystem.obviouslyEmpty(b2))) {
+					final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
+					if(sub1.compareTo(BigInteger.ZERO)>0) {
+						final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
+						if(sub2.compareTo(BigInteger.ZERO)>0) {
+							final BigInteger term = sub1.multiply(sub2);
+							synchronized(b) {
+								accumulator = accumulator.add(term);
+							}
 						}
 					}
 				}

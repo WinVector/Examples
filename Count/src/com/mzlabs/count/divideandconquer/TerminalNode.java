@@ -128,6 +128,11 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 	}
 	
 	@Override
+	public boolean obviouslyEmpty(final int[] b) {
+		return countNonNegativeSolutions(b).compareTo(BigInteger.ZERO)<=0;
+	}
+	
+	@Override
 	public String toString() {
 		return "terminal[" + A.length + "," + A[0].length + "]";
 	}

@@ -13,6 +13,8 @@ import com.mzlabs.count.zeroone.ZeroOneCounter;
  */
 final class RowCannonNode implements NonNegativeIntegralCounter {
 	private final int[][] A;
+	private final int m;
+	private final int rowRank;
 	private final RowDescription[] rowDescr;
 	private final NonNegativeIntegralCounter underlying;
 	private final boolean zeroOne;
@@ -22,14 +24,19 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 		this.rowDescr = rowDescr;
 		this.underlying = underlying;
 		this.zeroOne = zeroOne;
+		m = A.length;
+		int nBasis = 0;
+		for(final RowDescription di: rowDescr) {
+			if(di.newIndex>=0) {
+				++nBasis;
+			}
+		}
+		rowRank = nBasis;
 	}
 	
-	
 	@Override
-	public BigInteger countNonNegativeSolutions(final int[] b) {
+	public boolean obviouslyEmpty(final int[] b) {
 		// check if b obeys the implied symmetries of the homomorphism
-		final int m = b.length;
-		BigInteger count = null;
 		for(final RowDescription di: rowDescr) {
 			if(di.newIndex<0) {
 				double impliedB = 0.0;
@@ -37,23 +44,27 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 					impliedB += di.soln[j]*b[j];
 				}
 				if(Math.abs(impliedB-b[di.origIndex])>1.0e-6) {
-					count = BigInteger.ZERO;
-					break;
+					return true;
 				}
 			}
 		}
-		if(null!=count) {
+		return false;
+	}
+	
+	@Override
+	public BigInteger countNonNegativeSolutions(final int[] b) {
+		if(obviouslyEmpty(b)) {
 			if(DivideAndConquerCounter.debug) {
 				final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
-				if(check.compareTo(count)!=0) {
+				if(check.compareTo(BigInteger.ZERO)!=0) {
 					throw new IllegalStateException("got wrong answer");
 				}
 			}
-			return count;
+			return BigInteger.ZERO;
 		}
 		// delegate the counting to underlying
 		final int[] b2 = IntMat.mapVector(rowDescr,b);
-		count = underlying.countNonNegativeSolutions(b2);
+		final BigInteger count = underlying.countNonNegativeSolutions(b2);
 		if(DivideAndConquerCounter.debug) {
 			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
 			if(check.compareTo(count)!=0) {
@@ -65,6 +76,6 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 	
 	@Override
 	public String toString() {
-		return "(" + underlying + ")";
+		return "{" + m + ":" + rowRank + "," + underlying + "}";
 	}
 }
