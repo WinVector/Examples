@@ -48,6 +48,7 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 				}
 			}
 		}
+		// Could delegate, but not much point is the obviouslyEmpty() is mostly to get info from this node
 		return false;
 	}
 	
@@ -76,6 +77,6 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 	
 	@Override
 	public String toString() {
-		return "{" + m + ":" + rowRank + "," + underlying + "}";
+		return "{" + m + "\\" + rowRank + "," + underlying + "}";
 	}
 }

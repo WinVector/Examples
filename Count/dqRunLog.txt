@@ -1,29 +1,171 @@
 
 
-8 by 8 contingency tables
-Mon Sep 08 09:03:04 PDT 2014
+1 by 1 contingency tables
+Mon Sep 08 09:54:03 PDT 2014
 dc counter initted
-	dc({16:15,split(15:8,64;{15:11,split(11:3,32;{11:7,zo(7,16)},{11:7,zo(7,16)})},{15:11,split(11:3,32;{11:7,zo(7,16)},{11:7,zo(7,16)})})})
-Mon Sep 08 09:03:05 PDT 2014
+	dc(terminal[2,1])
+Mon Sep 08 09:54:03 PDT 2014
+zo counter initted
+Mon Sep 08 09:54:04 PDT 2014
 
-Mon Sep 08 09:03:05 PDT 2014
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]	divide and conquer solution	1
-Mon Sep 08 09:03:05 PDT 2014
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0]	divide and conquer solution	1
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0]	zero one solution	1
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
 
-Mon Sep 08 09:03:05 PDT 2014
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]	divide and conquer solution	40320
-Mon Sep 08 09:03:05 PDT 2014
 
-Mon Sep 08 09:03:05 PDT 2014
-[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]	divide and conquer solution	545007960
-Mon Sep 08 09:03:05 PDT 2014
+2 by 2 contingency tables
+Mon Sep 08 09:54:04 PDT 2014
+dc counter initted
+	dc({4\3,zo(3,4)})
+Mon Sep 08 09:54:04 PDT 2014
+zo counter initted
+Mon Sep 08 09:54:04 PDT 2014
 
-Mon Sep 08 09:03:05 PDT 2014
-[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]	divide and conquer solution	1579060246400
-Mon Sep 08 09:03:06 PDT 2014
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0, 0, 0]	divide and conquer solution	1
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0, 0, 0]	zero one solution	1
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
 
-Mon Sep 08 09:03:06 PDT 2014
-[4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]	divide and conquer solution	1455918295922650
-Mon Sep 08 09:03:15 PDT 2014
 
-Mon Sep 08 09:03:15 PDT 2014
+3 by 3 contingency tables
+Mon Sep 08 09:54:04 PDT 2014
+dc counter initted
+	dc({6\5,zo(5,9)})
+Mon Sep 08 09:54:04 PDT 2014
+zo counter initted
+Mon Sep 08 09:54:04 PDT 2014
+
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0, 0, 0, 0, 0]	zero one solution	1
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
+
+
+Mon Sep 08 09:54:04 PDT 2014
+[1, 1, 1, 1, 1, 1]	divide and conquer solution	6
+Mon Sep 08 09:54:04 PDT 2014
+[1, 1, 1, 1, 1, 1]	zero one solution	6
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
+
+
+4 by 4 contingency tables
+Mon Sep 08 09:54:04 PDT 2014
+dc counter initted
+	dc({8\7,zo(7,16)})
+Mon Sep 08 09:54:04 PDT 2014
+zo counter initted
+Mon Sep 08 09:54:04 PDT 2014
+
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Mon Sep 08 09:54:04 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0]	zero one solution	1
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
+
+
+Mon Sep 08 09:54:04 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1]	divide and conquer solution	24
+Mon Sep 08 09:54:04 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1]	zero one solution	24
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
+
+
+Mon Sep 08 09:54:04 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2]	divide and conquer solution	282
+Mon Sep 08 09:54:04 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2]	zero one solution	282
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
+
+
+Mon Sep 08 09:54:04 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3]	divide and conquer solution	2008
+Mon Sep 08 09:54:04 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3]	zero one solution	2008
+Mon Sep 08 09:54:04 PDT 2014
+equal: true
+
+
+5 by 5 contingency tables
+Mon Sep 08 09:54:04 PDT 2014
+dc counter initted
+	dc({10\9,zo(9,25)})
+Mon Sep 08 09:54:39 PDT 2014
+
+Mon Sep 08 09:54:39 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Mon Sep 08 09:54:39 PDT 2014
+
+Mon Sep 08 09:54:39 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]	divide and conquer solution	120
+Mon Sep 08 09:54:39 PDT 2014
+
+Mon Sep 08 09:54:39 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2]	divide and conquer solution	6210
+Mon Sep 08 09:54:40 PDT 2014
+
+Mon Sep 08 09:54:40 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3, 3, 3]	divide and conquer solution	153040
+Mon Sep 08 09:54:40 PDT 2014
+
+Mon Sep 08 09:54:40 PDT 2014
+[4, 4, 4, 4, 4, 4, 4, 4, 4, 4]	divide and conquer solution	2224955
+Mon Sep 08 09:54:45 PDT 2014
+
+Mon Sep 08 09:54:45 PDT 2014
+[5, 5, 5, 5, 5, 5, 5, 5, 5, 5]	divide and conquer solution	22069251
+Mon Sep 08 09:54:47 PDT 2014
+
+Mon Sep 08 09:54:47 PDT 2014
+[6, 6, 6, 6, 6, 6, 6, 6, 6, 6]	divide and conquer solution	164176640
+Mon Sep 08 09:54:53 PDT 2014
+
+6 by 6 contingency tables
+Mon Sep 08 09:54:53 PDT 2014
+dc counter initted
+	dc({12\11,split(11\6,36;{11\8,zo(8,18)},{11\8,zo(8,18)})})
+Mon Sep 08 09:54:53 PDT 2014
+
+Mon Sep 08 09:54:53 PDT 2014
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]	divide and conquer solution	1
+Mon Sep 08 09:54:53 PDT 2014
+
+Mon Sep 08 09:54:53 PDT 2014
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]	divide and conquer solution	720
+Mon Sep 08 09:54:53 PDT 2014
+
+Mon Sep 08 09:54:53 PDT 2014
+[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]	divide and conquer solution	202410
+Mon Sep 08 09:54:53 PDT 2014
+
+Mon Sep 08 09:54:53 PDT 2014
+[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]	divide and conquer solution	20933840
+Mon Sep 08 09:54:53 PDT 2014
+
+Mon Sep 08 09:54:53 PDT 2014
+[4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]	divide and conquer solution	1047649905
+Mon Sep 08 09:54:53 PDT 2014
+
+Mon Sep 08 09:54:53 PDT 2014
+[5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]	divide and conquer solution	30767936616
+Mon Sep 08 09:54:54 PDT 2014
+
+Mon Sep 08 09:54:54 PDT 2014
+[6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]	divide and conquer solution	602351808741
+Mon Sep 08 09:54:55 PDT 2014
+
+Mon Sep 08 09:54:55 PDT 2014
+[7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]	divide and conquer solution	8575979362560
+Mon Sep 08 09:54:58 PDT 2014
+
+Mon Sep 08 09:54:58 PDT 2014

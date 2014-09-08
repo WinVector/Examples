@@ -23,10 +23,12 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	private final CountingProblem problem;
 	private final NonNegativeIntegralCounter underlying;
 	private final boolean zeroOne;
+	private final boolean allowZeroOneNode;
 	
-	public DivideAndConquerCounter(final CountingProblem problem, boolean allowParallel, final boolean zeroOne) {
+	public DivideAndConquerCounter(final CountingProblem problem, boolean allowParallel, final boolean zeroOne, final boolean allowZeroOneNode) {
 		this.problem = problem;
 		this.zeroOne = zeroOne;
+		this.allowZeroOneNode = allowZeroOneNode && (!zeroOne);
 		if(!acceptableA(problem.A)) {
 			throw new IllegalArgumentException("non-acceptable A");
 		}
@@ -113,7 +115,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			if(n<=1) {
 				throw new IllegalStateException("terminal case didn't catch single column case");
 			}
-			if((!zeroOne)&&(n<=25)) {
+			if((allowZeroOneNode)&&(!zeroOne)&&(n<=28)) {
 				final ZeroOneCounter zoc = new ZeroOneCounter(new CountingProblem(A),false);
 				subTree = zoc;
 			} else {
@@ -188,7 +190,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		public StepOrg(final CountingProblem problem, final IntVec boundsVec) {
 			this.problem = problem;
 			this.boundsVec = boundsVec;
-			dc = new DivideAndConquerCounter(problem,false,true);
+			dc = new DivideAndConquerCounter(problem,false,true,false);
 		}
 				
 		public void runStep(final int lastValue) {
@@ -261,12 +263,12 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	public static void main(final String[] args) {
 		System.out.println();
-		for(int n=8;n<=9;++n) {
+		for(int n=1;n<=9;++n) {
 			System.out.println();
 			System.out.println("" + n + " by " + n + " contingency tables");
 			final CountingProblem prob  = new ContingencyTableProblem(n,n);
 			System.out.println(new Date());
-			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,true, false);
+			final DivideAndConquerCounter dc = new DivideAndConquerCounter(prob,true, false,true);
 			System.out.println("dc counter initted");
 			System.out.println("\t" + dc);
 			System.out.println(new Date());
