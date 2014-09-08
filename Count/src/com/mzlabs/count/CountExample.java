@@ -132,7 +132,7 @@ public final class CountExample {
 		runEx1();
 		runEx2();
 		runEx3();
-		for(int n=1;n<=10;++n) {
+		for(int n=1;n<=4;++n) {
 			runEx4(n);
 		}
 	}
