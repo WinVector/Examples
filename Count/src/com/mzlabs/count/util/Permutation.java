@@ -5,7 +5,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 public final class Permutation implements Comparable<Permutation> {
-	private final int[] perm;
+	private final int[] perm; // x[i] -> x[perm[i]]
 	
 	public Permutation(final int[] perm) {
 		this.perm = perm;
@@ -96,10 +96,12 @@ public final class Permutation implements Comparable<Permutation> {
 		for(int i=0;i<n;++i) {
 			pending.add(i);
 		}
+		boolean sawAny = false;
 		while(!pending.isEmpty()) {
 			final Integer k = pending.first();
 			pending.remove(k);
 			if(perm[k]!=k) {
+				sawAny = true;
 				b.append("(");
 				b.append(k);
 				int pt = perm[k];
@@ -110,6 +112,9 @@ public final class Permutation implements Comparable<Permutation> {
 				}
 				b.append(")");
 			}
+		}
+		if(!sawAny) {
+			b.append("()");
 		}
 		return b.toString();
 	}
@@ -147,8 +152,12 @@ public final class Permutation implements Comparable<Permutation> {
 	 * @return new perm r s.t. r(x) = p(this(x)), compatible with Herstein circle notation (T o P)(x) = P(T(x)) (p. 13, Topics in Algebra 2nd edition)
 	 */
 	public Permutation compose(final Permutation p) {
-		final int[] r = Arrays.copyOf(p.perm,perm.length);
-		return new Permutation(apply(r));
+		final int n = perm.length;
+		final int[] r = new int[n];
+		for(int i=0;i<n;++i) {
+			r[i] = p.perm[perm[i]];
+		}
+		return new Permutation(r);
 	}
 	
 	/**

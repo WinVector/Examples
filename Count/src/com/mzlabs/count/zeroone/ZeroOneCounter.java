@@ -45,7 +45,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
 public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	private final CountingProblem prob;
 	private final int m;
-	private final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts;
+	private final ZeroOneStore zeroOneCounts;
 	
 	/**
 	 * check that x = 0 is the unique non-negative solution to A x = 0
@@ -127,35 +127,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		return zeroOneCounts;
 	}
 	
-	/**
-	 * 
-	 * @param counts Map b to number of solutions to A z = b for z zero/one (okay to omit unsolvable systems)
-	 * @return Map from (b mod 2) to b to number of solutions to A z = b (all unsolvable combination omitted)
-	 */
-	private Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final Map<IntVec,BigInteger> counts) {
-		final Map<IntVec,Map<IntVec,BigInteger>> zeroOneCounts = new HashMap<IntVec,Map<IntVec,BigInteger>>(10000);
-		for(final Map.Entry<IntVec,BigInteger> me: counts.entrySet()) {
-			final IntVec b = me.getKey();
-			final BigInteger c = me.getValue();
-			if(c.compareTo(BigInteger.ZERO)>0) {
-				final IntVec groupVec = modKVec(2,b);
-				Map<IntVec,BigInteger> bgroup = zeroOneCounts.get(groupVec);
-				if(null==bgroup) {
-					bgroup = new HashMap<IntVec,BigInteger>();
-					zeroOneCounts.put(groupVec,bgroup);
-				}
-				final BigInteger ov = bgroup.get(b);
-				if(null==ov) {
-					bgroup.put(b,c);
-				} else {
-					if(ov.compareTo(c)!=0) {
-						throw new IllegalArgumentException("zero one data doesn't obey expected symmetries");
-					}
-				}
-			}
-		}
-		return zeroOneCounts;
-	}
+
 	
 	/**
 	 * 
@@ -176,17 +148,10 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		} else {
 			countsByB = zeroOneSolutionCounts(prob.A);
 		}
-		zeroOneCounts = organizeZeroOneStructures(countsByB);
+		zeroOneCounts = new ZeroOneStore(prob,countsByB);
 	}
 	
-	private static IntVec modKVec(final int k, final IntVec x) {
-		final int n = x.dim();
-		final int[] xm = new int[n];
-		for(int i=0;i<n;++i) {
-			xm[i] = x.get(i)%k;			
-		}
-		return new IntVec(xm);
-	}
+
 	
 
 	
@@ -206,7 +171,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		BigInteger cached = nonnegCounts.get(b);
 		if(null==cached) {
 			cached = BigInteger.ZERO;
-			final Map<IntVec,BigInteger> group = zeroOneCounts.get(modKVec(2,b));  // this is the gotcha- the modK and sub-keys are not in normal form
+			final Map<IntVec,BigInteger> group = zeroOneCounts.lookup(b);
 			if((null!=group)&&(!group.isEmpty())) {
 				final int[] bprime = new int[m];
 				for(final Map.Entry<IntVec,BigInteger> me: group.entrySet()) {

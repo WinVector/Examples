@@ -5,8 +5,8 @@ import java.util.Arrays;
 import com.mzlabs.count.util.Permutation;
 
 public final class ContingencyTableProblem extends CountingProblem {
-	private final int rows;
-	private final int cols;
+	public final int rows;
+	public final int cols;
 	
 
 	private static int[] coords(final int rows, final int cols, final int index) {
@@ -84,7 +84,8 @@ public final class ContingencyTableProblem extends CountingProblem {
 		final int n = b.length;
 		final Permutation p1 = Permutation.sortingPerm(b, 0, rows, n);
 		final Permutation p2 = Permutation.sortingPerm(b, rows, rows+cols, n);
-		return p1.compose(p2); // disjoint indices in perms, so doesn't matter which order we compose
+		final Permutation perm = p1.compose(p2); // disjoint indices in perms, so doesn't matter which order we compose
+		return perm; 
 	}
 	
 	@Override
