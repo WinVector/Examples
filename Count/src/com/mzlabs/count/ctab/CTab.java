@@ -13,13 +13,19 @@ import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
 import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 
 public final class CTab {
 	
 	private static final class CPair {
-		public ContingencyTableProblem prob = null;
-		public NonNegativeIntegralCounter counter = null;
+		public final ContingencyTableProblem prob;
+		public final NonNegativeIntegralCounter counter;
+		
+		public CPair(final ContingencyTableProblem prob, final NonNegativeIntegralCounter counter) {
+			this.prob = prob;
+			this.counter = counter;
+		}
 	}
 	
 	private final Map<IntVec,CPair> counters = new  HashMap<IntVec,CPair>();
@@ -133,9 +139,13 @@ public final class CTab {
 			counter = counters.get(counterKey);
 			if(null==counter) {
 				final ContingencyTableProblem cp = new ContingencyTableProblem(nRows,nCols);
-				counter = new CPair();
-				counter.prob = cp;
-				counter.counter = new DivideAndConquerCounter(cp,false,false,true);
+				final NonNegativeIntegralCounter cnt;
+				if(nRows*nCols<=28) {
+					cnt = new ZeroOneCounter(cp,true);
+				} else {
+					cnt = new DivideAndConquerCounter(cp,false,false,true);
+				}
+				counter = new CPair(cp,cnt);
 				counters.put(counterKey,counter);
 			}
 		}
@@ -174,13 +184,17 @@ public final class CTab {
 			}
 			if(targetSum==xsum) {
 				final BigInteger xCount = countTables(rowTotals1,x);
-				final BigInteger nperm = stepper.nPerm(x);
-				for(int i=0;i<nCols;++i) {
-					y[i] = colTotal - x[i];
+				if(xCount.compareTo(BigInteger.ZERO)>0) {
+					for(int i=0;i<nCols;++i) {
+						y[i] = colTotal - x[i];
+					}
+					Arrays.sort(y);
+					final BigInteger yCount = countTables(rowTotals2,y);
+					if(yCount.compareTo(BigInteger.ZERO)>0) {
+						final BigInteger nperm = stepper.nPerm(x);
+						sum = sum.add(nperm.multiply(xCount).multiply(yCount));
+					}
 				}
-				Arrays.sort(y);
-				final BigInteger yCount = countTables(rowTotals2,y);
-				sum = sum.add(nperm.multiply(xCount).multiply(yCount));
 			}
 		} while(stepper.advanceLEI(x));
 		return sum;
