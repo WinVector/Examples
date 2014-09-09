@@ -89,7 +89,6 @@ public final class CTab {
 	 * @return
 	 */
 	private BigInteger countSemiTables(final int nCols, final int colTotal, final int[] rowTotals) {
-		// TODO: split one more time before going to base-case counter
 		final int nRows = rowTotals.length;		
 		final OrderStepper stepper = new OrderStepper(nCols,colTotal);
 		BigInteger sum = BigInteger.ZERO;
