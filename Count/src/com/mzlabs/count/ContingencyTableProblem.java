@@ -55,6 +55,20 @@ public final class ContingencyTableProblem extends CountingProblem {
 		this.cols = cols;
 	}
 	
+	public int[] encodeB(final int[] rowTotals, final int[] colTotals) {
+		if((rowTotals.length!=rows)||(colTotals.length!=cols)) {
+			throw new IllegalArgumentException();
+		}
+		final int[] b = new int[rows+cols];
+		for(int i=0;i<rows;++i) {
+			b[i] = rowTotals[i];
+		}
+		for(int i=0;i<cols;++i) {
+			b[i+rows] = colTotals[i];
+		}
+		return b;
+	}
+	
 	@Override
 	public boolean admissableB(final int[] b) {
 		if(b.length!=rows+cols) {
