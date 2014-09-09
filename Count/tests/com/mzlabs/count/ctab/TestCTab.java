@@ -2,6 +2,8 @@ package com.mzlabs.count.ctab;
 
 import static org.junit.Assert.*;
 
+import java.math.BigInteger;
+
 import org.junit.Test;
 
 public class TestCTab {
@@ -13,5 +15,18 @@ public class TestCTab {
 			}
 		}
 	}
-
+	
+	@Test
+	public void testCounter() {
+		final CTab ctab = new CTab();
+		for(int rowsCols=1;rowsCols<=4;++rowsCols) {
+			for(int total=0;total<=10;++total) {
+				final BigInteger count = ctab.countSqTables(rowsCols,total); 
+				final BigInteger check = ctab.debugConfirmSqTables(rowsCols, total);
+				final boolean eq = (check.compareTo(count)==0);
+				assertTrue(eq);
+				//System.out.println(rowsCols + "\t" + total + "\t" + count + "\t" + check + "\t" + eq);
+			}
+		}
+	}
 }
