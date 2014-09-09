@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
@@ -21,6 +24,61 @@ public final class CTab {
 	
 	private final Map<IntVec,CPair> counters = new  HashMap<IntVec,CPair>();
 
+	
+	private final class StepOrg {
+		public final int rowsCols;
+		public final int total;
+		public final OrderStepper stepper;
+		public final int n1;
+		public final int n2;
+		public final int targetSum;
+		public BigInteger sum = BigInteger.ZERO; // synchronized on this
+		
+		public StepOrg(final int rowsCols, final int total) {
+			this.rowsCols = rowsCols;
+			this.total = total;
+			stepper = new OrderStepper(rowsCols,total);
+			n1 = rowsCols/2;
+			n2 = rowsCols - n1;
+			targetSum = n1*total;
+		}
+		
+		public void runStep(final int[] x) {
+			final BigInteger xCount = countSemiTables(n1,total,x);
+			if(xCount.compareTo(BigInteger.ZERO)>0) {
+				final int[] y = new int[rowsCols];
+				for(int i=0;i<rowsCols;++i) {
+					y[i] = total - x[i];
+				}
+				Arrays.sort(y);
+				final BigInteger yCount = countSemiTables(n2,total,y);
+				if(yCount.compareTo(BigInteger.ZERO)>0) {
+					final BigInteger nperm = stepper.nPerm(x);
+					final BigInteger term = nperm.multiply(xCount).multiply(yCount);
+					synchronized (this) {
+						sum = sum.add(term);
+					}
+				}
+			}
+		}
+		
+		public final class StepJob implements Runnable {
+			private final int[] x;
+
+			private StepJob(final int[] x) {
+				this.x = Arrays.copyOf(x,x.length);
+			}
+
+			@Override
+			public final void run() {
+				runStep(x);
+			}
+		}
+		
+		public StepJob stepJob(final int[] x) {
+			return new StepJob(x);
+		}
+	}
 	
 	/**
 	 * count number of rowsCols by rowsCols contingency table fill-ins with all rows/columns summing to total
@@ -39,30 +97,33 @@ public final class CTab {
 			return BigInteger.ONE;
 		}
 		// now know rowsCols>1 and total>0, split into semi-regular tables
-		final OrderStepper stepper = new OrderStepper(rowsCols,total);
-		BigInteger sum = BigInteger.ZERO;
 		final int[] x = new int[rowsCols];
-		final int[] y = new int[rowsCols];
-		final int n1 = rowsCols/2;
-		final int n2 = rowsCols - n1;
-		final int targetSum = n1*total;
+		final StepOrg stepOrg = new StepOrg(rowsCols,total);
+		final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1000);
+		final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
 		do {
 			int xsum = 0;
 			for(final int xi: x) {
 				xsum += xi;
 			}
-			if(targetSum==xsum) {
-				final BigInteger xCount = countSemiTables(n1,total,x);
-				final BigInteger nperm = stepper.nPerm(x);
-				for(int i=0;i<rowsCols;++i) {
-					y[i] = total - x[i];
+			if(xsum==stepOrg.targetSum) {
+				if(stepOrg.targetSum==xsum) {
+					if(workQueue.size()<=100) {
+						ex.execute(stepOrg.stepJob(x));
+					} else {
+						stepOrg.runStep(x);
+					}
 				}
-				Arrays.sort(y);
-				final BigInteger yCount = countSemiTables(n2,total,y);
-				sum = sum.add(nperm.multiply(xCount).multiply(yCount));
 			}
-		} while(stepper.advanceLEI(x));
-		return sum;
+		} while(stepOrg.stepper.advanceLEI(x));
+		ex.shutdown();
+		while(!ex.isTerminated()) {
+			try {
+				ex.awaitTermination(1000, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+			}
+		}
+		return stepOrg.sum;
 	}
 	
 	private CPair getSubCounter(final int nRows, final int nCols) {
@@ -74,7 +135,7 @@ public final class CTab {
 				final ContingencyTableProblem cp = new ContingencyTableProblem(nRows,nCols);
 				counter = new CPair();
 				counter.prob = cp;
-				counter.counter = new DivideAndConquerCounter(cp,true, false,true);
+				counter.counter = new DivideAndConquerCounter(cp,false,false,true);
 				counters.put(counterKey,counter);
 			}
 		}

@@ -60,7 +60,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		return false;
 	}
 	
-	private class StepOrg {
+	private final class StepOrg {
 		public final int[] b;
 		public final IntVec bdE;
 		public BigInteger accumulator = BigInteger.ZERO; // use b to sync access to accumulator
@@ -106,7 +106,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 			} while(bdE.advanceLE(counter,nEntangled-1));
 		}
 		
-		public class StepJob implements Runnable {
+		public final class StepJob implements Runnable {
 			private final int lastVal;
 
 			private StepJob(final int lastVal) {
