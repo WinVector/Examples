@@ -1,6 +1,5 @@
 package com.mzlabs.count.Minkowski;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -34,9 +33,19 @@ public final class Cones {
 
 	
 	/**
-	 * @param A totally unimodular matrix with non-zero number of rows
+	 * @param A non-negative totally unimodular matrix with non-zero number of rows
 	 */
 	public Cones(final int[][] Ain) {
+		if(Ain.length<=0) {
+			throw new IllegalArgumentException("no rows");
+		}
+		for(final int[] Ai: Ain) {
+			for(final int Aij: Ai) {
+				if(Aij<0) {
+					throw new IllegalArgumentException("negative entry");
+				}
+			}
+		}
 		rowDescr = IntMat.buildMapToCannon(Ain);
 		A = IntMat.rowRestrict(Ain,rowDescr);
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
@@ -214,49 +223,65 @@ public final class Cones {
 		return true;
 	}
 
-	
-	public BigInteger getCount(final int[] bIn) throws LPException {
+	/**
+	 * 
+	 * @param bIn vector with no non-positive entries compatible with original linear system
+	 * @return a new system (in reduced rank notation) that would allow us to infer a cone polynomial
+	 * @throws LPException
+	 */
+	public int[] buildConeWedge(final int[] bIn) throws LPException {
+		if(bIn.length!=rowDescr.length) {
+			throw new IllegalArgumentException("wrong dimension b");
+		}
+		for(final int bi: bIn) {
+			if(bi<=0) {
+				throw new IllegalArgumentException("b wasn't positive");
+			}
+		}
+		if(!IntMat.checkImpliedEntries(rowDescr,bIn)) {
+			throw new IllegalArgumentException("b wasn't consistent");
+		}
 		final int m = A.length;
 		final int n = A[0].length;
 		final int degree = n-m;
-		final int[] b = IntMat.mapVector(rowDescr,bIn); // TODO: check linear relns on map
+		final int[] b = IntMat.mapVector(rowDescr,bIn); 
 		final int[] bInterior = getAConeInteriorPt(b);  // TODO: confirm the (implied) lemma that cones agree on closures is true
 		// Note: zeros in rhsGroup(b) are a problem, as parts of the wedge solution might guess different extensions
 		// So need to find a new bp without any zeros in rhsGroup(bp) (and also still compatible with the original problem)
-		final IntVec group = rhsGroup(bInterior);   // TODO: cache on group
-		final int[] wedgeBase = placeWedgeBase(group); 
+		final IntVec coneGroup = rhsGroup(bInterior);   // If we were really going to use this we would cache on cone-group, or on b's rhsGroup
+		if((!zeroFree(coneGroup))||(!compatibleSigns(rhsGroup(b),coneGroup))) {
+			throw new IllegalStateException("failed to find and interior point");
+		}
+		final int[] wedgeBase = placeWedgeBase(coneGroup); 
 		final IntVec baseGroup = rhsGroup(wedgeBase);
-		System.out.println(compatibleSigns(group,baseGroup));
+		if(!compatibleSigns(coneGroup,baseGroup)) {
+			throw new IllegalStateException("wedge base wasn't in cone");
+		}
 		for(int i=0;i<m;++i) {
 			final int[] wi = Arrays.copyOf(wedgeBase,wedgeBase.length);
 			wi[i] = wedgeBase[i] + degree;
 			final IntVec baseGroupI = rhsGroup(wi);
-			System.out.println(compatibleSigns(group,baseGroupI));
+			if(!compatibleSigns(coneGroup,baseGroupI)) {
+				throw new IllegalStateException("wedge vertex wasn't in cone");
+			}
 		}
 		// now in principle could count on every item in baseGroup wedge (baseGroup + a right orthant) to 
 		// get the counting polynomial for the cone and then evaluate the polynomial at b (which is in the closure of the cone)
 		// Lagrange interpolation would let us do this with integer-only arithmetic.
-		return null;
-	}
-
-	public static void main1(final String[] args) {
-		// just check if building the check-rows has any value or we could just use {-1,0,1}^bdim which has at least all the rows
-		// could also just look for rows that send one column of A to a vector with one 1 and the rest zeros.
-		System.out.println("n" + "\t" + "bdim" + "\t" + "nCheckRows" + "\t" + "2b^dim" + "\t" + "3^bdim" + "\t" + "date");
-		for(int n=1;n<=5;++n) {
-			final CountingProblem prob = new ContingencyTableProblem(n,n);
-			final Cones cones = new Cones(prob.A);
-			final int bdim = cones.checkVecs[0].dim();
-			System.out.println("" + n + "\t" + bdim + "\t" + cones.checkVecs.length + "\t" +
-			Math.pow(2.0,bdim) + "\t"  + Math.pow(3.0,bdim) + "\t" + new Date());
-		}
+		// Not pursuing this as the entries seem to get large too fast to be useful (now that we have the even/odd counter).
+		return wedgeBase;
 	}
 	
 	public static void main(final String[] args) throws LPException {
-		final int n = 3;
-		final CountingProblem prob = new ContingencyTableProblem(n,n);
-		final Cones cones = new Cones(prob.A);
-		final int b[] = new int[] { 10, 10, 10, 10, 10, 10};
-		System.out.println(cones.getCount(b));
+		for(int n=1;n<=4;++n) {
+			System.out.println("n:" + n + "\t" + new Date());
+			final CountingProblem prob = new ContingencyTableProblem(n,n);
+			final Cones cones = new Cones(prob.A);
+			System.out.println("\tcheck conditions: " + cones.checkVecs.length);
+			final int b[] = new int[2*n];
+			Arrays.fill(b,10);
+			System.out.println("\tinterpolation base: " + new IntVec(cones.buildConeWedge(b)));
+		}
+		System.out.println(new Date());
 	}
 }

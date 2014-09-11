@@ -143,6 +143,25 @@ public final class IntMat implements Comparable<IntMat> {
 		return b2;
 	}
 	
+	public static boolean checkImpliedEntries(final RowDescription[] rowDescr, final int[] b) {
+		for(final RowDescription di: rowDescr) {
+			if(di.newIndex<0) {
+				double check = 0.0;
+				final int m = di.soln.length;
+				if(m!=b.length) {
+					return false;
+				}
+				for(int i=0;i<m;++i) {
+					check += b[i]*di.soln[i];
+				}
+				if(Math.abs(check-b[di.origIndex])>1.e-5) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * // TODO: add test
 	 * @param A m by n matrix (m,n>0)
