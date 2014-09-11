@@ -1,4 +1,4 @@
-package com.mzlabs.count.divideandconquer;
+package com.mzlabs.count.util;
 
 import java.util.Arrays;
 import java.util.SortedMap;
@@ -141,6 +141,32 @@ public final class IntMat implements Comparable<IntMat> {
 			}
 		}
 		return b2;
+	}
+	
+	/**
+	 * pullBack(rowDescr,mapVector(rowDescr,x)) == x // TODO: add test
+	 * @param rowDescr
+	 * @param b
+	 * @return
+	 */
+	public static int[] pullBackVector(final RowDescription[] rowDescr, final int[] b) {
+		final int n = rowDescr.length;
+		final int[] x = new int[n];
+		for(final RowDescription di: rowDescr) {
+			if(di.newIndex>=0) {
+				x[di.origIndex] = b[di.newIndex];
+			}
+		}
+		for(final RowDescription di: rowDescr) {
+			if(di.newIndex<0) {
+				double sum = 0;
+				for(int j=0;j<n;++j) {
+					sum += di.soln[j]*x[j];
+				}
+				x[di.origIndex] = (int)Math.round(sum);
+			}
+		}
+		return x;
 	}
 	
 	public static boolean checkImpliedEntries(final RowDescription[] rowDescr, final int[] b) {

@@ -1,5 +1,6 @@
 package com.mzlabs.count.Minkowski;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -8,8 +9,11 @@ import java.util.Set;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
-import com.mzlabs.count.divideandconquer.IntMat;
-import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
+import com.mzlabs.count.NonNegativeIntegralCounter;
+import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
+import com.mzlabs.count.util.BigRat;
+import com.mzlabs.count.util.IntMat;
+import com.mzlabs.count.util.IntMat.RowDescription;
 import com.mzlabs.count.util.IntVec;
 import com.winvector.linalg.DenseVec;
 import com.winvector.linalg.LinalgFactory;
@@ -305,12 +309,33 @@ public final class Cones {
 		for(int n=1;n<=4;++n) {
 			System.out.println("n:" + n + "\t" + new Date());
 			final CountingProblem prob = new ContingencyTableProblem(n,n);
+			final NonNegativeIntegralCounter counter = new DivideAndConquerCounter(prob,true,false,true);
 			final Cones cones = new Cones(prob.A);
 			System.out.println("\tcheck conditions: " + cones.checkVecs.length);
 			final int b[] = new int[2*n];
-			Arrays.fill(b,10);
-			System.out.println("\tinterpolation base: " + new IntVec(cones.buildConeWedge(b)));
+			Arrays.fill(b,100);
+			final int[] b2 = IntMat.mapVector(cones.rowDescr,b);
+			final int[] base = cones.buildConeWedge(b);
+			System.out.println("\tinterpolation base: " + IntVec.toString(base));
+			final SumStepper stepper = new SumStepper(cones.degree);
+			final int[] d = stepper.first(base.length);
+			final int[] z = new int[base.length];
+			BigRat lagrangeEval = BigRat.ZERO;
+			do {
+				for(int i=0;i<z.length;++i) {
+					z[i] = base[i] + d[i];
+				}
+				final int[] x = IntMat.pullBackVector(cones.rowDescr,z);
+				final BigInteger fx = counter.countNonNegativeSolutions(x);
+				final BigRat px = LagrangePolynomial.eval(base,z,cones.degree,b2);
+				lagrangeEval = lagrangeEval.add(px.multiply(BigRat.valueOf(fx)));
+				System.out.println(IntVec.toString(x) + "\t" + fx + "\t" + px);
+			} while(stepper.next(d));
+			System.out.println("LagrangePolynomial\t" + lagrangeEval);
+			final BigInteger count = counter.countNonNegativeSolutions(b);
+			System.out.println("Direct count\t" + count);
 		}
 		System.out.println(new Date());
+		System.out.println();
 	}
 }

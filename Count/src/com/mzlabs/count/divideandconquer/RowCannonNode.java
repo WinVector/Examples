@@ -3,7 +3,8 @@ package com.mzlabs.count.divideandconquer;
 import java.math.BigInteger;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
-import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
+import com.mzlabs.count.util.IntMat;
+import com.mzlabs.count.util.IntMat.RowDescription;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 /**

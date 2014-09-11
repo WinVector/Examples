@@ -12,9 +12,10 @@ import java.util.concurrent.TimeUnit;
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
-import com.mzlabs.count.divideandconquer.IntMat.RowDescription;
+import com.mzlabs.count.util.IntMat;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.Permutation;
+import com.mzlabs.count.util.IntMat.RowDescription;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 import com.mzlabs.count.zeroone.ZeroOneStore;
 
