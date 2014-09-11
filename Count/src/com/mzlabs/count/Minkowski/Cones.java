@@ -2,10 +2,9 @@ package com.mzlabs.count.Minkowski;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import com.mzlabs.count.ContingencyTableProblem;
@@ -18,7 +17,6 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;
 import com.winvector.lp.LPEQProb;
 import com.winvector.lp.LPException;
-import com.winvector.lp.LPException.LPMalformedException;
 import com.winvector.lp.LPSoln;
 import com.winvector.lp.impl.RevisedSimplexSolver;
 
@@ -74,28 +72,64 @@ public final class Cones {
 		checkVecs = rows.toArray(new IntVec[rows.size()]);
 	}
 	
-	private BitSet rhsGroup(final int[] b) {
+	private IntVec rhsGroup(final int[] b) {
 		final int ncheck = checkVecs.length;
 		final int m = A.length;
-		final BitSet group = new BitSet(ncheck);
+		final int[] group = new int[ncheck];
 		for(int i=0;i<ncheck;++i) {
 			final IntVec row = checkVecs[i];
 			int dot = 0;
 			for(int j=0;j<m;++j) {
 				dot += row.get(j)*b[j];
 			}
-			if(dot>=0) {
-				group.set(i);
+			if(dot>0) {
+				group[i] = 1;
+			} else if(dot<0) {
+				group[i] = -1;
 			}
 		}
-		return group;
+		return new IntVec(group);
 	}
 	
-	private int[] placeWedgeBase(final int b[], final BitSet group) throws LPException {
+	
+	private static boolean zeroFree(final IntVec x) {
+		final int n = x.dim();
+		for(int i=0;i<n;++i) {
+			if(x.get(i)==0) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	// just a heuristic, move up and wriggle
+	private int[] getAConeInteriorPt(final int[] b) {
+		final int n = b.length;
+		final IntVec group = rhsGroup(b);
+		if(zeroFree(group)) {
+			return Arrays.copyOf(b,n);
+		}
+		final int[] bP = Arrays.copyOf(b,n);
+		final Random rand = new Random(352253);
+		while(true) {
+			for(int i=0;i<n;++i) {
+				bP[i] = 1000*b[i] + rand.nextInt(10);
+			}
+			final IntVec groupP = rhsGroup(bP);
+			if(zeroFree(groupP)) {
+				return bP;
+			}
+		}
+	}
+	
+	private int[] placeWedgeBase(final IntVec group) throws LPException {
 		final int ncheck = checkVecs.length;
 		final int m = A.length;
 		final int n = A[0].length;
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
+		if(!zeroFree(group)) {
+			throw new IllegalArgumentException("on cone boundary");
+		}
 		final int totalRows = (m+1)*ncheck;
 		final int probDim = m + totalRows;
 		final int degree = n-m;
@@ -109,19 +143,21 @@ public final class Cones {
 		int slackVar = m;
 		// put in first set of conditions
 		for(int i=0;i<ncheck;++i) {
-			if(group.get(i)) {
+			if(group.get(i)==0) {
+				continue;
+			}
+			if(group.get(i)>0) {
 				// expect checkVecs[i].x >= 0, so: checkVecs[i].x - slack = 0
 				for(int j=0;j<m;++j) {
 					mat.set(row,j,checkVecs[i].get(j));
 				}
 				mat.set(row,slackVar,-1.0);
 			} else {
-				// expect checkVecs[i].x <= -1 so: -checkVecs[i].x - slack = 1
+				// expect checkVecs[i].x <= 0 so: -checkVecs[i].x - slack = 0
 				for(int j=0;j<m;++j) {
 					mat.set(row,j,-checkVecs[i].get(j));
 				}
 				mat.set(row,slackVar,-1.0);
-				rhs[row] = 1.0;
 			}
 			++slackVar;
 			++row;
@@ -129,7 +165,10 @@ public final class Cones {
 		// put in additional wedge conditions
 		for(int k=0;k<m;++k) {
 			for(int i=0;i<ncheck;++i) {
-				if(group.get(i)) {
+				if(group.get(i)==0) {
+					continue;
+				}
+				if(group.get(i)>0) {
 					// expect checkVecs[i]*(x+degree*Ek) >= 0, so: checkVecs[i].x - slack = -degree*checkVecs[i][k];
 					for(int j=0;j<m;++j) {
 						mat.set(row,j,checkVecs[i].get(j));
@@ -137,12 +176,12 @@ public final class Cones {
 					mat.set(row,slackVar,-1.0);
 					rhs[row] = -degree*checkVecs[i].get(k);
 				} else {
-					// expect checkVecs[i].(x+degree*Ek) <= -1 so: -checkVecs[i].x - slack = 1 + degree*checkVecs[i][k]
+					// expect checkVecs[i].(x+degree*Ek) <= 0 so: -checkVecs[i].x - slack =  degree*checkVecs[i][k]
 					for(int j=0;j<m;++j) {
 						mat.set(row,j,-checkVecs[i].get(j));
 					}
 					mat.set(row,slackVar,-1.0);
-					rhs[row] = 1.0 + degree*checkVecs[i].get(k);
+					rhs[row] = degree*checkVecs[i].get(k);
 				}
 				++slackVar;
 				++row;
@@ -161,52 +200,42 @@ public final class Cones {
 		for(int i=0;i<m;++i) {
 			base[i] = (int)Math.round(soln.primalSolution.get(i));
 		}
+		// base only guaranteed to be consistent if there were no zeros in the group key
 		return base;
 	}
 	
-	private static final class BitComp implements Comparator<BitSet> {
-		@Override
-		public int compare(final BitSet a, final BitSet b) {
-			final int la = a.length();
-			final int lb = b.length();
-			if(la!=lb) {
-				if(la>=lb) {
-					return 1;
-				} else {
-					return -1;
-				}
+	public static boolean compatibleSigns(final IntVec a, final IntVec b) {
+		final int n = a.dim();
+		for(int i=0;i<n;++i) {
+			if(a.get(i)*b.get(i)<0) {
+				return false;
 			}
-			for(int i=0;i<la;++i) {
-				final boolean av = a.get(i);
-				final boolean bv = b.get(i);
-				if(av!=bv) {
-					if(av) {
-						return 1;
-					} else {
-						return -1;
-					}
-				}
-			}
-			return 0;
 		}
+		return true;
 	}
-	public static final Comparator<BitSet> compBitSet = new BitComp();
+
 	
 	public BigInteger getCount(final int[] bIn) throws LPException {
 		final int m = A.length;
 		final int n = A[0].length;
 		final int degree = n-m;
 		final int[] b = IntMat.mapVector(rowDescr,bIn); // TODO: check linear relns on map
-		final BitSet group = rhsGroup(b);   // TODO: cache on group
-		final int[] wedgeBase = placeWedgeBase(b,group); 
-		final BitSet baseGroup = rhsGroup(wedgeBase);
-		System.out.println(compBitSet.compare(group,baseGroup));
+		final int[] bInterior = getAConeInteriorPt(b);  // TODO: confirm the (implied) lemma that cones agree on closures is true
+		// Note: zeros in rhsGroup(b) are a problem, as parts of the wedge solution might guess different extensions
+		// So need to find a new bp without any zeros in rhsGroup(bp) (and also still compatible with the original problem)
+		final IntVec group = rhsGroup(bInterior);   // TODO: cache on group
+		final int[] wedgeBase = placeWedgeBase(group); 
+		final IntVec baseGroup = rhsGroup(wedgeBase);
+		System.out.println(compatibleSigns(group,baseGroup));
 		for(int i=0;i<m;++i) {
 			final int[] wi = Arrays.copyOf(wedgeBase,wedgeBase.length);
 			wi[i] = wedgeBase[i] + degree;
-			final BitSet baseGroupI = rhsGroup(wi);
-			System.out.println(compBitSet.compare(group,baseGroupI));
+			final IntVec baseGroupI = rhsGroup(wi);
+			System.out.println(compatibleSigns(group,baseGroupI));
 		}
+		// now in principle could count on every item in baseGroup wedge (baseGroup + a right orthant) to 
+		// get the counting polynomial for the cone and then evaluate the polynomial at b (which is in the closure of the cone)
+		// Lagrange interpolation would let us do this with integer-only arithmetic.
 		return null;
 	}
 
@@ -224,10 +253,10 @@ public final class Cones {
 	}
 	
 	public static void main(final String[] args) throws LPException {
-		final int n = 2;
+		final int n = 3;
 		final CountingProblem prob = new ContingencyTableProblem(n,n);
 		final Cones cones = new Cones(prob.A);
-		final int b[] = new int[] { 50, 100, 90, 60};
+		final int b[] = new int[] { 10, 10, 10, 10, 10, 10};
 		System.out.println(cones.getCount(b));
 	}
 }
