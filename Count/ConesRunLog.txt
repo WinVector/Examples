@@ -1,13 +1,13 @@
-n:1	Wed Sep 10 17:46:35 PDT 2014
+n:1	Thu Sep 11 08:24:29 PDT 2014
 	check conditions: 1
 	interpolation base: [0]
-n:2	Wed Sep 10 17:46:36 PDT 2014
+n:2	Thu Sep 11 08:24:29 PDT 2014
 	check conditions: 8
 	interpolation base: [1, 1, 0]
-n:3	Wed Sep 10 17:46:36 PDT 2014
+n:3	Thu Sep 11 08:24:29 PDT 2014
 	check conditions: 42
 	interpolation base: [20, 20, 8, 12, 12]
-n:4	Wed Sep 10 17:46:36 PDT 2014
+n:4	Thu Sep 11 08:24:30 PDT 2014
 	check conditions: 204
 	interpolation base: [63, 63, 36, 63, 45, 45, 45]
-Wed Sep 10 17:46:57 PDT 2014
+Thu Sep 11 08:24:51 PDT 2014

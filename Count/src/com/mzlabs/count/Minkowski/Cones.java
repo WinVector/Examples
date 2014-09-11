@@ -21,7 +21,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
 
 /**
  * For A x = b1, A x = b2 (x>=0, A totally unimodular)
- * find conditions such that { x | A x = b1, x>=0 } + { x | A x = b2, x>=0 } (Minkowski sum) =  { x | A x = b1 + b2, x>=0 }
+ * find conditions such that { x | A x = b1, x>=0 } +(Minkowski sum) { x | A x = b2, x>=0 }  =  { x | A x = b1 + b2, x>=0 }
  * From pp. 55-57 of John Mount Ph.D. thesis
  * @author johnmount
  *
@@ -29,7 +29,12 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
 public final class Cones {
 	private final RowDescription[] rowDescr; // map from Ain to full row-rank system
 	private final int[][] A;  // full row-rank sub-row system
+	private final int m;
+	private final int n;
+	private final int degree;
 	private final IntVec[] checkVecs;
+	private final int ncheck;
+
 
 	
 	/**
@@ -48,9 +53,10 @@ public final class Cones {
 		}
 		rowDescr = IntMat.buildMapToCannon(Ain);
 		A = IntMat.rowRestrict(Ain,rowDescr);
+		m = A.length;
+		n = A[0].length;
+		degree = n-m;
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-		final int m = A.length;
-		final int n = A[0].length;
 		final SetStepper setStepper = new SetStepper(m,n);
 		final int[] columnSelection = setStepper.first();
 		final Set<IntVec> rows = new HashSet<IntVec>();
@@ -79,11 +85,10 @@ public final class Cones {
 			}
 		} while(setStepper.next(columnSelection));
 		checkVecs = rows.toArray(new IntVec[rows.size()]);
+		ncheck = checkVecs.length;
 	}
 	
 	private IntVec rhsGroup(final int[] b) {
-		final int ncheck = checkVecs.length;
-		final int m = A.length;
 		final int[] group = new int[ncheck];
 		for(int i=0;i<ncheck;++i) {
 			final IntVec row = checkVecs[i];
@@ -113,15 +118,14 @@ public final class Cones {
 	
 	// just a heuristic, move up and wriggle
 	private int[] getAConeInteriorPt(final int[] b) {
-		final int n = b.length;
 		final IntVec group = rhsGroup(b);
 		if(zeroFree(group)) {
-			return Arrays.copyOf(b,n);
+			return Arrays.copyOf(b,m);
 		}
-		final int[] bP = Arrays.copyOf(b,n);
+		final int[] bP = Arrays.copyOf(b,m);
 		final Random rand = new Random(352253);
 		while(true) {
-			for(int i=0;i<n;++i) {
+			for(int i=0;i<m;++i) {
 				bP[i] = 1000*b[i] + rand.nextInt(10);
 			}
 			final IntVec groupP = rhsGroup(bP);
@@ -132,16 +136,12 @@ public final class Cones {
 	}
 	
 	private int[] placeWedgeBase(final IntVec group) throws LPException {
-		final int ncheck = checkVecs.length;
-		final int m = A.length;
-		final int n = A[0].length;
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
 		if(!zeroFree(group)) {
 			throw new IllegalArgumentException("on cone boundary");
 		}
 		final int totalRows = (m+1)*ncheck;
 		final int probDim = m + totalRows;
-		final int degree = n-m;
 		final ColtMatrix mat = factory.newMatrix(totalRows,probDim,true);
 		final double[] rhs = new double[totalRows];
 		final double[] obj = new double[probDim];
@@ -152,9 +152,6 @@ public final class Cones {
 		int slackVar = m;
 		// put in first set of conditions
 		for(int i=0;i<ncheck;++i) {
-			if(group.get(i)==0) {
-				continue;
-			}
 			if(group.get(i)>0) {
 				// expect checkVecs[i].x >= 0, so: checkVecs[i].x - slack = 0
 				for(int j=0;j<m;++j) {
@@ -174,9 +171,6 @@ public final class Cones {
 		// put in additional wedge conditions
 		for(int k=0;k<m;++k) {
 			for(int i=0;i<ncheck;++i) {
-				if(group.get(i)==0) {
-					continue;
-				}
 				if(group.get(i)>0) {
 					// expect checkVecs[i]*(x+degree*Ek) >= 0, so: checkVecs[i].x - slack = -degree*checkVecs[i][k];
 					for(int j=0;j<m;++j) {
@@ -185,7 +179,7 @@ public final class Cones {
 					mat.set(row,slackVar,-1.0);
 					rhs[row] = -degree*checkVecs[i].get(k);
 				} else {
-					// expect checkVecs[i].(x+degree*Ek) <= 0 so: -checkVecs[i].x - slack =  degree*checkVecs[i][k]
+					// expect checkVecs[i].(x+degree*Ek) <= 0 so: -checkVecs[i].x - slack = degree*checkVecs[i][k]
 					for(int j=0;j<m;++j) {
 						mat.set(row,j,-checkVecs[i].get(j));
 					}
@@ -204,7 +198,8 @@ public final class Cones {
 		}
 		final LPEQProb prob = new LPEQProb(mat.columnMatrix(),rhs,new DenseVec(obj));
 		final RevisedSimplexSolver solver = new RevisedSimplexSolver();
-		final LPSoln soln = solver.solve(prob, null, 1.0e-5, 1000, factory);
+		//final LPSoln soln = prob.solveDebug(solver, 1.0e-5, 1000, factory);
+		final LPSoln soln = solver.solve(prob,null,1.0e-5,1000,factory);
 		final int[] base = new int[m];
 		for(int i=0;i<m;++i) {
 			base[i] = (int)Math.round(soln.primalSolution.get(i));
@@ -223,6 +218,42 @@ public final class Cones {
 		return true;
 	}
 
+	private boolean checkWedgeConditions(final int[] wedgeBase) {
+		final boolean[] sawPlus = new boolean[ncheck];
+		final boolean[] sawMinus = new boolean[ncheck];
+		final IntVec baseGroup = rhsGroup(wedgeBase);
+		//System.out.println(baseGroup);
+		for(int i=0;i<ncheck;++i) {
+			if(baseGroup.get(i)>0) {
+				sawPlus[i] = true;
+			}
+			if(baseGroup.get(i)<0) {
+				sawMinus[i] = true;
+			}
+		}
+		for(int d=0;d<m;++d) {
+			final int[] wd = Arrays.copyOf(wedgeBase,wedgeBase.length);
+			wd[d] = wedgeBase[d] + degree;
+			final IntVec baseGroupI = rhsGroup(wd);
+			//System.out.println(baseGroupI);
+			for(int i=0;i<ncheck;++i) {
+				if(baseGroupI.get(i)>0) {
+					if(sawMinus[i]) {
+						return false;
+					}
+					sawPlus[i] = true;
+				}
+				if(baseGroupI.get(i)<0) {
+					if(sawPlus[i]) {
+						return false;
+					}
+					sawMinus[i] = true;
+				}
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * 
 	 * @param bIn vector with no non-positive entries compatible with original linear system
@@ -241,29 +272,27 @@ public final class Cones {
 		if(!IntMat.checkImpliedEntries(rowDescr,bIn)) {
 			throw new IllegalArgumentException("b wasn't consistent");
 		}
-		final int m = A.length;
-		final int n = A[0].length;
-		final int degree = n-m;
 		final int[] b = IntMat.mapVector(rowDescr,bIn); 
+		final IntVec bGroup = rhsGroup(b);
 		final int[] bInterior = getAConeInteriorPt(b);  // TODO: confirm the (implied) lemma that cones agree on closures is true
 		// Note: zeros in rhsGroup(b) are a problem, as parts of the wedge solution might guess different extensions
 		// So need to find a new bp without any zeros in rhsGroup(bp) (and also still compatible with the original problem)
 		final IntVec coneGroup = rhsGroup(bInterior);   // If we were really going to use this we would cache on cone-group, or on b's rhsGroup
-		if((!zeroFree(coneGroup))||(!compatibleSigns(rhsGroup(b),coneGroup))) {
+		if((!zeroFree(coneGroup))||(!compatibleSigns(bGroup,coneGroup))) {
 			throw new IllegalStateException("failed to find and interior point");
 		}
 		final int[] wedgeBase = placeWedgeBase(coneGroup); 
 		final IntVec baseGroup = rhsGroup(wedgeBase);
+		//System.out.println("baseGroup: " + baseGroup);
 		if(!compatibleSigns(coneGroup,baseGroup)) {
 			throw new IllegalStateException("wedge base wasn't in cone");
 		}
-		for(int i=0;i<m;++i) {
-			final int[] wi = Arrays.copyOf(wedgeBase,wedgeBase.length);
-			wi[i] = wedgeBase[i] + degree;
-			final IntVec baseGroupI = rhsGroup(wi);
-			if(!compatibleSigns(coneGroup,baseGroupI)) {
-				throw new IllegalStateException("wedge vertex wasn't in cone");
-			}
+		if(!compatibleSigns(coneGroup,bGroup)) {
+			throw new IllegalStateException("wedge base wasn't in cone");
+		}
+		//System.out.println("base wedge conditions");
+		if(!checkWedgeConditions(wedgeBase)) {
+			throw new IllegalStateException("wedge conditions don't hold");
 		}
 		// now in principle could count on every item in baseGroup wedge (baseGroup + a right orthant) to 
 		// get the counting polynomial for the cone and then evaluate the polynomial at b (which is in the closure of the cone)
