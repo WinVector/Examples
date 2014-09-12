@@ -27,7 +27,7 @@ public final class LagrangePolynomial {
 		final int n = z.length;
 		{ // confirm pre-conditions (helps localize any errors) 
 			if(s<0) {
-				throw new IllegalArgumentException("z<0");
+				throw new IllegalArgumentException("s<0");
 			}
 			int checkSum = 0;
 			for(int i=0;i<n;++i) {
