@@ -1,7 +1,5 @@
 package com.mzlabs.count.Minkowski;
 
-import java.util.Arrays;
-
 import com.mzlabs.count.util.BigRat;
 
 /**
@@ -25,37 +23,41 @@ public final class LagrangePolynomial {
 	 * @param x where to evaluate polynomial
 	 * @return f(x)
 	 */
-	public static final BigRat eval(int[] b, final int[] z, int s, final int[] x) {
+	public static final BigRat eval(final int[] b, final int[] z, final int s, final int[] x) {
 		final int n = z.length;
-		b = Arrays.copyOf(b,n);
+		{ // confirm pre-conditions (helps localize any errors) 
+			if(s<0) {
+				throw new IllegalArgumentException("z<0");
+			}
+			int checkSum = 0;
+			for(int i=0;i<n;++i) {
+				if(z[i]<b[i]) {
+					throw new IllegalArgumentException("b not <= z");
+				}
+				checkSum += z[i]-b[i];
+			}
+			if(checkSum>s) {
+				throw new IllegalArgumentException("sum(z-b)>s");
+			}
+		}
+		// evaluate polynomial (named by b,z,s) at x
+		int degreeRemaining = s;
 		BigRat prod = BigRat.ONE;
-		int nePos = 0;
-		while(s>0) {
-			// find first coordinate of z to exceed b
-			while((nePos<n)&&(z[nePos]<=b[nePos])) {
-				++nePos;
+		int sumDiff = 0;
+		for(int i=0;i<n;++i) {
+			int bi = b[i];
+			while(bi<z[i]) {
+				final BigRat c = BigRat.valueOf(x[i]-bi,z[i]-bi);
+				prod = prod.multiply(c);
+				bi += 1;
+				degreeRemaining -= 1;
 			}
-			if(nePos>=n) {
-				// z==b, so zap out rest of wedge by grade level
-				int sumDiff = 0;
-				for(int i=0;i<n;++i) {
-					sumDiff += x[i]-b[i];
-				}
-				// map sumDiffs of 1...n to zero and sumDiff of 0 to 1
-				for(int i=0;i<s;++i) {
-					final BigRat term = BigRat.ONE.subtract(BigRat.valueOf(sumDiff,i+1));
-					prod = prod.multiply(term);
-				}
-				s = 0;
-			} else {
-				// have a difference in coordinate, shift up until we reach it
-				while(b[nePos]<z[nePos]) {
-					final BigRat c = BigRat.valueOf(x[nePos]-b[nePos],z[nePos]-b[nePos]);
-					prod = prod.multiply(c);
-					b[nePos] += 1;
-					s -= 1;
-				}
-			}
+			sumDiff += x[i]-z[i];
+		}
+		while(degreeRemaining>0) { // z==b, so zap out rest of wedge by grade levels
+			final BigRat term = BigRat.ONE.subtract(BigRat.valueOf(sumDiff,degreeRemaining));
+			prod = prod.multiply(term);
+			--degreeRemaining;
 		}
 		return prod;
 	}
