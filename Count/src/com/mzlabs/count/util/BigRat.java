@@ -79,4 +79,12 @@ public final class BigRat implements Comparable<BigRat> {
 	public int hashCode() {
 		return num.hashCode() + 5*den.hashCode();
 	}
+	
+	public BigInteger intValue() {
+		if(BigInteger.ONE.compareTo(den)==0) {
+			return num;
+		} else {
+			return null; // wasn't and integer
+		}
+	}
 }

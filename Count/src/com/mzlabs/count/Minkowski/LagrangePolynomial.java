@@ -12,6 +12,9 @@ import com.mzlabs.count.util.BigRat;
  */
 public final class LagrangePolynomial {
 
+	private LagrangePolynomial() {
+	}
+	
 	/**
 	 * This function is a polynomial in b.length variables of degree s.
 	 * 
@@ -22,75 +25,38 @@ public final class LagrangePolynomial {
 	 * @param x where to evaluate polynomial
 	 * @return f(x)
 	 */
-	public static final BigRat eval(final int[] b, final int[] z, final int s, final int[] x) {
-		if(s<=0) {
-			return BigRat.ONE;
-		}
+	public static final BigRat eval(int[] b, final int[] z, int s, final int[] x) {
 		final int n = z.length;
-		// find first coordinate of z to exceed b
+		b = Arrays.copyOf(b,n);
+		BigRat prod = BigRat.ONE;
 		int nePos = 0;
-		while((nePos<n)&&(z[nePos]<=b[nePos])) {
-			++nePos;
-		}
-		if(nePos>=n) {
-			// z==b, so zap out rest of wedge by grade level
-			BigRat prod = BigRat.ONE;
-			int sumDiff = 0;
-			for(int i=0;i<n;++i) {
-				sumDiff += x[i]-b[i];
+		while(s>0) {
+			// find first coordinate of z to exceed b
+			while((nePos<n)&&(z[nePos]<=b[nePos])) {
+				++nePos;
 			}
-			// map sumDiffs of 1...n to zero and sumDiff of 0 to 1
-			for(int i=0;i<s;++i) {
-				final BigRat term = BigRat.ONE.subtract(BigRat.valueOf(sumDiff,i+1));
-				prod = prod.multiply(term);
-			}
-			return prod;
-		} else {
-			// have a difference in coordinate, recurse
-			final BigRat c = BigRat.valueOf(x[nePos]-b[nePos],z[nePos]-b[nePos]);
-			final int[] subB = Arrays.copyOf(b,n);
-			subB[nePos] += 1;
-			final BigRat sub = eval(subB,z,s-1,x);
-			return c.multiply(sub);
-		}
-	}
-	
-	
-	public static void main(final String[] args) {
-		// TODO: move to test
-		final int[] base = { 20, 20, 8, 12, 12 };
-		final int dim = base.length;
-		final int degree = 4;
-		final int[] b2 = new int[dim];
-		Arrays.fill(b2,100);
-		final SumStepper stepper = new SumStepper(degree);
-		final int[] d = stepper.first(base.length);
-		final int[] z = new int[base.length];
-		do {
-			for(int i=0;i<z.length;++i) {
-				z[i] = base[i] + d[i];
-			}
-			final BigRat confirmOne = LagrangePolynomial.eval(base,z,degree,z);
-			if(BigRat.ONE.compareTo(confirmOne)!=0) {
-				throw new IllegalStateException("didn't evalute to 1 at correct point");
-			}
-			final int[] d2 = stepper.first(base.length);
-			final int[] z2 = stepper.first(base.length);
-			do {
-				boolean equalsz = true;
-				for(int i=0;i<z2.length;++i) {
-					z2[i] = base[i] + d2[i];
-					if(z2[i]!=z[i]) {
-						equalsz = false;
-					}
+			if(nePos>=n) {
+				// z==b, so zap out rest of wedge by grade level
+				int sumDiff = 0;
+				for(int i=0;i<n;++i) {
+					sumDiff += x[i]-b[i];
 				}
-				if(!equalsz) {
-					final BigRat confirmZero = LagrangePolynomial.eval(base,z,degree,z2);
-					if(BigRat.ZERO.compareTo(confirmZero)!=0) {
-						throw new IllegalStateException("didn't evalute to 0 at correct point");
-					}
+				// map sumDiffs of 1...n to zero and sumDiff of 0 to 1
+				for(int i=0;i<s;++i) {
+					final BigRat term = BigRat.ONE.subtract(BigRat.valueOf(sumDiff,i+1));
+					prod = prod.multiply(term);
 				}
-			} while(stepper.next(d2));
-		} while(stepper.next(d));
+				s = 0;
+			} else {
+				// have a difference in coordinate, shift up until we reach it
+				while(b[nePos]<z[nePos]) {
+					final BigRat c = BigRat.valueOf(x[nePos]-b[nePos],z[nePos]-b[nePos]);
+					prod = prod.multiply(c);
+					b[nePos] += 1;
+					s -= 1;
+				}
+			}
+		}
+		return prod;
 	}
 }

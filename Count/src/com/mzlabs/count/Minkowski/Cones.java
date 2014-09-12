@@ -31,13 +31,13 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
  *
  */
 public final class Cones {
-	private final RowDescription[] rowDescr; // map from Ain to full row-rank system
-	private final int[][] A;  // full row-rank sub-row system
-	private final int m;
-	private final int n;
-	private final int degree;
-	private final IntVec[] checkVecs;
-	private final int ncheck;
+	public final RowDescription[] rowDescr; // map from Ain to full row-rank system
+	public final int[][] A;  // full row-rank sub-row system
+	public final int m;
+	public final int n;
+	public final int degree;
+	public final IntVec[] checkVecs;
+	public final int ncheck;
 
 
 	
@@ -332,10 +332,14 @@ public final class Cones {
 				System.out.println(IntVec.toString(x) + "\t" + fx + "\t" + px);
 			} while(stepper.next(d));
 			System.out.println("LagrangePolynomial\t" + lagrangeEval);
+			final BigInteger lcount = lagrangeEval.intValue();
 			final BigInteger count = counter.countNonNegativeSolutions(b);
 			System.out.println("Direct count\t" + count);
+			System.out.println(new Date());
+			System.out.println();
+			if(count.compareTo(lcount)!=0) {
+				throw new IllegalStateException("counts did not match");
+			}
 		}
-		System.out.println(new Date());
-		System.out.println();
 	}
 }
