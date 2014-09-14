@@ -1,18 +1,25 @@
 package com.mzlabs.count.ctab;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.mzlabs.count.util.IntVec;
 
 public final class OrderStepper {
 	public final int dim;
 	public final int bound;
 	private final BigInteger[] factorial;
+	private final Map<Integer,Iterable<int[]>> seqCache = new HashMap<Integer,Iterable<int[]>>();
 	
 	/**
 	 * 
 	 * @param dim>0
 	 * @param bound>=0
 	 */
-	public OrderStepper(final int dim, final int bound) {
+	private OrderStepper(final int dim, final int bound) {
 		this.dim = dim;
 		this.bound = bound;
 		if((dim<=0)||(bound<0)) {
@@ -24,6 +31,26 @@ public final class OrderStepper {
 		for(int i=2;i<=dim;++i) {
 			factorial[i] = factorial[i-1].multiply(BigInteger.valueOf(i));
 		}
+	}
+	
+	private static final Map<IntVec,OrderStepper> stepperCache = new HashMap<IntVec,OrderStepper>();
+	
+	/**
+	 * 
+	 * @param dim>0
+	 * @param bound>=0
+	 */
+	public static OrderStepper mkStepper(final int dim, final int bound) {
+		final IntVec key = new IntVec(new int[] {dim,bound});
+		OrderStepper cached = null;
+		synchronized (stepperCache) {
+			cached = stepperCache.get(key);
+			if(null==cached) {
+				cached = new OrderStepper(dim,bound);
+				stepperCache.put(key,cached);
+			}
+		}
+		return cached;
 	}
 	
 	/**
@@ -79,6 +106,31 @@ public final class OrderStepper {
 				return true;
 			}
 		}
+	}
+	
+	/**
+	 * TODO: buld one of these that is space and time efficient
+	 * @param targetSum>=0
+	 * @return
+	 */
+	public Iterable<int[]> stepSequencesA(final int targetSum) {
+		final Integer key = targetSum;
+		Iterable<int[]> cached = null;
+		synchronized (seqCache) {
+			cached = seqCache.get(key);
+			if(null==cached) {
+				final ArrayList<int[]> steps = new ArrayList<int[]>(2000);
+				if(null==cached) {
+					int[] x = first(targetSum);
+					do {
+						steps.add(Arrays.copyOf(x,x.length));
+					} while(advanceLEIs(x,targetSum));
+				}
+				cached = steps;
+				seqCache.put(key, cached);
+			}
+		}
+		return cached;
 	}
 	
 	/**

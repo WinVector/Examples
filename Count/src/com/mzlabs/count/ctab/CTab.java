@@ -48,7 +48,7 @@ public final class CTab {
 		public StepOrg(final int rowsCols, final int total) {
 			this.rowsCols = rowsCols;
 			this.total = total;
-			stepper = new OrderStepper(rowsCols,total);
+			stepper = OrderStepper.mkStepper(rowsCols,total);
 			n1 = rowsCols/2;
 			n2 = rowsCols - n1;
 			targetSum = n1*total;
@@ -195,7 +195,7 @@ public final class CTab {
 	 */
 	private BigInteger countSemiTables(final int nCols, final int colTotal, final int[] rowTotals) {
 		final int nRows = rowTotals.length;		
-		final OrderStepper stepper = new OrderStepper(nCols,colTotal);
+		final OrderStepper stepper =  OrderStepper.mkStepper(nCols,colTotal);
 		BigInteger sum = BigInteger.ZERO;
 		final int n1 = nRows/2;
 		final int n2 = nRows - n1;
@@ -210,11 +210,9 @@ public final class CTab {
 			rowTotals2[i] = rowTotals[n1+i];
 		}
 		final int targetSum = rowSum1;
-		final int[] x = stepper.first(targetSum);
+		final Iterable<int[]> xs = stepper.stepSequencesA(targetSum);
 		final int[] y = new int[nCols];
-		//System.out.println("dim:" + nCols + ", colTotal: " + colTotal + ", target: " + targetSum);
-		do {
-			//System.out.println("\t [" + IntVec.toString(x) + "]");
+		for(final int[] x: xs) {
 			final BigInteger xCount = countTablesSub(rowTotals1,x);
 			if(xCount.compareTo(BigInteger.ZERO)>0) {
 				for(int i=0;i<nCols;++i) {
@@ -227,7 +225,7 @@ public final class CTab {
 					sum = sum.add(nperm.multiply(xCount).multiply(yCount));
 				}
 			}
-		} while(stepper.advanceLEIs(x,targetSum));
+		}
 		return sum;
 	}
 	

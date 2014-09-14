@@ -12,7 +12,7 @@ public class TestCTab {
 	public void testStepper() {
 		for(int dim=1;dim<=4;++dim) {
 			for(int bound=0;bound<=5;++bound) {
-				assertTrue(new OrderStepper(dim,bound).checks());
+				assertTrue(OrderStepper.mkStepper(dim,bound).checks());
 			}
 		}
 	}
@@ -48,7 +48,7 @@ public class TestCTab {
 	
 	@Test
 	public void advanceBug2b() {
-		final OrderStepper stepper = new OrderStepper(2,5);
+		final OrderStepper stepper = OrderStepper.mkStepper(2,5);
 		final int[] x = stepper.first(3);
 		int n = 0;
 		do {
@@ -60,7 +60,7 @@ public class TestCTab {
 	
 	@Test
 	public void advanceBug1() {
-		final OrderStepper stepper = new OrderStepper(1,4);
+		final OrderStepper stepper = OrderStepper.mkStepper(1,4);
 		final int[] x = stepper.first(2);
 		do {
 			assertEquals(2,x[0]);
