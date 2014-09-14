@@ -115,13 +115,11 @@ public final class CTab {
 			for(final int xi: x) {
 				xsum += xi;
 			}
-			if(xsum==stepOrg.targetSum) {
-				if(stepOrg.targetSum==xsum) {
-					if(workQueue.size()<=100) {
-						ex.execute(stepOrg.stepJob(x));
-					} else {
-						stepOrg.runStep(x);
-					}
+			if(stepOrg.targetSum==xsum) {
+				if(workQueue.size()<=100) {
+					ex.execute(stepOrg.stepJob(x));
+				} else {
+					stepOrg.runStep(x);
 				}
 			}
 		} while(stepOrg.stepper.advanceLEI(x));
