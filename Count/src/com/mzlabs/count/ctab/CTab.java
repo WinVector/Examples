@@ -26,9 +26,11 @@ public final class CTab {
 		}
 	}
 	
+	private final boolean runParallel;
 	private final CPair[][] subCounters;
 	
-	public CTab(final int maxRowColSize) {
+	public CTab(final int maxRowColSize, final boolean runParallel) {
+		this.runParallel = runParallel;
 		subCounters = new CPair[maxRowColSize+1][maxRowColSize+1];
 	}
 	
@@ -106,28 +108,31 @@ public final class CTab {
 			return BigInteger.ONE;
 		}
 		// now know rowsCols>1 and total>0, split into semi-regular tables
-		final int[] x = new int[rowsCols];
 		final StepOrg stepOrg = new StepOrg(rowsCols,total);
-		final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(1000);
-		final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
+		final int[] x = stepOrg.stepper.first(stepOrg.targetSum);
+		final ArrayBlockingQueue<Runnable> workQueue;
+		final ThreadPoolExecutor ex;
+		if(runParallel) {
+			workQueue = new ArrayBlockingQueue<Runnable>(1000);
+			ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
+		} else {
+			workQueue = null;
+			ex = null;
+		}			
 		do {
-			int xsum = 0;
-			for(final int xi: x) {
-				xsum += xi;
+			if((workQueue!=null)&&(workQueue.size()<=100)) {
+				ex.execute(stepOrg.stepJob(x));
+			} else {
+				stepOrg.runStep(x);
 			}
-			if(stepOrg.targetSum==xsum) {
-				if(workQueue.size()<=100) {
-					ex.execute(stepOrg.stepJob(x));
-				} else {
-					stepOrg.runStep(x);
+		} while(stepOrg.stepper.advanceLEIs(x,stepOrg.targetSum));
+		if(null!=ex) {
+			ex.shutdown();
+			while(!ex.isTerminated()) {
+				try {
+					ex.awaitTermination(1000, TimeUnit.SECONDS);
+				} catch (InterruptedException e) {
 				}
-			}
-		} while(stepOrg.stepper.advanceLEI(x));
-		ex.shutdown();
-		while(!ex.isTerminated()) {
-			try {
-				ex.awaitTermination(1000, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
 			}
 		}
 		return stepOrg.sum;
@@ -192,40 +197,37 @@ public final class CTab {
 		final int nRows = rowTotals.length;		
 		final OrderStepper stepper = new OrderStepper(nCols,colTotal);
 		BigInteger sum = BigInteger.ZERO;
-		final int[] x = new int[nCols];
-		final int[] y = new int[nCols];
 		final int n1 = nRows/2;
 		final int n2 = nRows - n1;
-		int targetSum = 0;
+		int rowSum1 = 0;
 		final int[] rowTotals1 = new int[n1];
 		for(int i=0;i<n1;++i) {
-			targetSum += rowTotals[i];
+			rowSum1 += rowTotals[i];
 			rowTotals1[i] = rowTotals[i];
 		}	
 		final int[] rowTotals2 = new int[n2];
 		for(int i=0;i<n2;++i) {
 			rowTotals2[i] = rowTotals[n1+i];
 		}
+		final int targetSum = rowSum1;
+		final int[] x = stepper.first(targetSum);
+		final int[] y = new int[nCols];
+		//System.out.println("dim:" + nCols + ", colTotal: " + colTotal + ", target: " + targetSum);
 		do {
-			int xsum = 0;
-			for(final int xi: x) {
-				xsum += xi;
-			}
-			if(targetSum==xsum) {
-				final BigInteger xCount = countTablesSub(rowTotals1,x);
-				if(xCount.compareTo(BigInteger.ZERO)>0) {
-					for(int i=0;i<nCols;++i) {
-						y[i] = colTotal - x[i];
-					}
-					Arrays.sort(y);
-					final BigInteger yCount = countTablesSub(rowTotals2,y);
-					if(yCount.compareTo(BigInteger.ZERO)>0) {
-						final BigInteger nperm = stepper.nPerm(x);
-						sum = sum.add(nperm.multiply(xCount).multiply(yCount));
-					}
+			//System.out.println("\t [" + IntVec.toString(x) + "]");
+			final BigInteger xCount = countTablesSub(rowTotals1,x);
+			if(xCount.compareTo(BigInteger.ZERO)>0) {
+				for(int i=0;i<nCols;++i) {
+					y[i] = colTotal - x[i];
+				}
+				Arrays.sort(y);
+				final BigInteger yCount = countTablesSub(rowTotals2,y);
+				if(yCount.compareTo(BigInteger.ZERO)>0) {
+					final BigInteger nperm = stepper.nPerm(x);
+					sum = sum.add(nperm.multiply(xCount).multiply(yCount));
 				}
 			}
-		} while(stepper.advanceLEI(x));
+		} while(stepper.advanceLEIs(x,targetSum));
 		return sum;
 	}
 	
@@ -263,7 +265,7 @@ public final class CTab {
 	public static void main(final String[] args) {
 		System.out.println("n" + "\t" + "total" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes");
 		for(int n=1;n<=10;++n) {
-			final CTab ctab = new CTab(10);
+			final CTab ctab = new CTab(10,true);
 			for(int total=0;total<=(n*n-3*n+2)/2;++total) {
 				final BigInteger count = ctab.countSqTables(n,total);
 				final String cacheSizes = ctab.cacheSizesString();

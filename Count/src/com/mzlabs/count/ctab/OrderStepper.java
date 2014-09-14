@@ -2,7 +2,7 @@ package com.mzlabs.count.ctab;
 
 import java.math.BigInteger;
 
-public class OrderStepper {
+public final class OrderStepper {
 	public final int dim;
 	public final int bound;
 	private final BigInteger[] factorial;
@@ -27,6 +27,24 @@ public class OrderStepper {
 	}
 	
 	/**
+	 * 
+	 * @param targetSum if >0 check if there is valid start
+	 * @return
+	 */
+	public int[] first(final int targetSum) {
+		final int[] x = new int[dim];
+		if(targetSum>0) {
+			if(advanceLEIs(x,targetSum)) {
+				return x;
+			} else {
+				return null;
+			}
+		} else {
+			return x;
+		}
+	}
+	
+	/**
 	 * step through all x s.t. 0<=x<=b and x[i+1]>=x[i]
 	 * @param bounds
 	 * @param x start at all zeros
@@ -46,6 +64,21 @@ public class OrderStepper {
 			--i;
 		} while(i>=0);
 		return false;
+	}
+	
+	public boolean advanceLEIs(final int[] x, final int targetSum) {
+		while(true) {
+			if(!advanceLEI(x)) {
+				return false;
+			}
+			int sum = 0;
+			for(final int xi: x) {
+				sum += xi;
+			}
+			if(targetSum==sum) {
+				return true;
+			}
+		}
 	}
 	
 	/**
@@ -73,7 +106,7 @@ public class OrderStepper {
 	 * 
 	 */
 	public boolean checks() {
-		final int[] x = new int[dim];
+		final int[] x = first(-1);
 		BigInteger sum = BigInteger.ZERO;
 		do {
 			final BigInteger nperm = nPerm(x);
