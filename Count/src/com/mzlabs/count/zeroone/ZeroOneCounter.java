@@ -3,6 +3,7 @@ package com.mzlabs.count.zeroone;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.mzlabs.count.CountingProblem;
@@ -46,7 +47,15 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	private final CountingProblem prob;
 	private final int m;
 	private final ZeroOneStore zeroOneCounts;
-	private final HashMap<IntVec, BigInteger> cache = new HashMap<IntVec,BigInteger>(10000);
+	private final int cacheSize = 200000000;
+	private final HashMap<IntVec, BigInteger> cache = new LinkedHashMap<IntVec,BigInteger>(10000) {
+		private static final long serialVersionUID = 1L;
+
+		@Override 
+		 protected boolean removeEldestEntry (Map.Entry<IntVec,BigInteger> eldest) {
+	         return size()>cacheSize;
+	     }
+	};
 
 	
 	/**

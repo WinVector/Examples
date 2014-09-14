@@ -2,6 +2,7 @@ package com.mzlabs.count.divideandconquer;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -22,7 +23,15 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	private final int[] entangledRows;
 	private final boolean runParallel;
 	private final boolean zeroOne;
-	private final Map<IntVec,BigInteger> cache = new HashMap<IntVec,BigInteger>(1000); // synchronize access
+	private final int cacheSize = 200000000;
+	private final Map<IntVec,BigInteger> cache = new LinkedHashMap<IntVec,BigInteger>(1000) { // synchronize access
+		private static final long serialVersionUID = 1L;
+
+		@Override 
+		 protected boolean removeEldestEntry (Map.Entry<IntVec,BigInteger> eldest) {
+	         return size()>cacheSize;
+	     }
+	};
 	
 	public SplitNode(final int[][] A, final boolean[][] usesRow, final boolean runParallel,
 			final NonNegativeIntegralCounter leftSubSystem,
