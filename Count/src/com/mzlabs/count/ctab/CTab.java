@@ -3,8 +3,6 @@ package com.mzlabs.count.ctab;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +26,12 @@ public final class CTab {
 		}
 	}
 	
-	private final Map<IntVec,CPair> counters = new  HashMap<IntVec,CPair>();
+	private final CPair[][] subCounters;
+	
+	public CTab(final int maxRowColSize) {
+		subCounters = new CPair[maxRowColSize+1][maxRowColSize+1];
+	}
+	
 
 	
 	private final class StepOrg {
@@ -38,7 +41,7 @@ public final class CTab {
 		public final int n1;
 		public final int n2;
 		public final int targetSum;
-		public BigInteger sum = BigInteger.ZERO; // synchronized on this
+		public BigInteger sum = BigInteger.ZERO; // synchronized on containing class
 		
 		public StepOrg(final int rowsCols, final int total) {
 			this.rowsCols = rowsCols;
@@ -133,10 +136,9 @@ public final class CTab {
 	}
 	
 	private CPair getSubCounter(final int nRows, final int nCols) {
-		final IntVec counterKey = new IntVec(new int[] { nRows, nCols});
 		CPair counter = null;
-		synchronized (counters) { // essentially serialized here
-			counter = counters.get(counterKey);
+		synchronized (subCounters) { // essentially serialized here
+			counter = subCounters[nRows][nCols];
 			if(null==counter) {
 				final ContingencyTableProblem cp = new ContingencyTableProblem(nRows,nCols);
 				final NonNegativeIntegralCounter cnt;
@@ -146,10 +148,39 @@ public final class CTab {
 					cnt = new DivideAndConquerCounter(cp,false,false,true);
 				}
 				counter = new CPair(cp,cnt);
-				counters.put(counterKey,counter);
+				subCounters[nRows][nCols] = counter;
 			}
 		}
 		return counter;
+	}
+	
+	public String cacheSizesString() {
+		synchronized (subCounters) {
+			final StringBuilder b = new StringBuilder();
+			b.append("{");
+			for(int i=0;i<subCounters.length;++i) {
+				for(int j=0;j<subCounters[i].length;++j) {
+					final CPair counter = subCounters[i][j];
+					if(null!=counter) {
+						b.append(" [" + i + "," + j + "]:" + counter.counter.cacheSize());		
+					}
+				}
+			}
+			b.append(" }");
+			return b.toString();
+		}
+	}
+	
+	public void clearCaches() {
+		synchronized (subCounters) { 
+			for(final CPair[] row: subCounters) {
+				for(final CPair cij: row) {
+					if(null!=cij) {
+						cij.counter.clearCache();
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -183,13 +214,13 @@ public final class CTab {
 				xsum += xi;
 			}
 			if(targetSum==xsum) {
-				final BigInteger xCount = countTables(rowTotals1,x);
+				final BigInteger xCount = countTablesSub(rowTotals1,x);
 				if(xCount.compareTo(BigInteger.ZERO)>0) {
 					for(int i=0;i<nCols;++i) {
 						y[i] = colTotal - x[i];
 					}
 					Arrays.sort(y);
-					final BigInteger yCount = countTables(rowTotals2,y);
+					final BigInteger yCount = countTablesSub(rowTotals2,y);
 					if(yCount.compareTo(BigInteger.ZERO)>0) {
 						final BigInteger nperm = stepper.nPerm(x);
 						sum = sum.add(nperm.multiply(xCount).multiply(yCount));
@@ -200,26 +231,46 @@ public final class CTab {
 		return sum;
 	}
 	
-	private BigInteger countTables(final int[] rowTotals, final int[] colTotals) {
+	private BigInteger countTablesSub(final int[] rowTotalsIn, final int[] colTotalsIn) {
+		// use as many symmetries as we can, right here
+		int[] rowTotals = rowTotalsIn;
+		int[] colTotals = colTotalsIn;
+		Arrays.sort(rowTotals);
+		Arrays.sort(colTotals);
+		boolean swap = false;
+		if(rowTotals.length!=colTotals.length) {
+			swap = rowTotals.length>colTotals.length; 
+		} else {
+			swap = IntVec.compare(rowTotals, colTotals)>0; 
+		}
+		if(swap) {
+			final int[] tmp = rowTotals;
+			rowTotals = colTotals;
+			colTotals = tmp;
+		}
+		// delegate problem
 		final CPair counter = getSubCounter(rowTotals.length,colTotals.length);
 		final int[] b = counter.prob.encodeB(rowTotals,colTotals);
 		return counter.counter.countNonNegativeSolutions(b);
 	}
 
 	public BigInteger debugConfirmSqTables(final int rowsCols, final int total) {
-		final CPair counter = getSubCounter(rowsCols,rowsCols);
-		final int[] b = new int[2*rowsCols];
-		Arrays.fill(b,total);
-		return counter.counter.countNonNegativeSolutions(b);
+		final int[] rows = new int[rowsCols];
+		final int[] cols = new int[rowsCols];
+		Arrays.fill(rows,total);
+		Arrays.fill(cols,total);
+		return countTablesSub(rows,cols);
 	}
 	
 	public static void main(final String[] args) {
-		final CTab ctab = new CTab();
-		System.out.println("n" + "\t" + "total" + "\t" + "count" + "\t" + "date");
+		System.out.println("n" + "\t" + "total" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes");
 		for(int n=1;n<=10;++n) {
+			final CTab ctab = new CTab(10);
 			for(int total=0;total<=(n*n-3*n+2)/2;++total) {
-				final BigInteger count = ctab.countSqTables(n,total); 
-				System.out.println("" + n + "\t" + total + "\t" + count + "\t" + new Date());
+				final BigInteger count = ctab.countSqTables(n,total);
+				final String cacheSizes = ctab.cacheSizesString();
+				ctab.clearCaches();
+				System.out.println("" + n + "\t" + total + "\t" + count + "\t" + new Date() + "\t" + cacheSizes);
 			}
 		}
 	}

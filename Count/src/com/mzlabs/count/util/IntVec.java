@@ -4,21 +4,12 @@ import java.util.Arrays;
 
 
 public final class IntVec implements Comparable<IntVec> {
-	private final int hashCode;
+	public final int hashCode;
 	private final int[] b;
 	
 	public IntVec(final int[] b) {
-		hashCode = Arrays.hashCode(b);
 		this.b = Arrays.copyOf(b,b.length);
-	}
-
-	public boolean isZero() {
-		for(final int bi: b) {
-			if(bi>0) {
-				return false;
-			}
-		}
-		return true;
+		hashCode = Arrays.hashCode(b);
 	}
 	
 	public final int dim() {

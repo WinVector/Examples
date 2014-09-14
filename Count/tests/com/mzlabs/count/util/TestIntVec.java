@@ -12,17 +12,7 @@ import org.junit.Test;
 import com.mzlabs.count.util.IntVec;
 
 public class TestIntVec {
-	@Test
-	public void testZero() {
-		final IntVec iv0 = new IntVec(new int[] {0,0,0});
-		assertTrue(iv0.isZero());
-	}
-	
-	@Test
-	public void testNonZero() {
-		final IntVec ivnz = new IntVec(new int[] {0,1,0});
-		assertFalse(ivnz.isZero());
-	}
+
 	
 	@Test
 	public void testContents() {

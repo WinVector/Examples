@@ -304,4 +304,16 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		}
 	}
 
+
+	@Override
+	public int cacheSize() {
+		return underlying.cacheSize();
+	}
+
+
+	@Override
+	public void clearCache() {
+		underlying.clearCache();
+	}
+
 }

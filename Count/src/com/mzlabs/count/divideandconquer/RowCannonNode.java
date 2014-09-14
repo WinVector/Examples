@@ -80,4 +80,14 @@ final class RowCannonNode implements NonNegativeIntegralCounter {
 	public String toString() {
 		return "{" + m + "\\" + rowRank + "," + underlying + "}";
 	}
+
+	@Override
+	public int cacheSize() {
+		return underlying.cacheSize();
+	}
+
+	@Override
+	public void clearCache() {
+		underlying.clearCache();
+	}
 }

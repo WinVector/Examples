@@ -10,7 +10,23 @@ import com.mzlabs.count.util.Permutation;
 
 public final class ZeroOneStore {
 	private final CountingProblem problem;
-	private final Map<IntVec,Map<IntVec,BigInteger>> modulusToRhsToZOCountThin;
+	
+	public static final class IBPair {
+		public final IntVec key;
+		public final BigInteger value;
+		
+		public IBPair(final IntVec key, final BigInteger value) {
+			this.key = key;
+			this.value = value;
+		}
+		
+		@Override
+		public String toString() {
+			return key.toString() + ":" + value;
+		}
+	}
+	
+	private final Map<IntVec,IBPair[]> modulusToRhsToZOCountThin;
 	
 	private static IntVec mod2Vec(final IntVec x) {
 		final int n = x.dim();
@@ -46,7 +62,7 @@ public final class ZeroOneStore {
 	 * 		  b such that mod2Vec(b) is already in normal form.
 	 * @return Map from (b mod 2) to b to number of solutions to A z = b (all unsolvable combination omitted)
 	 */
-	private static Map<IntVec,Map<IntVec,BigInteger>> organizeZeroOneStructures(final CountingProblem problem,
+	private static Map<IntVec,IBPair[]> organizeZeroOneStructures(final CountingProblem problem,
 			final Map<IntVec,BigInteger> counts) {
 		final Map<IntVec,Map<IntVec,BigInteger>> modulusToRhsToZOCount = new HashMap<IntVec,Map<IntVec,BigInteger>>(1000);
 		for(final Map.Entry<IntVec,BigInteger> me: counts.entrySet()) {
@@ -69,7 +85,19 @@ public final class ZeroOneStore {
 				}
 			}
 		}
-		return modulusToRhsToZOCount;
+		final Map<IntVec,IBPair[]> r = new HashMap<IntVec,IBPair[]>(2*modulusToRhsToZOCount.size()+100);
+		for(final Map.Entry<IntVec,Map<IntVec,BigInteger>> me: modulusToRhsToZOCount.entrySet()) {
+			final IntVec key = me.getKey();
+			final Map<IntVec,BigInteger> value = me.getValue();
+			final IBPair[] nv = new IBPair[value.size()];
+			int i = 0;
+			for(final Map.Entry<IntVec,BigInteger> ne: value.entrySet()) {
+				nv[i] = new IBPair(ne.getKey(),ne.getValue());
+				++i;
+			}
+			r.put(key,nv);
+		}
+		return r;
 	}
 	
 	public ZeroOneStore(final CountingProblem problem, final Map<IntVec,BigInteger> counts) {
@@ -77,20 +105,22 @@ public final class ZeroOneStore {
 		modulusToRhsToZOCountThin = organizeZeroOneStructures(problem,counts);
 	}
 
-	public Map<IntVec, BigInteger> lookup(final IntVec b) {
+	public IBPair[] lookup(final IntVec b) {
 		final IntVec groupVec = mod2Vec(b);
 		final int[] groupVecA = groupVec.asVec();
 		final Permutation perm = problem.toNormalForm(groupVecA);
 		final IntVec sortedGroupVec = new IntVec(perm.apply(groupVecA));
-		final Map<IntVec, BigInteger> mpRow = modulusToRhsToZOCountThin.get(sortedGroupVec);
-		final Map<IntVec,BigInteger> mpAnswer;
+		final IBPair[] mpRow = modulusToRhsToZOCountThin.get(sortedGroupVec);
+		final IBPair[] mpAnswer;
 		if(null!=mpRow) {
-			mpAnswer = new HashMap<IntVec,BigInteger>(3*mpRow.size() + 100);
-			for(final Map.Entry<IntVec,BigInteger> me: mpRow.entrySet()) {
-				final IntVec origKey = me.getKey();
-				final BigInteger count = me.getValue();
+			final int n = mpRow.length;
+			mpAnswer = new IBPair[n];
+			for(int i=0;i<n;++i) {
+				final IBPair ri = mpRow[i];
+				final IntVec origKey = ri.key;
+				final BigInteger count = ri.value;
 				final IntVec newKey = new IntVec(perm.applyInv(origKey.asVec()));
-				mpAnswer.put(newKey,count);
+				mpAnswer[i] = new IBPair(newKey,count);
 			}
 		} else {
 			mpAnswer = null;

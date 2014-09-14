@@ -17,4 +17,7 @@ public interface NonNegativeIntegralCounter {
 	 * @return true if obviously empty (always safe to return false)
 	 */
 	public boolean obviouslyEmpty(final int[] b);
+	
+	public void clearCache();
+	public int cacheSize();
 }

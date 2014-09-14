@@ -1,15 +1,13 @@
 package com.mzlabs.count.divideandconquer;
 
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.util.SolnCache;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 final class SplitNode implements NonNegativeIntegralCounter {
@@ -23,15 +21,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	private final int[] entangledRows;
 	private final boolean runParallel;
 	private final boolean zeroOne;
-	private final int cacheSize = 200000000;
-	private final Map<IntVec,BigInteger> cache = new LinkedHashMap<IntVec,BigInteger>(1000) { // synchronize access
-		private static final long serialVersionUID = 1L;
-
-		@Override 
-		 protected boolean removeEldestEntry (Map.Entry<IntVec,BigInteger> eldest) {
-	         return size()>cacheSize;
-	     }
-	};
+	private final SolnCache cache = new SolnCache();
 	
 	public SplitNode(final int[][] A, final boolean[][] usesRow, final boolean runParallel,
 			final NonNegativeIntegralCounter leftSubSystem,
@@ -72,7 +62,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	private final class StepOrg {
 		public final int[] b;
 		public final IntVec bdE;
-		public BigInteger accumulator = BigInteger.ZERO; // use b to sync access to accumulator
+		public BigInteger accumulator = BigInteger.ZERO; // use this to sync access to accumulator
 		
 		public StepOrg(final int[] b, final IntVec bdE) {
 			this.b = b;
@@ -106,7 +96,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 						final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
 						if(sub2.compareTo(BigInteger.ZERO)>0) {
 							final BigInteger term = sub1.multiply(sub2);
-							synchronized(b) {
+							synchronized(this) {
 								accumulator = accumulator.add(term);
 							}
 						}
@@ -137,7 +127,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] b) {
 		final IntVec key = new IntVec(b);
-		synchronized(cache) {
+		{
 			final BigInteger count = cache.get(key);
 			if(null!=count) {
 				return count;
@@ -184,14 +174,24 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				throw new IllegalStateException("got wrong answer");
 			}
 		}
-		synchronized(cache) {
-			cache.put(key,count);
-		}
+		cache.put(key,count);
 		return count;
 	}
 	
 	@Override
 	public String toString() {
 		return "split(" + A.length + "\\" + nEntangled + "," + n  + ";" + leftSubSystem + "," + rightSubSystem + ")";
+	}
+	
+	@Override
+	public int cacheSize() {
+		return leftSubSystem.cacheSize() + rightSubSystem.cacheSize() + cache.size();
+	}
+
+	@Override
+	public void clearCache() {
+		leftSubSystem.clearCache();
+		rightSubSystem.clearCache();
+		cache.clear();
 	}
 }

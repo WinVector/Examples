@@ -39,8 +39,8 @@ public class TestPerm {
 	@Test
 	public void testComp2() {
 		//  Herstein circle notation (T o P)(x) = P(T(x)) (p. 13, Topics in Algebra 2nd edition)
-		final Permutation T = new Permutation(new int[] {2, 0, 1, 3, 4});
-		final Permutation P = new Permutation(new int[] {0, 1, 2, 3, 4});
+		final Permutation T = Permutation.newPerm(new int[] {2, 0, 1, 3, 4});
+		final Permutation P = Permutation.newPerm(new int[] {0, 1, 2, 3, 4});
 		final int[] x = {1,0,0,0,1};
 		final Permutation comp = T.compose(P);
 		final int[] map = comp.apply(x);
@@ -91,8 +91,8 @@ public class TestPerm {
 	@Test
 	public void testComp() {
 		//  Herstein circle notation (T o P)(x) = P(T(x)) (p. 13, Topics in Algebra 2nd edition)
-		final Permutation T = new Permutation(new int[] {1, 0, 2});
-		final Permutation P = new Permutation(new int[] {0, 2, 1});
+		final Permutation T = Permutation.newPerm(new int[] {1, 0, 2});
+		final Permutation P = Permutation.newPerm(new int[] {0, 2, 1});
 		final int[] x = { 0, 1, 2};
 		final Permutation comp = T.compose(P);
 		final Permutation other = P.compose(T);

@@ -18,8 +18,8 @@ public class TestCTab {
 	
 	@Test
 	public void testCounter() {
-		final CTab ctab = new CTab();
 		for(int rowsCols=1;rowsCols<=4;++rowsCols) {
+			final CTab ctab = new CTab(rowsCols);
 			for(int total=0;total<=10;++total) {
 				final BigInteger count = ctab.countSqTables(rowsCols,total); 
 				final BigInteger check = ctab.debugConfirmSqTables(rowsCols, total);

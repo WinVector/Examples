@@ -7,8 +7,12 @@ import java.util.TreeSet;
 public final class Permutation implements Comparable<Permutation> {
 	private final int[] perm; // x[i] -> x[perm[i]]
 	
-	public Permutation(final int[] perm) {
+	private Permutation(final int[] perm) {
 		this.perm = perm;
+	}
+	
+	public static Permutation newPerm(final int[] x) {
+		return new Permutation(Arrays.copyOf(x,x.length));
 	}
 	
 	public Permutation(final int n) {

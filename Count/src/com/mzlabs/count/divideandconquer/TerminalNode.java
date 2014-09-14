@@ -136,4 +136,13 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 	public String toString() {
 		return "terminal[" + A.length + "," + A[0].length + "]";
 	}
+
+	@Override
+	public int cacheSize() {
+		return 0;
+	}
+
+	@Override
+	public void clearCache() {
+	}
 }
