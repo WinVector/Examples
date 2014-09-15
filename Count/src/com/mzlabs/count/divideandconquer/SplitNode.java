@@ -1,14 +1,16 @@
 package com.mzlabs.count.divideandconquer;
 
 import java.math.BigInteger;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
+import com.mzlabs.count.op.IntFunc;
+import com.mzlabs.count.op.Reducer;
+import com.mzlabs.count.op.Sequencer;
+import com.mzlabs.count.op.impl.SimpleSum;
+import com.mzlabs.count.op.impl.ThreadedSum;
+import com.mzlabs.count.op.iter.RangeIter;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.SolnCache;
-import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 final class SplitNode implements NonNegativeIntegralCounter {
 	private final NonNegativeIntegralCounter leftSubSystem;
@@ -59,79 +61,13 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		return false;
 	}
 	
-	private final class StepOrg {
-		public final int[] b;
-		public final IntVec bdE;
-		public BigInteger accumulator = BigInteger.ZERO; // use this to sync access to accumulator
-		
-		public StepOrg(final int[] b, final IntVec bdE) {
-			this.b = b;
-			this.bdE = bdE;
-		}
-		
-		public void runStep(final int lastVal) {
-			final int[] b1 = new int[m];
-			final int[] b2 = new int[m];
-			for(int i=0;i<m;++i) {
-				if(usesRow[0][i]) {
-					b1[i] = b[i];
-				}
-				if(usesRow[1][i]) {
-					b2[i] = b[i];
-				}
-			}
-			final int[] counter = new int[nEntangled];
-			counter[nEntangled-1] = lastVal;
-			do {
-				for(int ii=0;ii<nEntangled;++ii) {
-					final int i = entangledRows[ii];
-					b1[i] = counter[ii];
-					b2[i] = b[i] - counter[ii];
-				}
-				// b1 + b2 == b
-				// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
-				if((!leftSubSystem.obviouslyEmpty(b1))&&(!rightSubSystem.obviouslyEmpty(b2))) {
-					final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
-					if(sub1.compareTo(BigInteger.ZERO)>0) {
-						final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
-						if(sub2.compareTo(BigInteger.ZERO)>0) {
-							final BigInteger term = sub1.multiply(sub2);
-							synchronized(this) {
-								accumulator = accumulator.add(term);
-							}
-						}
-					}
-				}
-			} while(bdE.advanceLE(counter,nEntangled-1));
-		}
-		
-		public final class StepJob implements Runnable {
-			private final int lastVal;
-
-			private StepJob(final int lastVal) {
-				this.lastVal = lastVal;
-			}
-
-			@Override
-			public final void run() {
-				runStep(lastVal);
-			}
-
-		}
-		
-		public StepJob stepJob(final int lastVal) {
-			return new StepJob(lastVal);
-		}
-	}
 	
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] b) {
 		final IntVec key = new IntVec(b);
-		{
-			final BigInteger count = cache.get(key);
-			if(null!=count) {
-				return count;
-			}
+		final BigInteger count = cache.get(key);
+		if(null!=count) {
+			return count;
 		}
 		final int[] bound = new int[nEntangled];
 		for(int ii=0;ii<nEntangled;++ii) {
@@ -146,36 +82,50 @@ final class SplitNode implements NonNegativeIntegralCounter {
 			}
 		}
 		final IntVec bdE = new IntVec(bound);
-		final StepOrg stepOrg = new StepOrg(b,bdE);
-		if(runParallel) {
-			final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(bdE.get(nEntangled-1)+2);
-			final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
-			for(int i=0;i<bdE.get(nEntangled-1);++i) {
-				final StepOrg.StepJob job = stepOrg.stepJob(i);
-				ex.execute(job);
-			}
-			stepOrg.runStep(bdE.get(nEntangled-1));
-			ex.shutdown();
-			while(!ex.isTerminated()) {
-				try {
-					ex.awaitTermination(1000, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
+		final IntFunc f = new IntFunc() {
+			@Override
+			public BigInteger f(final int[] x) {
+				final int lastVal = x[0];
+				BigInteger accumulator = BigInteger.ZERO;
+				final int[] b1 = new int[m];
+				final int[] b2 = new int[m];
+				for(int i=0;i<m;++i) {
+					if(usesRow[0][i]) {
+						b1[i] = b[i];
+					}
+					if(usesRow[1][i]) {
+						b2[i] = b[i];
+					}
 				}
+				final int[] counter = new int[nEntangled];
+				counter[nEntangled-1] = lastVal;
+				do {
+					for(int ii=0;ii<nEntangled;++ii) {
+						final int i = entangledRows[ii];
+						b1[i] = counter[ii];
+						b2[i] = b[i] - counter[ii];
+					}
+					// b1 + b2 == b
+					// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
+					if((!leftSubSystem.obviouslyEmpty(b1))&&(!rightSubSystem.obviouslyEmpty(b2))) {
+						final BigInteger sub1 = leftSubSystem.countNonNegativeSolutions(b1);
+						if(sub1.compareTo(BigInteger.ZERO)>0) {
+							final BigInteger sub2 = rightSubSystem.countNonNegativeSolutions(b2);
+							if(sub2.compareTo(BigInteger.ZERO)>0) {
+								final BigInteger term = sub1.multiply(sub2);
+								accumulator = accumulator.add(term);
+							}
+						}
+					}
+				} while(bdE.advanceLE(counter,nEntangled-1));
+				return accumulator;
 			}
-		} else {
-			for(int i=0;i<=bdE.get(nEntangled-1);++i) {
-				stepOrg.runStep(i);
-			}
-		}
-		final BigInteger count = stepOrg.accumulator;
-		if(DivideAndConquerCounter.debug) {
-			final BigInteger check = ZeroOneCounter.bruteForceSolnDebug(A,b,zeroOne);
-			if(check.compareTo(count)!=0) {
-				throw new IllegalStateException("got wrong answer");
-			}
-		}
-		cache.put(key,count);
-		return count;
+		};
+		final Sequencer seq = new RangeIter(0,bdE.get(nEntangled-1)+1);
+		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
+		final BigInteger sum = summer.reduce(f,seq);
+		cache.put(key,sum);
+		return sum;
 	}
 	
 	@Override
