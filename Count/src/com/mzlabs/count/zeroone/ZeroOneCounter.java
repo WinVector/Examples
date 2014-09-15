@@ -8,6 +8,8 @@ import java.util.Map;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
+import com.mzlabs.count.op.iter.SeqLE;
+import com.mzlabs.count.op.iter.SeqLT;
 import com.mzlabs.count.util.IntLinOp;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.Permutation;
@@ -115,7 +117,8 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		final int n = problem.A[0].length;
 		// build all possible zero/one sub-problems
 		final IntLinOp Aop = new IntLinOp(problem.A);
-		final int[] z = new int[n];
+		final SeqLT seq = new SeqLT(n,2);
+		final int[] z = seq.first();
 		final int[] r = new int[m];
 		do {
 			Aop.mult(z,r);
@@ -129,7 +132,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 				}
 				zeroOneCounts.put(rvec,nzone);
 			}
-		} while(IntVec.advanceLT(2,z));
+		} while(seq.advance(z));
 		return zeroOneCounts;
 	}
 	
@@ -283,8 +286,9 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 			}
 		}
 		final IntVec boundsV = new IntVec(bounds);
+		final SeqLE seq = new SeqLE(boundsV);
 		BigInteger count = BigInteger.ZERO;
-		final int[] x = new int[n];
+		final int[] x = seq.first();
 		final int[] r = new int[m];
 		do {
 			IntLinOp.mult(A,x,r);
@@ -298,7 +302,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 			if(goodR) {
 				count = count.add(BigInteger.ONE);
 			}
-		} while(boundsV.advanceLE(x));
+		} while(seq.advance(x));
 		return count;
 	}
 	

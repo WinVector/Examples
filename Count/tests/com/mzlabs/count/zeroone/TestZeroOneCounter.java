@@ -9,9 +9,8 @@ import org.junit.Test;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
+import com.mzlabs.count.op.iter.SeqLT;
 import com.mzlabs.count.util.IntLinOp;
-import com.mzlabs.count.util.IntVec;
-import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 public class TestZeroOneCounter {
 
@@ -21,7 +20,8 @@ public class TestZeroOneCounter {
 		final CountingProblem prob = new ContingencyTableProblem(3,2);
 		for(final boolean useSDQZO: new boolean[] {true, false}) {
 			final ZeroOneCounter cm = new ZeroOneCounter(prob,useSDQZO);
-			final int[] b = new int[prob.A.length];
+			final SeqLT seq = new SeqLT(prob.A.length,5);
+			final int[] b = seq.first();
 			BigInteger nRun = BigInteger.ZERO;
 			BigInteger nError = BigInteger.ZERO;
 			do {
@@ -31,7 +31,7 @@ public class TestZeroOneCounter {
 					nError = nError.add(BigInteger.ONE);
 				}
 				nRun = nRun.add(BigInteger.ONE);
-			} while(IntVec.advanceLT(5,b));
+			} while(seq.advance(b));
 			assertTrue(nError.compareTo(BigInteger.ZERO)==0);
 		}
 	}

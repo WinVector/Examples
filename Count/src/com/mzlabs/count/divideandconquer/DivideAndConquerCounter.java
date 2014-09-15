@@ -15,6 +15,7 @@ import com.mzlabs.count.op.Sequencer;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.RangeIter;
+import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.util.IntMat;
 import com.mzlabs.count.util.IntMat.RowDescription;
 import com.mzlabs.count.util.IntVec;
@@ -200,6 +201,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 		}
 		final IntVec boundsVec = new IntVec(bounds);
+		final Sequencer seq = new SeqLE(boundsVec,boundsVec.dim(),boundsVec.dim()-1);
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(problem,false,true,false);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>(); // synchronize access to this
 		final IntFunc f = new IntFunc() {
@@ -219,14 +221,14 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 							}
 						}
 					}
-				} while(boundsVec.advanceLE(b,m-1));
+				} while(seq.advance(b));
 				return BigInteger.ZERO;
 			}
 		};
-		final Sequencer seq = new RangeIter(0,bounds[m-1]+1);
+		final Sequencer seqL = new RangeIter(0,bounds[m-1]+1);
 		final boolean runParallel = true;
 		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
-		summer.reduce(f,seq);
+		summer.reduce(f,seqL);
 		return solnCounts;
 	}
 	

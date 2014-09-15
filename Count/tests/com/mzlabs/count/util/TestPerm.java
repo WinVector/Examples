@@ -7,19 +7,21 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import com.mzlabs.count.ContingencyTableProblem;
+import com.mzlabs.count.op.iter.SeqLT;
 
 public class TestPerm {
 	
 	@Test 
 	public void testSort() {
-		final int[] values = new int[3];
+		final SeqLT seq = new SeqLT(3,2);
+		final int[] values = seq.first();
 		do {
 			final Permutation p = Permutation.sortingPerm(values, 0, values.length,values.length);
 			final int[] sorted = p.apply(values);
 			for(int i=1;i<values.length;++i) {
 				assertTrue(sorted[i-1]<=sorted[i]);
 			}
-		} while(IntVec.advanceLT(2,values));
+		} while(seq.advance(values));
 	}
 	
 	@Test

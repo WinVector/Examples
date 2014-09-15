@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Random;
 
+import com.mzlabs.count.op.iter.SeqLT;
 import com.mzlabs.count.util.IntLinOp;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
@@ -15,7 +16,8 @@ public final class CountExample {
 		System.out.println();
 		final CountingProblem prob = new ContingencyTableProblem(3,2);
 		final ZeroOneCounter cm = new ZeroOneCounter(prob,false);
-		final int[] b = new int[prob.A.length];
+		final SeqLT seq = new SeqLT(prob.A.length,7);
+		final int[] b = seq.first();
 		BigInteger nRun = BigInteger.ZERO;
 		BigInteger nError = BigInteger.ZERO;
 		do {
@@ -26,7 +28,7 @@ public final class CountExample {
 				nError = nError.add(BigInteger.ONE);
 			}
 			nRun = nRun.add(BigInteger.ONE);
-		} while(IntVec.advanceLT(7,b));
+		} while(seq.advance(b));
 		System.out.println(nError + " errors out of " + nRun + " examples");
 		System.out.println();
 		return nError.compareTo(BigInteger.ZERO)==0;

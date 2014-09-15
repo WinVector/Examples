@@ -9,7 +9,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.op.iter.SeqLE;
+import com.mzlabs.count.op.iter.SeqLT;
 
 public class TestIntVec {
 
@@ -42,14 +43,15 @@ public class TestIntVec {
 	
 	@Test
 	public void testAdvance() {
-		final int[] x = new int[3];
+		final SeqLT seq = new SeqLT(3,4);
+		final int[] x = seq.first();
 		int n = 0;
 		do {
 			for(int i=0;i<x.length;++i) {
 				assertTrue((x[i]>=0)&&(x[i]<4));
 			}
 			++n;
-		} while(IntVec.advanceLT(4,x));
+		} while(seq.advance(x));
 		assertEquals(64,n);
 	}
 	
@@ -60,6 +62,7 @@ public class TestIntVec {
 			b[i+1] = i+1;
 		}
 		final IntVec bv = new IntVec(b);
+		final SeqLE seq = new SeqLE(bv);
 		final int[] x = new int[5];
 		int n = 0;
 		do {
@@ -67,7 +70,7 @@ public class TestIntVec {
 				assertTrue((x[i]>=0)&&(x[i]<=bv.get(i)));
 			}
 			++n;
-		} while(bv.advanceLE(x));
+		} while(seq.advance(x));
 		assertEquals(24,n);
 	}
 }

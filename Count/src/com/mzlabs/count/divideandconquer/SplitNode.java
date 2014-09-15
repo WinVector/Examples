@@ -9,6 +9,7 @@ import com.mzlabs.count.op.Sequencer;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.RangeIter;
+import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.SolnCache;
 
@@ -82,6 +83,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 			}
 		}
 		final IntVec bdE = new IntVec(bound);
+		final Sequencer seq = new SeqLE(bdE,bdE.dim(),bdE.dim()-1);
 		final IntFunc f = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {
@@ -117,13 +119,13 @@ final class SplitNode implements NonNegativeIntegralCounter {
 							}
 						}
 					}
-				} while(bdE.advanceLE(counter,nEntangled-1));
+				} while(seq.advance(counter));
 				return accumulator;
 			}
 		};
-		final Sequencer seq = new RangeIter(0,bdE.get(nEntangled-1)+1);
+		final Sequencer seqL = new RangeIter(0,bdE.get(nEntangled-1)+1);
 		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
-		final BigInteger sum = summer.reduce(f,seq);
+		final BigInteger sum = summer.reduce(f,seqL);
 		cache.put(key,sum);
 		return sum;
 	}
