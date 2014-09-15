@@ -3,13 +3,15 @@ package com.mzlabs.count.ctab;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
+import com.mzlabs.count.op.IntFunc;
+import com.mzlabs.count.op.Reducer;
+import com.mzlabs.count.op.impl.SimpleSum;
+import com.mzlabs.count.op.impl.ThreadedSum;
+import com.mzlabs.count.op.iter.OrderStepper;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
@@ -34,62 +36,6 @@ public final class CTab {
 		subCounters = new CPair[maxRowColSize+1][maxRowColSize+1];
 	}
 	
-
-	
-	private final class StepOrg {
-		public final int rowsCols;
-		public final int total;
-		public final OrderStepper stepper;
-		public final int n1;
-		public final int n2;
-		public final int targetSum;
-		public BigInteger sum = BigInteger.ZERO; // synchronized on containing class
-		
-		public StepOrg(final int rowsCols, final int total) {
-			this.rowsCols = rowsCols;
-			this.total = total;
-			stepper = OrderStepper.mkStepper(rowsCols,total);
-			n1 = rowsCols/2;
-			n2 = rowsCols - n1;
-			targetSum = n1*total;
-		}
-		
-		public void runStep(final int[] x) {
-			final BigInteger xCount = countSemiTables(n1,total,x);
-			if(xCount.compareTo(BigInteger.ZERO)>0) {
-				final int[] y = new int[rowsCols];
-				for(int i=0;i<rowsCols;++i) {
-					y[i] = total - x[i];
-				}
-				Arrays.sort(y);
-				final BigInteger yCount = countSemiTables(n2,total,y);
-				if(yCount.compareTo(BigInteger.ZERO)>0) {
-					final BigInteger nperm = stepper.nPerm(x);
-					final BigInteger term = nperm.multiply(xCount).multiply(yCount);
-					synchronized (this) {
-						sum = sum.add(term);
-					}
-				}
-			}
-		}
-		
-		public final class StepJob implements Runnable {
-			private final int[] x;
-
-			private StepJob(final int[] x) {
-				this.x = Arrays.copyOf(x,x.length);
-			}
-
-			@Override
-			public final void run() {
-				runStep(x);
-			}
-		}
-		
-		public StepJob stepJob(final int[] x) {
-			return new StepJob(x);
-		}
-	}
 	
 	/**
 	 * count number of rowsCols by rowsCols contingency table fill-ins with all rows/columns summing to total
@@ -108,34 +54,35 @@ public final class CTab {
 			return BigInteger.ONE;
 		}
 		// now know rowsCols>1 and total>0, split into semi-regular tables
-		final StepOrg stepOrg = new StepOrg(rowsCols,total);
-		final int[] x = stepOrg.stepper.first(stepOrg.targetSum);
-		final ArrayBlockingQueue<Runnable> workQueue;
-		final ThreadPoolExecutor ex;
-		if(runParallel) {
-			workQueue = new ArrayBlockingQueue<Runnable>(1000);
-			ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
-		} else {
-			workQueue = null;
-			ex = null;
-		}			
-		do {
-			if((workQueue!=null)&&(workQueue.size()<=100)) {
-				ex.execute(stepOrg.stepJob(x));
-			} else {
-				stepOrg.runStep(x);
-			}
-		} while(stepOrg.stepper.advanceLEIs(x,stepOrg.targetSum));
-		if(null!=ex) {
-			ex.shutdown();
-			while(!ex.isTerminated()) {
-				try {
-					ex.awaitTermination(1000, TimeUnit.SECONDS);
-				} catch (InterruptedException e) {
+		final int n1 = rowsCols/2;
+		final int n2 = rowsCols - n1;
+		final int targetSum = n1*total;
+		final OrderStepper stepper = new OrderStepper(rowsCols,total,targetSum);
+		final IntFunc f = new IntFunc() {
+			@Override
+			public BigInteger f(final int[] x) {
+				final BigInteger xCount = countSemiTables(n1,total,x);
+				if(xCount.compareTo(BigInteger.ZERO)>0) {
+					final int[] y = new int[rowsCols];
+					for(int i=0;i<rowsCols;++i) {
+						y[i] = total - x[i];
+					}
+					Arrays.sort(y);
+					final BigInteger yCount = countSemiTables(n2,total,y);
+					if(yCount.compareTo(BigInteger.ZERO)>0) {
+						final BigInteger nperm = stepper.nPerm(x);
+						final BigInteger term = nperm.multiply(xCount).multiply(yCount);
+						synchronized (this) {
+							return term;
+						}
+					}
 				}
+				return BigInteger.ZERO;
 			}
-		}
-		return stepOrg.sum;
+		};
+		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
+		final BigInteger sum = summer.reduce(f,stepper);
+		return sum;
 	}
 	
 	private CPair getSubCounter(final int nRows, final int nCols) {
@@ -195,8 +142,6 @@ public final class CTab {
 	 */
 	private BigInteger countSemiTables(final int nCols, final int colTotal, final int[] rowTotals) {
 		final int nRows = rowTotals.length;		
-		final OrderStepper stepper =  OrderStepper.mkStepper(nCols,colTotal);
-		BigInteger sum = BigInteger.ZERO;
 		final int n1 = nRows/2;
 		final int n2 = nRows - n1;
 		int rowSum1 = 0;
@@ -210,22 +155,28 @@ public final class CTab {
 			rowTotals2[i] = rowTotals[n1+i];
 		}
 		final int targetSum = rowSum1;
-		final Iterable<int[]> xs = stepper.stepSequencesA(targetSum);
-		final int[] y = new int[nCols];
-		for(final int[] x: xs) {
-			final BigInteger xCount = countTablesSub(rowTotals1,x);
-			if(xCount.compareTo(BigInteger.ZERO)>0) {
-				for(int i=0;i<nCols;++i) {
-					y[i] = colTotal - x[i];
+		final OrderStepper stepper =  new OrderStepper(nCols,colTotal,targetSum);
+		final IntFunc f = new IntFunc() {
+			@Override
+			public BigInteger f(final int[] x) {
+				final BigInteger xCount = countTablesSub(rowTotals1,x);
+				if(xCount.compareTo(BigInteger.ZERO)>0) {
+					final int[] y = new int[nCols];
+					for(int i=0;i<nCols;++i) {
+						y[i] = colTotal - x[i];
+					}
+					Arrays.sort(y);
+					final BigInteger yCount = countTablesSub(rowTotals2,y);
+					if(yCount.compareTo(BigInteger.ZERO)>0) {
+						final BigInteger nperm = stepper.nPerm(x);
+						return nperm.multiply(xCount).multiply(yCount);
+					}
 				}
-				Arrays.sort(y);
-				final BigInteger yCount = countTablesSub(rowTotals2,y);
-				if(yCount.compareTo(BigInteger.ZERO)>0) {
-					final BigInteger nperm = stepper.nPerm(x);
-					sum = sum.add(nperm.multiply(xCount).multiply(yCount));
-				}
+				return BigInteger.ZERO;
 			}
-		}
+		};
+		final Reducer summer = new SimpleSum();
+		final BigInteger sum = summer.reduce(f,stepper);
 		return sum;
 	}
 	

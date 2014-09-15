@@ -1,11 +1,13 @@
-package com.mzlabs.count.Minkowski;
+package com.mzlabs.count.op.iter;
+
+import com.mzlabs.count.op.Sequencer;
 
 /**
  * step through all ordered sets of size m from 0,...,n-1
  * @author johnmount
  *
  */
-public final class SetStepper {
+public final class SetStepper implements Sequencer {
 	public final int n; // number of items to choose from
 	public final int m; // number of items to choose
 	
@@ -22,6 +24,7 @@ public final class SetStepper {
 		}
 	}
 	
+	@Override
 	public int[] first() {
 		final int[] x = new int[m];
 		for(int i=0;i<m;++i) {
@@ -30,7 +33,8 @@ public final class SetStepper {
 		return x;
 	}
 	
-	public boolean next(final int[] x) {
+	@Override
+	public boolean advance(final int[] x) {
 		// find right-most item we can advance
 		int i = m-1;
 		while(i>=0) {

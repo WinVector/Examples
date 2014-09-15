@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import com.mzlabs.count.op.iter.SetStepper;
+
 public final class TestSetStepper {
 	@Test
 	public void testStepper() {
@@ -14,7 +16,7 @@ public final class TestSetStepper {
 		int nSaw = 0;
 		do {
 			++nSaw;
-		} while(setStepper.next(x));
+		} while(setStepper.advance(x));
 		assertEquals(10,nSaw);  // nSaw should be (n choose m)
 	}
 

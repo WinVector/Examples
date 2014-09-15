@@ -12,6 +12,7 @@ import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
+import com.mzlabs.count.op.iter.SumStepper;
 import com.mzlabs.count.util.BigRat;
 import com.mzlabs.count.util.IntMat;
 import com.winvector.lp.LPException;
@@ -25,8 +26,8 @@ public class TestLagrangePolynomial {
 		final int degree = 4;
 		final int[] b2 = new int[dim];
 		Arrays.fill(b2,100);
-		final SumStepper stepper = new SumStepper(degree);
-		final int[] d = stepper.first(base.length);
+		final SumStepper stepper = new SumStepper(base.length,degree);
+		final int[] d = stepper.first();
 		final int[] z = new int[base.length];
 		do {
 			for(int i=0;i<z.length;++i) {
@@ -34,8 +35,8 @@ public class TestLagrangePolynomial {
 			}
 			final BigRat confirmOne = LagrangePolynomial.eval(base,z,degree,z);
 			assertEquals(0,BigRat.ONE.compareTo(confirmOne));
-			final int[] d2 = stepper.first(base.length);
-			final int[] z2 = stepper.first(base.length);
+			final int[] d2 = stepper.first();
+			final int[] z2 = new int[base.length];
 			do {
 				boolean equalsz = true;
 				for(int i=0;i<z2.length;++i) {
@@ -48,8 +49,8 @@ public class TestLagrangePolynomial {
 					final BigRat confirmZero = LagrangePolynomial.eval(base,z,degree,z2);
 					assertEquals(0,BigRat.ZERO.compareTo(confirmZero));
 				}
-			} while(stepper.next(d2));
-		} while(stepper.next(d));
+			} while(stepper.advance(d2));
+		} while(stepper.advance(d));
 	}
 	
 	@Test
@@ -65,8 +66,8 @@ public class TestLagrangePolynomial {
 			final int[] b2 = IntMat.mapVector(cones.rowDescr,b);
 			final int[] base = cones.buildConeWedge(b);
 			//System.out.println("\tinterpolation base: " + IntVec.toString(base));
-			final SumStepper stepper = new SumStepper(cones.degree);
-			final int[] d = stepper.first(base.length);
+			final SumStepper stepper = new SumStepper(base.length,cones.degree);
+			final int[] d = stepper.first();
 			final int[] z = new int[base.length];
 			BigRat lagrangeEval = BigRat.ZERO;
 			do {
@@ -78,7 +79,7 @@ public class TestLagrangePolynomial {
 				final BigRat px = LagrangePolynomial.eval(base,z,cones.degree,b2);
 				lagrangeEval = lagrangeEval.add(px.multiply(BigRat.valueOf(fx)));
 				//System.out.println(IntVec.toString(x) + "\t" + fx + "\t" + px);
-			} while(stepper.next(d));
+			} while(stepper.advance(d));
 			//System.out.println("LagrangePolynomial\t" + lagrangeEval);
 			final BigInteger lcount = lagrangeEval.intValue();
 			assertNotNull(lcount);

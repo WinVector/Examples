@@ -1,27 +1,24 @@
-package com.mzlabs.count.ctab;
+package com.mzlabs.count.op.iter;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.op.Sequencer;
 
-public final class OrderStepper {
+public final class OrderStepper implements Sequencer {
 	public final int dim;
 	public final int bound;
+	public final int targetSum;
 	private final BigInteger[] factorial;
-	private final Map<Integer,Iterable<int[]>> seqCache = new HashMap<Integer,Iterable<int[]>>();
 	
 	/**
 	 * 
 	 * @param dim>0
 	 * @param bound>=0
 	 */
-	private OrderStepper(final int dim, final int bound) {
+	public OrderStepper(final int dim, final int bound, final int targetSum) {
 		this.dim = dim;
 		this.bound = bound;
+		this.targetSum = targetSum;
 		if((dim<=0)||(bound<0)) {
 			throw new IllegalArgumentException("(" + dim + "," + bound + ")");
 		}
@@ -33,35 +30,17 @@ public final class OrderStepper {
 		}
 	}
 	
-	private static final Map<IntVec,OrderStepper> stepperCache = new HashMap<IntVec,OrderStepper>();
-	
-	/**
-	 * 
-	 * @param dim>0
-	 * @param bound>=0
-	 */
-	public static OrderStepper mkStepper(final int dim, final int bound) {
-		final IntVec key = new IntVec(new int[] {dim,bound});
-		OrderStepper cached = null;
-		synchronized (stepperCache) {
-			cached = stepperCache.get(key);
-			if(null==cached) {
-				cached = new OrderStepper(dim,bound);
-				stepperCache.put(key,cached);
-			}
-		}
-		return cached;
-	}
 	
 	/**
 	 * 
 	 * @param targetSum if >0 check if there is valid start
 	 * @return
 	 */
-	public int[] first(final int targetSum) {
+	@Override
+	public int[] first() {
 		final int[] x = new int[dim];
 		if(targetSum>0) {
-			if(advanceLEIs(x,targetSum)) {
+			if(advanceLEIs(x)) {
 				return x;
 			} else {
 				return null;
@@ -77,7 +56,7 @@ public final class OrderStepper {
 	 * @param x start at all zeros
 	 * @return true if valid vector
 	 */
-	public boolean advanceLEI(final int[] x) {
+	private boolean advanceLEI(final int[] x) {
 		// find right-most advanceble position
 		int i = dim-1;
 		do {
@@ -93,7 +72,7 @@ public final class OrderStepper {
 		return false;
 	}
 	
-	public boolean advanceLEIs(final int[] x, final int targetSum) {
+	private boolean advanceLEIs(final int[] x) {
 		while(true) {
 			if(!advanceLEI(x)) {
 				return false;
@@ -108,29 +87,13 @@ public final class OrderStepper {
 		}
 	}
 	
-	/**
-	 * TODO: buld one of these that is space and time efficient
-	 * @param targetSum>=0
-	 * @return
-	 */
-	public Iterable<int[]> stepSequencesA(final int targetSum) {
-		final Integer key = targetSum;
-		Iterable<int[]> cached = null;
-		synchronized (seqCache) {
-			cached = seqCache.get(key);
-			if(null==cached) {
-				final ArrayList<int[]> steps = new ArrayList<int[]>(2000);
-				if(null==cached) {
-					int[] x = first(targetSum);
-					do {
-						steps.add(Arrays.copyOf(x,x.length));
-					} while(advanceLEIs(x,targetSum));
-				}
-				cached = steps;
-				seqCache.put(key, cached);
-			}
+	@Override
+	public boolean advance(int[] x) {
+		if(targetSum<0) {
+			return advanceLEI(x);
+		} else {
+			return advanceLEIs(x);
 		}
-		return cached;
 	}
 	
 	/**
@@ -158,7 +121,7 @@ public final class OrderStepper {
 	 * 
 	 */
 	public boolean checks() {
-		final int[] x = first(-1);
+		final int[] x = first();
 		BigInteger sum = BigInteger.ZERO;
 		do {
 			final BigInteger nperm = nPerm(x);

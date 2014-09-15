@@ -11,6 +11,8 @@ import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
+import com.mzlabs.count.op.iter.SetStepper;
+import com.mzlabs.count.op.iter.SumStepper;
 import com.mzlabs.count.util.BigRat;
 import com.mzlabs.count.util.IntMat;
 import com.mzlabs.count.util.IntMat.RowDescription;
@@ -87,7 +89,7 @@ public final class Cones {
 				}
 			} catch (Exception ex) {
 			}
-		} while(setStepper.next(columnSelection));
+		} while(setStepper.advance(columnSelection));
 		checkVecs = rows.toArray(new IntVec[rows.size()]);
 		ncheck = checkVecs.length;
 	}
@@ -317,8 +319,8 @@ public final class Cones {
 			final int[] b2 = IntMat.mapVector(cones.rowDescr,b);
 			final int[] base = cones.buildConeWedge(b);
 			System.out.println("\tinterpolation base: " + IntVec.toString(base));
-			final SumStepper stepper = new SumStepper(cones.degree);
-			final int[] d = stepper.first(base.length);
+			final SumStepper stepper = new SumStepper(base.length,cones.degree);
+			final int[] d = stepper.first();
 			final int[] z = new int[base.length];
 			BigRat lagrangeEval = BigRat.ZERO;
 			do {
@@ -330,7 +332,7 @@ public final class Cones {
 				final BigRat px = LagrangePolynomial.eval(base,z,cones.degree,b2);
 				lagrangeEval = lagrangeEval.add(px.multiply(BigRat.valueOf(fx)));
 				System.out.println(IntVec.toString(x) + "\t" + fx + "\t" + px);
-			} while(stepper.next(d));
+			} while(stepper.advance(d));
 			System.out.println("LagrangePolynomial\t" + lagrangeEval);
 			final BigInteger lcount = lagrangeEval.intValue();
 			final BigInteger count = counter.countNonNegativeSolutions(b);
