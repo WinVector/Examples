@@ -5,17 +5,20 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
+import com.mzlabs.count.op.IntFunc;
+import com.mzlabs.count.op.Reducer;
+import com.mzlabs.count.op.Sequencer;
+import com.mzlabs.count.op.impl.SimpleSum;
+import com.mzlabs.count.op.impl.ThreadedSum;
+import com.mzlabs.count.op.iter.RangeIter;
 import com.mzlabs.count.util.IntMat;
+import com.mzlabs.count.util.IntMat.RowDescription;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.Permutation;
-import com.mzlabs.count.util.IntMat.RowDescription;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 import com.mzlabs.count.zeroone.ZeroOneStore;
 
@@ -182,52 +185,6 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	}
 	
 	
-	private static class StepOrg {
-		public final CountingProblem problem;
-		public final DivideAndConquerCounter dc;
-		public final IntVec boundsVec;
-		public final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>(); // synchronize access to this
-		
-		public StepOrg(final CountingProblem problem, final IntVec boundsVec) {
-			this.problem = problem;
-			this.boundsVec = boundsVec;
-			dc = new DivideAndConquerCounter(problem,false,true,false);
-		}
-				
-		public void runStep(final int lastValue) {
-			final int m = boundsVec.dim();
-			final int[] b = new int[m];
-			b[m-1] = lastValue;
-			do {
-				if(ZeroOneStore.wantB(problem,b)) {
-					final BigInteger nsolns = dc.countNonNegativeSolutions(b);
-					if(nsolns.compareTo(BigInteger.ZERO)>0) {
-						final IntVec key = new IntVec(b);
-						synchronized (solnCounts) {
-							solnCounts.put(key,nsolns);
-						}
-					}
-				}
-			} while(boundsVec.advanceLE(b,m-1));
-		}
-		
-		public class StepJob implements Runnable {
-			private final int lastValue;
-
-			private StepJob(final int lastValue) {
-				this.lastValue = lastValue;
-			}
-
-			@Override
-			public final void run() {
-				runStep(lastValue);
-			}
-		}
-		
-		public StepJob stepJob(final int lastValue) {
-			return new StepJob(lastValue);
-		}
-	}
 	
 	/**
 	 * 
@@ -243,22 +200,34 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 			}
 		}
 		final IntVec boundsVec = new IntVec(bounds);
-		final StepOrg stepOrg = new StepOrg(problem,boundsVec);
-		final ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(bounds[m-1]+2);
-		final ThreadPoolExecutor ex = new ThreadPoolExecutor(4,4,1000,TimeUnit.SECONDS,workQueue);
-		for(int i=0;i<bounds[m-1];++i) {
-			final StepOrg.StepJob job = stepOrg.stepJob(i);
-			ex.execute(job);
-		}
-		stepOrg.runStep(bounds[m-1]);
-		ex.shutdown();
-		while(!ex.isTerminated()) {
-			try {
-				ex.awaitTermination(1000, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
+		final DivideAndConquerCounter dc = new DivideAndConquerCounter(problem,false,true,false);
+		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>(); // synchronize access to this
+		final IntFunc f = new IntFunc() {
+			@Override
+			public BigInteger f(final int[] x) {
+				final int lastValue = x[0];
+				final int m = boundsVec.dim();
+				final int[] b = new int[m];
+				b[m-1] = lastValue;
+				do {
+					if(ZeroOneStore.wantB(problem,b)) {
+						final BigInteger nsolns = dc.countNonNegativeSolutions(b);
+						if(nsolns.compareTo(BigInteger.ZERO)>0) {
+							final IntVec key = new IntVec(b);
+							synchronized (solnCounts) {
+								solnCounts.put(key,nsolns);
+							}
+						}
+					}
+				} while(boundsVec.advanceLE(b,m-1));
+				return BigInteger.ZERO;
 			}
-		}
-		return stepOrg.solnCounts;
+		};
+		final Sequencer seq = new RangeIter(0,bounds[m-1]+1);
+		final boolean runParallel = true;
+		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
+		summer.reduce(f,seq);
+		return solnCounts;
 	}
 	
 	
