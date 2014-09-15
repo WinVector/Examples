@@ -17,8 +17,12 @@ public final class OrderStepper implements Sequencer {
 	 */
 	public OrderStepper(final int dim, final int bound, final int targetSum) {
 		this.dim = dim;
-		this.bound = bound;
 		this.targetSum = targetSum;
+		if(targetSum>=0) {
+			this.bound = Math.min(bound,targetSum);
+		} else {
+			this.bound = bound;
+		}
 		if((dim<=0)||(bound<0)) {
 			throw new IllegalArgumentException("(" + dim + "," + bound + ")");
 		}
@@ -38,13 +42,20 @@ public final class OrderStepper implements Sequencer {
 	 */
 	@Override
 	public int[] first() {
-		final int[] x = new int[dim];
-		if(targetSum>0) {
-			if(advanceLEIs(x)) {
-				return x;
-			} else {
-				return null;
+		int[] x = new int[dim];
+		if(targetSum>=0) {
+			int remaining = targetSum;
+			int i = dim-1;
+			while((i>=0)&&(remaining>0)) {
+				final int allocation = Math.min(remaining,bound);
+				x[i] = allocation;
+				remaining -= allocation;
+				--i;
 			}
+			if(remaining>0) {
+				x = null;
+			}
+			return x;
 		} else {
 			return x;
 		}
@@ -72,6 +83,8 @@ public final class OrderStepper implements Sequencer {
 		return false;
 	}
 	
+	
+	// TODO: efficient implementation of this (right-fill in rule is different)
 	private boolean advanceLEIs(final int[] x) {
 		while(true) {
 			if(!advanceLEI(x)) {

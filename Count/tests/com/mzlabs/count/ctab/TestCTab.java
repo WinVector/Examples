@@ -14,7 +14,9 @@ public class TestCTab {
 	public void testStepper() {
 		for(int dim=1;dim<=4;++dim) {
 			for(int bound=0;bound<=5;++bound) {
-				assertTrue(new OrderStepper(dim,bound,-1).checks());
+				final OrderStepper orderStepper = new OrderStepper(dim,bound,-1);
+				final boolean eq = orderStepper.checks();
+				assertTrue(eq);
 			}
 		}
 	}
@@ -27,9 +29,6 @@ public class TestCTab {
 				final BigInteger count = ctab.countSqTables(rowsCols,total); 
 				final BigInteger check = ctab.debugConfirmSqTables(rowsCols, total);
 				final boolean eq = (check.compareTo(count)==0);
-				if(!eq) {
-					System.out.println("break");
-				}
 				assertTrue(eq);
 				//System.out.println(rowsCols + "\t" + total + "\t" + count + "\t" + check + "\t" + eq);
 			}

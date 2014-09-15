@@ -73,7 +73,6 @@ public class TestPerm {
 		for(int i=0;i<orig.length;++i) {
 			assertEquals(values[i],orig[i]);
 		}
-		//System.out.println("break");
 	}
 	
 	
