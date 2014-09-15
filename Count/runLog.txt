@@ -2,11 +2,11 @@
 0 errors out of 16807 examples
 
 
-Tue Sep 09 05:22:21 PDT 2014
+Mon Sep 15 10:15:41 PDT 2014
 [2, 6, 2, 5, 2, 3]	even odd solution	30
-Tue Sep 09 05:22:21 PDT 2014
+Mon Sep 15 10:15:41 PDT 2014
 [2, 6, 2, 5, 2, 3]	brute force solution	30
-Tue Sep 09 05:22:21 PDT 2014
+Mon Sep 15 10:15:41 PDT 2014
 equal: true
 
 
@@ -15,29 +15,29 @@ equal: true
 	x(2,0)	x(2,1)	x(2,2)	x(2,3)	277000
 	x(3,0)	x(3,1)	x(3,2)	x(3,3)	160179
 	191780	288348	165221	201433
-Tue Sep 09 05:22:22 PDT 2014
+Mon Sep 15 10:15:41 PDT 2014
 [154179, 255424, 277000, 160179, 191780, 288348, 165221, 201433]	even odd solution	350854066054593772938684218633979710637454260
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 
 
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 have counter zero/one structures
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(1,1;0)= 1
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 	poly(1,1;0)= 1.0
 	poly(1,1;1)= 1.0
 	poly(1,1;2)= 1.0
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 
 
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 have counter zero/one structures
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(2,2;0)= 1
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(2,2;1)= 2
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 	poly(2,2;0)= 1.0
 	poly(2,2;1)= 2.0
 	poly(2,2;2)= 3.0
@@ -47,22 +47,22 @@ Tue Sep 09 05:22:29 PDT 2014
 	poly(2,2;6)= 7.0
 	poly(2,2;7)= 8.0
 	poly(2,2;8)= 9.0
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 
 
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 have counter zero/one structures
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(3,3;0)= 1
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(3,3;1)= 6
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(3,3;2)= 21
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(3,3;3)= 55
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 evenOdd(3,3;4)= 120
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 	poly(3,3;0)= 1.0
 	poly(3,3;1)= 6.0
 	poly(3,3;2)= 21.0
@@ -82,32 +82,32 @@ Tue Sep 09 05:22:29 PDT 2014
 	poly(3,3;16)= 11781.0
 	poly(3,3;17)= 14705.999999999942
 	poly(3,3;18)= 18145.0
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 
 
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:49 PDT 2014
 have counter zero/one structures
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;0)= 1
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;1)= 24
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;2)= 282
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;3)= 2008
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;4)= 10147
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;5)= 40176
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;6)= 132724
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;7)= 381424
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;8)= 981541
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 evenOdd(4,4;9)= 2309384
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 	poly(4,4;0)= 1.0
 	poly(4,4;1)= 24.0
 	poly(4,4;2)= 282.0
@@ -141,5 +141,5 @@ Tue Sep 09 05:22:29 PDT 2014
 	poly(4,4;30)= 3.4166132175890625E10
 	poly(4,4;31)= 4.5065420224078125E10
 	poly(4,4;32)= 5.895255540913281E10
-Tue Sep 09 05:22:29 PDT 2014
+Mon Sep 15 10:15:50 PDT 2014
 

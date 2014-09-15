@@ -11,7 +11,7 @@ import com.mzlabs.count.op.IntFunc;
 import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
-import com.mzlabs.count.op.iter.OrderStepper;
+import com.mzlabs.count.op.iter.OrderStepperTot;
 import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
@@ -57,7 +57,7 @@ public final class CTab {
 		final int n1 = rowsCols/2;
 		final int n2 = rowsCols - n1;
 		final int targetSum = n1*total;
-		final OrderStepper stepper = new OrderStepper(rowsCols,total,targetSum);
+		final OrderStepperTot stepper = new OrderStepperTot(rowsCols,total,targetSum);
 		final IntFunc f = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {
@@ -155,7 +155,7 @@ public final class CTab {
 			rowTotals2[i] = rowTotals[n1+i];
 		}
 		final int targetSum = rowSum1;
-		final OrderStepper stepper =  new OrderStepper(nCols,colTotal,targetSum);
+		final OrderStepperTot stepper =  new OrderStepperTot(nCols,colTotal,targetSum);
 		final IntFunc f = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {

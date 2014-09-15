@@ -1,12 +1,12 @@
-n:1	Fri Sep 12 15:16:20 PDT 2014
+n:1	Mon Sep 15 10:18:35 PDT 2014
 	check conditions: 1
 	interpolation base: 0
 0, 0	1	1
 LagrangePolynomial	1
 Direct count	1
-Fri Sep 12 15:16:21 PDT 2014
+Mon Sep 15 10:18:35 PDT 2014
 
-n:2	Fri Sep 12 15:16:21 PDT 2014
+n:2	Mon Sep 15 10:18:35 PDT 2014
 	check conditions: 8
 	interpolation base: 1, 1, 0
 1, 1, 0, 2	1	-297
@@ -15,9 +15,9 @@ n:2	Fri Sep 12 15:16:21 PDT 2014
 2, 1, 0, 3	1	99
 LagrangePolynomial	101
 Direct count	101
-Fri Sep 12 15:16:21 PDT 2014
+Mon Sep 15 10:18:35 PDT 2014
 
-n:3	Fri Sep 12 15:16:21 PDT 2014
+n:3	Mon Sep 15 10:18:35 PDT 2014
 	check conditions: 42
 	interpolation base: 20, 20, 8, 12, 12
 20, 20, 8, 12, 12, 24	4625	1365780850
@@ -148,9 +148,9 @@ n:3	Fri Sep 12 15:16:21 PDT 2014
 24, 20, 8, 12, 12, 28	4660	1581580
 LagrangePolynomial	13268976
 Direct count	13268976
-Fri Sep 12 15:16:22 PDT 2014
+Mon Sep 15 10:18:36 PDT 2014
 
-n:4	Fri Sep 12 15:16:22 PDT 2014
+n:4	Mon Sep 15 10:18:36 PDT 2014
 	check conditions: 204
 	interpolation base: 63, 63, 36, 63, 45, 45, 45
 63, 63, 36, 63, 45, 45, 45, 90	2497408141631	-146394286959141442
@@ -11595,5 +11595,5 @@ n:4	Fri Sep 12 15:16:22 PDT 2014
 72, 63, 36, 63, 45, 45, 45, 99	2626932705138	124403620
 LagrangePolynomial	1159382525319251
 Direct count	1159382525319251
-Fri Sep 12 15:16:47 PDT 2014
+Mon Sep 15 10:19:00 PDT 2014
 

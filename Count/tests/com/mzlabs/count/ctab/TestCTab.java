@@ -8,13 +8,14 @@ import java.math.BigInteger;
 import org.junit.Test;
 
 import com.mzlabs.count.op.iter.OrderStepper;
+import com.mzlabs.count.op.iter.OrderStepperTot;
 
 public class TestCTab {
 	@Test
 	public void testStepper() {
 		for(int dim=1;dim<=4;++dim) {
 			for(int bound=0;bound<=5;++bound) {
-				final OrderStepper orderStepper = new OrderStepper(dim,bound,-1);
+				final OrderStepper orderStepper = new OrderStepper(dim,bound);
 				final boolean eq = orderStepper.checks();
 				assertTrue(eq);
 			}
@@ -49,7 +50,7 @@ public class TestCTab {
 	
 	@Test
 	public void advanceBug2b() {
-		final OrderStepper stepper = new OrderStepper(2,5,3);
+		final OrderStepperTot stepper = new OrderStepperTot(2,5,3);
 		final int[] x = stepper.first();
 		int n = 0;
 		do {
@@ -61,10 +62,21 @@ public class TestCTab {
 	
 	@Test
 	public void advanceBug1() {
-		final OrderStepper stepper = new OrderStepper(1,4,2);
+		final OrderStepperTot stepper = new OrderStepperTot(1,4,2);
 		final int[] x = stepper.first();
 		do {
 			assertEquals(2,x[0]);
 		} while(stepper.advance(x));
+	}
+	
+	@Test
+	public void testOrderStepperTot() {
+		for(int dim=1;dim<=5;++dim) {
+			for(int bound=0;bound<=6;++bound) {
+				for(int targetSum=0;targetSum<=10;++targetSum) {
+					assertTrue(OrderStepperTot.confirm(dim,bound,targetSum));
+				}
+			}
+		}
 	}
 }

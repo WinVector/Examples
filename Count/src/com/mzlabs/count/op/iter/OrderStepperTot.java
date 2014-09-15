@@ -1,13 +1,17 @@
 package com.mzlabs.count.op.iter;
 
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import com.mzlabs.count.op.Sequencer;
+import com.mzlabs.count.util.IntVec;
 
 /**
- * TODO: test and confirm correctness of this class and use it to replace the taretSum>=0 function of OrderStepper
+ * 
  * @author johnmount
  *
  */
-final class OrderStepperTot extends FactorialBase implements Sequencer {
+public final class OrderStepperTot extends FactorialBase implements Sequencer {
 	public final int bound;
 	public final int targetSum;
 	
@@ -71,20 +75,76 @@ final class OrderStepperTot extends FactorialBase implements Sequencer {
 		int i = dim-1;
 		do {
 			final int xi = x[i];
-			final int boundI = Math.min(bound,targetSum-(leftSum+(dim-i)*(xi+1)));
+			final int boundI = Math.min(bound,(targetSum-leftSum)/(dim-i));
 			if(boundI>=xi+1) {
-				x[i] = xi+1;
-				int sum = leftSum + x[i]; 
+				final int ni = xi+1;
+				x[i] = ni;
+				int excessAllocation = targetSum - (leftSum+ (dim-i)*ni);
 				for(int j=dim-1;j>i;--j) {
-					final int allocation = Math.min(targetSum-sum,bound);
-					x[j] = allocation;
-					sum += allocation;
+					final int xij = Math.min(bound,ni+excessAllocation);
+					x[j] = xij;
+					excessAllocation -= (xij-ni);
 				}
 				return true;
 			}
-			leftSum -= xi;
 			--i;
+			if(i>=0) {
+				leftSum -= x[i];
+			}
 		} while((i>=0)&&(leftSum>=0));
 		return false;
+	}
+	
+	public static boolean confirm(final int dim, final int bound, final int targetSum) {
+		final SortedSet<IntVec> checkSet = new TreeSet<IntVec>();
+		final OrderStepper checkStepper = new OrderStepper(dim,bound);
+		//System.out.println("check " + dim + " " + bound + " " + targetSum);
+		final int[] checkX = checkStepper.first();
+		if(null!=checkX) {
+			do {
+				int sum = 0;
+				for(final int xi: checkX) {
+					sum += xi;
+				}
+				if(targetSum==sum) {
+					final IntVec checkV = new IntVec(checkX);
+					//System.out.println("\t" + checkV);
+					checkSet.add(checkV);
+				}
+			} while(checkStepper.advance(checkX));
+		}
+		final OrderStepperTot stepper = new OrderStepperTot(dim,bound,targetSum);
+		//System.out.println("step " + dim + " " + bound + " " + targetSum);
+		final int[] x = stepper.first();
+		if(null==x) {
+			if(!checkSet.isEmpty()) {
+				return false;
+			}
+		} else {
+			do {
+				int sum = 0;
+				int lastXi = 0;
+				for(final int xi: x) {
+					if((xi<0)||(xi>bound)||(xi<lastXi)) {
+						return false;
+					}
+					sum += xi;
+					lastXi = xi;
+				}
+				if(targetSum!=sum) {
+					return false;
+				}
+				final IntVec xv = new IntVec(x);
+				//System.out.println("\t" + xv);
+				if(!checkSet.contains(xv)) {
+					return false;
+				}
+				checkSet.remove(xv);
+			} while(stepper.advance(x));
+			if(!checkSet.isEmpty()) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
