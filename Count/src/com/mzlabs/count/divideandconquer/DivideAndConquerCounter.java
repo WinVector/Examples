@@ -204,7 +204,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		final Sequencer seq = new SeqLE(boundsVec,boundsVec.dim(),boundsVec.dim()-1);
 		final DivideAndConquerCounter dc = new DivideAndConquerCounter(problem,false,true,false);
 		final Map<IntVec,BigInteger> solnCounts = new HashMap<IntVec,BigInteger>(); // synchronize access to this
-		final IntFunc f = new IntFunc() {
+		final IntFunc subF = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {
 				final int lastValue = x[0];
@@ -228,7 +228,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		final Sequencer seqL = new RangeIter(0,bounds[m-1]+1);
 		final boolean runParallel = true;
 		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
-		summer.reduce(f,seqL);
+		summer.reduce(subF,seqL);
 		return solnCounts;
 	}
 	

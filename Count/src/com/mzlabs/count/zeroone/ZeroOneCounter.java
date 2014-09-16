@@ -12,6 +12,7 @@ import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.op.iter.SeqLT;
 import com.mzlabs.count.util.IntLinOp;
 import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.util.IntVecFn;
 import com.mzlabs.count.util.Permutation;
 import com.mzlabs.count.util.SolnCache;
 import com.mzlabs.count.zeroone.ZeroOneStore.IBPair;
@@ -46,7 +47,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
  * @author johnmount
  *
  */
-public final class ZeroOneCounter implements NonNegativeIntegralCounter {
+public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn {
 	private final CountingProblem prob;
 	private final int m;
 	private final ZeroOneStore zeroOneCounts;
@@ -168,48 +169,46 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 	}
 	
 	/**
+	 * not parallelizing this as we usually call it from CTab which is already parallel at the top level
 	 * assumes finite number of solutions (all variables involved) and A non-negative
 	 * @param b non-negative, non-zero admissableB already in normal form
 	 * @return number of non-negative integer solutions x to A x == b
 	 */
-	private BigInteger countNonNegativeSolutionsR(final IntVec b) {
-		BigInteger cached = cache.get(b);
-		if(null==cached) {
-			cached = BigInteger.ZERO;
-			final IBPair[] group = zeroOneCounts.lookup(b);
-			if(null!=group) {
-				final int[] bprime = new int[m];
-				for(final IBPair gi: group) {
-					final IntVec r = gi.key;
-					boolean goodR = true;
-					int sum = 0;
-					for(int i=0;i<m;++i) {
-						final int diff = b.get(i) - r.get(i);
-						if(diff<0) {
-							goodR = false;
-							break;
-						}
-						final int bpi = diff>>1;
-						bprime[i] = bpi;
-						sum += bpi;
+	@Override
+	public BigInteger eval(final IntVec b) {
+		BigInteger result = BigInteger.ZERO;
+		final IBPair[] group = zeroOneCounts.lookup(b);
+		if(null!=group) {
+			final int[] bprime = new int[m];
+			for(final IBPair gi: group) {
+				final IntVec r = gi.key;
+				boolean goodR = true;
+				int sum = 0;
+				for(int i=0;i<m;++i) {
+					final int diff = b.get(i) - r.get(i);
+					if(diff<0) {
+						goodR = false;
+						break;
 					}
-					if(goodR) {
-						final BigInteger nzone = gi.value;
-						if(sum<=0) { // A x = 0, has one non-negative solution (since a second positive solution would give us a ray of solutions, and we know we are bounded).
-							cached = cached.add(nzone);
-						} else {
-							final Permutation tobprimeNorm = prob.toNormalForm(bprime);
-							final IntVec bprimeNorm = new IntVec(tobprimeNorm.apply(bprime));
-							final BigInteger subsoln = countNonNegativeSolutionsR(bprimeNorm);
-							cached = cached.add(nzone.multiply(subsoln));
-						}
+					final int bpi = diff>>1;
+					bprime[i] = bpi;
+					sum += bpi;
+				}
+				if(goodR) {
+					final BigInteger nzone = gi.value;
+					if(sum<=0) { // A x = 0, has one non-negative solution (since a second positive solution would give us a ray of solutions, and we know we are bounded).
+						result = result.add(nzone);
+					} else {
+						final Permutation tobprimeNorm = prob.toNormalForm(bprime);
+						final int[] bprimeNorm = tobprimeNorm.apply(bprime);
+						final BigInteger subsoln = countNonNegativeSolutions(bprimeNorm);
+						result = result.add(nzone.multiply(subsoln));
 					}
 				}
 			}
-			cache.put(b,cached);
-			//System.out.println(b + " " + cached);
 		}
-		return cached;
+		//System.out.println(b + " " + cached);
+		return result;
 	}
 	
 	@Override
@@ -229,7 +228,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 			}
 			sum += bi;
 		}
-		if(!prob.admissableB(bIn)) {
+		if(obviouslyEmpty(bIn)) {
 			return BigInteger.ZERO;
 		}
 		if(sum<=0) {
@@ -237,7 +236,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter {
 		}
 		final Permutation perm = prob.toNormalForm(bIn);
 		final IntVec bNormal = new IntVec(perm.apply(bIn));
-		final BigInteger result = countNonNegativeSolutionsR(bNormal);
+		final BigInteger result = cache.evalCached(this,bNormal);
 		return result;
 	}
 	

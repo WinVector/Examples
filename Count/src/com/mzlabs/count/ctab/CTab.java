@@ -58,7 +58,7 @@ public final class CTab {
 		final int n2 = rowsCols - n1;
 		final int targetSum = n1*total;
 		final OrderStepperTot stepper = new OrderStepperTot(rowsCols,total,targetSum);
-		final IntFunc f = new IntFunc() {
+		final IntFunc subF = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {
 				final BigInteger xCount = countSemiTables(n1,total,x);
@@ -81,7 +81,7 @@ public final class CTab {
 			}
 		};
 		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
-		final BigInteger sum = summer.reduce(f,stepper);
+		final BigInteger sum = summer.reduce(subF,stepper);
 		return sum;
 	}
 	
@@ -156,7 +156,7 @@ public final class CTab {
 		}
 		final int targetSum = rowSum1;
 		final OrderStepperTot stepper =  new OrderStepperTot(nCols,colTotal,targetSum);
-		final IntFunc f = new IntFunc() {
+		final IntFunc subF = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {
 				final BigInteger xCount = countTablesSub(rowTotals1,x);
@@ -176,7 +176,7 @@ public final class CTab {
 			}
 		};
 		final Reducer summer = new SimpleSum();
-		final BigInteger sum = summer.reduce(f,stepper);
+		final BigInteger sum = summer.reduce(subF,stepper);
 		return sum;
 	}
 	
@@ -222,6 +222,7 @@ public final class CTab {
 				System.out.println("" + n + "\t" + total + "\t" + count + "\t" + new Date() + "\t" + cacheSizes);
 			}
 		}
+		//System.out.println("total evals: " + SolnCache.totalEvals);
 	}
 
 }

@@ -7,9 +7,13 @@ public final class SolnCache {
 	private final int nsub = 1000;
 	
 	
-	private static final class CI extends HashMap<IntVec,BigInteger> {
+	private static final class CI extends HashMap<IntVec,BHolder> {
 		private static final long serialVersionUID = 1L;
 	};
+	
+	private static final class BHolder {
+		public BigInteger value = null;
+	}
 	
 	private final CI[] caches = new CI[nsub];  // split caches to cut down on contention and improve hash slightly 
 	
@@ -32,19 +36,64 @@ public final class SolnCache {
 		return r;
 	}
 	
-	public BigInteger get(final IntVec key) {
-		final CI cache = caches[subKey(key)];
-		synchronized (cache) {
-			return cache.get(key);
+	
+//	private static final Object syncObj = new Object();
+//	public static long totalEvals = 0;
+	
+	/**
+	 * Look for a cached value of f(x), if none such create a record, block on the record and compute f(x) (so only one attempt to compute f(x))
+	 * @param f
+	 * @param x
+	 * @return
+	 */
+	public BigInteger evalCached(final IntVecFn f, final IntVec x) {
+		final BHolder cached;
+		{
+			final CI cache = caches[subKey(x)];
+			final BHolder newHolder = new BHolder();
+			synchronized (newHolder) {
+				synchronized(cache) {
+					cached = cache.get(x);
+					if(null==cached) {
+						cache.put(x,newHolder);
+					}
+				}
+				if(null==cached) {
+//					synchronized (syncObj) {
+//						totalEvals += 1;
+//					}
+					newHolder.value = f.eval(x);
+					return newHolder.value;
+				}
+			}
+		}
+		// cached is not null here
+		synchronized (cached) {
+			// if we can obtain the lock then cached.value is not null (as it is set before the lock is released)
+			return cached.value;
 		}
 	}
-
-	public void put(final IntVec key, final BigInteger value) {
-		final CI cache = caches[subKey(key)];
-		synchronized (cache) {
-			cache.put(key,value);
-		}
-	}
+	
+	
+//	private BigInteger evalCachedSimple(final IntVecFn f, final IntVec x) {
+//		final CI cache = caches[subKey(x)];
+//		synchronized (cache) {
+//			final BHolder cached = cache.get(x);
+//			if(null!=cached) {
+//				return cached.value;
+//			}
+//		}
+//		final BHolder newHolder = new BHolder();
+//		synchronized (syncObj) {
+//			totalEvals += 1;
+//		}
+//		newHolder.value = f.eval(x);
+//		synchronized (cache) {
+//			cache.put(x,newHolder);
+//		}
+//		return newHolder.value;
+//	}
+	
 	
 	public int size() {
 		int sz = 0;

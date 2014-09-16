@@ -11,9 +11,10 @@ import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.RangeIter;
 import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.util.IntVecFn;
 import com.mzlabs.count.util.SolnCache;
 
-final class SplitNode implements NonNegativeIntegralCounter {
+final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 	private final NonNegativeIntegralCounter leftSubSystem;
 	private final NonNegativeIntegralCounter rightSubSystem;
 	private final int[][] A;
@@ -62,18 +63,12 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		return false;
 	}
 	
-	
 	@Override
-	public BigInteger countNonNegativeSolutions(final int[] b) {
-		final IntVec key = new IntVec(b);
-		final BigInteger count = cache.get(key);
-		if(null!=count) {
-			return count;
-		}
+	public BigInteger eval(final IntVec b) {
 		final int[] bound = new int[nEntangled];
 		for(int ii=0;ii<nEntangled;++ii) {
 			final int i = entangledRows[ii];
-			bound[ii] = b[i];
+			bound[ii] = b.get(i);
 			if(zeroOne) {
 				int rowSum = 0;
 				for(int j=0;j<n;++j) {
@@ -84,7 +79,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		}
 		final IntVec bdE = new IntVec(bound);
 		final Sequencer seq = new SeqLE(bdE,bdE.dim(),bdE.dim()-1);
-		final IntFunc f = new IntFunc() {
+		final IntFunc subF = new IntFunc() {
 			@Override
 			public BigInteger f(final int[] x) {
 				final int lastVal = x[0];
@@ -93,10 +88,10 @@ final class SplitNode implements NonNegativeIntegralCounter {
 				final int[] b2 = new int[m];
 				for(int i=0;i<m;++i) {
 					if(usesRow[0][i]) {
-						b1[i] = b[i];
+						b1[i] = b.get(i);
 					}
 					if(usesRow[1][i]) {
-						b2[i] = b[i];
+						b2[i] = b.get(i);
 					}
 				}
 				final int[] counter = new int[nEntangled];
@@ -105,7 +100,7 @@ final class SplitNode implements NonNegativeIntegralCounter {
 					for(int ii=0;ii<nEntangled;++ii) {
 						final int i = entangledRows[ii];
 						b1[i] = counter[ii];
-						b2[i] = b[i] - counter[ii];
+						b2[i] = b.get(i) - counter[ii];
 					}
 					// b1 + b2 == b
 					// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
@@ -125,10 +120,15 @@ final class SplitNode implements NonNegativeIntegralCounter {
 		};
 		final Sequencer seqL = new RangeIter(0,bdE.get(nEntangled-1)+1);
 		final Reducer summer = runParallel?new ThreadedSum():new SimpleSum();
-		final BigInteger sum = summer.reduce(f,seqL);
-		cache.put(key,sum);
+		final BigInteger sum = summer.reduce(subF,seqL);
 		return sum;
 	}
+	
+	@Override
+	public BigInteger countNonNegativeSolutions(final int[] b) {
+		return cache.evalCached(this,new IntVec(b));
+	}
+
 	
 	@Override
 	public String toString() {

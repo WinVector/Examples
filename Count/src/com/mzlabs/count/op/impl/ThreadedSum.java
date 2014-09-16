@@ -11,7 +11,7 @@ import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.Sequencer;
 
 public final class ThreadedSum implements Reducer {
-	public int nThreads = 4;
+	public int nThreads = 8;
 		
 	private static final class StepOrg {
 		public final IntFunc f;
