@@ -178,15 +178,17 @@ public final class Permutation implements Comparable<Permutation> {
 			p[i] = i;
 		}
 		final int n = toBound-fromIndex;
-		final SortItem[] items = new SortItem[n];
-		for(int i=0;i<n;++i) {
-			items[i] = new SortItem(i+fromIndex,d[i+fromIndex]);
-		}
-		Arrays.sort(items);
-		for(int i=0;i<n;++i) {
-			final int origIndex = items[i].origIndex;
-			final int newIndex = i + fromIndex;
-			p[origIndex] = newIndex;
+		if(n>1) {
+			final SortItem[] items = new SortItem[n];
+			for(int i=0;i<n;++i) {
+				items[i] = new SortItem(i+fromIndex,d[i+fromIndex]);
+			}
+			Arrays.sort(items);
+			for(int i=0;i<n;++i) {
+				final int origIndex = items[i].origIndex;
+				final int newIndex = i + fromIndex;
+				p[origIndex] = newIndex;
+			}
 		}
 		return new Permutation(p);
 	}
