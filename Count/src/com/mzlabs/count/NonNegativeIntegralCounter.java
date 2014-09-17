@@ -19,5 +19,5 @@ public interface NonNegativeIntegralCounter {
 	public boolean obviouslyEmpty(final int[] b);
 	
 	public void clearCache();
-	public int cacheSize();
+	public long cacheSize();
 }

@@ -277,7 +277,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 
 
 	@Override
-	public int cacheSize() {
+	public long cacheSize() {
 		return underlying.cacheSize();
 	}
 

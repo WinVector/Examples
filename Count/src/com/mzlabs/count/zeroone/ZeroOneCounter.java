@@ -306,7 +306,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn
 	}
 	
 	@Override
-	public int cacheSize() {
+	public long cacheSize() {
 		return cache.size();
 	}
 

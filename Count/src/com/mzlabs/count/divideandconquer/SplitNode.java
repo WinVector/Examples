@@ -136,7 +136,7 @@ final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 	}
 	
 	@Override
-	public int cacheSize() {
+	public long cacheSize() {
 		return leftSubSystem.cacheSize() + rightSubSystem.cacheSize() + cache.size();
 	}
 

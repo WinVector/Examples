@@ -138,7 +138,7 @@ final class TerminalNode implements NonNegativeIntegralCounter {
 	}
 
 	@Override
-	public int cacheSize() {
+	public long cacheSize() {
 		return 0;
 	}
 
