@@ -3,6 +3,8 @@ package com.mzlabs.count.ctab;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.mzlabs.count.ContingencyTableProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
@@ -47,6 +49,9 @@ public final class CTab {
 		if(rowsCols<=0) {
 			throw new IllegalArgumentException();
 		}
+		if(rowsCols>=subCounters.length) {
+			throw new IllegalArgumentException();
+		}
 		if(total<0) {
 			return BigInteger.ZERO;
 		}
@@ -55,7 +60,19 @@ public final class CTab {
 		}
 		// now know rowsCols>1 and total>0, split into semi-regular tables
 		final int n1 = rowsCols/2;
-		final int n2 = rowsCols - n1;
+		final int n2 = rowsCols - n1;		
+		final Set<Integer> subDims = new TreeSet<Integer>();
+		subDims.add(n1);
+		subDims.add(n2);
+		for(final int v1: subDims) {
+			for(final int v2: subDims) {
+				if((0<v1)&&(v1<=v2)) {
+					if(null==subCounters[v1][v2]) {
+						subCounters[v1][v2] = getSubCounter(v1,v2);
+					}
+				}
+			}
+		}		
 		final int targetSum = n1*total;
 		final OrderStepperTot stepper = new OrderStepperTot(rowsCols,total,targetSum);
 		final IntFunc subF = new IntFunc() {
@@ -85,23 +102,15 @@ public final class CTab {
 		return sum;
 	}
 	
-	private CPair getSubCounter(final int nRows, final int nCols) {
-		CPair counter = null;
-		synchronized (subCounters) { // essentially serialized here
-			counter = subCounters[nRows][nCols];
-			if(null==counter) {
-				final ContingencyTableProblem cp = new ContingencyTableProblem(nRows,nCols);
-				final NonNegativeIntegralCounter cnt;
-				if(nRows*nCols<=28) {
-					cnt = new ZeroOneCounter(cp,true);
-				} else {
-					cnt = new DivideAndConquerCounter(cp,false,false,true);
-				}
-				counter = new CPair(cp,cnt);
-				subCounters[nRows][nCols] = counter;
-			}
+	private static CPair getSubCounter(final int nRows, final int nCols) {
+		final ContingencyTableProblem cp = new ContingencyTableProblem(nRows,nCols);
+		final NonNegativeIntegralCounter cnt;
+		if(nRows*nCols<=28) {
+			cnt = new ZeroOneCounter(cp,true);
+		} else {
+			cnt = new DivideAndConquerCounter(cp,false,false,true);
 		}
-		return counter;
+		return new CPair(cp,cnt);
 	}
 	
 	public String cacheSizesString() {
@@ -198,23 +207,21 @@ public final class CTab {
 			colTotals = tmp;
 		}
 		// delegate problem
-		final CPair counter = getSubCounter(rowTotals.length,colTotals.length);
+		final CPair counter = subCounters[rowTotals.length][colTotals.length];
 		final int[] b = counter.prob.encodeB(rowTotals,colTotals);
 		return counter.counter.countNonNegativeSolutions(b);
 	}
 
-	public BigInteger debugConfirmSqTables(final int rowsCols, final int total) {
-		final int[] rows = new int[rowsCols];
-		final int[] cols = new int[rowsCols];
-		Arrays.fill(rows,total);
-		Arrays.fill(cols,total);
-		return countTablesSub(rows,cols);
+	public static BigInteger debugConfirmSqTables(final int rowsCols, final int total) {
+		final int[] b = new int[2*rowsCols];
+		Arrays.fill(b,total);
+		return getSubCounter(rowsCols,rowsCols).counter.countNonNegativeSolutions(b);
 	}
 	
 	public static void main(final String[] args) {
 		System.out.println("n" + "\t" + "total" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes");
 		for(int n=1;n<=10;++n) {
-			final CTab ctab = new CTab(10,true);
+			final CTab ctab = new CTab(n,true);
 			for(int total=0;total<=(n*n-3*n+2)/2;++total) {
 				final BigInteger count = ctab.countSqTables(n,total);
 				final String cacheSizes = ctab.cacheSizesString();

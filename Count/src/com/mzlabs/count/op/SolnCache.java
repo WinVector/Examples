@@ -1,16 +1,23 @@
-package com.mzlabs.count.util;
+package com.mzlabs.count.op;
 
 import java.math.BigInteger;
-import java.util.HashMap;
+import java.util.TreeMap;
+
+import com.mzlabs.count.util.IntVec;
 
 public final class SolnCache {
 	private final int nsub = 1000;
 	
 	
-	private static final class CI extends HashMap<IntVec,BHolder> {
+	private static final class CI extends TreeMap<IntVec,BHolder> {
 		private static final long serialVersionUID = 1L;
 	};
 	
+	/**
+	 * gives as per-problem lock to hold
+	 * @author johnmount
+	 *
+	 */
 	private static final class BHolder {
 		public BigInteger value = null;
 	}

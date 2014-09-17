@@ -28,7 +28,7 @@ public class TestCTab {
 			final CTab ctab = new CTab(rowsCols,true);
 			for(int total=0;total<=10;++total) {
 				final BigInteger count = ctab.countSqTables(rowsCols,total); 
-				final BigInteger check = ctab.debugConfirmSqTables(rowsCols, total);
+				final BigInteger check = CTab.debugConfirmSqTables(rowsCols, total);
 				final boolean eq = (check.compareTo(count)==0);
 				assertTrue(eq);
 				//System.out.println(rowsCols + "\t" + total + "\t" + count + "\t" + check + "\t" + eq);
@@ -42,7 +42,7 @@ public class TestCTab {
 		final int total = 5;
 		final CTab ctab = new CTab(rowsCols,false);
 		final BigInteger count = ctab.countSqTables(rowsCols,total); 
-		final BigInteger check = ctab.debugConfirmSqTables(rowsCols, total);
+		final BigInteger check = CTab.debugConfirmSqTables(rowsCols, total);
 		final boolean eq = (check.compareTo(count)==0);
 		assertTrue(eq);
 		//System.out.println(rowsCols + "\t" + total + "\t" + count + "\t" + check + "\t" + eq);

@@ -4,15 +4,15 @@ import java.math.BigInteger;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.op.IntFunc;
+import com.mzlabs.count.op.IntVecFn;
 import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.Sequencer;
+import com.mzlabs.count.op.SolnCache;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.RangeIter;
 import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.util.IntVec;
-import com.mzlabs.count.util.IntVecFn;
-import com.mzlabs.count.util.SolnCache;
 
 final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 	private final NonNegativeIntegralCounter leftSubSystem;
