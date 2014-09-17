@@ -59,6 +59,7 @@ public final class RecNode {
 		final int i = findSlot(nk,map);
 		if(null!=map[i]) {
 			map[i] = x;
+			return;
 		}
 		++noccupied;
 		if(5*noccupied>=map.length) {
