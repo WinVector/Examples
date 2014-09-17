@@ -1,9 +1,9 @@
 package com.mzlabs.count.op;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import com.mzlabs.count.op.impl.RecNode;
-import com.mzlabs.count.util.IntVec;
 
 public final class SolnCache {
 	private final int nsub = 100;
@@ -19,16 +19,16 @@ public final class SolnCache {
 	/**
 	 * Look for a cached value of f(x), if none such create a record, block on the record and compute f(x) (so only one attempt to compute f(x))
 	 * @param f
-	 * @param x
+	 * @param x not null, x.length>0
 	 * @return
 	 */
-	public BigInteger evalCached(final IntVecFn f, final IntVec x) {
-		int subi = x.hashCode%nsub;
+	public BigInteger evalCached(final CachableCalculation f, final int[] x) {
+		int subi = Arrays.hashCode(x)%nsub;
 		if(subi<0) {
 			subi += nsub;
 		}
 		final RecNode store = stores[subi];
-		final RecNode newHolder = new RecNode(x.get(x.dim()-1));
+		final RecNode newHolder = new RecNode(x[x.length-1]);
 		final RecNode cached;
 		synchronized (newHolder) {
 			synchronized(store) {

@@ -2,7 +2,6 @@ package com.mzlabs.count.op.impl;
 
 import java.math.BigInteger;
 
-import com.mzlabs.count.util.IntVec;
 
 /**
  * prefix tree on integer vectors (trying to cut down number of flyweight objects)
@@ -86,17 +85,17 @@ public final class RecNode {
 	 * @param newNode not null with key==x.get(x.dim()-1) (possible mutex locked)
 	 * @return terminal node to hold value (newNode if there was allocation)
 	 */
-	private static RecNode lookupAlloc(RecNode nd, final IntVec x, final RecNode newNode) {
-		final int n = x.dim();
+	private static RecNode lookupAlloc(RecNode nd, final int[] x, final RecNode newNode) {
+		final int n = x.length;
 		if(n<=0) {
 			throw new IllegalArgumentException("empty x");
 		}
-		if(newNode.key!=x.get(n-1)) {
+		if(newNode.key!=x[n-1]) {
 			throw new IllegalArgumentException("bad new key");
 		}
 		int firstPosn = 0;
 		while(true) {
-			final int key = x.get(firstPosn);
+			final int key = x[firstPosn];
 			RecNode sub = nd.get(key);
 			if(firstPosn>=n-1) {
 				// at terminal case
@@ -123,7 +122,7 @@ public final class RecNode {
 	 * @param newNode
 	 * @return
 	 */
-	public RecNode lookupAlloc(final IntVec x, final RecNode newNode) {
+	public RecNode lookupAlloc(final int[] x, final RecNode newNode) {
 		return lookupAlloc(this,x,newNode);
 	}
 	

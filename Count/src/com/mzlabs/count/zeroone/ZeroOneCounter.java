@@ -8,7 +8,7 @@ import java.util.Map;
 import com.mzlabs.count.CountingProblem;
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.divideandconquer.DivideAndConquerCounter;
-import com.mzlabs.count.op.IntVecFn;
+import com.mzlabs.count.op.CachableCalculation;
 import com.mzlabs.count.op.SolnCache;
 import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.op.iter.SeqLT;
@@ -47,7 +47,7 @@ import com.winvector.lp.impl.RevisedSimplexSolver;
  * @author johnmount
  *
  */
-public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn {
+public final class ZeroOneCounter implements NonNegativeIntegralCounter,CachableCalculation {
 	private final CountingProblem prob;
 	private final int m;
 	private final ZeroOneStore zeroOneCounts;
@@ -175,9 +175,9 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn
 	 * @return number of non-negative integer solutions x to A x == b
 	 */
 	@Override
-	public BigInteger eval(final IntVec b) {
+	public BigInteger eval(final int[] b) {
 		BigInteger result = BigInteger.ZERO;
-		final IBPair[] group = zeroOneCounts.lookup(b);
+		final IBPair[] group = zeroOneCounts.lookup(new IntVec(b));
 		if(null!=group) {
 			final int[] bprime = new int[m];
 			for(final IBPair gi: group) {
@@ -185,7 +185,7 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn
 				boolean goodR = true;
 				int sum = 0;
 				for(int i=0;i<m;++i) {
-					final int diff = b.get(i) - r.get(i);
+					final int diff = b[i] - r.get(i);
 					if(diff<0) {
 						goodR = false;
 						break;
@@ -195,14 +195,16 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn
 					sum += bpi;
 				}
 				if(goodR) {
-					final BigInteger nzone = gi.value;
+					final BigInteger nzone = gi.value;  // not zero by cache conditions
 					if(sum<=0) { // A x = 0, has one non-negative solution (since a second positive solution would give us a ray of solutions, and we know we are bounded).
 						result = result.add(nzone);
 					} else {
 						final Permutation tobprimeNorm = prob.toNormalForm(bprime);
 						final int[] bprimeNorm = tobprimeNorm.apply(bprime);
 						final BigInteger subsoln = countNonNegativeSolutions(bprimeNorm);
-						result = result.add(nzone.multiply(subsoln));
+						if(subsoln.compareTo(BigInteger.ZERO)!=0) {
+							result = result.add(nzone.multiply(subsoln));
+						}
 					}
 				}
 			}
@@ -228,14 +230,14 @@ public final class ZeroOneCounter implements NonNegativeIntegralCounter,IntVecFn
 			}
 			sum += bi;
 		}
-		if(obviouslyEmpty(bIn)) {
+		if(!prob.admissableB(bIn)) {
 			return BigInteger.ZERO;
 		}
-		if(sum<=0) {
+		if(sum<=0) {  // if A x = 0 has either 1, zero or +infinity solutions- we are bounded it is zero or one (and therefore 1 in this case).
 			return BigInteger.ONE;
 		}
 		final Permutation perm = prob.toNormalForm(bIn);
-		final IntVec bNormal = new IntVec(perm.apply(bIn));
+		final int[] bNormal = perm.apply(bIn);
 		final BigInteger result = cache.evalCached(this,bNormal);
 		return result;
 	}

@@ -4,7 +4,7 @@ import java.math.BigInteger;
 
 import com.mzlabs.count.NonNegativeIntegralCounter;
 import com.mzlabs.count.op.IntFunc;
-import com.mzlabs.count.op.IntVecFn;
+import com.mzlabs.count.op.CachableCalculation;
 import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.Sequencer;
 import com.mzlabs.count.op.SolnCache;
@@ -14,7 +14,7 @@ import com.mzlabs.count.op.iter.RangeIter;
 import com.mzlabs.count.op.iter.SeqLE;
 import com.mzlabs.count.util.IntVec;
 
-final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
+final class SplitNode implements NonNegativeIntegralCounter,CachableCalculation {
 	private final NonNegativeIntegralCounter leftSubSystem;
 	private final NonNegativeIntegralCounter rightSubSystem;
 	private final int[][] A;
@@ -64,11 +64,11 @@ final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 	}
 	
 	@Override
-	public BigInteger eval(final IntVec b) {
+	public BigInteger eval(final int[] b) {
 		final int[] bound = new int[nEntangled];
 		for(int ii=0;ii<nEntangled;++ii) {
 			final int i = entangledRows[ii];
-			bound[ii] = b.get(i);
+			bound[ii] = b[i];
 			if(zeroOne) {
 				int rowSum = 0;
 				for(int j=0;j<n;++j) {
@@ -88,10 +88,10 @@ final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 				final int[] b2 = new int[m];
 				for(int i=0;i<m;++i) {
 					if(usesRow[0][i]) {
-						b1[i] = b.get(i);
+						b1[i] = b[i];
 					}
 					if(usesRow[1][i]) {
-						b2[i] = b.get(i);
+						b2[i] = b[i];
 					}
 				}
 				final int[] counter = new int[nEntangled];
@@ -100,7 +100,7 @@ final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 					for(int ii=0;ii<nEntangled;++ii) {
 						final int i = entangledRows[ii];
 						b1[i] = counter[ii];
-						b2[i] = b.get(i) - counter[ii];
+						b2[i] = b[i] - counter[ii];
 					}
 					// b1 + b2 == b
 					// add sub1*sub2 terms, but try to avoid calculating sub(i) if sub(1-i) is obviously zero
@@ -126,7 +126,7 @@ final class SplitNode implements NonNegativeIntegralCounter,IntVecFn {
 	
 	@Override
 	public BigInteger countNonNegativeSolutions(final int[] b) {
-		return cache.evalCached(this,new IntVec(b));
+		return cache.evalCached(this,b);
 	}
 
 	
