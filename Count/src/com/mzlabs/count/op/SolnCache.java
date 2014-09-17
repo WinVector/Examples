@@ -6,7 +6,15 @@ import com.mzlabs.count.op.impl.RecNode;
 import com.mzlabs.count.util.IntVec;
 
 public final class SolnCache {
-	private final RecNode store = new RecNode(-1);
+	private final int nsub = 100;
+	private final RecNode[] stores;
+	
+	public SolnCache() {
+		stores = new RecNode[nsub];
+		for(int i=0;i<nsub;++i) {
+			stores[i] = new RecNode(-1);
+		}
+	}
 	
 	/**
 	 * Look for a cached value of f(x), if none such create a record, block on the record and compute f(x) (so only one attempt to compute f(x))
@@ -15,8 +23,13 @@ public final class SolnCache {
 	 * @return
 	 */
 	public BigInteger evalCached(final IntVecFn f, final IntVec x) {
-		final RecNode cached;
+		int subi = x.hashCode%nsub;
+		if(subi<0) {
+			subi += nsub;
+		}
+		final RecNode store = stores[subi];
 		final RecNode newHolder = new RecNode(x.get(x.dim()-1));
+		final RecNode cached;
 		synchronized (newHolder) {
 			synchronized(store) {
 				cached = store.lookupAlloc(x,newHolder);
@@ -37,18 +50,28 @@ public final class SolnCache {
 	}
 		
 	
+	/**
+	 * good effort clear, not atomic across sub-caches
+	 * @return
+	 */
 	public long size() {
-		synchronized (store) {
-			return store.size();
+		long sz = 0;
+		for(final RecNode store: stores) {
+			synchronized (store) {
+				sz += store.size();
+			}
 		}
+		return sz;
 	}
 
 	/**
-	 * good effort clear, not atomic accross sub-caches
+	 * good effort clear, not atomic across sub-caches
 	 */
 	public void clear() {
-		synchronized (store) {
-			store.clear();
+		for(final RecNode store: stores) {
+			synchronized (store) {
+				store.clear();
+			}
 		}
 	}
 }

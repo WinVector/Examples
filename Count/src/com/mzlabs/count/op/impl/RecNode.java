@@ -79,6 +79,7 @@ public final class RecNode {
 		}
 	}
 	
+	
 	/**
 	 * 
 	 * @param x x.dim()>0
