@@ -50,6 +50,8 @@ public final class SolnCache {
 						cache.put(x,newHolder);
 					}
 				}
+				// newHolder now potentially visible to other threads (as it is in the cache and we released the mutex)
+				// keep newHolder mutex so we can fill in value before anybody else looks
 				if(null==cached) {
 					newHolder.value = f.eval(x);
 					return newHolder.value;
