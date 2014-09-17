@@ -85,7 +85,7 @@ public final class RecNode {
 	 * @param newNode not null with key==x.get(x.dim()-1) (possible mutex locked)
 	 * @return terminal node to hold value (newNode if there was allocation)
 	 */
-	private static RecNode lookup(RecNode nd, final IntVec x, final RecNode newNode) {
+	private static RecNode lookupAlloc(RecNode nd, final IntVec x, final RecNode newNode) {
 		final int n = x.dim();
 		if(n<=0) {
 			throw new IllegalArgumentException("empty x");
@@ -122,12 +122,13 @@ public final class RecNode {
 	 * @param newNode
 	 * @return
 	 */
-	public RecNode lookup(final IntVec x, final RecNode newNode) {
-		return lookup(this,x,newNode);
+	public RecNode lookupAlloc(final IntVec x, final RecNode newNode) {
+		return lookupAlloc(this,x,newNode);
 	}
 	
 	public void clear() {
 		map = null;
+		noccupied = 0;
 	}
 	
 	public long size() {

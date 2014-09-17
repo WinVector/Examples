@@ -19,7 +19,7 @@ public final class SolnCache {
 		final RecNode newHolder = new RecNode(x.get(x.dim()-1));
 		synchronized (newHolder) {
 			synchronized(store) {
-				cached = store.lookup(x,newHolder);
+				cached = store.lookupAlloc(x,newHolder);
 			}
 			// newHolder now potentially visible to other threads (as it is in the cache and we released the mutex)
 			// keep newHolder mutex so we can fill in value before anybody else looks
