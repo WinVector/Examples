@@ -130,6 +130,7 @@ public final class RecNode {
 	public void clear() {
 		map = null;
 		noccupied = 0;
+		value = null;
 	}
 	
 	public long size() {
