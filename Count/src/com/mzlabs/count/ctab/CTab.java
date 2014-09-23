@@ -15,6 +15,7 @@ import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.OrderStepperTot;
 import com.mzlabs.count.util.IntVec;
+import com.mzlabs.count.util.LinearFitter;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 
@@ -219,17 +220,35 @@ public final class CTab {
 	}
 	
 	public static void main(final String[] args) {
-		System.out.println("n" + "\t" + "total" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes");
-		for(int n=1;n<=10;++n) {
+		System.out.println("n" + "\t" + "total" + "\t" + "target" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes" + "\t" + "tableFinishTimeEst");
+		for(int n=8;n<=10;++n) {
 			final CTab ctab = new CTab(n,true);
-			for(int total=0;total<=(n*n-3*n+2)/2;++total) {
+			final LinearFitter lf = new LinearFitter(1);
+			final int tLast = (n*n-3*n+2)/2;
+			for(int total=0;total<=tLast;++total) {
+				final Date startTime = new Date();
 				final BigInteger count = ctab.countSqTables(n,total);
 				final String cacheSizes = ctab.cacheSizesString();
-				ctab.clearCaches();
-				System.out.println("" + n + "\t" + total + "\t" + count + "\t" + new Date() + "\t" + cacheSizes);
+				final Date curTime = new Date();
+				long remainingTimeEstMS = 10000;
+				if(total>0) { 
+					// simplistic model: log(time) ~ a + b*size
+					final double[] x = { total };
+					final double y = 10000.0+curTime.getTime() - startTime.getTime();
+					lf.addObservation(x, Math.log(y), y);
+					final double[] beta = lf.solve();
+					double timeEstMS = 0.0;
+					for(int j=total+1;j<=tLast;++j) {
+						final double predict = LinearFitter.predict(beta,new double[] {j});
+						timeEstMS += Math.exp(predict);
+					}
+					remainingTimeEstMS = (long)Math.ceil(timeEstMS);
+				}
+				final Date finishTimeEst = new Date(curTime.getTime()+remainingTimeEstMS);
+				System.out.println("" + n + "\t" + total + "\t" + tLast + "\t" + count + "\t" + curTime + "\t" + cacheSizes + "\t" + finishTimeEst);
 			}
+			ctab.clearCaches();
 		}
-		//System.out.println("total evals: " + SolnCache.totalEvals);
 	}
 
 }
