@@ -63,9 +63,11 @@ public final class ContingencyTableProblem extends CountingProblem {
 		for(int i=0;i<rows;++i) {
 			b[i] = rowTotals[i];
 		}
+		Arrays.sort(b,0,rows);
 		for(int i=0;i<cols;++i) {
 			b[i+rows] = colTotals[i];
 		}
+		Arrays.sort(b,rows,rows+cols);
 		return b;
 	}
 	

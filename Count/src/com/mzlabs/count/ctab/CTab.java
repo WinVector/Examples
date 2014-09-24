@@ -14,7 +14,6 @@ import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.OrderStepperTot;
-import com.mzlabs.count.util.IntVec;
 import com.mzlabs.count.util.LinearFitter;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
@@ -85,7 +84,6 @@ public final class CTab {
 					for(int i=0;i<rowsCols;++i) {
 						y[i] = total - x[i];
 					}
-					Arrays.sort(y);
 					final BigInteger yCount = countSemiTables(n2,total,y);
 					if(yCount.compareTo(BigInteger.ZERO)>0) {
 						final BigInteger nperm = stepper.nPerm(x);
@@ -175,7 +173,6 @@ public final class CTab {
 					for(int i=0;i<nCols;++i) {
 						y[i] = colTotal - x[i];
 					}
-					Arrays.sort(y);
 					final BigInteger yCount = countTablesSub(rowTotals2,y);
 					if(yCount.compareTo(BigInteger.ZERO)>0) {
 						final BigInteger nperm = stepper.nPerm(x);
@@ -191,21 +188,15 @@ public final class CTab {
 	}
 	
 	private BigInteger countTablesSub(final int[] rowTotalsIn, final int[] colTotalsIn) {
-		// use as many symmetries as we can, right here
-		int[] rowTotals = rowTotalsIn;
-		int[] colTotals = colTotalsIn;
-		Arrays.sort(rowTotals);
-		Arrays.sort(colTotals);
-		boolean swap = false;
-		if(rowTotals.length!=colTotals.length) {
-			swap = rowTotals.length>colTotals.length; 
+		final int[] rowTotals;
+		final int[] colTotals;
+		if(rowTotalsIn.length>colTotalsIn.length) {
+			// swap
+			rowTotals = colTotalsIn;
+			colTotals = rowTotalsIn;
 		} else {
-			swap = IntVec.compare(rowTotals, colTotals)>0; 
-		}
-		if(swap) {
-			final int[] tmp = rowTotals;
-			rowTotals = colTotals;
-			colTotals = tmp;
+			rowTotals = rowTotalsIn;
+			colTotals = colTotalsIn;
 		}
 		// delegate problem
 		final CPair counter = subCounters[rowTotals.length][colTotals.length];
@@ -235,7 +226,7 @@ public final class CTab {
 					// simplistic model: log(time) ~ a + b*size
 					final double[] x = { total };
 					final double y = 10000.0+curTime.getTime() - startTime.getTime();
-					lf.addObservation(x, Math.log(y), y);
+					lf.addObservation(x, Math.log(y),1.0);
 					final double[] beta = lf.solve();
 					double timeEstMS = 0.0;
 					for(int j=total+1;j<=tLast;++j) {

@@ -1,6 +1,7 @@
 package com.mzlabs.count.util;
 
 import java.util.Arrays;
+import java.util.Comparator;
 
 
 public final class IntVec implements Comparable<IntVec> {
@@ -40,6 +41,13 @@ public final class IntVec implements Comparable<IntVec> {
 		}
 		return 0;		
 	}
+	
+	public static final Comparator<int[]> IntComp = new Comparator<int[]>() {
+		@Override
+		public int compare(final int[] x, final int[] y) {
+			return IntVec.compare(x,y);
+		}
+	};
 	
 	@Override
 	public int compareTo(final IntVec o) {

@@ -1,18 +1,22 @@
 package com.mzlabs.count.op;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
-import com.mzlabs.count.op.impl.RecNode;
+import com.mzlabs.count.util.IntVec;
 
 public final class SolnCache {
-	private final int nsub = 100;
-	private final RecNode[] stores;
 	
-	public SolnCache() {
-		stores = new RecNode[nsub];
-		for(int i=0;i<nsub;++i) {
-			stores[i] = new RecNode(-1);
+	private final int nStores = 1377;
+	private final ArrayList<Map<int[],BigInteger>> hotStores = new ArrayList<Map<int[],BigInteger>>(nStores);
+	
+	
+	public SolnCache() {	
+		for(int i=0;i<nStores;++i) {
+			hotStores.add(new TreeMap<int[],BigInteger>(IntVec.IntComp));
 		}
 	}
 	
@@ -22,55 +26,55 @@ public final class SolnCache {
 	 * @param x not null, x.length>0
 	 * @return
 	 */
-	public BigInteger evalCached(final CachableCalculation f, final int[] x) {
-		int subi = Arrays.hashCode(x)%nsub;
-		if(subi<0) {
-			subi += nsub;
-		}
-		final RecNode store = stores[subi];
-		final RecNode newHolder = new RecNode(x[x.length-1]);
-		final RecNode cached;
-		synchronized (newHolder) {
-			synchronized(store) {
-				cached = store.lookupAlloc(x,newHolder);
+	public BigInteger evalCached(final CachableCalculation f, final int[] xin) {
+		// find the sub-store
+		final Map<int[],BigInteger> hotStore;
+		{
+			int subi = Arrays.hashCode(xin)%nStores;
+			if(subi<0) {
+				subi += nStores;
 			}
-			// newHolder now potentially visible to other threads (as it is in the cache and we released the mutex)
-			// keep newHolder mutex so we can fill in value before anybody else looks
-			// if cached.value==null it is because we allocated and cached==newHolder
-			if(null==cached.value) {
-				cached.value = f.eval(x);
-				return cached.value;
+			hotStore = hotStores.get(subi);
+		}
+		// hope for cached
+		synchronized (hotStore) {
+			BigInteger found = hotStore.get(xin);
+			if(null!=found) {
+				return found;
 			}
 		}
-		// cached is not null here
-		synchronized (cached) {
-			// if we can obtain the lock then cached.value is not null (as it is set before the lock is released)
-			return cached.value;
+		// do the work (while not holding locks)
+		final int[] xcopy = Arrays.copyOf(xin,xin.length);
+		final BigInteger value = f.eval(xcopy);
+		// write back result
+		synchronized (hotStore) {
+			hotStore.put(xcopy,value);
 		}
+		return value;
 	}
-		
 	
 	/**
-	 * good effort clear, not atomic across sub-caches
+	 * best effort, not atomic across stores
 	 * @return
 	 */
 	public long size() {
-		long sz = 0;
-		for(final RecNode store: stores) {
-			synchronized (store) {
-				sz += store.size();
+		long size = 0;
+		for(final Map<int[],BigInteger> s: hotStores) {
+			synchronized (s) {
+				size += s.size();
 			}
 		}
-		return sz;
+		return size;
 	}
 
+	
 	/**
-	 * good effort clear, not atomic across sub-caches
+	 * best effort, not atomic across stores
 	 */
 	public void clear() {
-		for(final RecNode store: stores) {
-			synchronized (store) {
-				store.clear();
+		for(final Map<int[],BigInteger> s: hotStores) {
+			synchronized (s) {
+				s.clear();
 			}
 		}
 	}
