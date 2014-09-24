@@ -38,6 +38,22 @@ hold1OutLMPreds <- function(formula,data,wts=c()) {
   preds
 }
 
+# Example of calculating PRESS, and related statistics
+# y is the actual y column
+# press statistic is sum(y_i - f_i)^2, f_i hold-i-out prediction
+PRESSstats.lm = function(fmla, dframe, y) {
+  n = length(y)
+  hopreds = hold1OutLMPreds(fmla, dframe)
+  homeans = hold1OutMeans(y)
+  devs = y-hopreds
+  PRESS = sum(devs^2)
+  rmPRESS = sqrt(mean(devs^2))
+  dely = y-homeans
+  PRESS.r2= 1 - (PRESS/sum(dely^2))
+  data.frame(PRESS=PRESS, rmPRESS=rmPRESS, PRESS.r.squared=PRESS.r2)
+}
+
+
 # example:
 # set.seed(25325)
 # d <- data.frame(y=rnorm(10),x=rnorm(10))
@@ -50,6 +66,10 @@ hold1OutLMPreds <- function(formula,data,wts=c()) {
 # print('confirm h1mean')
 # print(sum(d$h1mean-d$h1meanCheck)^2)  # 4.930381e-32
 # d$lmpred <- predict(lm(y~x,data=d))
+# print(PRESSstats.lm("y~x", d, d$y))
+# #     PRESS   rmPRESS PRESS.r.squared
+# #  2.196021 0.4686172     -0.02146757
+
 # d$mean <- mean(d$y)
 # print("in-sample R^2")
 # print(1-sum((d$lmpred-d$y)^2)/sum((d$mean-d$y)^2))   # R^2 : 0.1378046
