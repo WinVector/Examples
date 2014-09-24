@@ -224,13 +224,13 @@ public final class CTab {
 				long remainingTimeEstMS = 10000;
 				if(total>0) { 
 					// simplistic model: log(time) ~ a + b*size
-					final double[] x = { total };
+					final double[] x = { total, total*total };
 					final double y = 10000.0+curTime.getTime() - startTime.getTime();
 					lf.addObservation(x, Math.log(y),1.0);
 					final double[] beta = lf.solve();
 					double timeEstMS = 0.0;
 					for(int j=total+1;j<=tLast;++j) {
-						final double predict = LinearFitter.predict(beta,new double[] {j});
+						final double predict = LinearFitter.predict(beta,new double[] {j, j*j});
 						timeEstMS += Math.exp(predict);
 					}
 					remainingTimeEstMS = (long)Math.ceil(timeEstMS);

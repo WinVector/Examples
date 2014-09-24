@@ -38,7 +38,7 @@ public final class SolnCache {
 		}
 		// hope for cached
 		synchronized (hotStore) {
-			BigInteger found = hotStore.get(xin);
+			final BigInteger found = hotStore.get(xin);
 			if(null!=found) {
 				return found;
 			}
