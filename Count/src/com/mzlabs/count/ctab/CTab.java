@@ -213,7 +213,7 @@ public final class CTab {
 	
 	public static void main(final String[] args) {
 		System.out.println("n" + "\t" + "total" + "\t" + "target" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes" + "\t" + "tableFinishTimeEst");
-		for(int n=8;n<=10;++n) {
+		for(int n=1;n<=9;++n) {
 			final CTab ctab = new CTab(n,true);
 			final Fitter lf = new LogLinearFitter();
 			final int tLast = (n*n-3*n+2)/2;
@@ -223,18 +223,20 @@ public final class CTab {
 				final String cacheSizes = ctab.cacheSizesString();
 				final Date curTime = new Date();
 				long remainingTimeEstMS = 10000;
-				if(total>0) { 
-					// simplistic model: time ~ exp(a + b*size + c*size*size)
-					final double[] x = { total, total*total };
+				if(total>2) { 
+					// simplistic model: time ~ exp(a + b*size)
+					final double[] x = { total };
 					final double y = 10000.0+curTime.getTime() - startTime.getTime();
-					lf.addObservation(x, y,1.0);
-					final double[] beta = lf.solve();
-					double timeEstMS = 0.0;
-					for(int j=total+1;j<=tLast;++j) {
-						final double predict = lf.predict(beta,new double[] {j, j*j});
-						timeEstMS += predict;
+					lf.addObservation(x,y,1.0);
+					if(total>6) {
+						final double[] beta = lf.solve();
+						double timeEstMS = 0.0;
+						for(int j=total+1;j<=tLast;++j) {
+							final double predict = lf.predict(beta,new double[] {j});
+							timeEstMS += predict;
+						}
+						remainingTimeEstMS = (long)Math.ceil(timeEstMS);
 					}
-					remainingTimeEstMS = (long)Math.ceil(timeEstMS);
 				}
 				final Date finishTimeEst = new Date(curTime.getTime()+remainingTimeEstMS);
 				System.out.println("" + n + "\t" + total + "\t" + tLast + "\t" + count + "\t" + curTime + "\t" + cacheSizes + "\t" + finishTimeEst);
