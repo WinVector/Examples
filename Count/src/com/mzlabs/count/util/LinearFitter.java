@@ -9,7 +9,7 @@ import com.winvector.linalg.colt.ColtMatrix;
  * @author johnmount
  *
  */
-public final class LinearFitter {
+public final class LinearFitter implements Fitter {
 	private final ColtMatrix xTx;
 	private final double[] xTy;
 	
@@ -23,14 +23,15 @@ public final class LinearFitter {
 		xTy = new double[n+1];
 	}
 
-	/**
-	 * add a y ~ f(x) observation
-	 * @param x
-	 * @param y
-	 * @param wt weight of observation (set to 1.0 in many cases)
+	/* (non-Javadoc)
+	 * @see com.mzlabs.count.util.Fitter#addObservation(double[], double, double)
 	 */
+	@Override
 	public void addObservation(final double[] x, final double y, final double wt) {
 		final int n = xTx.rows()-1;
+		if(n!=x.length) {
+			throw new IllegalArgumentException();
+		}
 		for(int i=0;i<=n;++i) {
 			final double xi = i<n?x[i]:1.0;
 			xTy[i] += wt*xi*y;
@@ -41,6 +42,10 @@ public final class LinearFitter {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.mzlabs.count.util.Fitter#solve()
+	 */
+	@Override
 	public double[] solve() {
 		final int n = xTx.rows()-1;
 		final double epsilon = 1.0e-5;
@@ -56,8 +61,15 @@ public final class LinearFitter {
 		return soln;
 	}
 	
-	public static double predict(final double[] soln, final double[] x) {
+	/* (non-Javadoc)
+	 * @see com.mzlabs.count.util.Fitter#predict(double[], double[])
+	 */
+	@Override
+	public double predict(final double[] soln, final double[] x) {
 		final int n = soln.length-1;
+		if((n!=x.length)||(n+1!=soln.length)) {
+			throw new IllegalArgumentException();
+		}
 		double sum = 0.0;
 		for(int i=0;i<=n;++i) {
 			final double xi = i<n?x[i]:1.0;

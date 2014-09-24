@@ -14,7 +14,8 @@ import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.OrderStepperTot;
-import com.mzlabs.count.util.LinearFitter;
+import com.mzlabs.count.util.Fitter;
+import com.mzlabs.count.util.LogLinearFitter;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 
 
@@ -214,7 +215,7 @@ public final class CTab {
 		System.out.println("n" + "\t" + "total" + "\t" + "target" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes" + "\t" + "tableFinishTimeEst");
 		for(int n=8;n<=10;++n) {
 			final CTab ctab = new CTab(n,true);
-			final LinearFitter lf = new LinearFitter(1);
+			final Fitter lf = new LogLinearFitter();
 			final int tLast = (n*n-3*n+2)/2;
 			for(int total=0;total<=tLast;++total) {
 				final Date startTime = new Date();
@@ -223,15 +224,15 @@ public final class CTab {
 				final Date curTime = new Date();
 				long remainingTimeEstMS = 10000;
 				if(total>0) { 
-					// simplistic model: log(time) ~ a + b*size
+					// simplistic model: time ~ exp(a + b*size + c*size*size)
 					final double[] x = { total, total*total };
 					final double y = 10000.0+curTime.getTime() - startTime.getTime();
-					lf.addObservation(x, Math.log(y),1.0);
+					lf.addObservation(x, y,1.0);
 					final double[] beta = lf.solve();
 					double timeEstMS = 0.0;
 					for(int j=total+1;j<=tLast;++j) {
-						final double predict = LinearFitter.predict(beta,new double[] {j, j*j});
-						timeEstMS += Math.exp(predict);
+						final double predict = lf.predict(beta,new double[] {j, j*j});
+						timeEstMS += predict;
 					}
 					remainingTimeEstMS = (long)Math.ceil(timeEstMS);
 				}
