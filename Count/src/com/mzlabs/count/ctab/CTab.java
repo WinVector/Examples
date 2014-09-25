@@ -14,9 +14,10 @@ import com.mzlabs.count.op.Reducer;
 import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.OrderStepperTot;
-import com.mzlabs.count.util.Fitter;
-import com.mzlabs.count.util.LogLinearFitter;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
+import com.mzlabs.fit.Fitter;
+import com.mzlabs.fit.GLMFitter;
+import com.mzlabs.fit.SquareLossOfExp;
 
 
 public final class CTab {
@@ -215,7 +216,7 @@ public final class CTab {
 		System.out.println("n" + "\t" + "total" + "\t" + "target" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes" + "\t" + "tableFinishTimeEst");
 		for(int n=1;n<=9;++n) {
 			final CTab ctab = new CTab(n,true);
-			final Fitter lf = new LogLinearFitter();
+			final Fitter lf = new GLMFitter(new SquareLossOfExp());
 			final int tLast = (n*n-3*n+2)/2;
 			for(int total=0;total<=tLast;++total) {
 				final Date startTime = new Date();

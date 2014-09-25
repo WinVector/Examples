@@ -1,4 +1,4 @@
-package com.mzlabs.count.util;
+package com.mzlabs.fit;
 
 public interface Fitter {
 

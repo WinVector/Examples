@@ -1,4 +1,4 @@
-package com.mzlabs.count.util;
+package com.mzlabs.fit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,32 +7,13 @@ import java.util.Arrays;
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;
 
-public final class LogLinearFitter implements Fitter {
-	public static final class Obs {
-		public final double[] x;
-		public final double y;
-		public final double wt;
-		
-		public Obs(final double[] x, final double y, final double wt) {
-			this.x = Arrays.copyOf(x,x.length);
-			this.y = y;
-			this.wt = wt;
-		}
-		
-		@Override
-		public String toString() {
-			final StringBuilder b = new StringBuilder();
-			b.append("" + wt + ":[");
-			for(final double xi:x) {
-				b.append(" " + xi);
-			}
-			b.append(" ]-> " + y);
-			return b.toString();
-		}
+public final class GLMFitter implements Fitter {
+	public final Link link;
+	public final ArrayList<Obs> obs = new ArrayList<Obs>();
+	
+	public GLMFitter(final Link link) {
+		this.link = link;
 	}
-	
-	private final ArrayList<Obs> obs = new ArrayList<Obs>();
-	
 	
 	@Override
 	public void addObservation(final double[] x, final double y, final double wt) {
@@ -52,44 +33,6 @@ public final class LogLinearFitter implements Fitter {
 	 * 
 	 */
 	
-	private static double dot(final double[] soln, final double[] x) {
-		final int n = x.length;
-		double sum = 0.0;
-		for(int i=0;i<=n;++i) {
-			final double xi = i<n?x[i]:1.0;
-			sum += xi*soln[i];
-		}
-		return sum;
-	}
-	
-	private double errAndGradAndHessian(final double[] beta, final double[] grad, final ColtMatrix hessian) {
-		final int dim = beta.length;
-		Arrays.fill(grad,0.0);
-		for(int i=0;i<dim;++i) {
-			for(int j=0;j<dim;++j) {
-				hessian.set(i,j,0.0);
-			}
-		}
-		double err = 0.0;
-		for(final Obs obsi: obs) {
-			final double ebx = Math.exp(dot(beta,obsi.x));
-			final double diff = obsi.y-ebx;
-			err += diff*diff;
-			final double gradCoef = -2*diff*ebx*obsi.wt;
-			final double hessCoef = -2*(obsi.y-2*ebx)*ebx*obsi.wt;
-			for(int i=0;i<dim;++i) {
-				final double xi = i<dim-1?obsi.x[i]:1.0;
-				grad[i] += gradCoef*xi;
-				for(int j=0;j<dim;++j) {
-					final double xj = j<dim-1?obsi.x[j]:1.0;
-					final double hij = hessian.get(i,j);
-					hessian.set(i,j,hij+xi*xj*hessCoef);
-				}
-			}
-		}
-		return err;
-	}
-
 	@Override
 	public double[] solve() {
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
@@ -107,7 +50,7 @@ public final class LogLinearFitter implements Fitter {
 		int nFails = 0;
 		out:
 		while(true) {
-			final double err = errAndGradAndHessian(beta,grad,hessian);
+			final double err = link.lossAndGradAndHessian(obs,beta,grad,hessian);
 			if((null==bestBeta)||(err<bestErr)) {
 				bestErr = err;
 				bestBeta = Arrays.copyOf(beta,beta.length);
@@ -173,6 +116,6 @@ public final class LogLinearFitter implements Fitter {
 		if((n!=x.length)||(n+1!=soln.length)) {
 			throw new IllegalArgumentException();
 		}
-		return Math.exp(dot(soln,x));
+		return Math.exp(Obs.dot(soln,x));
 	}
 }

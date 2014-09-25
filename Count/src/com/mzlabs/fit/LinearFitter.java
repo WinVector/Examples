@@ -1,4 +1,4 @@
-package com.mzlabs.count.util;
+package com.mzlabs.fit;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;

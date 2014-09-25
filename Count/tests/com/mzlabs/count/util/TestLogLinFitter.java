@@ -1,19 +1,23 @@
 package com.mzlabs.count.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Random;
 
 import org.junit.Test;
 
-import com.mzlabs.count.util.LogLinearFitter.Obs;
+import com.mzlabs.fit.Fitter;
+import com.mzlabs.fit.GLMFitter;
+import com.mzlabs.fit.LinearFitter;
+import com.mzlabs.fit.Obs;
+import com.mzlabs.fit.SquareLossOfExp;
 
 public class TestLogLinFitter {
 	@Test
 	public void testLFit() {
 		final Fitter lf = new LinearFitter(2);
-		final LogLinearFitter llf = new LogLinearFitter();
+		final Fitter llf = new GLMFitter(new SquareLossOfExp());
 		final Random rand = new Random(343406L);
 		final ArrayList<Obs> obs = new ArrayList<Obs>();
 		for(int i=1;i<7;++i) {
