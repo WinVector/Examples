@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.winvector.linalg.colt.ColtMatrix;
 
 /**
- * sum(y-e^{x.dot(beta)})^2
+ * sum(y-e^{x.dot(beta)})^2 not a regression (doesn't get expected values right)
  * @author johnmount
  *
  */
