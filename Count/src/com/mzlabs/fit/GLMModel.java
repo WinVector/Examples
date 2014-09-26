@@ -24,10 +24,10 @@ public class GLMModel implements VectorFnWithJacobian {
 		for(final Obs obsi: obs) {
 			final BalanceJacobianCoef ghc = balanceJacobianCalc.calc(obsi,beta);
 			for(int i=0;i<dim;++i) {
-				final double xi = i<dim-1?obsi.x[i]:1.0;
+				final double xi = obsi.x[i];
 				balance[i] += ghc.balanceCoef*xi;
 				for(int j=0;j<dim;++j) {
-					final double xj = j<dim-1?obsi.x[j]:1.0;
+					final double xj = obsi.x[j];
 					final double hij = jacobian.get(i,j);
 					jacobian.set(i,j,hij+xi*xj*ghc.jacobianCoef);
 				}

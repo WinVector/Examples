@@ -34,9 +34,9 @@ public final class NewtonFitter implements Fitter {
 	@Override
 	public double[] solve() {
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-		final int dim = obs.get(0).x.length+1;
+		final int dim = obs.get(0).x.length;
 		// roughly: often solving y ~ f(b.x), so start at f^-1(y) ~ b.x
-		final Fitter sf = new LinearFitter(dim-1);
+		final Fitter sf = new LinearFitter(dim);
 		for(final Obs obsi: obs) {
 			sf.addObservation(obsi.x, link.heuristicLink(obsi.y), obsi.wt);
 		}

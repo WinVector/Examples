@@ -215,7 +215,6 @@ public final class CTab {
 		System.out.println("n" + "\t" + "total" + "\t" + "target" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes" + "\t" + "tableFinishTimeEst");
 		for(int n=1;n<=9;++n) {
 			final CTab ctab = new CTab(n,true);
-			//final NewtonFitter lf = new NewtonFitter(new SquareLossOfExp());
 			final NewtonFitter lf = new NewtonFitter(DirectPoissonJacobian.poissonLink);
 			final int tLast = (n*n-3*n+2)/2;
 			for(int total=0;total<=tLast;++total) {
@@ -226,14 +225,14 @@ public final class CTab {
 				long remainingTimeEstMS = 10000;
 				if(total>2) { 
 					// simplistic model: time ~ exp(a + b*size)
-					final double[] x = { total };
+					final double[] x = { 1, total };
 					final double y = 10000.0+curTime.getTime() - startTime.getTime();
 					lf.addObservation(x,y,1.0);
 					if(total>6) {
 						final double[] beta = lf.solve();
 						double timeEstMS = 0.0;
 						for(int j=total+1;j<=tLast;++j) {
-							final double predict = lf.link.evalEst(beta,new double[] {j});
+							final double predict = lf.link.evalEst(beta,new double[] {1,j});
 							timeEstMS += predict;
 						}
 						remainingTimeEstMS = (long)Math.ceil(timeEstMS);

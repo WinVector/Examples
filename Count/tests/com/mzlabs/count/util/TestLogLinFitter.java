@@ -19,14 +19,14 @@ import com.mzlabs.fit.SquareLossOfExp;
 public class TestLogLinFitter {
 	@Test
 	public void testLFit() {
-		final LinearFitter lf = new LinearFitter(1);
+		final LinearFitter lf = new LinearFitter(2);
 		final NewtonFitter llf = new NewtonFitter(new SquareLossOfExp());
 		final Random rand = new Random(343406L);
 		final ArrayList<Obs> obs = new ArrayList<Obs>();
 		for(int i=1;i<7;++i) {
 			final double y = Math.exp(2.0*i);
 			for(int j=0;j<10;++j) {
-				final double[] x = new double[] {i};
+				final double[] x = new double[] {1,i};
 				final double yObserved = y*(1+0.3*rand.nextGaussian());
 				llf.addObservation(x,yObserved,1.0);
 				lf.addObservation(x,Math.log(Math.max(1.0,yObserved)),1.0);
@@ -55,7 +55,7 @@ public class TestLogLinFitter {
 	@Test
 	public void testPLinks() {
 		final double y = 1.55528;
-		final double[] x = { 5.0 };
+		final double[] x = { 1.0, 5.0 };
 		final Obs obs = new Obs(x,y,1.0);
 		final double[] beta = { 0.2 , -0.1};
 		final BalanceJacobianCoef lpgh = LinkBasedGradHess.poissonGradHess.calc(obs, beta);
@@ -72,7 +72,7 @@ public class TestLogLinFitter {
 		final Random rand = new Random(343406L);
 		for(int i=1;i<=5;++i) {
 			final double y = Math.exp(0.4*i) + rand.nextGaussian();
-			final double[] x = new double[] {i};
+			final double[] x = new double[] {1,i};
 			llf.addObservation(x,y,1.0);
 			obs.add(new Obs(x,y,1.0));
 		}
@@ -89,8 +89,7 @@ public class TestLogLinFitter {
 			final double[] x = obsi.x;
 			final double llfit = llf.link.evalEst(llsoln,x);
 			for(int i=0;i<dim;++i) {
-				final double xi = i<dim-1?obsi.x[i]:1.0;
-				sums[i] += obsi.wt*xi*(y-llfit);
+				sums[i] += obsi.wt*x[i]*(y-llfit);
 			}
 		}
 		for(final double si: sums) {

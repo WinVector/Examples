@@ -37,10 +37,10 @@ public class SquareLossOfExp implements VectorFnWithJacobian {
 			final double gradCoef = -2*diff*ebx*obsi.wt;
 			final double hessCoef = -2*(obsi.y-2*ebx)*ebx*obsi.wt;
 			for(int i=0;i<dim;++i) {
-				final double xi = i<dim-1?obsi.x[i]:1.0;
+				final double xi = obsi.x[i];
 				balance[i] += gradCoef*xi;
 				for(int j=0;j<dim;++j) {
-					final double xj = j<dim-1?obsi.x[j]:1.0;
+					final double xj = obsi.x[j];
 					final double hij = jacobian.get(i,j);
 					jacobian.set(i,j,hij+xi*xj*hessCoef);
 				}

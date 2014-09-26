@@ -19,8 +19,8 @@ public final class LinearFitter implements Fitter {
 	 */
 	public LinearFitter(final int n) {
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-		xTx = factory.newMatrix(n+1,n+1,false);
-		xTy = new double[n+1];
+		xTx = factory.newMatrix(n,n,false);
+		xTy = new double[n];
 	}
 
 	/* (non-Javadoc)
@@ -28,15 +28,15 @@ public final class LinearFitter implements Fitter {
 	 */
 	@Override
 	public void addObservation(final double[] x, final double y, final double wt) {
-		final int n = xTx.rows()-1;
+		final int n = xTx.rows();
 		if(n!=x.length) {
 			throw new IllegalArgumentException();
 		}
-		for(int i=0;i<=n;++i) {
-			final double xi = i<n?x[i]:1.0;
+		for(int i=0;i<n;++i) {
+			final double xi = x[i];
 			xTy[i] += wt*xi*y;
-			for(int j=0;j<=n;++j) {
-				final double xj = j<n?x[j]:1.0;
+			for(int j=0;j<n;++j) {
+				final double xj = x[j];
 				xTx.set(i,j,xTx.get(i, j)+wt*xi*xj);
 			}
 		}
@@ -47,15 +47,15 @@ public final class LinearFitter implements Fitter {
 	 */
 	@Override
 	public double[] solve() {
-		final int n = xTx.rows()-1;
+		final int n = xTx.rows();
 		final double epsilon = 1.0e-5;
 		final double[] xTxii = new double[n+1];
-		for(int i=0;i<=n;++i) {
+		for(int i=0;i<n;++i) {
 			xTxii[i] = xTx.get(i,i);
 			xTx.set(i,i,xTxii[i]+epsilon);  // Ridge term
 		}
 		final double[] soln = xTx.solve(xTy);
-		for(int i=0;i<=n;++i) {
+		for(int i=0;i<n;++i) {
 			xTx.set(i,i,xTxii[i]);
 		}
 		return soln;
@@ -65,14 +65,13 @@ public final class LinearFitter implements Fitter {
 	 * @see com.mzlabs.count.util.Fitter#predict(double[], double[])
 	 */
 	public double predict(final double[] soln, final double[] x) {
-		final int n = soln.length-1;
-		if((n!=x.length)||(n+1!=soln.length)) {
+		final int n = soln.length;
+		if((n!=x.length)||(n!=soln.length)) {
 			throw new IllegalArgumentException();
 		}
 		double sum = 0.0;
-		for(int i=0;i<=n;++i) {
-			final double xi = i<n?x[i]:1.0;
-			sum += xi*soln[i];
+		for(int i=0;i<n;++i) {
+			sum += x[i]*soln[i];
 		}
 		return sum;
 	}

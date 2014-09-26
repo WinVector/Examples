@@ -15,26 +15,25 @@ public final class Obs {
 	
 	/**
 	 * 
-	 * @param soln soln.length==x.length+1
+	 * @param soln soln.length==x.length
 	 * @param x
 	 * @return
 	 */
 	public static double dot(final double soln[], final double[] x) {
 		final int n = x.length;
-		if(soln.length!=n+1) {
+		if(soln.length!=n) {
 			throw new IllegalArgumentException();
 		}
 		double sum = 0.0;
-		for(int i=0;i<=n;++i) {
-			final double xi = i<n?x[i]:1.0;
-			sum += xi*soln[i];
+		for(int i=0;i<n;++i) {
+			sum += x[i]*soln[i];
 		}
-		return sum;		
+		return sum;
 	}
 	
 	/**
 	 * 
-	 * @param soln.length==x.length+1
+	 * @param soln.length==x.length
 	 * @return
 	 */
 	public double dot(final double[] soln) {
