@@ -12,13 +12,4 @@ public interface Fitter {
 			final double wt);
 
 	public abstract double[] solve();
-
-	/**
-	 * 
-	 * @param soln
-	 * @param x length(soln)==length(x)+1
-	 * @return
-	 */
-	public abstract double predict(final double[] soln, final double[] x);
-
 }

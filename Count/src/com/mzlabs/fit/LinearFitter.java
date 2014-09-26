@@ -64,7 +64,6 @@ public final class LinearFitter implements Fitter {
 	/* (non-Javadoc)
 	 * @see com.mzlabs.count.util.Fitter#predict(double[], double[])
 	 */
-	@Override
 	public double predict(final double[] soln, final double[] x) {
 		final int n = soln.length-1;
 		if((n!=x.length)||(n+1!=soln.length)) {

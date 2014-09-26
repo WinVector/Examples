@@ -15,8 +15,8 @@ import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.OrderStepperTot;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
-import com.mzlabs.fit.Fitter;
-import com.mzlabs.fit.GLMFitter;
+import com.mzlabs.fit.GLMModel;
+import com.mzlabs.fit.NewtonFitter;
 import com.mzlabs.fit.SquareLossOfExp;
 
 
@@ -216,7 +216,8 @@ public final class CTab {
 		System.out.println("n" + "\t" + "total" + "\t" + "target" + "\t" + "count" + "\t" + "date" + "\t" + "cacheSizes" + "\t" + "tableFinishTimeEst");
 		for(int n=1;n<=9;++n) {
 			final CTab ctab = new CTab(n,true);
-			final Fitter lf = new GLMFitter(new SquareLossOfExp());
+			//final NewtonFitter lf = new NewtonFitter(new SquareLossOfExp());
+			final NewtonFitter lf = new NewtonFitter(GLMModel.PoissonLink);
 			final int tLast = (n*n-3*n+2)/2;
 			for(int total=0;total<=tLast;++total) {
 				final Date startTime = new Date();
@@ -233,7 +234,7 @@ public final class CTab {
 						final double[] beta = lf.solve();
 						double timeEstMS = 0.0;
 						for(int j=total+1;j<=tLast;++j) {
-							final double predict = lf.predict(beta,new double[] {j});
+							final double predict = lf.link.evalEst(beta,new double[] {j});
 							timeEstMS += predict;
 						}
 						remainingTimeEstMS = (long)Math.ceil(timeEstMS);

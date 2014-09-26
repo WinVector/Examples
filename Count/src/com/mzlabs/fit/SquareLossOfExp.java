@@ -9,7 +9,11 @@ import com.winvector.linalg.colt.ColtMatrix;
  * @author johnmount
  *
  */
-public class SquareLossOfExp implements Link {
+public class SquareLossOfExp implements VectorFnWithGradAndHessian {
+	@Override
+	public double evalEst(final double[] beta, final double[] x) {
+		return Math.exp(Obs.dot(beta,x));
+	}
 
 	@Override
 	public double lossAndGradAndHessian(final Iterable<Obs> obs, final double[] beta,
@@ -23,7 +27,7 @@ public class SquareLossOfExp implements Link {
 		}
 		double err = 0.0;
 		for(final Obs obsi: obs) {
-			final double ebx = Math.exp(obsi.dot(beta));
+			final double ebx = evalEst(beta,obsi.x);
 			final double diff = obsi.y-ebx;
 			err += diff*diff;
 			final double gradCoef = -2*diff*ebx*obsi.wt;
@@ -39,11 +43,6 @@ public class SquareLossOfExp implements Link {
 			}
 		}
 		return err;
-	}
-
-	@Override
-	public double inverseLink(final double y) {
-		return Math.exp(y);
 	}
 
 }

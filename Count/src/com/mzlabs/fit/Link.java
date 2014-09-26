@@ -1,8 +1,17 @@
 package com.mzlabs.fit;
 
-import com.winvector.linalg.colt.ColtMatrix;
-
 public interface Link {
-	public double lossAndGradAndHessian(Iterable<Obs> obs, double[] beta, double[] grad, ColtMatrix hessian);
-	public double inverseLink(double y);
+	/**
+	 * 
+	 * @param z
+	 * @param res res.length==3, set to (f^{-1}(z),d/dz f^{-1}(z), d^2/dz^2 f^{-1}(z)
+	 */
+	void invLink(double z, double[] res);
+
+	/**
+	 * 
+	 * @param z
+	 * @return f^{-1}(z)
+	 */
+	double invLink(double z);
 }
