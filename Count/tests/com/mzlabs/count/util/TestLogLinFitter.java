@@ -7,13 +7,14 @@ import java.util.Random;
 
 import org.junit.Test;
 
-import com.mzlabs.fit.GLMModel;
+import com.mzlabs.fit.BalanceBasedJacobian;
+import com.mzlabs.fit.BalanceJacobianCoef;
+import com.mzlabs.fit.DirectPoissonJacobian;
 import com.mzlabs.fit.LinearFitter;
+import com.mzlabs.fit.LinkBasedGradHess;
 import com.mzlabs.fit.NewtonFitter;
 import com.mzlabs.fit.Obs;
 import com.mzlabs.fit.SquareLossOfExp;
-import com.winvector.linalg.LinalgFactory;
-import com.winvector.linalg.colt.ColtMatrix;
 
 public class TestLogLinFitter {
 	@Test
@@ -50,9 +51,23 @@ public class TestLogLinFitter {
 		assertTrue(sqLLError<sqLError);
 	}
 	
+
+	@Test
+	public void testPLinks() {
+		final double y = 1.55528;
+		final double[] x = { 5.0 };
+		final Obs obs = new Obs(x,y,1.0);
+		final double[] beta = { 0.2 , -0.1};
+		final BalanceJacobianCoef lpgh = LinkBasedGradHess.poissonGradHess.calc(obs, beta);
+		final BalanceJacobianCoef dpgh = DirectPoissonJacobian.poissonGradHess.calc(obs, beta);
+		final BalanceJacobianCoef bpgh = BalanceBasedJacobian.poissonJacobian.calc(obs, beta);
+		assertTrue(lpgh.absDiff(dpgh)<1.0e-8);
+		assertTrue(lpgh.absDiff(bpgh)<1.0e-8);
+	}
+	
 	@Test
 	public void testPFit() {
-		final NewtonFitter llf = new NewtonFitter(GLMModel.PoissonLinkDebug);
+		final NewtonFitter llf = new NewtonFitter(DirectPoissonJacobian.poissonLink);
 		final ArrayList<Obs> obs = new ArrayList<Obs>();
 		final Random rand = new Random(343406L);
 		for(int i=1;i<=5;++i) {
@@ -65,10 +80,10 @@ public class TestLogLinFitter {
 		//System.out.println("" + "y" + "\t" + "fit" + "\t" + "llfit");
 		final int dim = 2;		
 		double[] sums = new double[dim];
-		double[] grad = new double[dim];
-		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-		final ColtMatrix hessian = factory.newMatrix(dim, dim, false);
-		llf.link.lossAndGradAndHessian(obs, llsoln, grad, hessian);
+//		double[] balance = new double[dim];
+//		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
+//		final ColtMatrix jacobian = factory.newMatrix(dim, dim, false);
+//		llf.link.balanceAndJacobian(obs, llsoln, balance, jacobian);
 		for(final Obs obsi: obs) {
 			final double y = obsi.y;
 			final double[] x = obsi.x;
@@ -78,7 +93,6 @@ public class TestLogLinFitter {
 				sums[i] += obsi.wt*xi*(y-llfit);
 			}
 		}
-		System.out.println("break");
 		for(final double si: sums) {
 			assertTrue(Math.abs(si)<1.0e-5);
 		}

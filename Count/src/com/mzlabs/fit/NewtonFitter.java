@@ -6,10 +6,10 @@ import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;
 
 public final class NewtonFitter implements Fitter {
-	public final VectorFnWithGradAndHessian link;
+	public final VectorFnWithJacobian link;
 	public final ArrayList<Obs> obs = new ArrayList<Obs>();
 	
-	public NewtonFitter(final VectorFnWithGradAndHessian link) {
+	public NewtonFitter(final VectorFnWithJacobian link) {
 		this.link = link;
 	}
 	
@@ -27,7 +27,7 @@ public final class NewtonFitter implements Fitter {
 	
 	/**
 	 *  minimize sum_i wt[i] (e^{beta.x[i]} - y[i])^2
-	 *  via Newton's method over gradient (should equal zero) and Hessian (Jacobian of vector eqn)
+	 *  via Newton's method over balance (should equal zero) and Jacobian
 	 * 
 	 */
 	
@@ -40,21 +40,20 @@ public final class NewtonFitter implements Fitter {
 		for(final Obs obsi: obs) {
 			sf.addObservation(obsi.x, Math.log(Math.max(1.0,obsi.y)), obsi.wt);
 		}
-		final double[] beta = sf.solve();
-		final double[] grad = new double[dim];
-		final ColtMatrix hessian = factory.newMatrix(dim, dim, false);
+		final double[] beta = sf.solve();  // TODO: generalize this start position to use link info!
+		final double[] balance = new double[dim];
+		final ColtMatrix jacobian = factory.newMatrix(dim, dim, false);
 		out:
 		while(true) {
-			@SuppressWarnings("unused")
-			final double err = link.lossAndGradAndHessian(obs,beta,grad,hessian);
-			// add regularization of overall optimization terms f(beta) = dot(beta,beta) (grad and hessian as follows)
+			link.balanceAndJacobian(obs,beta,balance,jacobian);
+			// add regularization of overall optimization terms f(beta) = dot(beta,beta) (balance and jacobian from gradient and hessian of f() as follows)
 			final double epsilon = 1.0e-5;
 			for(int i=0;i<dim;++i) {
-				grad[i] += 2*epsilon*beta[i];
-				hessian.set(i,i,hessian.get(i,i)+2*epsilon);
+				balance[i] += 2*epsilon*beta[i];
+				jacobian.set(i,i,jacobian.get(i,i)+2*epsilon);
 			}
 			double absGrad = 0.0;
-			for(final double gi: grad) {
+			for(final double gi: balance) {
 				absGrad += Math.abs(gi);
 			}
 			if(Double.isInfinite(absGrad)||Double.isNaN(absGrad)||(absGrad<=1.0e-8)) {
@@ -65,7 +64,7 @@ public final class NewtonFitter implements Fitter {
 				double totAbs = 0.0;
 				for(int i=0;i<dim;++i) {
 					for(int j=0;j<dim;++j) {
-						totAbs += Math.abs(hessian.get(i,j));
+						totAbs += Math.abs(jacobian.get(i,j));
 					}
 				}
 				if(Double.isInfinite(totAbs)||Double.isNaN(totAbs)||(totAbs<=1.0e-8)) {
@@ -73,12 +72,12 @@ public final class NewtonFitter implements Fitter {
 				}
 				final double scale = (dim*dim)/totAbs;
 				for(int i=0;i<dim;++i) {
-					grad[i] *= scale;
+					balance[i] *= scale;
 					for(int j=0;j<dim;++j) {
-						hessian.set(i,j,hessian.get(i,j)*scale);
+						jacobian.set(i,j,jacobian.get(i,j)*scale);
 					}
 				}
-				final double[] delta = hessian.solve(grad);
+				final double[] delta = jacobian.solve(balance);
 				for(final double di: delta) {
 					if(Double.isNaN(di)||Double.isNaN(di)) {
 						break out;
@@ -93,7 +92,6 @@ public final class NewtonFitter implements Fitter {
 					break out;
 				}
 			} catch (Exception ex) {
-				System.out.println("break");
 				break out;
 			}
 		}

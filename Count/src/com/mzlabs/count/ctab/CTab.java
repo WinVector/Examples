@@ -15,7 +15,7 @@ import com.mzlabs.count.op.impl.SimpleSum;
 import com.mzlabs.count.op.impl.ThreadedSum;
 import com.mzlabs.count.op.iter.OrderStepperTot;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
-import com.mzlabs.fit.GLMModel;
+import com.mzlabs.fit.DirectPoissonJacobian;
 import com.mzlabs.fit.NewtonFitter;
 
 
@@ -216,7 +216,7 @@ public final class CTab {
 		for(int n=1;n<=9;++n) {
 			final CTab ctab = new CTab(n,true);
 			//final NewtonFitter lf = new NewtonFitter(new SquareLossOfExp());
-			final NewtonFitter lf = new NewtonFitter(GLMModel.PoissonLink);
+			final NewtonFitter lf = new NewtonFitter(DirectPoissonJacobian.poissonLink);
 			final int tLast = (n*n-3*n+2)/2;
 			for(int total=0;total<=tLast;++total) {
 				final Date startTime = new Date();
