@@ -35,12 +35,12 @@ public final class NewtonFitter implements Fitter {
 	public double[] solve() {
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
 		final int dim = obs.get(0).x.length+1;
-		// start at solution to log(y) ~ b.x
+		// roughly: often solving y ~ f(b.x), so start at f^-1(y) ~ b.x
 		final Fitter sf = new LinearFitter(dim-1);
 		for(final Obs obsi: obs) {
-			sf.addObservation(obsi.x, Math.log(Math.max(1.0,obsi.y)), obsi.wt);
+			sf.addObservation(obsi.x, link.heuristicLink(obsi.y), obsi.wt);
 		}
-		final double[] beta = sf.solve();  // TODO: generalize this start position to use link info!
+		final double[] beta = sf.solve();
 		final double[] balance = new double[dim];
 		final ColtMatrix jacobian = factory.newMatrix(dim, dim, false);
 		out:

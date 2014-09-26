@@ -16,6 +16,12 @@ public class SquareLossOfExp implements VectorFnWithJacobian {
 	}
 
 	@Override
+	public double heuristicLink(final double y) {
+		return Math.log(Math.abs(y)+1.0); // near log(y), but well behaved
+	}
+
+
+	@Override
 	public void balanceAndJacobian(final Iterable<Obs> obs, final double[] beta,
 			final double[] balance, final ColtMatrix jacobian) {
 		final int dim = beta.length;
@@ -41,5 +47,4 @@ public class SquareLossOfExp implements VectorFnWithJacobian {
 			}
 		}
 	}
-
 }

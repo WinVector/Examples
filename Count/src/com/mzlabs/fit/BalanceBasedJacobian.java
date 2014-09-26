@@ -30,6 +30,11 @@ public final class BalanceBasedJacobian implements BalanceJacobianCalc {
 	public double evalEst(final double[] beta, final double[] x) {
 		return link.invLink(Obs.dot(beta,x));
 	}
+	
+	@Override
+	public double heuristicLink(final double y) {
+		return link.heuristicLink(y);
+	}
 
 	public static final BalanceBasedJacobian poissonJacobian = new BalanceBasedJacobian(LinkBasedGradHess.LogLink);
 	public static GLMModel poissonLink = new GLMModel(poissonJacobian);

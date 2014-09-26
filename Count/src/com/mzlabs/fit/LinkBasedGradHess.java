@@ -36,6 +36,11 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 		return link.invLink(Obs.dot(beta,x));
 	}
 	
+	@Override
+	public double heuristicLink(final double y) {
+		return link.heuristicLink(y);
+	}
+	
 	
 	
 	
@@ -67,6 +72,10 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 		@Override
 		public double invLink(final double z) {
 			return Math.exp(z);
+		}
+		@Override
+		public double heuristicLink(double y) {
+			return Math.log(Math.abs(y)+1.0); // near log(y), but well behaved
 		}
 	};
 	

@@ -39,4 +39,9 @@ public class GLMModel implements VectorFnWithJacobian {
 	public double evalEst(double[] beta, double[] x) {
 		return balanceJacobianCalc.evalEst(beta,x);
 	}
+	
+	@Override
+	public double heuristicLink(final double y) {
+		return balanceJacobianCalc.heuristicLink(y);
+	}
 }

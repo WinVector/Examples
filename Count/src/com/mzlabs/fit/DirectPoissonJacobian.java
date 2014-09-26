@@ -23,6 +23,11 @@ public final class DirectPoissonJacobian implements BalanceJacobianCalc {
 		return Math.exp(Obs.dot(beta,x));
 	}
 	
+	@Override
+	public double heuristicLink(final double y) {
+		return Math.log(Math.abs(y)+1.0); // near log(y), but well behaved
+	}
+	
 	public static final DirectPoissonJacobian poissonGradHess = new DirectPoissonJacobian();
 	public static GLMModel poissonLink = new GLMModel(poissonGradHess);
 }
