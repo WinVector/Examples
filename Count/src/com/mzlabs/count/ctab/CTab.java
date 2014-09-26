@@ -17,7 +17,6 @@ import com.mzlabs.count.op.iter.OrderStepperTot;
 import com.mzlabs.count.zeroone.ZeroOneCounter;
 import com.mzlabs.fit.GLMModel;
 import com.mzlabs.fit.NewtonFitter;
-import com.mzlabs.fit.SquareLossOfExp;
 
 
 public final class CTab {

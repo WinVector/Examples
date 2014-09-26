@@ -52,7 +52,7 @@ public class TestLogLinFitter {
 	
 	@Test
 	public void testPFit() {
-		final NewtonFitter llf = new NewtonFitter(GLMModel.PoissonLink);
+		final NewtonFitter llf = new NewtonFitter(GLMModel.PoissonLinkDebug);
 		final ArrayList<Obs> obs = new ArrayList<Obs>();
 		final Random rand = new Random(343406L);
 		for(int i=1;i<=5;++i) {
