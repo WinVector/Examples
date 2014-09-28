@@ -36,6 +36,6 @@ public final class BalanceBasedJacobian implements BalanceJacobianCalc {
 		return link.heuristicLink(y);
 	}
 
-	public static final BalanceBasedJacobian poissonJacobian = new BalanceBasedJacobian(LinkBasedGradHess.LogLink);
+	public static final BalanceBasedJacobian poissonJacobian = new BalanceBasedJacobian(LinkBasedGradHess.logLink);
 	public static GLMModel poissonLink = new GLMModel(poissonJacobian);
 }

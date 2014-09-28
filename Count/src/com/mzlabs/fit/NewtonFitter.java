@@ -1,16 +1,17 @@
 package com.mzlabs.fit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;
 
 public final class NewtonFitter implements Fitter {
-	public final VectorFnWithJacobian link;
+	public final VectorFnWithJacobian fn;
 	public final ArrayList<Obs> obs = new ArrayList<Obs>();
 	
-	public NewtonFitter(final VectorFnWithJacobian link) {
-		this.link = link;
+	public NewtonFitter(final VectorFnWithJacobian fn) {
+		this.fn = fn;
 	}
 	
 	@Override
@@ -25,38 +26,57 @@ public final class NewtonFitter implements Fitter {
 		obs.add(obsi);
 	}
 	
-	/**
-	 *  minimize sum_i wt[i] (e^{beta.x[i]} - y[i])^2
-	 *  via Newton's method over balance (should equal zero) and Jacobian
-	 * 
-	 */
+	public static String toString(final double[] x) {
+		final StringBuilder b = new StringBuilder();
+		b.append("{");
+		boolean first = true;
+		for(final double xi: x) {
+			if(first) {
+				first = false;
+			} else {
+				b.append(", ");
+			}
+			b.append(xi);
+		}
+		b.append("}");
+		return b.toString();
+	}
 	
+	/**
+	 *  find zero of vecto function summed over data
+	 *  via Newton's method over balance (should equal zero) and Jacobian
+	 *  @return solution
+	 */
 	@Override
 	public double[] solve() {
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-		final int dim = obs.get(0).x.length;
+		final int dim = fn.dim(obs.get(0));
 		// roughly: often solving y ~ f(b.x), so start at f^-1(y) ~ b.x
-		final Fitter sf = new LinearFitter(dim);
+		final Fitter sf = new LinearFitter(obs.get(0).x.length);
 		for(final Obs obsi: obs) {
-			sf.addObservation(obsi.x, link.heuristicLink(obsi.y), obsi.wt);
+			sf.addObservation(obsi.x, fn.heuristicLink(obsi.y), obsi.wt);
 		}
-		final double[] beta = sf.solve();
+		double[] beta = sf.solve();
+		if(beta.length!=dim) {
+			beta = Arrays.copyOf(beta,dim);
+		}
 		final double[] balance = new double[dim];
 		final ColtMatrix jacobian = factory.newMatrix(dim, dim, false);
 		out:
 		while(true) {
-			link.balanceAndJacobian(obs,beta,balance,jacobian);
+			fn.balanceAndJacobian(obs,beta,balance,jacobian);
+			//System.out.println("Newston: beta=" + toString(beta) + ", balance=" + toString(balance));
 			// add regularization of overall optimization terms f(beta) = dot(beta,beta) (balance and jacobian from gradient and hessian of f() as follows)
 			final double epsilon = 1.0e-5;
 			for(int i=0;i<dim;++i) {
 				balance[i] += 2*epsilon*beta[i];
 				jacobian.set(i,i,jacobian.get(i,i)+2*epsilon);
 			}
-			double absGrad = 0.0;
+			double absBalance = 0.0;
 			for(final double gi: balance) {
-				absGrad += Math.abs(gi);
+				absBalance += Math.abs(gi);
 			}
-			if(Double.isInfinite(absGrad)||Double.isNaN(absGrad)||(absGrad<=1.0e-8)) {
+			if(Double.isInfinite(absBalance)||Double.isNaN(absBalance)||(absBalance<=1.0e-8)) {
 				break out;
 			}
 			try {

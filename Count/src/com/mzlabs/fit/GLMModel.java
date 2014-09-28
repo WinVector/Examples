@@ -44,4 +44,9 @@ public class GLMModel implements VectorFnWithJacobian {
 	public double heuristicLink(final double y) {
 		return balanceJacobianCalc.heuristicLink(y);
 	}
+
+	@Override
+	public int dim(final Obs obs) {
+		return obs.x.length;
+	}
 }

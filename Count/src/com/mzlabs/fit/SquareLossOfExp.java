@@ -9,7 +9,7 @@ import com.winvector.linalg.colt.ColtMatrix;
  * @author johnmount
  *
  */
-public class SquareLossOfExp implements VectorFnWithJacobian {
+public final class SquareLossOfExp implements VectorFnWithJacobian {
 	@Override
 	public double evalEst(final double[] beta, final double[] x) {
 		return Math.exp(Obs.dot(beta,x));
@@ -46,5 +46,10 @@ public class SquareLossOfExp implements VectorFnWithJacobian {
 				}
 			}
 		}
+	}
+
+	@Override
+	public int dim(final Obs obs) {
+		return obs.x.length;
 	}
 }

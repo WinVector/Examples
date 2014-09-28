@@ -232,7 +232,7 @@ public final class CTab {
 						final double[] beta = lf.solve();
 						double timeEstMS = 0.0;
 						for(int j=total+1;j<=tLast;++j) {
-							final double predict = lf.link.evalEst(beta,new double[] {1,j});
+							final double predict = lf.fn.evalEst(beta,new double[] {1,j});
 							timeEstMS += predict;
 						}
 						remainingTimeEstMS = (long)Math.ceil(timeEstMS);

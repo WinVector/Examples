@@ -35,4 +35,12 @@ public interface VectorFnWithJacobian {
 	 * @param jacobian jacobian.rows()==jacobian.cols()==beta.length
 	 */
 	void balanceAndJacobian(Iterable<Obs> obs, double[] beta, double[] balance, ColtMatrix jacobian);
+
+	/**
+	 * return dimension of parameter space for this sort of observation (usually obs.x.length, but can be other values)
+	 * @param obs
+	 * @return
+	 */
+	int dim(Obs obs);
+
 }

@@ -44,7 +44,7 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 	
 	
 	
-	public static final ProbYGivenZ PoissonProbability = new ProbYGivenZ() {
+	public static final ProbYGivenZ poissonProbability = new ProbYGivenZ() {
 		@Override
 		public void eval(final double y, final double z, final double[] res) {
 			if(y>0) {
@@ -61,7 +61,7 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 		}
 	};
 	
-	public static final Link LogLink = new Link() {
+	public static final Link logLink = new Link() {
 		@Override
 		public void invLink(final double z, final double[] res) {
 			final double ez = Math.exp(z);
@@ -80,6 +80,6 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 	};
 	
 	
-	public static final LinkBasedGradHess poissonGradHess = new LinkBasedGradHess(PoissonProbability,LogLink);
+	public static final LinkBasedGradHess poissonGradHess = new LinkBasedGradHess(poissonProbability,logLink);
 	public static GLMModel poissonLink = new GLMModel(poissonGradHess);
 }
