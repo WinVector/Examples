@@ -101,8 +101,9 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
 		final ArrayList<Obs> obs = new ArrayList<Obs>();
 		for(int i=0;i<200;++i) {
 			final double[] x = new double[] {1, rand.nextGaussian(), rand.nextGaussian()};
-			final double y = Math.max(0.1,Math.exp(x[0] + 2.0+x[1] + 3.0+x[2]) + 10*rand.nextDouble());
-			obs.add(new Obs(x,y,1.0));
+			final double yIdeal = Math.exp(x[0] + 2.0+x[1] + 3.0+x[2]);
+			final double yObserved = Math.max(0.1,yIdeal + 0.4*rand.nextGaussian()*yIdeal);
+			obs.add(new Obs(x,yObserved,1.0));
 		}
 		// provision fitters
 		final ExpectationAndSqLoss fn = new ExpectationAndSqLoss(LinkBasedGradHess.logLink);
@@ -146,14 +147,14 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
 				throw new IllegalStateException("didn't balance");
 			}
 		}
-		if(Math.abs(balanceCheck)>1.0e-4) {
+		if(Math.abs(balanceCheck)>1.0e-3) {
 			throw new IllegalStateException("didn't balance");
 		}
 		// print data and estimates
 		for(int j=1;j<dim;++j) {
 			System.out.print("x"+j + "\t");
 		}
-		System.out.print("y" + "\t" + "isTrain" + "\t" + "logYest");
+		System.out.print("y" + "\t" + "TestTrain" + "\t" + "logYest");
 		for(int j=0;j<fitters.length;++j) {
 			System.out.print("\t" + fitters[j].fn);
 		}
@@ -163,7 +164,7 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
 			for(int j=1;j<dim;++j) {
 				System.out.print(obsi.x[j] + "\t");
 			}
-			System.out.print(obsi.y + "\t" + (i<nTrain?1:0) + "\t" + Math.exp(lf.evalEst(lfSoln,obsi.x)));
+			System.out.print(obsi.y + "\t" + (i<nTrain?"train":"test") + "\t" + Math.exp(lf.evalEst(lfSoln,obsi.x)));
 			for(int j=0;j<fitters.length;++j) {
 				System.out.print("\t" + fitters[j].evalEst(fSoln[j],obsi.x));
 			}
@@ -176,17 +177,28 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
  			library(reshape2)
  			d <- read.table('expFit.tsv',sep='\t',stringsAsFactors=FALSE,header=TRUE)
  			ests <- c('logYest','SquareLossOfExp','GLM.PoissonRegression.log.link..','ExpectationAndSquareLoss.log.link.')
- 			dTrain <- subset(d,isTrain==1)
- 			dTest <- subset(d,isTrain==0)
+ 			dTrain <- subset(d,TestTrain=='train')
+ 			dTest <- subset(d,TestTrain!='train')
+ 			# confirm poisson fit
+			model <- glm(y~x1+x2,family=poisson(link='log'),data=dTrain)
+			print(sum((dTrain[,'GLM.PoissonRegression.log.link..']-predict(model,type='response'))^2))
+			# show balance and square error
  			for(v in ests) {
  			   print(paste(v,sum(dTrain$y-dTrain[,v]),sum((dTrain$y-dTrain[,v])^2)))
  			}
  			for(v in ests) {
  			   print(paste(v,sum(dTest$y-dTest[,v]),sum((dTest$y-dTest[,v])^2)))
  			}
-			dplot <- melt(subset(d,isTrain==1),id.vars=c('x1','x2','isTrain','y'),variable.name='estimate')
-			ggplot(data=dplot,aes(x=value,y=y,color=estimate,shape=estimate)) + geom_point()
-			ggplot(data=dplot,aes(x=value,y=y,color=estimate,shape=estimate)) + geom_point() + scale_x_log10() + scale_y_log10()
+			dplot <- melt(d,id.vars=c('x1','x2','TestTrain','y'),variable.name='estimateMethod',value.name='estimateValue')
+			ggplot(data=dplot,aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
+			   geom_point() + geom_abline() + facet_wrap(~TestTrain,ncol=1)
+			ggplot(data=dplot,aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
+			   geom_point() + geom_abline() + facet_wrap(~TestTrain,ncol=1) + scale_x_log10() + scale_y_log10()
+			ggplot(data=subset(dplot,TestTrain!='train'),aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
+			   geom_point() + geom_abline() + facet_wrap(~estimateMethod) + guides(colour=FALSE,shape=FALSE)
+			ggplot(data=subset(dplot,TestTrain!='train'),aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
+			   geom_point() + geom_abline() + facet_wrap(~estimateMethod) + scale_x_log10() + scale_y_log10() + guides(colour=FALSE,shape=FALSE)
+			
 		 */
 	}
 }
