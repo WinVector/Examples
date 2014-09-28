@@ -181,7 +181,8 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
 				}
 				System.out.print("\t" + obsi.y + "\t" + (i<nTrain?"train":"test") + "\t" + Math.exp(lf.evalEst(lfSoln,obsi.x)));
 				for(int j=0;j<fitters.length;++j) {
-					System.out.print("\t" + fitters[j].evalEst(fSoln[j],obsi.x));
+					final double est = fitters[j].evalEst(fSoln[j],obsi.x);
+					System.out.print("\t" + est);
 				}
 				System.out.println();
 			}

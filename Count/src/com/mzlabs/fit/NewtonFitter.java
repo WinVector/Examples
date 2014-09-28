@@ -3,8 +3,17 @@ package com.mzlabs.fit;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix1D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.colt.matrix.linalg.Algebra;
+import cern.colt.matrix.linalg.SingularValueDecomposition;
+
 import com.winvector.linalg.LinalgFactory;
 import com.winvector.linalg.colt.ColtMatrix;
+
+
 
 public final class NewtonFitter implements Fitter {
 	public final VectorFnWithJacobian fn;
@@ -84,39 +93,65 @@ public final class NewtonFitter implements Fitter {
 			if(Double.isInfinite(absBalance)||Double.isNaN(absBalance)||(absBalance<=1.0e-8)) {
 				break out;
 			}
+			// neaten up system a touch before solving
+			double totAbs = 0.0;
+			for(int i=0;i<dim;++i) {
+				for(int j=0;j<dim;++j) {
+					totAbs += Math.abs(jacobian.get(i,j));
+				}
+			}
+			if(Double.isInfinite(totAbs)||Double.isNaN(totAbs)||(totAbs<=1.0e-8)) {
+				break out;
+			}
+			final double scale = (dim*dim)/totAbs;
+			for(int i=0;i<dim;++i) {
+				balance[i] *= scale;
+				for(int j=0;j<dim;++j) {
+					jacobian.set(i,j,jacobian.get(i,j)*scale);
+				}
+			}
+			double[] delta = null;
 			try {
-				// neaten up system a touch before solving
-				double totAbs = 0.0;
-				for(int i=0;i<dim;++i) {
-					for(int j=0;j<dim;++j) {
-						totAbs += Math.abs(jacobian.get(i,j));
-					}
-				}
-				if(Double.isInfinite(totAbs)||Double.isNaN(totAbs)||(totAbs<=1.0e-8)) {
-					break out;
-				}
-				final double scale = (dim*dim)/totAbs;
-				for(int i=0;i<dim;++i) {
-					balance[i] *= scale;
-					for(int j=0;j<dim;++j) {
-						jacobian.set(i,j,jacobian.get(i,j)*scale);
-					}
-				}
-				final double[] delta = jacobian.solve(balance);
-				for(final double di: delta) {
-					if(Double.isNaN(di)||Double.isNaN(di)) {
-						break out;
-					}
-				}
-				double deltaAbs = 0.0;
-				for(int i=0;i<dim;++i) {
-					beta[i] -= delta[i];
-					deltaAbs += Math.abs(delta[i]);
-				}
-				if(deltaAbs<=1.0e-10) {
-					break out;
-				}
+				delta = jacobian.solve(balance);
 			} catch (Exception ex) {
+			}
+			if(null==delta) {
+				final DoubleMatrix2D jMat = new DenseDoubleMatrix2D(dim,dim);
+				for(int i=0;i<dim;++i) {
+					for(int j=0;j<dim;++j) {
+						jMat.set(i,j,jacobian.get(i,j));
+					}
+				}
+				final SingularValueDecomposition svd = new SingularValueDecomposition(jMat);
+				final DoubleMatrix2D uMat = svd.getU();
+				final DoubleMatrix2D sMat = svd.getS();
+				final DoubleMatrix2D vMat = svd.getV();
+				final Algebra algebra = Algebra.ZERO;
+				// final DoubleMatrix2D recovered = algebra.mult(algebra.mult(uMat,sMat),algebra.transpose(vMat));
+				for(int i=0;i<dim;++i) {
+					final double sii = sMat.get(i,i);
+					if(sii>0.01) {
+						sMat.set(i,i,1/sii);
+					} else {
+						sMat.set(i,i,0.0);
+					}
+				}
+				final DoubleMatrix1D bVec = new DenseDoubleMatrix1D(balance);
+				final DoubleMatrix1D soln = algebra.mult(vMat,algebra.mult(sMat,algebra.mult(algebra.transpose(uMat),bVec)));
+				// final DoubleMatrix1D check = algebra.mult(jMat,soln);
+				delta = soln.toArray();
+			}
+			for(final double di: delta) {
+				if(Double.isNaN(di)||Double.isNaN(di)) {
+					break out;
+				}
+			}
+			double deltaAbs = 0.0;
+			for(int i=0;i<dim;++i) {
+				beta[i] -= delta[i];
+				deltaAbs += Math.abs(delta[i]);
+			}
+			if(deltaAbs<=1.0e-10) {
 				break out;
 			}
 		}

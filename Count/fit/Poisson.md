@@ -48,8 +48,8 @@ for(v in colnames(runSummaries)) {
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##  -20100    5370   11000   12600   16400   76400 
 ## [1] "balance.train.SquareLossOfExp"
-##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-## -3.23e+60 -3.09e+03  1.43e+02 -3.23e+58  4.54e+03  2.86e+04 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -16000   -3030     419    1280    4910   28600 
 ## [1] "balance.train.GLM.PoissonRegression.log.link.."
 ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
 ## -0.000124 -0.000121 -0.000120 -0.000120 -0.000119 -0.000117 
@@ -60,8 +60,8 @@ for(v in colnames(runSummaries)) {
 ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 ## 7.35e+06 3.76e+07 5.41e+07 9.98e+07 9.96e+07 9.80e+08 
 ## [1] "sqError.train.SquareLossOfExp"
-##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-##  6.80e+06  2.40e+07  3.48e+07 1.04e+119  5.10e+07 1.04e+121 
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 6.80e+06 2.40e+07 3.48e+07 4.56e+07 5.07e+07 2.51e+08 
 ## [1] "sqError.train.GLM.PoissonRegression.log.link.."
 ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 ## 7.02e+06 2.60e+07 3.70e+07 5.37e+07 6.56e+07 3.32e+08 
@@ -72,8 +72,8 @@ for(v in colnames(runSummaries)) {
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##  -66800    2570   10900   13200   23900   83900 
 ## [1] "balance.test.SquareLossOfExp"
-##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-## -1.37e+55 -8.87e+03  1.85e+03 -1.37e+53  1.01e+04  6.58e+04 
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -65500   -8730    1850    1620   10100   65800 
 ## [1] "balance.test.GLM.PoissonRegression.log.link.."
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##  -41200   -7860    1660    1550   11200   68900 
@@ -84,8 +84,8 @@ for(v in colnames(runSummaries)) {
 ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 ## 1.17e+07 4.51e+07 8.24e+07 1.98e+08 1.47e+08 5.08e+09 
 ## [1] "sqError.test.SquareLossOfExp"
-##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-##  1.75e+07  4.87e+07  8.29e+07 1.88e+108  1.63e+08 1.88e+110 
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 1.75e+07 4.87e+07 8.29e+07 1.89e+08 1.63e+08 2.44e+09 
 ## [1] "sqError.test.GLM.PoissonRegression.log.link.."
 ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
 ## 1.22e+07 3.96e+07 8.03e+07 1.43e+08 1.17e+08 1.61e+09 
