@@ -1,0 +1,122 @@
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># echo &quot;library(knitr); knit(&#39;Poisson.Rmd&#39;)&quot; | R --vanilla ; pandoc Poisson.md -o Poisson.html</span>
+<span class="kw">library</span>(ggplot2)
+<span class="kw">library</span>(reshape2)
+d &lt;-<span class="st"> </span><span class="kw">read.table</span>(<span class="st">&#39;expFit.tsv&#39;</span>,<span class="dt">sep=</span><span class="st">&#39;</span><span class="ch">\t</span><span class="st">&#39;</span>,<span class="dt">stringsAsFactors=</span><span class="ot">FALSE</span>,<span class="dt">header=</span><span class="ot">TRUE</span>)
+ests &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;logYest&#39;</span>,<span class="st">&#39;SquareLossOfExp&#39;</span>,
+   <span class="st">&#39;GLM.PoissonRegression.log.link..&#39;</span>,<span class="st">&#39;ExpectationAndSquareLoss.log.link.&#39;</span>)
+runSummaries &lt;-<span class="st"> </span><span class="kw">c</span>()
+for(runNum in <span class="kw">unique</span>(d$runNumber)) {                       
+   dTrain &lt;-<span class="st"> </span><span class="kw">subset</span>(d,TestTrain==<span class="st">&#39;train&#39;</span> &amp;<span class="st"> </span>runNumber==runNum)
+   dTest &lt;-<span class="st"> </span><span class="kw">subset</span>(d,TestTrain!=<span class="st">&#39;train&#39;</span> &amp;<span class="st"> </span>runNumber==runNum)
+   <span class="co"># confirm poisson fit</span>
+   model &lt;-<span class="st"> </span><span class="kw">glm</span>(y~x1+x2,<span class="dt">family=</span><span class="kw">quasipoisson</span>(<span class="dt">link=</span><span class="st">&#39;log&#39;</span>),<span class="dt">data=</span>dTrain)
+   glmError &lt;-<span class="st"> </span><span class="kw">sum</span>((dTrain[,<span class="st">&#39;GLM.PoissonRegression.log.link..&#39;</span>] -
+<span class="st">      </span><span class="kw">predict</span>(model,<span class="dt">type=</span><span class="st">&#39;response&#39;</span>))^<span class="dv">2</span>)
+   <span class="kw">names</span>(glmError) &lt;-<span class="st"> &#39;glmDescrepancy&#39;</span>
+   trainBalance &lt;-<span class="st"> </span><span class="kw">sapply</span>(ests,function(v) <span class="kw">sum</span>(dTrain$y-dTrain[,v]))
+   <span class="kw">names</span>(trainBalance) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;balance.train.&#39;</span>,ests,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+   trainSqError &lt;-<span class="st"> </span><span class="kw">sapply</span>(ests,function(v) <span class="kw">sum</span>((dTrain$y-dTrain[,v])^<span class="dv">2</span>))
+   <span class="kw">names</span>(trainSqError) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;sqError.train.&#39;</span>,ests,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+   testBalance &lt;-<span class="st"> </span><span class="kw">sapply</span>(ests,function(v) <span class="kw">sum</span>(dTest$y-dTest[,v]))
+   <span class="kw">names</span>(testBalance) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;balance.test.&#39;</span>,ests,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+   testSqError &lt;-<span class="st"> </span><span class="kw">sapply</span>(ests,function(v) <span class="kw">sum</span>((dTest$y-dTest[,v])^<span class="dv">2</span>))
+   <span class="kw">names</span>(testSqError) &lt;-<span class="st"> </span><span class="kw">paste</span>(<span class="st">&#39;sqError.test.&#39;</span>,ests,<span class="dt">sep=</span><span class="st">&#39;&#39;</span>)
+   row &lt;-<span class="st"> </span><span class="kw">c</span>(glmError,trainBalance,trainSqError,testBalance,testSqError)
+   runSummariesI &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">runNum=</span>runNum)
+   for(m in <span class="kw">names</span>(row)) {
+      runSummariesI[<span class="dv">1</span>,m] &lt;-<span class="st"> </span>row[m]
+   }
+   runSummaries &lt;-<span class="st"> </span><span class="kw">rbind</span>(runSummaries,runSummariesI);
+}
+for(v in <span class="kw">colnames</span>(runSummaries)) {
+   <span class="kw">print</span>(v)
+   <span class="kw">print</span>(<span class="kw">summary</span>(runSummaries[,v]))
+}</code></pre>
+<pre><code>## [1] &quot;runNum&quot;
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##     1.0    25.8    50.5    50.5    75.2   100.0 
+## [1] &quot;glmDescrepancy&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 1.15e-10 2.37e-10 3.01e-10 3.53e-10 4.20e-10 1.05e-09 
+## [1] &quot;balance.train.logYest&quot;
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -20100    5370   11000   12600   16400   76400 
+## [1] &quot;balance.train.SquareLossOfExp&quot;
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -3.23e+60 -3.09e+03  1.43e+02 -3.23e+58  4.54e+03  2.86e+04 
+## [1] &quot;balance.train.GLM.PoissonRegression.log.link..&quot;
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -0.000124 -0.000121 -0.000120 -0.000120 -0.000119 -0.000117 
+## [1] &quot;balance.train.ExpectationAndSquareLoss.log.link.&quot;
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -0.021900 -0.003020 -0.000217 -0.000927  0.001720  0.009540 
+## [1] &quot;sqError.train.logYest&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 7.35e+06 3.76e+07 5.41e+07 9.98e+07 9.96e+07 9.80e+08 
+## [1] &quot;sqError.train.SquareLossOfExp&quot;
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+##  6.80e+06  2.40e+07  3.48e+07 1.04e+119  5.10e+07 1.04e+121 
+## [1] &quot;sqError.train.GLM.PoissonRegression.log.link..&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 7.02e+06 2.60e+07 3.70e+07 5.37e+07 6.56e+07 3.32e+08 
+## [1] &quot;sqError.train.ExpectationAndSquareLoss.log.link.&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 6.82e+06 2.40e+07 3.50e+07 4.65e+07 5.14e+07 2.68e+08 
+## [1] &quot;balance.test.logYest&quot;
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -66800    2570   10900   13200   23900   83900 
+## [1] &quot;balance.test.SquareLossOfExp&quot;
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+## -1.37e+55 -8.87e+03  1.85e+03 -1.37e+53  1.01e+04  6.58e+04 
+## [1] &quot;balance.test.GLM.PoissonRegression.log.link..&quot;
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -41200   -7860    1660    1550   11200   68900 
+## [1] &quot;balance.test.ExpectationAndSquareLoss.log.link.&quot;
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -59800   -8910    1170     917   10500   65500 
+## [1] &quot;sqError.test.logYest&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 1.17e+07 4.51e+07 8.24e+07 1.98e+08 1.47e+08 5.08e+09 
+## [1] &quot;sqError.test.SquareLossOfExp&quot;
+##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+##  1.75e+07  4.87e+07  8.29e+07 1.88e+108  1.63e+08 1.88e+110 
+## [1] &quot;sqError.test.GLM.PoissonRegression.log.link..&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 1.22e+07 3.96e+07 8.03e+07 1.43e+08 1.17e+08 1.61e+09 
+## [1] &quot;sqError.test.ExpectationAndSquareLoss.log.link.&quot;
+##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+## 1.74e+07 4.64e+07 8.37e+07 1.74e+08 1.56e+08 1.67e+09</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">nRuns &lt;-<span class="st"> </span><span class="kw">dim</span>(runSummaries)[[<span class="dv">1</span>]]
+
+<span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;probability train glm square error &lt; ExpectationAndSquareLoss square error:&#39;</span>,
+      <span class="kw">sum</span>(runSummaries[,<span class="st">&quot;sqError.train.GLM.PoissonRegression.log.link..&quot;</span>]&lt;
+<span class="st">          </span>runSummaries[,<span class="st">&quot;sqError.train.ExpectationAndSquareLoss.log.link.&quot;</span>])/nRuns))</code></pre>
+<pre><code>## [1] &quot;probability train glm square error &lt; ExpectationAndSquareLoss square error: 0&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;probability test glm square error &lt; ExpectationAndSquareLoss square error:&#39;</span>,
+      <span class="kw">sum</span>(runSummaries[,<span class="st">&quot;sqError.test.GLM.PoissonRegression.log.link..&quot;</span>]&lt;
+<span class="st">          </span>runSummaries[,<span class="st">&quot;sqError.test.ExpectationAndSquareLoss.log.link.&quot;</span>])/nRuns))</code></pre>
+<pre><code>## [1] &quot;probability test glm square error &lt; ExpectationAndSquareLoss square error: 0.73&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;probability train glm abs balance &lt; ExpectationAndSquareLoss abs balance:&#39;</span>,
+      <span class="kw">sum</span>(<span class="kw">abs</span>(runSummaries[,<span class="st">&quot;balance.train.GLM.PoissonRegression.log.link..&quot;</span> ])&lt;
+<span class="st">          </span><span class="kw">abs</span>(runSummaries[,<span class="st">&quot;balance.train.ExpectationAndSquareLoss.log.link.&quot;</span>]))/nRuns))</code></pre>
+<pre><code>## [1] &quot;probability train glm abs balance &lt; ExpectationAndSquareLoss abs balance: 0.99&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">paste</span>(<span class="st">&#39;probability test glm abs balance &lt; ExpectationAndSquareLoss abs balance:&#39;</span>,
+      <span class="kw">sum</span>(<span class="kw">abs</span>(runSummaries[,<span class="st">&quot;balance.test.GLM.PoissonRegression.log.link..&quot;</span> ])&lt;
+<span class="st">          </span><span class="kw">abs</span>(runSummaries[,<span class="st">&quot;balance.test.ExpectationAndSquareLoss.log.link.&quot;</span>]))/nRuns))</code></pre>
+<pre><code>## [1] &quot;probability test glm abs balance &lt; ExpectationAndSquareLoss abs balance: 0.57&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">dplot &lt;-<span class="st"> </span><span class="kw">melt</span>(<span class="kw">subset</span>(d,TestTrain!=<span class="st">&#39;train&#39;</span>),
+   <span class="dt">id.vars=</span><span class="kw">c</span>(<span class="st">&#39;runNumber&#39;</span>,<span class="st">&#39;x1&#39;</span>,<span class="st">&#39;x2&#39;</span>,<span class="st">&#39;TestTrain&#39;</span>,<span class="st">&#39;y&#39;</span>),
+   <span class="dt">variable.name=</span><span class="st">&#39;estimateMethod&#39;</span>,<span class="dt">value.name=</span><span class="st">&#39;estimateValue&#39;</span>)
+<span class="kw">ggplot</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,TestTrain!=<span class="st">&#39;train&#39;</span>),
+      <span class="kw">aes</span>(<span class="dt">x=</span>estimateValue,<span class="dt">y=</span>y,<span class="dt">color=</span>estimateMethod,<span class="dt">shape=</span>estimateMethod)) +<span class="st"> </span>
+<span class="st">   </span><span class="kw">geom_point</span>() +<span class="st"> </span><span class="kw">geom_abline</span>() +<span class="st"> </span><span class="kw">facet_wrap</span>(~estimateMethod,<span class="dt">scales=</span><span class="st">&#39;free&#39;</span>) +<span class="st"> </span><span class="kw">guides</span>(<span class="dt">colour=</span><span class="ot">FALSE</span>,<span class="dt">shape=</span><span class="ot">FALSE</span>)</code></pre>
+<div class="figure">
+<img src="figure/PExample1.png" alt="plot of chunk PExample" /><p class="caption">plot of chunk PExample</p>
+</div>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(<span class="dt">data=</span><span class="kw">subset</span>(dplot,TestTrain!=<span class="st">&#39;train&#39;</span>),
+      <span class="kw">aes</span>(<span class="dt">x=</span>estimateValue,<span class="dt">y=</span>y,<span class="dt">color=</span>estimateMethod,<span class="dt">shape=</span>estimateMethod)) +<span class="st"> </span>
+<span class="st">   </span><span class="kw">geom_point</span>() +<span class="st"> </span><span class="kw">geom_abline</span>() +<span class="st"> </span><span class="kw">facet_wrap</span>(~estimateMethod,<span class="dt">scales=</span><span class="st">&#39;free&#39;</span>) +<span class="st"> </span>
+<span class="st">   </span><span class="kw">scale_x_log10</span>() +<span class="st"> </span><span class="kw">scale_y_log10</span>() +<span class="st"> </span><span class="kw">guides</span>(<span class="dt">colour=</span><span class="ot">FALSE</span>,<span class="dt">shape=</span><span class="ot">FALSE</span>)</code></pre>
+<div class="figure">
+<img src="figure/PExample2.png" alt="plot of chunk PExample" /><p class="caption">plot of chunk PExample</p>
+</div>

@@ -186,45 +186,5 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
 				System.out.println();
 			}
 		}
-		/**
-		 R: steps
-		 	
-		 	library(ggplot2)
- 			library(reshape2)
- 			d <- read.table('expFit.tsv',sep='\t',stringsAsFactors=FALSE,header=TRUE)
- 			ests <- c('logYest','SquareLossOfExp','GLM.PoissonRegression.log.link..','ExpectationAndSquareLoss.log.link.')
- 			runSummaries <- c()
- 			for(runNum in unique(d$runNumber)) { 			   
- 			   dTrain <- subset(d,TestTrain=='train' & runNumber==runNum)
- 			   dTest <- subset(d,TestTrain!='train' & runNumber==runNum)
- 			   # confirm poisson fit
-			   model <- glm(y~x1+x2,family=poisson(link='log'),data=dTrain)
-			   glmError <- sum((dTrain[,'GLM.PoissonRegression.log.link..']-predict(model,type='response'))^2)
-			   names(glmError) <- 'glmDescrepancy'
-			   trainBalance <- sapply(ests,function(v) sum(dTrain$y-dTrain[,v]))
-			   names(trainBalance) <- paste('balance.train.',ests,sep='')
-			   trainSqError <- sapply(ests,function(v) sum((dTrain$y-dTrain[,v])^2))
-			   names(trainSqError) <- paste('sqError.train.',ests,sep='')
-			   testBalance <- sapply(ests,function(v) sum(dTest$y-dTest[,v]))
-			   names(testBalance) <- paste('balance.test.',ests,sep='')
-			   testSqError <- sapply(ests,function(v) sum((dTest$y-dTest[,v])^2))
-			   names(testSqError) <- paste('sqError.test.',ests,sep='')
-			   row <- c(glmError,trainBalance,trainSqError,testBalance,testSqError)
-			   runSummariesI <- data.frame(runNum=runNum)
-			   for(m in names(row)) {
-			      runSummariesI[1,m] <- row[m]
-			   }
-			   runSummaries <- rbind(runSummaries,runSummariesI);
- 			}
- 			print(summary(runSummaries))
-			dplot <- melt(subset(d,TestTrain!='train'),
-			   id.vars=c('runNumber','x1','x2','TestTrain','y'),
-			   variable.name='estimateMethod',value.name='estimateValue')
-			ggplot(data=subset(dplot,TestTrain!='train'),aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
-			   geom_point() + geom_abline() + facet_wrap(~estimateMethod,scales='free') + guides(colour=FALSE,shape=FALSE)
-			ggplot(data=subset(dplot,TestTrain!='train'),aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
-			   geom_point() + geom_abline() + facet_wrap(~estimateMethod,scales='free') + scale_x_log10() + scale_y_log10() + guides(colour=FALSE,shape=FALSE)
-			
-		 */
 	}
 }
