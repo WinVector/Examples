@@ -12,6 +12,11 @@ public class GLMModel implements VectorFnWithJacobian {
 	}
 	
 	@Override
+	public String toString() {
+		return "GLM(" + balanceJacobianCalc.toString() + ")";
+	}
+	
+	@Override
 	public void balanceAndJacobian(final Iterable<Obs> obs, final double[] beta,
 			final double[] balance, final ColtMatrix jacobian) {
 		final int dim = beta.length;

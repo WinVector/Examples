@@ -15,6 +15,11 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 		this.link = link;
 	}
 
+	@Override
+	public String toString() {
+		return link.toString();
+	}
+	
 	private static double sq(final double z) {
 		return z*z;
 	}
@@ -76,6 +81,10 @@ public final class LinkBasedGradHess implements BalanceJacobianCalc {
 		@Override
 		public double heuristicLink(double y) {
 			return Math.log(Math.abs(y)+1.0); // near log(y), but well behaved
+		}
+		@Override
+		public String toString() {
+			return "log-link";
 		}
 	};
 	

@@ -15,6 +15,11 @@ public final class BalanceBasedJacobian implements BalanceJacobianCalc {
 	public BalanceBasedJacobian(final Link link) {
 		this.link = link;
 	}
+	
+	@Override
+	public String toString() {
+		return link.toString();
+	}
 
 	@Override
 	public BalanceJacobianCoef calc(final Obs obs, final double[] beta) {

@@ -45,7 +45,7 @@ public class TestLogLinFitter {
 		for(final Obs obsi: obs) {
 			final double y = obsi.y;
 			final double[] x = obsi.x;
-			final double lfit = Math.exp(lf.predict(lsoln, x));
+			final double lfit = Math.exp(lf.evalEst(lsoln, x));
 			final double llfit = llf.fn.evalEst(llsoln,x);
 			//System.out.println("" + y + "\t" + lfit + "\t" + llfit );
 			sqLError += obsi.wt*Math.pow(lfit-y,2);

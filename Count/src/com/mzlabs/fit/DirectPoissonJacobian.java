@@ -19,6 +19,11 @@ public final class DirectPoissonJacobian implements BalanceJacobianCalc {
 	}
 	
 	@Override
+	public String toString() {
+		return "PoissonRegression(log-link)";
+	}
+	
+	@Override
 	public double evalEst(double[] beta, double[] x) {
 		return Math.exp(Obs.dot(beta,x));
 	}

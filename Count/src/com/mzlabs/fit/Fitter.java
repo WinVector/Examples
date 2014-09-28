@@ -8,8 +8,10 @@ public interface Fitter {
 	 * @param y
 	 * @param wt weight of observation (set to 1.0 in many cases)
 	 */
-	public abstract void addObservation(final double[] x, final double y,
+	void addObservation(final double[] x, final double y,
 			final double wt);
 
-	public abstract double[] solve();
+	double[] solve();
+	
+	double evalEst(double[] beta, double[] x);
 }

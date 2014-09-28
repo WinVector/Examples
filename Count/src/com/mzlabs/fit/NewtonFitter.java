@@ -117,4 +117,9 @@ public final class NewtonFitter implements Fitter {
 		}
 		return beta;
 	}
+
+	@Override
+	public double evalEst(final double[] beta, final double[] x) {
+		return fn.evalEst(beta, x);
+	}
 }

@@ -19,6 +19,11 @@ public final class SquareLossOfExp implements VectorFnWithJacobian {
 	public double heuristicLink(final double y) {
 		return Math.log(Math.abs(y)+1.0); // near log(y), but well behaved
 	}
+	
+	@Override
+	public String toString() {
+		return "SquareLossOfExp";
+	}
 
 
 	@Override
