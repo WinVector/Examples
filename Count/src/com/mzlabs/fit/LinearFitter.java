@@ -10,19 +10,26 @@ import com.winvector.linalg.colt.ColtMatrix;
  *
  */
 public final class LinearFitter implements Fitter {
-	private final ColtMatrix xTx;
-	private final double[] xTy;
+	private final int n;
+	private ColtMatrix xTx;
+	private double[] xTy;
 	
 	/**
 	 * 
 	 * @param n dimension of x-vectors
 	 */
 	public LinearFitter(final int n) {
+		this.n = n;
+		clear();
+	}
+
+	@Override
+	public void clear() {
 		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
 		xTx = factory.newMatrix(n,n,false);
 		xTy = new double[n];
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see com.mzlabs.count.util.Fitter#addObservation(double[], double, double)
 	 */

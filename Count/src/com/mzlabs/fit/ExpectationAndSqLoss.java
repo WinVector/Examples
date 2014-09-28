@@ -96,79 +96,95 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
 	}
 	
 	public static void main(final String[] args) {
-		// build some example data
+		// controls/params
+		final boolean checkBalance = true;
+		final int elIndex = 2;
+		final int exampleSize = 200;
+		final int nTrain = exampleSize/2;
 		final Random rand = new Random(343406L);
-		final ArrayList<Obs> obs = new ArrayList<Obs>();
-		for(int i=0;i<200;++i) {
-			final double[] x = new double[] {1, rand.nextGaussian(), rand.nextGaussian()};
-			final double yIdeal = Math.exp(x[0] + 2.0+x[1] + 3.0+x[2]);
-			final double yObserved = Math.max(0.1,yIdeal + 0.4*rand.nextGaussian()*yIdeal);
-			obs.add(new Obs(x,yObserved,1.0));
-		}
+		final int dim = 3;
 		// provision fitters
 		final ExpectationAndSqLoss fn = new ExpectationAndSqLoss(LinkBasedGradHess.logLink);
-		final int elIndex = 2;
 		final NewtonFitter[] fitters = { 
 				new NewtonFitter(new SquareLossOfExp()),
 				new NewtonFitter(DirectPoissonJacobian.poissonLink),
 				new NewtonFitter(fn)  // elIndex == 2
 		};
-		final int dim = obs.get(0).x.length;
-		final int nTrain = obs.size()/2;
 		final LinearFitter lf = new LinearFitter(dim);
-		// scan data
-		for(int i=0;i<nTrain;++i) {
-			final Obs obsi = obs.get(i);
-			lf.addObservation(obsi.x,Math.log(obsi.y),1.0);
-			for(final NewtonFitter fitter: fitters) {
-				fitter.addObservation(obsi.x,obsi.y,1.0);
-			}
-		}
-		// solve
-		final double[] lfSoln = lf.solve();
-		final double[][] fSoln = new double[fitters.length][];
-		for(int j=0;j<fitters.length;++j) {
-			fSoln[j] = fitters[j].solve();
-		}
-		// check balance condition
-		final int pdim = fSoln[elIndex].length;
-		final double[] balance = new double[pdim];
-		final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
-		final ColtMatrix jacobian = factory.newMatrix(pdim,pdim,false);
-		fn.balanceAndJacobian(obs.subList(0,nTrain), fSoln[elIndex], balance, jacobian);
-		double balanceCheck = 0.0;
-		for(int i=0;i<nTrain;++i) {
-			final Obs obsi = obs.get(i);
-			final double llfit = fn.evalEst(fSoln[elIndex],obsi.x);
-			balanceCheck += obsi.wt*(obsi.y-llfit);
-		}
-		for(final double bi: balance) {
-			if(Math.abs(bi)>1.0e-3) {
-				throw new IllegalStateException("didn't balance");
-			}
-		}
-		if(Math.abs(balanceCheck)>1.0e-3) {
-			throw new IllegalStateException("didn't balance");
-		}
-		// print data and estimates
+		// print header
+		System.out.print("runNumber");
 		for(int j=1;j<dim;++j) {
-			System.out.print("x"+j + "\t");
+			System.out.print("\t" + "x"+j);
 		}
-		System.out.print("y" + "\t" + "TestTrain" + "\t" + "logYest");
+		System.out.print("\t" + "y" + "\t" + "TestTrain" + "\t" + "logYest");
 		for(int j=0;j<fitters.length;++j) {
 			System.out.print("\t" + fitters[j].fn);
 		}
 		System.out.println();
-		for(int i=0;i<obs.size();++i) {
-			final Obs obsi = obs.get(i);
-			for(int j=1;j<dim;++j) {
-				System.out.print(obsi.x[j] + "\t");
+	
+		for(int runNum=1;runNum<=100;++runNum) {
+			// reset fitters (as they hold data)
+			lf.clear();
+			for(final NewtonFitter fitter: fitters) {
+				fitter.clear();
 			}
-			System.out.print(obsi.y + "\t" + (i<nTrain?"train":"test") + "\t" + Math.exp(lf.evalEst(lfSoln,obsi.x)));
+			// build some example data
+			final ArrayList<Obs> obs = new ArrayList<Obs>();
+			for(int i=0;i<exampleSize;++i) {
+				final double[] x = new double[] {1, rand.nextGaussian(), rand.nextGaussian()};
+				final double yIdeal = Math.exp(x[0] + 2.0+x[1] + 3.0+x[2]);
+				final double yObserved = Math.max(0.1,yIdeal + 0.4*rand.nextGaussian()*yIdeal);
+				obs.add(new Obs(x,yObserved,1.0));
+			}
+			// scan data
+			for(int i=0;i<nTrain;++i) {
+				final Obs obsi = obs.get(i);
+				lf.addObservation(obsi.x,Math.log(obsi.y),1.0);
+				for(final NewtonFitter fitter: fitters) {
+					fitter.addObservation(obsi.x,obsi.y,1.0);
+				}
+			}
+			// solve
+			final double[] lfSoln = lf.solve();
+			final double[][] fSoln = new double[fitters.length][];
 			for(int j=0;j<fitters.length;++j) {
-				System.out.print("\t" + fitters[j].evalEst(fSoln[j],obsi.x));
+				fSoln[j] = fitters[j].solve();
 			}
-			System.out.println();
+			if(checkBalance) {
+				// check balance condition
+				final int pdim = fSoln[elIndex].length;
+				final double[] balance = new double[pdim];
+				final LinalgFactory<ColtMatrix> factory = ColtMatrix.factory;
+				final ColtMatrix jacobian = factory.newMatrix(pdim,pdim,false);
+				fn.balanceAndJacobian(obs.subList(0,nTrain), fSoln[elIndex], balance, jacobian);
+				double balanceCheck = 0.0;
+				for(int i=0;i<nTrain;++i) {
+					final Obs obsi = obs.get(i);
+					final double llfit = fn.evalEst(fSoln[elIndex],obsi.x);
+					balanceCheck += obsi.wt*(obsi.y-llfit);
+				}
+				for(final double bi: balance) {
+					if(Math.abs(bi)>=0.1) {
+						throw new IllegalStateException("didn't balance");
+					}
+				}
+				if(Math.abs(balanceCheck)>=0.1) {
+					throw new IllegalStateException("didn't balance");
+				}
+			}
+			// print data and estimates
+			for(int i=0;i<obs.size();++i) {
+				final Obs obsi = obs.get(i);
+				System.out.print(runNum);
+				for(int j=1;j<dim;++j) {
+					System.out.print("\t" + obsi.x[j]);
+				}
+				System.out.print("\t" + obsi.y + "\t" + (i<nTrain?"train":"test") + "\t" + Math.exp(lf.evalEst(lfSoln,obsi.x)));
+				for(int j=0;j<fitters.length;++j) {
+					System.out.print("\t" + fitters[j].evalEst(fSoln[j],obsi.x));
+				}
+				System.out.println();
+			}
 		}
 		/**
 		 R: steps
@@ -177,27 +193,37 @@ public final class ExpectationAndSqLoss implements VectorFnWithJacobian {
  			library(reshape2)
  			d <- read.table('expFit.tsv',sep='\t',stringsAsFactors=FALSE,header=TRUE)
  			ests <- c('logYest','SquareLossOfExp','GLM.PoissonRegression.log.link..','ExpectationAndSquareLoss.log.link.')
- 			dTrain <- subset(d,TestTrain=='train')
- 			dTest <- subset(d,TestTrain!='train')
- 			# confirm poisson fit
-			model <- glm(y~x1+x2,family=poisson(link='log'),data=dTrain)
-			print(sum((dTrain[,'GLM.PoissonRegression.log.link..']-predict(model,type='response'))^2))
-			# show balance and square error
- 			for(v in ests) {
- 			   print(paste(v,sum(dTrain$y-dTrain[,v]),sum((dTrain$y-dTrain[,v])^2)))
+ 			runSummaries <- c()
+ 			for(runNum in unique(d$runNumber)) { 			   
+ 			   dTrain <- subset(d,TestTrain=='train' & runNumber==runNum)
+ 			   dTest <- subset(d,TestTrain!='train' & runNumber==runNum)
+ 			   # confirm poisson fit
+			   model <- glm(y~x1+x2,family=poisson(link='log'),data=dTrain)
+			   glmError <- sum((dTrain[,'GLM.PoissonRegression.log.link..']-predict(model,type='response'))^2)
+			   names(glmError) <- 'glmDescrepancy'
+			   trainBalance <- sapply(ests,function(v) sum(dTrain$y-dTrain[,v]))
+			   names(trainBalance) <- paste('balance.train.',ests,sep='')
+			   trainSqError <- sapply(ests,function(v) sum((dTrain$y-dTrain[,v])^2))
+			   names(trainSqError) <- paste('sqError.train.',ests,sep='')
+			   testBalance <- sapply(ests,function(v) sum(dTest$y-dTest[,v]))
+			   names(testBalance) <- paste('balance.test.',ests,sep='')
+			   testSqError <- sapply(ests,function(v) sum((dTest$y-dTest[,v])^2))
+			   names(testSqError) <- paste('sqError.test.',ests,sep='')
+			   row <- c(glmError,trainBalance,trainSqError,testBalance,testSqError)
+			   runSummariesI <- data.frame(runNum=runNum)
+			   for(m in names(row)) {
+			      runSummariesI[1,m] <- row[m]
+			   }
+			   runSummaries <- rbind(runSummaries,runSummariesI);
  			}
- 			for(v in ests) {
- 			   print(paste(v,sum(dTest$y-dTest[,v]),sum((dTest$y-dTest[,v])^2)))
- 			}
-			dplot <- melt(d,id.vars=c('x1','x2','TestTrain','y'),variable.name='estimateMethod',value.name='estimateValue')
-			ggplot(data=dplot,aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
-			   geom_point() + geom_abline() + facet_wrap(~TestTrain,ncol=1)
-			ggplot(data=dplot,aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
-			   geom_point() + geom_abline() + facet_wrap(~TestTrain,ncol=1) + scale_x_log10() + scale_y_log10()
+ 			print(summary(runSummaries))
+			dplot <- melt(subset(d,TestTrain!='train'),
+			   id.vars=c('runNumber','x1','x2','TestTrain','y'),
+			   variable.name='estimateMethod',value.name='estimateValue')
 			ggplot(data=subset(dplot,TestTrain!='train'),aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
-			   geom_point() + geom_abline() + facet_wrap(~estimateMethod) + guides(colour=FALSE,shape=FALSE)
+			   geom_point() + geom_abline() + facet_wrap(~estimateMethod,scales='free') + guides(colour=FALSE,shape=FALSE)
 			ggplot(data=subset(dplot,TestTrain!='train'),aes(x=estimateValue,y=y,color=estimateMethod,shape=estimateMethod)) + 
-			   geom_point() + geom_abline() + facet_wrap(~estimateMethod) + scale_x_log10() + scale_y_log10() + guides(colour=FALSE,shape=FALSE)
+			   geom_point() + geom_abline() + facet_wrap(~estimateMethod,scales='free') + scale_x_log10() + scale_y_log10() + guides(colour=FALSE,shape=FALSE)
 			
 		 */
 	}

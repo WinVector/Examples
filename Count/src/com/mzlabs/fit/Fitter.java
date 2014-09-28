@@ -10,6 +10,8 @@ public interface Fitter {
 	 */
 	void addObservation(final double[] x, final double y,
 			final double wt);
+	
+	void clear();
 
 	double[] solve();
 	

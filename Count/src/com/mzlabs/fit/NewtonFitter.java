@@ -8,10 +8,15 @@ import com.winvector.linalg.colt.ColtMatrix;
 
 public final class NewtonFitter implements Fitter {
 	public final VectorFnWithJacobian fn;
-	public final ArrayList<Obs> obs = new ArrayList<Obs>();
+	public ArrayList<Obs> obs = new ArrayList<Obs>();
 	
 	public NewtonFitter(final VectorFnWithJacobian fn) {
 		this.fn = fn;
+	}
+	
+	@Override
+	public void clear() {
+		obs = new ArrayList<Obs>();
 	}
 	
 	@Override
