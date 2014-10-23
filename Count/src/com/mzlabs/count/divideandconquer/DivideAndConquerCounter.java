@@ -42,7 +42,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 		for(int i=0;i<n;++i) {
 			origVarIndices[i] = i;
 		}
-		underlying = buildSolnTree(problem.A,origVarIndices,new HashMap<IntMat,NonNegativeIntegralCounter>(1000),allowParallel);
+		underlying = buildSolnDag(problem.A,origVarIndices,new HashMap<IntMat,NonNegativeIntegralCounter>(1000),allowParallel);
 	}
 	
 
@@ -88,7 +88,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 	
 	
 	
-	private final NonNegativeIntegralCounter buildSolnTree(final int[][] Ain, final int[] origVarIndices,
+	private final NonNegativeIntegralCounter buildSolnDag(final int[][] Ain, final int[] origVarIndices,
 			final Map<IntMat,NonNegativeIntegralCounter> cannonSolns, final boolean runParrallel) {
 		if(Ain.length<1) {
 			throw new IllegalArgumentException("called on zero-row system");
@@ -149,7 +149,7 @@ public final class DivideAndConquerCounter implements NonNegativeIntegralCounter
 				}
 				final NonNegativeIntegralCounter[] subsystem = new NonNegativeIntegralCounter[2];
 				for(int sub=0;sub<2;++sub) {
-					subsystem[sub] = buildSolnTree(Asub[sub],subIndices[sub],cannonSolns,false);
+					subsystem[sub] = buildSolnDag(Asub[sub],subIndices[sub],cannonSolns,false);
 				}
 				subTree = new SplitNode(A,usesRow,runParrallel,subsystem[0],subsystem[1],zeroOne);
 			}

@@ -8,19 +8,27 @@ import java.util.TreeMap;
 
 import com.mzlabs.count.util.IntVec;
 
+/**
+ * assuming any recursive calls are on strictly smaller totals (so we can't have circular locks)
+ * @author jmount
+ *
+ */
 public final class SolnCache {
-	private final int storeMask = 0x07fff; // 2^k-1
+	private final int maxSum = 2*10*100;
+	private final int storeMask = 0x07f; // 2^k-1
 	
-	private static final class SolnEntry {
-		public BigInteger value = null; 
-	}
-	
-	private final ArrayList<Map<int[],SolnEntry>> hotStores = new ArrayList<Map<int[],SolnEntry>>(storeMask+1);  // sub-stores (to shallow trees), also sync on these
+
+	private final ArrayList<ArrayList<Map<int[],BigInteger>>> hotStores = 
+			new ArrayList<ArrayList<Map<int[],BigInteger>>>(storeMask+1);
 	
 
 	public SolnCache() {
 		for(int i=0;i<=storeMask;++i) {
-			hotStores.add(new TreeMap<int[],SolnEntry>(IntVec.IntComp));
+			final ArrayList<Map<int[],BigInteger>> ai = new ArrayList<Map<int[],BigInteger>>(maxSum+1);
+			for(int j=0;j<=maxSum;++j) {
+				ai.add(new TreeMap<int[],BigInteger>(IntVec.IntComp));
+			}
+			hotStores.add(ai);
 		}
 		clear(); // get into initial state
 	}
@@ -32,29 +40,25 @@ public final class SolnCache {
 	 * @return
 	 */
 	public BigInteger evalCached(final CachableCalculation f, final int[] xin) {
-		final SolnEntry foundValueHolder;
-		final SolnEntry newValueHolder = new SolnEntry();
-		synchronized (newValueHolder) {
-			// find the sub-store
-			final int storeIndex = Arrays.hashCode(xin)&storeMask;
-			final Map<int[],SolnEntry> hotStore = hotStores.get(storeIndex);
-			// hope for cached
-			synchronized (hotStore) {
-				foundValueHolder = hotStore.get(xin);
-				if(null==foundValueHolder) {
-					final int[] xcopy = Arrays.copyOf(xin,xin.length);
-					hotStore.put(xcopy,newValueHolder); // newValueHolder now visible to other threads, don't release it's lock before calculating
+		// find the sub-store
+		final int storeIndex = Arrays.hashCode(xin)&storeMask;
+		int total = 0;
+		for(final int xi: xin) {
+			total += xi;
+		}
+		final Map<int[],BigInteger> hotStore = hotStores.get(storeIndex).get(total);
+		synchronized (hotStore) {
+			{ 		// hope for cached
+				final BigInteger foundValue = hotStore.get(xin);
+				if(null!=foundValue) {
+					return foundValue;
 				}
 			}
-			if(null==foundValueHolder) {
-				// do the work (while not holding outer locks, but while holding newValueHolder lock)
-				newValueHolder.value = f.eval(xin);
-				return newValueHolder.value;
-			}
-		}
-		// foundValueHolder not null here
-		synchronized (foundValueHolder) {
-			return foundValueHolder.value;
+			// do the work (while holding locks)
+			final BigInteger newValue = f.eval(xin);
+			final int[] xcopy = Arrays.copyOf(xin,xin.length);
+			hotStore.put(xcopy,newValue);
+			return newValue;
 		}
 	}
 	
@@ -65,10 +69,11 @@ public final class SolnCache {
 	 */
 	public long size() {
 		long size = 0;
-		for(int i=0;i<=storeMask;++i) {
-			final Map<int[],SolnEntry> s = hotStores.get(i);
-			synchronized (s) {
-				size += s.size();
+		for(final ArrayList<Map<int[], BigInteger>> ai: hotStores) {
+			for(final Map<int[], BigInteger> aij: ai) {
+				synchronized(aij) {
+					size += aij.size();
+				}
 			}
 		}
 		return size;
@@ -78,10 +83,11 @@ public final class SolnCache {
 	 * best effort, not atomic across stores
 	 */
 	public void clear() {
-		for(int i=0;i<=storeMask;++i) {
-			final Map<int[],SolnEntry> s = hotStores.get(i);
-			synchronized (s) {
-				s.clear();
+		for(final ArrayList<Map<int[], BigInteger>> ai: hotStores) {
+			for(final Map<int[], BigInteger> aij: ai) {
+				synchronized(aij) {
+					aij.clear();
+				}
 			}
 		}
 	}

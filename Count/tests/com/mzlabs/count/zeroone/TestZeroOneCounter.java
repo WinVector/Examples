@@ -66,7 +66,7 @@ public class TestZeroOneCounter {
 			final int[] interior = new int[prob.A[0].length];
 			final Random rand = new Random(2426236);
 			for(int i=0;i<interior.length;++i) {
-				interior[i] = rand.nextInt(1000);
+				interior[i] = rand.nextInt(100);
 			}
 			IntLinOp.mult(prob.A,interior,b);
 			final BigInteger evenOddSoln = cm.countNonNegativeSolutions(b);
