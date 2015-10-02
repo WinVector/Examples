@@ -1,0 +1,39 @@
+```{r}
+library(ggplot2)
+library(reshape2)
+
+allScores = readRDS("allScores.RDS")
+
+makeplot = function(allScores, method, testSize, title) {
+  
+  filter = allScores$method==method & allScores$testSize==testSize
+  modelScores = allScores[filter, c("number_of_variables", "trainScore", "testScore", "freshScore")] 
+  
+  plotFrame <- melt(modelScores,
+                    id.vars=c('number_of_variables'),
+                    value.name='accuracy',
+                    variable.name='dataset')
+ 
+  ggplot(plotFrame,aes(x=number_of_variables,
+                            y=accuracy,
+                            color=dataset, 
+                            shape=dataset,
+                            linetype=dataset)) +
+    geom_point() + geom_line() + #geom_smooth(se=FALSE) +
+    ggtitle(paste(title)) + scale_color_brewer(palette="Dark2")
+}
+
+makeplot(allScores, "testMethod", 1000, "Naive method, test size=1000")
+makeplot(allScores, "diffPrivMethod_0.04", 1000, "Differential Privacy, test size = 1000")
+makeplot(allScores, "testMethod", 10000, "Naive method, test size = 10000")
+```
+
+```{r}
+naive = allScores[allScores$method=="testMethod" & allScores$testSize==1000,]
+sum(grepl("x", naive$varChosen))
+dp = allScores[allScores$method=="diffPrivMethod_0.04" & allScores$testSize==1000,]
+sum(grepl("x", dp$varChosen))
+oracle = allScores[allScores$method=="testMethod" & allScores$testSize==10000,]
+sum(grepl("x", oracle$varChosen))
+
+```

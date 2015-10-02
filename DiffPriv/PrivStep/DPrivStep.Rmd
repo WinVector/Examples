@@ -1,0 +1,195 @@
+---
+title: "DPrivStep.Rmd"
+author: "Win-Vector LLC"
+date: "September 30, 2015"
+output: html_document
+---
+
+
+```{r warning=FALSE}
+library("ggplot2")
+# devtools::install_github("WinVector/WVPlots")
+library("WVPlots")
+library("reshape2")
+source('DPrivStep.R')
+
+DEBUG=FALSE
+
+set.seed(23237)
+
+
+signalCoefs <- rep(1,10)
+names(signalCoefs) <- paste('x',seq_len(length(signalCoefs)),sep='')
+noiseCoefs <- rep(0,100)
+names(noiseCoefs) <- paste('n',seq_len(length(noiseCoefs)),sep='')
+coefs <- c(signalCoefs,noiseCoefs)
+
+cl <- c()
+if(!DEBUG) {
+  cl <- parallel::makeCluster(parallel::detectCores())
+}
+
+
+modelScoreImprovement <- function(varSet,newV,trainData,scoreData) {
+  scoreO <- 0
+  if(length(varSet)>0) {
+    modelO <- mkModel(varSet,trainData)
+    scoreO <- scoreModel(modelO,scoreData)
+  }
+  modelP <- mkModel(c(newV,varSet),trainData)
+  scoreP <- scoreModel(modelP,scoreData)
+  scoreP - scoreO
+}
+  
+        
+
+
+mkWorker <- function(task) {
+  testData <- task$testData
+  eps <- c()
+  args <- strsplit(task$method,'_')[[1]]
+  if(length(args)>1) {
+     eps <- as.numeric(args[[2]])
+  }
+  methodList = list(
+    combinedMethod = function(v) {
+      dat <- rbind(trainData,testData)
+      modelScoreImprovement(varSet,v,dat,dat)
+    },
+    testMethod = function(v) {
+      modelScoreImprovement(varSet,v,trainData,testData)
+    },
+    diffPrivMethod = function(v) {
+      testScore <- modelScoreImprovement(varSet,v,
+                                         trainData,
+                                         testData)
+      trainScore <- modelScoreImprovement(varSet,v,
+                                          trainData,
+                                          trainData)
+      if(abs(testScore-trainScore)<=eps/2) {
+        sc <- trainScore + rlaplace(1,eps/2)
+      } else {
+        sc <- testScore + rlaplace(1,eps)
+      }
+      pmax(0,pmin(1,sc))
+    }
+  )
+  bindToEnv(environment(),
+            rlaplace,
+            trainData,
+            accuracy,
+            mkModel,
+            scoreModel,
+            varSet,
+            modelScoreImprovement)
+  methodList[[strsplit(task$method,'_')[[1]][[1]]]]
+}
+  
+allScores <- c()
+perf <- c()
+
+for(rep in seq_len(5)) {
+  trainData <- mkData(coefs,1000)
+  freshData <- mkData(coefs,10000)
+  testDataS <- mkData(coefs,1000)
+  testData10000 <- mkData(coefs,10000)
+  tasks <- list(
+    list(testData=testDataS,method='testMethod'),
+    list(testData=testDataS,method='combinedMethod'),
+    list(testData=testDataS,method='diffPrivMethod_0.04'),
+    list(testData=testData10000,method='testMethod')
+  )
+  
+  for(task in tasks) {
+    testData <- task$testData
+    testSize <- nrow(testData)
+    method <- task$method
+    taskName <- paste(method,' test size=',testSize)
+    if(rep==1) {
+      print(taskName)
+    }
+    
+    varSet <- c()
+    candidateSet <- names(coefs)
+    
+    nc <- length(candidateSet)
+    modelScores <- data.frame(number_of_variables=seq_len(min(nc,50)),
+                              varChosen=NA,
+                              trainScore=NA,
+                              testScore=NA,
+                              freshScore=NA,
+                              stringsAsFactors = FALSE)
+    i <- 0
+    while((i<50)&&(length(candidateSet)>0)) {
+      # find the next stepwise variable
+      if(DEBUG) {
+        worker <- mkWorker(task)
+        vScores <- numeric(length(candidateSet))
+        for(j in seq_len(length(candidateSet))) {
+          vScores[[j]] <- worker(candidateSet[[j]])
+        }
+      } else {
+        vScores <-  as.numeric(parallel::parLapplyLB(cl,
+                                                     candidateSet,
+                                                     mkWorker(task)))
+      }
+      idx <- which.max(vScores)
+      newVar <- candidateSet[idx]
+      varSet <- c(varSet,newVar)
+      candidateSet <- setdiff(candidateSet,newVar)
+      # score model
+      if(method=='combinedMethod') {
+        dat <- rbind(trainData,testData)
+        model <- mkModel(varSet,dat)
+      } else {
+        model <- mkModel(varSet,trainData)
+      }
+      i <- i+1
+      if(rep==1) {
+        print(paste(i,newVar))
+      }
+      modelScores$varChosen[[i]] <- newVar
+      modelScores$trainScore[[i]] <- scoreModel(model,trainData)
+      modelScores$testScore[[i]] <- scoreModel(model,testData)
+      modelScores$freshScore[[i]] <- scoreModel(model,freshData)
+    }
+    if(rep==1) {
+      plotFrame <- melt(modelScores,
+                        id.vars=c('number_of_variables','varChosen'),
+                        value.name='accuracy',
+                        variable.name='dataset')
+      modelScores$testSize <- testSize
+      modelScores$method <- method 
+      allScores <- rbind(allScores,modelScores)
+      print(ggplot(data=plotFrame,aes(x=number_of_variables,
+                                      y=accuracy,
+                                      color=dataset)) +
+              geom_point() + geom_smooth() +
+              ggtitle(taskName))
+    }
+    # get perf stats (fresh only)
+    bestFresh <- max(modelScores$freshScore[[i]])
+    perfI <- data.frame(method=method,
+                        testSize=testSize,
+                        rep=rep,
+                        bestFreshAccuracy=bestFresh,
+                     stringsAsFactors = FALSE)
+    perf <- rbind(perf,perfI)
+  }
+}
+
+
+saveRDS(allScores,'allScores.RDS')
+saveRDS(perf,'perf.RDS')
+
+perf$what <- paste(perf$method,perf$testSize)
+print(WVPlots::ScatterBoxPlotH(perf,'bestFreshAccuracy','what',
+                              'accuracy on new data'))
+
+if(!is.null(cl)) {
+  parallel::stopCluster(cl)
+  cl <- NULL
+}
+```
+
+
