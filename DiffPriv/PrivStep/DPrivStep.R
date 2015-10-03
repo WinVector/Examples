@@ -1,6 +1,9 @@
 
 
 rlaplace <- function(n,sigma) {
+  if(sigma<=0) {
+    return(numeric(n))
+  }
   rexp(n,rate = 1/sigma) - rexp(n,rate = 1/sigma)
 }
 
