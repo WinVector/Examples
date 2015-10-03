@@ -9,7 +9,7 @@ library(ggplot2) # For the graphs at the bottom of the code
 set.seed(345345)
 
 rlaplace <- function(n,sigma) {
-  if(sigma==0) {
+  if(sigma<=0) {
     numeric(n)
   }
   rexp(n,rate = 1/sigma) - rexp(n,rate = 1/sigma)
