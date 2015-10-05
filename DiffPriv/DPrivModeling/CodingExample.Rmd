@@ -1,0 +1,298 @@
+---
+title: "CodingExample"
+author: "Win-Vector LLC"
+date: "September 30, 2015"
+output: html_document
+---
+
+
+```{r, echo=FALSE, results='hide', warning=FALSE}
+source('model.R')
+source('mkModel.R')
+# devtools::install_github("WinVector/WVPlots")
+library("WVPlots")
+
+set.seed(232567)
+vplan <- list(designVar('x1',10),
+              designVar('x2',10),
+              designVar('x3',10),
+              designVar('x4',10),
+              designVar('x5',10),
+              designVar('x6',10),
+              designVar('x7',10),
+              designVar('x8',10),
+              designVar('x9',10),
+              designVar('x10',10),
+              designNoiseVar('n1',500),
+              designNoiseVar('n2',500),
+              designNoiseVar('n3',500),
+              designNoiseVar('n4',500),
+              designNoiseVar('n5',500),
+              designNoiseVar('n6',500),
+              designNoiseVar('n7',500),
+              designNoiseVar('n8',500),
+              designNoiseVar('n9',500),
+              designNoiseVar('n10',500),
+              designNoiseVar('n11',500),
+              designNoiseVar('n12',500),
+              designNoiseVar('n13',500),
+              designNoiseVar('n14',500),
+              designNoiseVar('n15',500),
+              designNoiseVar('n16',500),
+              designNoiseVar('n17',500),
+              designNoiseVar('n18',500),
+              designNoiseVar('n19',500),
+              designNoiseVar('n20',500),
+              designNoiseVar('n21',500),
+              designNoiseVar('n22',500),
+              designNoiseVar('n23',500),
+              designNoiseVar('n24',500),
+              designNoiseVar('n25',500),
+              designNoiseVar('n26',500),
+              designNoiseVar('n27',500),
+              designNoiseVar('n28',500),
+              designNoiseVar('n29',500),
+              designNoiseVar('n30',500))
+yName <- 'y'
+
+dTrain <- generateExample(vplan,2000)
+vars <- setdiff(colnames(dTrain),yName)
+dTest <- generateExample(vplan,10000)
+
+
+errorRate <- function(pred,truth) {
+  sum((pred>=0.5)!=truth)/length(truth)
+}
+```
+
+```{r, echo=FALSE, results='hide', warning=FALSE}
+cl <- parallel::makeCluster(parallel::detectCores())
+```
+
+```{r, echo=FALSE, results='hide', warning=FALSE}
+mkWorker1 <- function() {
+  bindToEnv(environment(),
+            yName,
+            dTrain,
+            vars,
+            dTest,
+            errorRate,
+            rlaplace,
+            noiseCount,
+            conditionalCounts,
+            listLookup,
+            bayesCode,
+            trainCoder,
+            codeFrame,
+            trainBayesCoder,
+            countCode,
+            trainCountCoder)
+  function(sigma) {
+    cCoder <- trainCountCoder(dTrain,yName,vars,sigma)
+    dTrainC <- cCoder$codeFrame(dTrain)
+    dTestC <- cCoder$codeFrame(dTest)
+    varsC <- setdiff(colnames(dTrainC),yName)
+    formulaC <- paste(yName,paste(varsC,collapse=' + '),sep=' ~ ')
+    modelC <- glm(formulaC,data=dTrainC,family=binomial(link='logit'))
+    dTestC$pred <- predict(modelC,newdata=dTestC,type='response')
+    scoreC <- errorRate(dTestC$pred,dTestC[[yName]])
+    bCoder <- trainBayesCoder(dTrain,yName,vars,sigma)
+    dTrainB <- bCoder$codeFrame(dTrain)
+    dTestB <- bCoder$codeFrame(dTest)
+    varsB <- setdiff(colnames(dTrainB),yName)
+    formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+    modelB <- glm(formulaB,data=dTrainB,family=binomial(link='logit'))
+    dTestB$pred <- predict(modelB,newdata=dTestB,type='response')
+    scoreB <- errorRate(dTestB$pred,dTestB[[yName]])
+    list(scoreC=scoreC,scoreB=scoreB,sigma=sigma)
+  }
+}
+
+results <- parallel::parLapplyLB(cl,(seq_len(201)-1),mkWorker1())
+
+cSigmaBest = 0
+bestC = Inf
+bSigmaBest = 0
+bestB = Inf
+for(res in results) {
+  sigma <- res$sigma
+  scoreC <- res$scoreC
+  scoreB <- res$scoreB
+  if(scoreC<bestC) {
+    bestC <- scoreC
+    cSigmaBest <- sigma
+  }
+  if(scoreB<bestB) {
+    bestB <- scoreB
+    bSigmaBest <- sigma
+  }
+}
+```
+
+
+```{r}
+for(cSigma in unique(c(0,cSigmaBest))) {
+  print(paste('count model, sigma=',cSigma))
+  cCoder <- trainCountCoder(dTrain,yName,vars,cSigma)
+  dTrainC <- cCoder$codeFrame(dTrain)
+  dTestC <- cCoder$codeFrame(dTest)
+  varsC <- setdiff(colnames(dTrainC),yName)
+  formulaC <- paste(yName,paste(varsC,collapse=' + '),sep=' ~ ')
+  modelC <- glm(formulaC,data=dTrainC,family=binomial(link='logit'))
+  dTrainC$pred <- predict(modelC,newdata=dTrainC,type='response')
+  print(WVPlots::ROCPlot(dTrainC,'pred',yName,
+                         paste('count model train, sigma=',cSigma)))
+  dTestC$pred <- predict(modelC,newdata=dTestC,type='response')
+  print(errorRate(dTestC$pred,dTestC[[yName]]))
+  print(WVPlots::ROCPlot(dTestC,'pred',yName,
+                         paste('count model test, sigma=',cSigma)))
+}
+```
+
+
+
+```{r}
+for(bSigma in unique(c(0,bSigmaBest))) {
+  print(paste('Bayes model, sigma=',bSigma))
+  bCoder <- trainBayesCoder(dTrain,yName,vars,bSigma)
+  dTrainB <- bCoder$codeFrame(dTrain)
+  dTestB <- bCoder$codeFrame(dTest)
+  varsB <- setdiff(colnames(dTrainB),yName)
+  formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+  modelB <- glm(formulaB,data=dTrainB,family=binomial(link='logit'))
+  dTrainB$pred <- predict(modelB,newdata=dTrainB,type='response')
+  print(WVPlots::ROCPlot(dTrainB,'pred',yName,
+                         paste('Bayes model train, sigma=',bSigma)))
+  dTestB$pred <- predict(modelB,newdata=dTestB,type='response')
+  print(errorRate(dTestB$pred,dTestB[[yName]]))
+  print(WVPlots::ROCPlot(dTestB,'pred',yName,
+                         paste('Bayes model test, sigma=',bSigma)))
+}
+```
+
+
+```{r}
+print('count model, jackknifed')
+cCoder <- trainCountCoder(dTrain,yName,vars,0)
+dTrainC <- jackknifeCountCode(dTrain,yName,vars)
+dTestC <- cCoder$codeFrame(dTest)
+varsC <- setdiff(colnames(dTrainC),yName)
+formulaC <- paste(yName,paste(varsC,collapse=' + '),sep=' ~ ')
+modelC <- glm(formulaC,data=dTrainC,family=binomial(link='logit'))
+dTrainC$pred <- predict(modelC,newdata=dTrainC,type='response')
+print(WVPlots::ROCPlot(dTrainC,'pred',yName,
+                       'count model train, jackknifed'))
+dTestC$pred <- predict(modelC,newdata=dTestC,type='response')
+print(errorRate(dTestC$pred,dTestC[[yName]]))
+print(WVPlots::ROCPlot(dTestC,'pred',yName,
+                       'count model test, jackknifed'))
+```
+
+
+```{r}
+print('Bayes model, jackknifed')
+bCoder <- trainBayesCoder(dTrain,yName,vars,0)
+dTrainB <- jackknifeBayesCode(dTrain,yName,vars)
+dTestB <- bCoder$codeFrame(dTest)
+varsB <- setdiff(colnames(dTrainB),yName)
+formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+modelB <- glm(formulaB,data=dTrainB,family=binomial(link='logit'))
+dTrainB$pred <- predict(modelB,newdata=dTrainB,type='response')
+print(WVPlots::ROCPlot(dTrainB,'pred',yName,
+                       'Bayes model train, jackknifed'))
+dTestB$pred <- predict(modelB,newdata=dTestB,type='response')
+print(errorRate(dTestB$pred,dTestB[[yName]]))
+print(WVPlots::ROCPlot(dTestB,'pred',yName,
+                       'Bayes model test, jackknifed'))
+```
+
+
+```{r}
+print("vtreat model")
+treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
+                                        rareSig=c(),
+                                        smFactor=5.0,
+                                        verbose=FALSE,
+                                        parallelCluster=cl)
+#print(treatments$scoreFrame)
+dTrainV <- vtreat::prepare(treatments,dTrain,pruneSig=0.2,
+                           parallelCluster=cl)
+dTestV <- vtreat::prepare(treatments,dTest,pruneSig=0.2,
+                          parallelCluster=cl)
+varsV <- setdiff(colnames(dTrainV),yName)
+formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
+modelV <- glm(formulaV,data=dTrainV,family=binomial(link='logit'))
+dTrainV$pred <- predict(modelV,newdata=dTrainV,type='response')
+print(WVPlots::ROCPlot(dTrainV,'pred',yName,
+                       paste('vtreat model train')))
+dTestV$pred <- predict(modelV,newdata=dTestV,type='response')
+print(errorRate(dTestV$pred,dTestV[[yName]]))
+print(WVPlots::ROCPlot(dTestV,'pred',yName,
+                       paste('vtreat model test')))
+print(WVPlots::DoubleDensityPlot(dTestV,'pred',yName,
+                       paste('vtreat model test')))
+```
+
+
+```{r}
+print("vtreat split model")
+isCal <- runif(nrow(dTrain))<0.5
+dTrainC <- dTrain[isCal,]
+dTrainT <- dTrain[!isCal,]
+treatments <- vtreat::designTreatmentsC(dTrainC,vars,yName,TRUE,
+                                        rareSig=c(),
+                                        smFactor=5.0,
+                                        verbose=FALSE,
+                                        parallelCluster=cl)
+#print(treatments$scoreFrame)
+dTrainV <- vtreat::prepare(treatments,dTrainT,pruneSig=0.2,
+                           parallelCluster=cl)
+dTestV <- vtreat::prepare(treatments,dTest,pruneSig=0.2,
+                          parallelCluster=cl)
+varsV <- setdiff(colnames(dTrainV),yName)
+formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
+modelV <- glm(formulaV,data=dTrainV,family=binomial(link='logit'))
+dTestV$pred <- predict(modelV,newdata=dTestV,type='response')
+print(errorRate(dTestV$pred,dTestV[[yName]]))
+print(WVPlots::ROCPlot(dTestV,'pred',yName,
+                       paste('vtreat split model test')))
+print(WVPlots::DoubleDensityPlot(dTestV,'pred',yName,
+                       paste('vtreat split model test')))
+```
+
+
+```{r}
+print("vtreat cross model")
+treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
+                                        rareSig=c(),
+                                        returnXFrame=TRUE,
+                                        smFactor=5.0,
+                                        verbose=FALSE,
+                                        parallelCluster=cl)
+#print(treatments$scoreFrame)
+dTrainV <- treatments$xframe
+varsV <- treatments$scoreFrame$varName[treatments$scoreFrame$csig<0.2]
+dTestV <- vtreat::prepare(treatments,dTest,
+                          pruneSig=c(),
+                          varRestriction = varsV,
+                          parallelCluster=cl)
+formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
+modelV <- glm(formulaV,data=dTrainV,family=binomial(link='logit'))
+dTrainV$pred <- predict(modelV,newdata=dTrainV,type='response')
+print(WVPlots::ROCPlot(dTrainV,'pred',yName,
+                       paste('vtreat cross model train')))
+dTestV$pred <- predict(modelV,newdata=dTestV,type='response')
+print(errorRate(dTestV$pred,dTestV[[yName]]))
+print(WVPlots::ROCPlot(dTestV,'pred',yName,
+                       paste('vtreat cross model test')))
+print(WVPlots::DoubleDensityPlot(dTestV,'pred',yName,
+                       paste('vtreat cross model test')))
+```
+
+
+```{r}
+if(!is.null(cl)) {
+  parallel::stopCluster(cl)
+  cl <- NULL
+}
+```
