@@ -212,12 +212,13 @@ print("vtreat model")
 treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
                                         rareSig=c(),
                                         smFactor=5.0,
+                                        minFraction=2.0,
                                         verbose=FALSE,
                                         parallelCluster=cl)
-#print(treatments$scoreFrame)
-dTrainV <- vtreat::prepare(treatments,dTrain,pruneSig=0.2,
+print(treatments$scoreFrame)
+dTrainV <- vtreat::prepare(treatments,dTrain,pruneSig=0.05,
                            parallelCluster=cl)
-dTestV <- vtreat::prepare(treatments,dTest,pruneSig=0.2,
+dTestV <- vtreat::prepare(treatments,dTest,pruneSig=0.05,
                           parallelCluster=cl)
 varsV <- setdiff(colnames(dTrainV),yName)
 formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
@@ -242,12 +243,13 @@ dTrainT <- dTrain[!isCal,]
 treatments <- vtreat::designTreatmentsC(dTrainC,vars,yName,TRUE,
                                         rareSig=c(),
                                         smFactor=5.0,
+                                        minFraction=2.0,
                                         verbose=FALSE,
                                         parallelCluster=cl)
-#print(treatments$scoreFrame)
-dTrainV <- vtreat::prepare(treatments,dTrainT,pruneSig=0.2,
+print(treatments$scoreFrame)
+dTrainV <- vtreat::prepare(treatments,dTrainT,pruneSig=0.05,
                            parallelCluster=cl)
-dTestV <- vtreat::prepare(treatments,dTest,pruneSig=0.2,
+dTestV <- vtreat::prepare(treatments,dTest,pruneSig=0.05,
                           parallelCluster=cl)
 varsV <- setdiff(colnames(dTrainV),yName)
 formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
@@ -267,11 +269,12 @@ treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
                                         rareSig=c(),
                                         returnXFrame=TRUE,
                                         smFactor=5.0,
+                                        minFraction=2.0,
                                         verbose=FALSE,
                                         parallelCluster=cl)
-#print(treatments$scoreFrame)
+print(treatments$scoreFrame)
 dTrainV <- treatments$xframe
-varsV <- treatments$scoreFrame$varName[treatments$scoreFrame$csig<0.2]
+varsV <- treatments$scoreFrame$varName[treatments$scoreFrame$csig<0.05]
 dTestV <- vtreat::prepare(treatments,dTest,
                           pruneSig=c(),
                           varRestriction = varsV,
