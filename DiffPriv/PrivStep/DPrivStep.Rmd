@@ -15,7 +15,7 @@ source('DPrivStep.R')
 
 DEBUG=FALSE
 
-set.seed(23237)
+set.seed(4751)
 
 
 signalCoefs <- rep(1,10)
@@ -96,7 +96,10 @@ for(rep in seq_len(5)) {
   tasks <- list(
     list(testData=testDataS,method='testMethod'),
     list(testData=testDataS,method='combinedMethod'),
+    list(testData=testDataS,method='diffPrivMethod_0.0'),
+    list(testData=testDataS,method='diffPrivMethod_0.02'),
     list(testData=testDataS,method='diffPrivMethod_0.04'),
+    list(testData=testDataS,method='diffPrivMethod_0.06'),
     list(testData=testData10000,method='testMethod')
   )
   
