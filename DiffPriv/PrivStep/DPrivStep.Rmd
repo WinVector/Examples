@@ -49,7 +49,7 @@ mkWorker <- function(task) {
   eps <- c()
   args <- strsplit(task$method,'_')[[1]]
   if(length(args)>1) {
-     eps <- as.numeric(args[[2]])
+    eps <- as.numeric(args[[2]])
   }
   methodList = list(
     combinedMethod = function(v) {
@@ -71,7 +71,26 @@ mkWorker <- function(task) {
       } else {
         sc <- testScore + rlaplace(1,eps)
       }
-      pmax(0,pmin(1,sc))
+      sc
+    },
+    bootPrivMethod = function(v) {
+      bootSize <- ceiling(min(nrow(trainData),nrow(testData))/10)
+      bootTest <- testData[sample.int(nrow(testData),bootSize,replace=TRUE),
+                           ,drop=FALSE]
+      bootTrain <- trainData[sample.int(nrow(trainData),bootSize,replace=TRUE),
+                           ,drop=FALSE]
+      testScore <- modelScoreImprovement(varSet,v,
+                                         trainData,
+                                         bootTest)
+      trainScore <- modelScoreImprovement(varSet,v,
+                                          trainData,
+                                          bootTrain)
+      if(abs(testScore-trainScore)<=eps/2) {
+        sc <- trainScore
+      } else {
+        sc <- testScore
+      }
+      sc
     }
   )
   bindToEnv(environment(),
@@ -100,7 +119,9 @@ for(rep in seq_len(5)) {
     list(testData=testDataS,method='diffPrivMethod_0.02'),
     list(testData=testDataS,method='diffPrivMethod_0.04'),
     list(testData=testDataS,method='diffPrivMethod_0.06'),
-    list(testData=testData10000,method='testMethod')
+    list(testData=testDataS,method='bootPrivMethod_0.02'),
+    list(testData=testDataS,method='bootPrivMethod_0.04'),
+     list(testData=testData10000,method='testMethod')
   )
   
   for(task in tasks) {
