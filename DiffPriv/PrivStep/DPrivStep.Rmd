@@ -66,7 +66,7 @@ mkWorker <- function(task) {
       trainScore <- modelScoreImprovement(varSet,v,
                                           trainData,
                                           trainData)
-      if(abs(testScore-trainScore)<=eps/2) {
+      if(abs(testScore-trainScore)<=eps/2 + rlaplace(1,eps/2)) {
         sc <- trainScore + rlaplace(1,eps/2)
       } else {
         sc <- testScore + rlaplace(1,eps)
@@ -119,9 +119,9 @@ for(rep in seq_len(5)) {
     list(testData=testDataS,method='diffPrivMethod_0.02'),
     list(testData=testDataS,method='diffPrivMethod_0.04'),
     list(testData=testDataS,method='diffPrivMethod_0.06'),
-    list(testData=testDataS,method='bootPrivMethod_0.02'),
-    list(testData=testDataS,method='bootPrivMethod_0.04'),
-     list(testData=testData10000,method='testMethod')
+    #list(testData=testDataS,method='bootPrivMethod_0.02'),
+    #list(testData=testDataS,method='bootPrivMethod_0.04'),
+    list(testData=testData10000,method='testMethod')
   )
   
   for(task in tasks) {
