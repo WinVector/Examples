@@ -12,6 +12,9 @@ source('mkModel.R')
 # devtools::install_github("WinVector/WVPlots")
 library("WVPlots")
 
+runAll = TRUE
+cl = NULL
+
 set.seed(232567)
 vplan <- list(designVar('x1',10),
               designVar('x2',10),
@@ -66,7 +69,10 @@ errorRate <- function(pred,truth) {
 ```
 
 ```{r, echo=FALSE, results='hide', warning=FALSE}
-cl <- parallel::makeCluster(parallel::detectCores())
+cl <- NULL
+if(runAll) {
+  cl <- parallel::makeCluster(parallel::detectCores())
+}
 ```
 
 ```{r, echo=FALSE, results='hide', warning=FALSE}
@@ -108,30 +114,33 @@ mkWorker1 <- function() {
   }
 }
 
-results <- parallel::parLapplyLB(cl,(seq_len(201)-1),mkWorker1())
-
 cSigmaBest = 0
-bestC = Inf
 bSigmaBest = 0
-bestB = Inf
-for(res in results) {
-  sigma <- res$sigma
-  scoreC <- res$scoreC
-  scoreB <- res$scoreB
-  if(scoreC<bestC) {
-    bestC <- scoreC
-    cSigmaBest <- sigma
-  }
-  if(scoreB<bestB) {
-    bestB <- scoreB
-    bSigmaBest <- sigma
+
+if(runAll) {
+  results <- parallel::parLapplyLB(cl,(seq_len(201)-1),mkWorker1())
+  
+  bestC = Inf
+  bestB = Inf
+  for(res in results) {
+    sigma <- res$sigma
+    scoreC <- res$scoreC
+    scoreB <- res$scoreB
+    if(scoreC<bestC) {
+      bestC <- scoreC
+      cSigmaBest <- sigma
+    }
+    if(scoreB<bestB) {
+      bestB <- scoreB
+      bSigmaBest <- sigma
+    }
   }
 }
 ```
 
 
 ```{r}
-for(cSigma in unique(c(0,cSigmaBest))) {
+for(cSigma in sort(unique(c(0,cSigmaBest)))) {
   print(paste('count model, sigma=',cSigma))
   cCoder <- trainCountCoder(dTrain,yName,vars,cSigma)
   dTrainC <- cCoder$codeFrame(dTrain)
@@ -152,7 +161,7 @@ for(cSigma in unique(c(0,cSigmaBest))) {
 
 
 ```{r}
-for(bSigma in unique(c(0,bSigmaBest))) {
+for(bSigma in sort(unique(c(0,bSigmaBest)))) {
   print(paste('Bayes model, sigma=',bSigma))
   bCoder <- trainBayesCoder(dTrain,yName,vars,bSigma)
   dTrainB <- bCoder$codeFrame(dTrain)
@@ -212,7 +221,7 @@ print(WVPlots::ROCPlot(dTestB,'pred',yName,
 ```{r}
 print("vtreat model")
 treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
-                                        rareSig=c(),
+                                        rareSig=0.3,
                                         smFactor=5.0,
                                         minFraction=2.0,
                                         verbose=FALSE,
@@ -243,7 +252,7 @@ isCal <- runif(nrow(dTrain))<0.5
 dTrainC <- dTrain[isCal,]
 dTrainT <- dTrain[!isCal,]
 treatments <- vtreat::designTreatmentsC(dTrainC,vars,yName,TRUE,
-                                        rareSig=c(),
+                                        rareSig=0.3,
                                         smFactor=5.0,
                                         minFraction=2.0,
                                         verbose=FALSE,
@@ -268,7 +277,7 @@ print(WVPlots::DoubleDensityPlot(dTestV,'pred',yName,
 ```{r}
 print("vtreat cross model")
 treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
-                                        rareSig=c(),
+                                        rareSig=0.3,
                                         returnXFrame=TRUE,
                                         smFactor=5.0,
                                         minFraction=2.0,
