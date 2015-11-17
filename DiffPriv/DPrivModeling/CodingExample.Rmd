@@ -274,36 +274,6 @@ print(WVPlots::DoubleDensityPlot(dTestV,'pred',yName,
 ```
 
 
-```{r}
-print("vtreat cross model")
-treatments <- vtreat::designTreatmentsC(dTrain,vars,yName,TRUE,
-                                        rareSig=0.3,
-                                        returnXFrame=TRUE,
-                                        smFactor=5.0,
-                                        minFraction=2.0,
-                                        verbose=FALSE,
-                                        parallelCluster=cl)
-print(treatments$scoreFrame)
-dTrainV <- treatments$xframe
-varsV <- treatments$scoreFrame$varName[treatments$scoreFrame$csig<0.05]
-dTestV <- vtreat::prepare(treatments,dTest,
-                          pruneSig=c(),
-                          varRestriction = varsV,
-                          parallelCluster=cl)
-formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
-modelV <- glm(formulaV,data=dTrainV,family=binomial(link='logit'))
-dTrainV$pred <- predict(modelV,newdata=dTrainV,type='response')
-print(WVPlots::ROCPlot(dTrainV,'pred',yName,
-                       paste('vtreat cross model train')))
-dTestV$pred <- predict(modelV,newdata=dTestV,type='response')
-print(errorRate(dTestV$pred,dTestV[[yName]]))
-print(WVPlots::ROCPlot(dTestV,'pred',yName,
-                       paste('vtreat cross model test')))
-print(WVPlots::DoubleDensityPlot(dTestV,'pred',yName,
-                       paste('vtreat cross model test')))
-```
-
-
 
 
 ```{r}
