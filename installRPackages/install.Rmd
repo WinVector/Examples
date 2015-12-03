@@ -1,0 +1,36 @@
+---
+title: "install"
+author: "Win-Vector LLC"
+date: "December 3, 2015"
+output: html_document
+---
+
+Here are the packages we most commonly use in our courses.
+Note you could change the repository to another mirror 
+(such as  http://cran.rstudio.com ) and also try using https based
+repositories.  If pressing "knit" on this worksheet doesn't work
+try copying and pasting the contents into your R prompt 
+to run (which will allow more interactive dialogues such
+as where to write the libraries and mirror selection).
+
+```{r install1}
+install.packages(c('devtools', 'gdata', 'gbm', 'glmnet', 'ggplot2',
+                   'kernlab', 'knitr', 'mclust', 'mixtools', 'mgcv',
+                   'plyr', 'pROC', 'randomForest', 'reshape2', 'ROCR',
+                   'RSQLite',
+                   'rpart', 'rpart.plot', 'scales', 'sqldf', 'snow', 'vtreat'),
+                 repos='http://cran.us.r-project.org')
+```
+
+This next part can fail as devtools uses the RCurl package
+for the downloads, and this can fail if the host machine doesn't
+have a working libcurl installed for RCurl to use.
+
+```{r optional}
+tryCatch(
+  devtools::install_github('WinVector/WVPlots'),
+  error=function(e) print(e)
+)
+```
+
+
