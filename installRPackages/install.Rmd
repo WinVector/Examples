@@ -33,4 +33,12 @@ tryCatch(
 )
 ```
 
+Urls:
+
+ * Video explaining the install [https://youtu.be/bjpo0nCJLBU](https://youtu.be/bjpo0nCJLBU)
+ * R [https://cran.r-project.org](https://cran.r-project.org)
+ * RStudio [https://www.rstudio.com](https://www.rstudio.com)
+ * WVPlots [https://github.com/WinVector/WVPlots](https://github.com/WinVector/WVPlots)
+ * This document [https://github.com/WinVector/Examples/blob/master/installRPackages/install.Rmd](https://github.com/WinVector/Examples/blob/master/installRPackages/install.Rmd)
+ 
 
