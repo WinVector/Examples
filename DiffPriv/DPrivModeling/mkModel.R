@@ -4,7 +4,9 @@ designVar <- function(vname,nlevs) {
   probs <- probs/sum(probs)
   cumprobs <- cumsum(probs)
   codes <- paste(vname,sprintf("c%03d",seq_len(nlevs)),sep='.')
-  lpy <- rnorm(nlevs)
+  lpy <- rnorm(nlevs)  # effects from this variable
+  # some levels have no effect
+  lpy[sample.int(nlevs,floor(nlevs/2))] <- 0.0
   list(vname=vname,
        probs=probs,
        cumprobs=cumprobs,
@@ -17,7 +19,7 @@ designNoiseVar <- function(vname,nlevs) {
   probs <- probs/sum(probs)
   cumprobs <- cumsum(probs)
   codes <- paste(vname,sprintf("c%03d",seq_len(nlevs)),sep='.')
-  lpy <- numeric(nlevs)
+  lpy <- numeric(nlevs)  # all zeroes, no effect from this variable
   list(vname=vname,
        probs=probs,
        cumprobs=cumprobs,
