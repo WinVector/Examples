@@ -1,0 +1,271 @@
+---
+title: "CodingExampleR"
+author: "Win-Vector LLC"
+date: "December 18, 2015"
+output: html_document
+---
+
+```{r, echo=FALSE, results='hide', warning=FALSE}
+source('utils.R')
+source('modelR.R')
+source('mkExample.R')
+# devtools::install_github("WinVector/WVPlots")
+library("WVPlots")
+# devtools::install_github('WinVector/vtreat')
+library('vtreat')
+
+runAll <- TRUE
+debug <- FALSE
+cl <- NULL
+
+set.seed(232567)
+vplan <- list(designVar('x1',10),
+              designVar('x2',10),
+              designVar('x3',10),
+              designVar('x4',10),
+              designVar('x5',10),
+              designVar('x6',10),
+              designVar('x7',10),
+              designVar('x8',10),
+              designVar('x9',10),
+              designVar('x10',10),
+              designNoiseVar('n1',500),
+              designNoiseVar('n2',500),
+              designNoiseVar('n3',500),
+              designNoiseVar('n4',500),
+              designNoiseVar('n5',500),
+              designNoiseVar('n6',500),
+              designNoiseVar('n7',500),
+              designNoiseVar('n8',500),
+              designNoiseVar('n9',500),
+              designNoiseVar('n10',500),
+              designNoiseVar('n11',500),
+              designNoiseVar('n12',500),
+              designNoiseVar('n13',500),
+              designNoiseVar('n14',500),
+              designNoiseVar('n15',500),
+              designNoiseVar('n16',500),
+              designNoiseVar('n17',500),
+              designNoiseVar('n18',500),
+              designNoiseVar('n19',500),
+              designNoiseVar('n20',500),
+              designNoiseVar('n21',500),
+              designNoiseVar('n22',500),
+              designNoiseVar('n23',500),
+              designNoiseVar('n24',500),
+              designNoiseVar('n25',500),
+              designNoiseVar('n26',500),
+              designNoiseVar('n27',500),
+              designNoiseVar('n28',500),
+              designNoiseVar('n29',500),
+              designNoiseVar('n30',500))
+yVars <- c('yCat','yNumeric')
+yName <- 'yNumeric'
+
+dTrain <- generateExample(vplan,2000)  # Training set
+vars <- setdiff(colnames(dTrain),yVars)
+dCal <- generateExample(vplan,2000)   # Used to pick sigma
+dTest <- generateExample(vplan,10000)  # Pure holdout test
+```
+
+```{r, echo=FALSE, results='hide', warning=FALSE}
+cl <- NULL
+if(runAll && (!debug)) {
+  cl <- parallel::makeCluster(parallel::detectCores())
+}
+```
+
+```{r, echo=FALSE, results='hide', warning=FALSE}
+mkWorker1 <- function() {
+  bindToEnv(environment(),
+            yName,
+            yVars,
+            dTrain,
+            vars,
+            dCal,
+            rmse,
+            rlaplace,
+            noiseCount,
+            listLookup,
+            moments,
+            expectCode,
+            trainCoderR,
+            codeFrameR,
+            trainEffectCoderR,
+            jackknifeEffectCodeR)
+  function(sigma) {
+    bCoder <- trainEffectCoderR(dTrain,yName,vars,sigma)
+    dTrainB <- bCoder$codeFrameR(dTrain)
+    dCalB <- bCoder$codeFrameR(dCal)
+    varsB <- setdiff(colnames(dTrainB),yVars)
+    formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+    print(formulaB)
+    modelB <- lm(formulaB,data=dTrainB)
+    dCalB$pred <- predict(modelB,newdata=dCalB)
+    scoreB <- rmse(dCalB$pred,dCalB[[yName]])
+    list(scoreB=scoreB,sigma=sigma)
+  }
+}
+
+bSigmaBest = 0
+
+if(runAll) {
+  sigmaTargets <- (seq_len(21)-1)
+  worker <- mkWorker1()
+  if(!is.null(cl)) {
+    results <- parallel::parLapplyLB(cl,sigmaTargets,worker)
+  } else {
+    results <- vector(mode='list',length=length(sigmaTargets))
+    for(ii in seq_len(length(sigmaTargets))) {
+      results[[ii]] <- worker(sigmaTargets[[ii]])
+    }
+  }
+  
+  bestB = Inf
+  for(res in results) {
+    sigma <- res$sigma
+    scoreB <- res$scoreB
+    if(scoreB<bestB) {
+      bestB <- scoreB
+      bSigmaBest <- sigma
+    }
+  }
+}
+
+print(paste('bSigmaBest',bSigmaBest))
+```
+
+
+
+
+
+```{r}
+for(bSigma in sort(unique(c(0,bSigmaBest)))) {
+  print(paste('Bayes model, sigma=',bSigma))
+  bCoder <- trainEffectCoderR(dTrain,yName,vars,bSigma)
+  dTrainB <- bCoder$codeFrameR(dTrain)
+  dTestB <- bCoder$codeFrameR(dTest)
+  varsB <- setdiff(colnames(dTrainB),yVars)
+  formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+  modelB <- lm(formulaB,data=dTrainB)
+  dTrainB$pred <- predict(modelB,newdata=dTrainB)
+  print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+  print(WVPlots::ScatterHist(dTrainB,'pred',yName,
+                         paste('Bayes model train, sigma=',bSigma),
+                         smoothmethod='lm',annot_size=2))
+  dTestB$pred <- predict(modelB,newdata=dTestB)
+  print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+  print(WVPlots::ScatterHist(dTestB,'pred',yName,
+                         paste('Bayes model test, sigma=',bSigma),
+                         smoothmethod='lm',annot_size=2))
+}
+```
+
+```{r}
+print('Bayes model, jacknifed')
+bCoder <- trainEffectCoderR(dTrain,yName,vars,0)
+# dTrainB <- bCoder$codeFrame(dTrain)
+# dTrainB <- bCoder$codeFrame(dCal)
+dTrainB <- jackknifeEffectCodeR(dTrain,yName,vars)
+dTestB <- bCoder$codeFrameR(dTest)
+varsB <- setdiff(colnames(dTrainB),yVars)
+formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+modelB <- lm(formulaB,data=dTrainB)
+dTrainB$pred <- predict(modelB,newdata=dTrainB)
+print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+print(WVPlots::ScatterHist(dTrainB,'pred',yName,
+                       'Bayes model train, jackknifed',
+                         smoothmethod='lm',annot_size=2))
+dTestB$pred <- predict(modelB,newdata=dTestB)
+print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+print(WVPlots::ScatterHist(dTestB,'pred',yName,
+                       'Bayes model test, jackknifed',
+                         smoothmethod='lm',annot_size=2))
+```
+
+
+```{r}
+print("vtreat std model")
+pruneSig = 0.05
+
+print("working vtreat split model")
+mTitle <- 'vtreat split model'
+isTrain <- runif(nrow(dTrain))<=0.5
+dTrainDT <- dTrain[isTrain,]
+dTrainDC <- dTrain[!isTrain,]
+treatments <- vtreat::designTreatmentsN(dTrainDC,vars,yName,
+                                        rareSig=0.3,
+                                        smFactor=5.0,
+                                        minFraction=2.0,
+                                        verbose=FALSE,
+                                        parallelCluster=cl)
+dTrainV <- vtreat::prepare(treatments,dTrainDT,pruneSig=pruneSig,
+                           parallelCluster=cl)
+
+#print(treatments$scoreFrame)
+varsV <- intersect(colnames(dTrainV),
+                   treatments$scoreFrame$varName[treatments$scoreFrame$sig<pruneSig])
+print(varsV)
+dTestV <- vtreat::prepare(treatments,dTest,pruneSig=pruneSig,
+                          varRestriction=varsV,
+                          parallelCluster=cl)
+formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
+modelV <- lm(formulaV,data=dTrainV)
+dTrainV$pred <- predict(modelV,newdata=dTrainV)
+print(paste('train rmse',rmse(dTrainV$pred,dTrainV[[yName]])))
+print(WVPlots::ScatterHist(dTrainV,'pred',yName,
+                         paste(mTitle,'train'),
+                         smoothmethod='lm',annot_size=2))
+dTestV$pred <- predict(modelV,newdata=dTestV)
+print(paste('test rmse',rmse(dTestV$pred,dTestV[[yName]])))
+print(WVPlots::ScatterHist(dTestV,'pred',yName,
+                         paste(mTitle,'test'),
+                         smoothmethod='lm',annot_size=2))
+```
+
+```{r}
+print("vtreat cross model")
+pruneSig = 0.05
+if("mkCrossFrameNExperiment" %in% ls('package:vtreat')) {
+  print("working vtreat cross model")
+  mTitle <- 'vtreat cross model'
+  crossD <- vtreat::mkCrossFrameNExperiment(dTrain,vars,yName,
+                                            rareSig=0.3,
+                                            smFactor=5.0,
+                                            minFraction=2.0,
+                                            parallelCluster=cl)
+  treatments <- crossD$treatments
+  dTrainV <- crossD$crossFrame
+  
+#  print(treatments$scoreFrame)
+  varsV <- intersect(colnames(dTrainV),
+                     treatments$scoreFrame$varName[treatments$scoreFrame$sig<pruneSig])
+  print(varsV)
+  dTestV <- vtreat::prepare(treatments,dTest,pruneSig=pruneSig,
+                            varRestriction=varsV,
+                            parallelCluster=cl)
+  formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
+  modelV <- lm(formulaV,data=dTrainV)
+  dTrainV$pred <- predict(modelV,newdata=dTrainV)
+  print(paste('train rmse',rmse(dTrainV$pred,dTrainV[[yName]])))
+  print(WVPlots::ScatterHist(dTrainV,'pred',yName,
+                             paste(mTitle,'train'),
+                             smoothmethod='lm',annot_size=2))
+  dTestV$pred <- predict(modelV,newdata=dTestV)
+  print(paste('test rmse',rmse(dTestV$pred,dTestV[[yName]])))
+  print(WVPlots::ScatterHist(dTestV,'pred',yName,
+                             paste(mTitle,'test'),
+                             smoothmethod='lm',annot_size=2))
+} else {
+  print("cross model not in library")
+}
+```
+
+
+
+```{r}
+if(!is.null(cl)) {
+  parallel::stopCluster(cl)
+  cl <- NULL
+}
+```

@@ -1,26 +1,11 @@
 
 
-rlaplace <- function(n,sigma) {
-  if(sigma<=0) {
-    return(numeric(n))
-  }
-  rexp(n,rate = 1/sigma) - rexp(n,rate = 1/sigma)
-}
-
-noiseCount <- function(orig,sigma) {
-  if(sigma>0) {
-    x <- orig + rlaplace(length(orig),sigma)
-  } else {
-    x <- orig
-  }
-  x <- pmax(x,1.0e-3)
-  x
-}
-
-
-#' @param vcol character vector
-#' @param rescol logical vector
-#' @param sigma scalar 
+#' Compute counts of rescol conditioned on level of vcol
+#' 
+#' @param vcol character vector independent variable
+#' @param rescol logical vector dependent variable
+#' @param sigma scalar Laplze noise level to apply
+#' @return conditonal count structure
 conditionalCounts <- function(vcol,rescol,sigma) {
   # count queries
   nCandT <- noiseCount(tapply(as.numeric(rescol),vcol,sum),sigma)   #  sum of true examples for a given C (vector)
@@ -30,18 +15,13 @@ conditionalCounts <- function(vcol,rescol,sigma) {
 
 
 
-listLookup <- function(vcol,maplist) {
-  vals <- numeric(length(vcol))
-  seen <- vcol %in% names(maplist)
-  if(length(seen)>0) {
-     vals[seen] <- as.numeric(unlist(maplist[vcol[seen]]))
-  }
-  vals[!seen] <- 0
-  vals
-}
-
-
-
+#' Encode a categorical variable as a Bayes model
+#'
+#' @param vname independnet variable name
+#' @param vcol depedent variable values
+#' @param counts conditional count structure
+#' @param rescol if not null the idependent column to Jacknife out of the counts
+#' @return encoded data frame
 bayesCode <- function(vname,vcol,counts,rescol) {
   smFactor <- 1.0e-3
   nCandT <- listLookup(vcol,counts$nCandT) #  sum of true examples for given C
@@ -57,7 +37,7 @@ bayesCode <- function(vname,vcol,counts,rescol) {
     nF <- nF - ifelse(rescol,0,1)
   }
   # perform the Bayesian calculation, vectorized
-  probT <- nT/(nT+nF)   # unconditional probabilty target is true
+  probT <- nT/pmax(nT+nF,1.0e-3)   # unconditional probabilty target is true
   pCgivenT <- (nCandT+probT*smFactor)/(nT+probT*smFactor)   # probability of a given evidence C, condition on outcome=T
   pCgivenF <- (nCandF+(1.0-probT)*smFactor)/(nF+(1.0-probT)*smFactor)  # probability of a given evidence C, condition on outcome=F
   pTgivenCunnorm <- pCgivenT*probT      # Bayes law, corret missing a /pC term (which we will normalize out)
@@ -70,7 +50,14 @@ bayesCode <- function(vname,vcol,counts,rescol) {
   z
 }
 
-
+#' Train a coder from examples
+#' 
+#' @param d data.frame
+#' @param yName independent varaible name
+#' @param varnames dependent variable names
+#' @param maker
+#' @param coder
+#' @param sigma degree of Laplace smoothing
 trainCoder <- function(d,yName,varNames,maker,coder,sigma) {
   codes <- lapply(varNames,function(vnam) { maker(d[[vnam]],d[[yName]],sigma) })
   names(codes) <- varNames
@@ -83,6 +70,12 @@ trainCoder <- function(d,yName,varNames,maker,coder,sigma) {
 }
 
 
+#' Encode a data frame using a coding plan
+#' 
+#' @param d data.frame original data frame
+#' @param codes coding plan
+#' @param rescol optional dependent varaible to Jacknife out
+#' @return encoded data frame
 codeFrame <- function(d,codes,rescol) {
   nd <- data.frame(d[[codes$yName]],
                    stringsAsFactors = FALSE)
@@ -94,7 +87,13 @@ codeFrame <- function(d,codes,rescol) {
   nd
 }
 
-
+#' Return a Bayes coding plan
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @param sigma Laplace smoothing degree
+#' @return Bayes encoding plan
 trainBayesCoder <- function(d,yName,varNames,sigma) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,bayesCode,sigma) 
   coder$what <- 'BayesCoder'
@@ -102,6 +101,12 @@ trainBayesCoder <- function(d,yName,varNames,sigma) {
   coder
 }
 
+#' Jacknife encode a dataframe through Bayes encoding.
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @return Jackknife encoded frame
 jackknifeBayesCode <- function(d,yName,varNames) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,bayesCode,0) 
   coder$what <- 'BayesCoder'
@@ -109,7 +114,14 @@ jackknifeBayesCode <- function(d,yName,varNames) {
 }
 
 
-
+#' Encode a counts model see: 
+#'   http://blogs.technet.com/b/machinelearning/archive/2015/02/17/big-learning-made-easy-with-counts.aspx
+#'
+#' @param vname independnet variable name
+#' @param vcol depedent variable values
+#' @param counts conditional count structure
+#' @param rescol if not null the idependent column to Jacknife out of the counts
+#' @return encoded data frame
 countCode <- function(vname,vcol,codes,rescol) {
   eps <- 1.0e-3
   nPlus <- pmax(eps,listLookup(vcol,codes$nCandT))
@@ -127,6 +139,14 @@ countCode <- function(vname,vcol,codes,rescol) {
   z
 }
 
+
+#' Return a count coding plan
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @param sigma Laplace smoothing degree
+#' @return count coding plan
 trainCountCoder <- function(d,yName,varNames,sigma) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,countCode,sigma) 
   coder$what <- 'countCoder'
@@ -134,6 +154,12 @@ trainCountCoder <- function(d,yName,varNames,sigma) {
   coder
 }
 
+#' Jacknife encode a dataframe through count code.
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @return Jackknife encoded frame
 jackknifeCountCode <- function(d,yName,varNames) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,countCode,0) 
   coder$what <- 'countCoder'
