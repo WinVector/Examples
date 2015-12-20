@@ -141,7 +141,7 @@ print(paste('bSigmaBest',bSigmaBest))
 
 ```{r}
 for(bSigma in sort(unique(c(0,bSigmaBest)))) {
-  print(paste('Bayes model, sigma=',bSigma))
+  print(paste('effects model, sigma=',bSigma))
   bCoder <- trainEffectCoderR(dTrain,yName,vars,bSigma)
   dTrainB <- bCoder$codeFrameR(dTrain)
   dTestB <- bCoder$codeFrameR(dTest)
@@ -151,18 +151,18 @@ for(bSigma in sort(unique(c(0,bSigmaBest)))) {
   dTrainB$pred <- predict(modelB,newdata=dTrainB)
   print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ScatterHist(dTrainB,'pred',yName,
-                         paste('Bayes model train, sigma=',bSigma),
+                         paste('effects model train, sigma=',bSigma),
                          smoothmethod='lm',annot_size=2))
   dTestB$pred <- predict(modelB,newdata=dTestB)
   print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
   print(WVPlots::ScatterHist(dTestB,'pred',yName,
-                         paste('Bayes model test, sigma=',bSigma),
+                         paste('effects model test, sigma=',bSigma),
                          smoothmethod='lm',annot_size=2))
 }
 ```
 
 ```{r}
-print('Bayes model, jacknifed')
+print('effects model, jacknifed')
 bCoder <- trainEffectCoderR(dTrain,yName,vars,0)
 # dTrainB <- bCoder$codeFrame(dTrain)
 # dTrainB <- bCoder$codeFrame(dCal)
@@ -174,18 +174,18 @@ modelB <- lm(formulaB,data=dTrainB)
 dTrainB$pred <- predict(modelB,newdata=dTrainB)
 print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
 print(WVPlots::ScatterHist(dTrainB,'pred',yName,
-                       'Bayes model train, jackknifed',
+                       'effects model train, jackknifed',
                          smoothmethod='lm',annot_size=2))
 dTestB$pred <- predict(modelB,newdata=dTestB)
 print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
 print(WVPlots::ScatterHist(dTestB,'pred',yName,
-                       'Bayes model test, jackknifed',
+                       'effects model test, jackknifed',
                          smoothmethod='lm',annot_size=2))
 ```
 
 
 ```{r}
-print("vtreat std model")
+print("vtreat split model")
 pruneSig = 0.05
 
 print("working vtreat split model")
