@@ -26,6 +26,16 @@ noiseCount <- function(orig,sigma) {
   x
 }
 
+noiseExpectation <- function(orig,sigma) {
+  if(sigma>0) {
+    x <- orig + rlaplace(length(orig),sigma)
+  } else {
+    x <- orig
+  }
+  x
+}
+
+
 listLookup <- function(vcol,maplist) {
   vals <- numeric(length(vcol))
   seen <- vcol %in% names(maplist)

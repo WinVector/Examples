@@ -8,7 +8,7 @@
 moments <- function(vcol,rescol,sigma) {
   # count queries
   sumX <- noiseCount(tapply(rep(1.0,length(rescol)),vcol,sum),sigma)
-  sumXY <- noiseCount(tapply(as.numeric(rescol),vcol,sum),sigma)
+  sumXY <- noiseExpectation(tapply(as.numeric(rescol),vcol,sum),sigma)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))
 }

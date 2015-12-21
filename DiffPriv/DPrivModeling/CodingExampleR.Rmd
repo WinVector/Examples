@@ -86,6 +86,7 @@ mkWorker1 <- function() {
             rmse,
             rlaplace,
             noiseCount,
+            noiseExpectation,
             listLookup,
             moments,
             expectCode,
