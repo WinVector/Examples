@@ -10,6 +10,7 @@ output: html_document
 source('utils.R')
 source('modelCat.R')
 source('mkExample.R')
+sourcedFns <- ls()
 # devtools::install_github("WinVector/WVPlots")
 library("WVPlots")
 # devtools::install_github('WinVector/vtreat')
@@ -78,23 +79,12 @@ if(runAll && (!debug)) {
 
 ```{r, echo=FALSE, results='hide', warning=FALSE}
 mkWorker1 <- function() {
-  bindToEnv(environment(),
+  bindToEnv(objNames=sourcedFns,
             yName,
             yVars,
             dTrain,
             vars,
-            dCal,
-            errorRate,
-            rlaplace,
-            noiseCount,
-            conditionalCounts,
-            listLookup,
-            bayesCode,
-            trainCoder,
-            codeFrame,
-            trainBayesCoder,
-            countCode,
-            trainCountCoder)
+            dCal)
   function(sigma) {
     cCoder <- trainCountCoder(dTrain,yName,vars,sigma)
     dTrainC <- cCoder$codeFrame(dTrain)
@@ -120,7 +110,7 @@ cSigmaBest = 0
 bSigmaBest = 0
 
 if(runAll) {
-  sigmaTargets <- (seq_len(21)-1)
+  sigmaTargets <- (seq_len(41)-1)
   worker <- mkWorker1()
   if(!is.null(cl)) {
     results <- parallel::parLapplyLB(cl,sigmaTargets,worker)
