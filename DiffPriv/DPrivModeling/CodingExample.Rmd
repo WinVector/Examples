@@ -149,6 +149,7 @@ for(cSigma in sort(unique(c(0,cSigmaBest)))) {
   varsC <- setdiff(colnames(dTrainC),yVars)
   formulaC <- paste(yName,paste(varsC,collapse=' + '),sep=' ~ ')
   modelC <- glm(formulaC,data=dTrainC,family=binomial(link='logit'))
+  print(summary(modelC))
   dTrainC$pred <- predict(modelC,newdata=dTrainC,type='response')
   print(paste('train errorRate',errorRate(dTrainC$pred,dTrainC[[yName]])))
   print(WVPlots::ROCPlot(dTrainC,'pred',yName,
@@ -171,6 +172,7 @@ for(bSigma in sort(unique(c(0,bSigmaBest)))) {
   varsB <- setdiff(colnames(dTrainB),yVars)
   formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
   modelB <- glm(formulaB,data=dTrainB,family=binomial(link='logit'))
+  print(summary(modelB))
   dTrainB$pred <- predict(modelB,newdata=dTrainB,type='response')
   print(paste('train errorRate',errorRate(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ROCPlot(dTrainB,'pred',yName,
@@ -191,6 +193,7 @@ dTestB <- bCoder$codeFrame(dTest)
 varsB <- setdiff(colnames(dTrainB),yVars)
 formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
 modelB <- glm(formulaB,data=dTrainB,family=binomial(link='logit'))
+print(summary(modelB))
 dTrainB$pred <- predict(modelB,newdata=dTrainB,type='response')
 print(paste('train errorRate',errorRate(dTrainB$pred,dTrainB[[yName]])))
 print(WVPlots::ROCPlot(dTrainB,'pred',yName,
@@ -210,6 +213,7 @@ dTestC <- cCoder$codeFrame(dTest)
 varsC <- setdiff(colnames(dTrainC),yVars)
 formulaC <- paste(yName,paste(varsC,collapse=' + '),sep=' ~ ')
 modelC <- glm(formulaC,data=dTrainC,family=binomial(link='logit'))
+print(summary(modelC))
 dTrainC$pred <- predict(modelC,newdata=dTrainC,type='response')
 print(paste('train errorRate',errorRate(dTrainC$pred,dTrainC[[yName]])))
 print(WVPlots::ROCPlot(dTrainC,'pred',yName,
@@ -248,6 +252,7 @@ dTestV <- vtreat::prepare(treatments,dTest,pruneSig=pruneSig,
                           parallelCluster=cl)
 formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
 modelV <- glm(formulaV,data=dTrainV,family=binomial(link='logit'))
+print(summary(modelV))
 dTrainV$pred <- predict(modelV,newdata=dTrainV,type='response')
 print(paste('train errorRate',errorRate(dTrainV$pred,dTrainV[[yName]])))
 print(WVPlots::ROCPlot(dTrainV,'pred',yName,
@@ -281,6 +286,7 @@ if("mkCrossFrameCExperiment" %in% ls('package:vtreat')) {
                             parallelCluster=cl)
   formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
   modelV <- glm(formulaV,data=dTrainV,family=binomial(link='logit'))
+  print(summary(modelV))
   dTrainV$pred <- predict(modelV,newdata=dTrainV,type='response')
   print(paste('train errorRate',errorRate(dTrainV$pred,dTrainV[[yName]])))
   print(WVPlots::ROCPlot(dTrainV,'pred',yName,

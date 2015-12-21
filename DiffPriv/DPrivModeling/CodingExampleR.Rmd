@@ -139,6 +139,7 @@ for(bSigma in sort(unique(c(0,bSigmaBest)))) {
   varsB <- setdiff(colnames(dTrainB),yVars)
   formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
   modelB <- lm(formulaB,data=dTrainB)
+  print(summary(modelB))
   dTrainB$pred <- predict(modelB,newdata=dTrainB)
   print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ScatterHist(dTrainB,'pred',yName,
@@ -162,6 +163,7 @@ dTestB <- bCoder$codeFrameR(dTest)
 varsB <- setdiff(colnames(dTrainB),yVars)
 formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
 modelB <- lm(formulaB,data=dTrainB)
+print(summary(modelB))
 dTrainB$pred <- predict(modelB,newdata=dTrainB)
 print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
 print(WVPlots::ScatterHist(dTrainB,'pred',yName,
@@ -237,6 +239,7 @@ if("mkCrossFrameNExperiment" %in% ls('package:vtreat')) {
                             parallelCluster=cl)
   formulaV <- paste(yName,paste(varsV,collapse=' + '),sep=' ~ ')
   modelV <- lm(formulaV,data=dTrainV)
+  print(summary(modelV))
   dTrainV$pred <- predict(modelV,newdata=dTrainV)
   print(paste('train rmse',rmse(dTrainV$pred,dTrainV[[yName]])))
   print(WVPlots::ScatterHist(dTrainV,'pred',yName,
