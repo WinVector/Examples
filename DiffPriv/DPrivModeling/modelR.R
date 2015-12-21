@@ -1,17 +1,50 @@
 
-#' Compute counts of rescol conditioned on level of vcol
+
+#' Compute counts of rescol conditioned on level of vcol, standard method.
 #' 
 #' @param vcol character vector independent variable
 #' @param rescol logical vector dependent variable
-#' @param sigma scalar Laplze noise level to apply
+#' @param sigma ignored, only for consistency of calling interface
 #' @return conditonal count structure
 moments <- function(vcol,rescol,sigma) {
+  # count queries
+  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum)
+  sumXY <- tapply(as.numeric(rescol),vcol,sum)
+  list(sumX=as.list(sumX),
+       sumXY=as.list(sumXY))
+}
+
+#' Compute counts of rescol conditioned on level of vcol, Laplace noise added.
+#' Inspired by differential privacy ideas
+#' see Misha Bilenko, Principal Researcher in Microsoft Azure Machine Learning. http://blogs.technet.com/b/machinelearning/archive/2015/02/17/big-learning-made-easy-with-counts.aspx
+#' 
+#' @param vcol character vector independent variable
+#' @param rescol logical vector dependent variable
+#' @param sigma scalar Laplace noise level to apply
+#' @return conditonal count structure
+momentsLNoise <- function(vcol,rescol,sigma) {
   # count queries
   sumX <- noiseCount(tapply(rep(1.0,length(rescol)),vcol,sum),sigma)
   sumXY <- noiseExpectation(tapply(as.numeric(rescol),vcol,sum),sigma)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))
 }
+
+#' Compute counts of rescol conditioned on level of vcol, Laplace smoothing
+#' 
+#' @param vcol character vector independent variable
+#' @param rescol logical vector dependent variable
+#' @param sigma scalar Laplace smoothing (added to denominator)
+#' @return conditonal count structure
+momentsLSmooth <- function(vcol,rescol,sigma) {
+  # count queries
+  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum) + sigma
+  sumXY <- tapply(as.numeric(rescol),vcol,sum)
+  list(sumX=as.list(sumX),
+       sumXY=as.list(sumXY))
+}
+
+
 
 
 
@@ -82,7 +115,7 @@ codeFrameR <- function(d,codes,rescol) {
   nd
 }
 
-#' Return a expectation coding plan
+#' Return a expectation coding plan using Laplace noising
 #' 
 #' @param d data.frame
 #' @param yName name of dependent variable
@@ -90,13 +123,29 @@ codeFrameR <- function(d,codes,rescol) {
 #' @param sigma Laplace smoothing degree
 #' @return expectation encoding plan
 trainEffectCoderR <- function(d,yName,varNames,sigma) {
-  coder <- trainCoderR(d,yName,varNames,moments,expectCode,sigma) 
+  coder <- trainCoderR(d,yName,varNames,momentsLNoise,expectCode,sigma) 
   coder$what <- 'EffectCoder'
   coder$codeFrameR <- function(df) codeFrameR(df,coder,c())
   coder
 }
 
-#' Jacknife encode a dataframe through expectation encoding.
+#' Return a expectation coding plan using Laplace smoothing
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @param sigma Laplace smoothing degree
+#' @return expectation encoding plan
+trainEffectCoderLSmooth <- function(d,yName,varNames,sigma) {
+  coder <- trainCoderR(d,yName,varNames,momentsLSmooth,expectCode,sigma) 
+  coder$what <- 'EffectCoder'
+  coder$codeFrameR <- function(df) codeFrameR(df,coder,c())
+  coder
+}
+
+
+
+#' Jackknife encode a dataframe through expectation encoding.
 #' 
 #' @param d data.frame
 #' @param yName name of dependent variable

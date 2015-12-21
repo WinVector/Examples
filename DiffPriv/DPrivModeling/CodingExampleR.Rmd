@@ -139,29 +139,57 @@ print(paste('bSigmaBest',bSigmaBest))
 
 
 
+```{r}
+print('naive effects model')
+bCoder <- trainEffectCoderR(dTrain,yName,vars,0)
+dTrainB <- bCoder$codeFrameR(dTrain)
+dTestB <- bCoder$codeFrameR(dTest)
+varsB <- setdiff(colnames(dTrainB),yVars)
+formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+modelB <- lm(formulaB,data=dTrainB)
+print(summary(modelB))
+dTrainB$pred <- predict(modelB,newdata=dTrainB)
+print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+print(WVPlots::ScatterHist(dTrainB,'pred',yName,
+                           'naive effects model train',
+                           smoothmethod='lm',annot_size=2))
+dTestB$pred <- predict(modelB,newdata=dTestB)
+print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+print(WVPlots::ScatterHist(dTestB,'pred',yName,
+                           'naive effects model test',
+                           smoothmethod='lm',annot_size=2))
+# try re-fitting pred to see if it is just a shift/scale issue
+# it is unlikely to be such, but good to look
+f2 <- paste(yName,'pred',sep=' ~ ')
+m2 <- lm(f2,data=dTestB)  # dileberately fitting on test itself (to show it does not help)
+print(summary(m2))
+dTestB$pred2 <- predict(m2,newdata=dTestB)
+print(paste('adjusted test rmse',rmse(dTestB$pred2,dTestB[[yName]])))
+print(WVPlots::ScatterHist(dTestB,'pred2',yName,
+                           'naive effects model test (adjusted on test)',
+                           smoothmethod='lm',annot_size=2))
+```
 
 
 ```{r}
-for(bSigma in sort(unique(c(0,bSigmaBest)))) {
-  print(paste('effects model, sigma=',bSigma))
-  bCoder <- trainEffectCoderR(dTrain,yName,vars,bSigma)
-  dTrainB <- bCoder$codeFrameR(dTrain)
-  dTestB <- bCoder$codeFrameR(dTest)
-  varsB <- setdiff(colnames(dTrainB),yVars)
-  formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-  modelB <- lm(formulaB,data=dTrainB)
-  print(summary(modelB))
-  dTrainB$pred <- predict(modelB,newdata=dTrainB)
-  print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
-  print(WVPlots::ScatterHist(dTrainB,'pred',yName,
-                         paste('effects model train, sigma=',bSigma),
-                         smoothmethod='lm',annot_size=2))
-  dTestB$pred <- predict(modelB,newdata=dTestB)
-  print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
-  print(WVPlots::ScatterHist(dTestB,'pred',yName,
-                         paste('effects model test, sigma=',bSigma),
-                         smoothmethod='lm',annot_size=2))
-}
+print(paste('effects model, sigma=',bSigmaBest))
+bCoder <- trainEffectCoderR(dTrain,yName,vars,bSigmaBest)
+dTrainB <- bCoder$codeFrameR(dTrain)
+dTestB <- bCoder$codeFrameR(dTest)
+varsB <- setdiff(colnames(dTrainB),yVars)
+formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+modelB <- lm(formulaB,data=dTrainB)
+print(summary(modelB))
+dTrainB$pred <- predict(modelB,newdata=dTrainB)
+print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+print(WVPlots::ScatterHist(dTrainB,'pred',yName,
+                           paste('effects model train, sigma=',bSigmaBest),
+                           smoothmethod='lm',annot_size=2))
+dTestB$pred <- predict(modelB,newdata=dTestB)
+print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+print(WVPlots::ScatterHist(dTestB,'pred',yName,
+                           paste('effects model test, sigma=',bSigmaBest),
+                           smoothmethod='lm',annot_size=2))
 ```
 
 ```{r}
@@ -265,6 +293,30 @@ if("mkCrossFrameNExperiment" %in% ls('package:vtreat')) {
   print("cross model not in library")
 }
 ```
+
+
+```{r}
+sSigma = 100
+print(paste('effects model, smoothing=',sSigma))
+bCoder <- trainEffectCoderLSmooth(dTrain,yName,vars,sSigma)
+dTrainB <- bCoder$codeFrameR(dTrain)
+dTestB <- bCoder$codeFrameR(dTest)
+varsB <- setdiff(colnames(dTrainB),yVars)
+formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+modelB <- lm(formulaB,data=dTrainB)
+print(summary(modelB))
+dTrainB$pred <- predict(modelB,newdata=dTrainB)
+print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+print(WVPlots::ScatterHist(dTrainB,'pred',yName,
+                           paste('effects model train, smoothing=',sSigma),
+                           smoothmethod='lm',annot_size=2))
+dTestB$pred <- predict(modelB,newdata=dTestB)
+print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+print(WVPlots::ScatterHist(dTestB,'pred',yName,
+                           paste('effects model test, smoothing=',sSigma),
+                           smoothmethod='lm',annot_size=2))
+```
+
 
 
 
