@@ -65,9 +65,20 @@ yName <- 'yNumeric'
 
 dTrain <- generateExample(vplan,2000)  # Training set
 vars <- setdiff(colnames(dTrain),yVars)
-dCal <- generateExample(vplan,2000)   # Used to pick sigma
+dCal <- generateExample(vplan,10000)   # Used to pick sigma
 dTest <- generateExample(vplan,10000)  # Pure holdout test
 ```
+
+Part of the idea is that for the Laplace noising to work we have
+to plug in a sigma (level of noising).  We simulate having a very
+good methodology to do so by supplying dCal a large calibration set
+to pick sigma.  In practice you don't have such a set and would need
+to either know sigma from first principles or experience, or use some
+of your training data to build it.  What we want to demonstrate
+is the effectiveness of the differential privacy inspired 
+Laplace nosing technique, so we will give it a good sigma (which one
+may or may not have in actual practice).
+
 
 ```{r, echo=FALSE, results='hide', warning=FALSE}
 cl <- NULL
