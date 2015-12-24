@@ -10,6 +10,7 @@ conditionalCounts <- function(vcol,rescol,sigma) {
   # count queries
   nCandT <- noiseCount(tapply(as.numeric(rescol),vcol,sum),sigma)   #  sum of true examples for a given C (vector)
   nCandF <- noiseCount(tapply(as.numeric(!rescol),vcol,sum),sigma)  #  sum of false examples for a give C (vector)
+  checkTwoNVecs(nCandT,nCandF)
   list(nCandT=as.list(nCandT),nCandF=as.list(nCandF))
 }
 

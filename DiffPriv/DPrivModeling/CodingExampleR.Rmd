@@ -101,7 +101,6 @@ mkWorker1 <- function() {
     dCalB <- bCoder$codeFrameR(dCal)
     varsB <- setdiff(colnames(dTrainB),yVars)
     formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-    print(formulaB)
     modelB <- lm(formulaB,data=dTrainB)
     dCalB$pred <- predict(modelB,newdata=dCalB)
     scoreB <- rmse(dCalB$pred,dCalB[[yName]])

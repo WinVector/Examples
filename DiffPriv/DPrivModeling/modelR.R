@@ -10,6 +10,7 @@ moments <- function(vcol,rescol,sigma) {
   # count queries
   sumX <- tapply(rep(1.0,length(rescol)),vcol,sum)
   sumXY <- tapply(as.numeric(rescol),vcol,sum)
+  checkTwoNVecs(sumX,sumXY)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))
 }
@@ -25,7 +26,11 @@ moments <- function(vcol,rescol,sigma) {
 momentsLNoise <- function(vcol,rescol,sigma) {
   # count queries
   sumX <- noiseCount(tapply(rep(1.0,length(rescol)),vcol,sum),sigma)
+  namesX <- names(sumX)
+  sumX <- pmax(1.0,sumX) # kills names
+  names(sumX) <- namesX
   sumXY <- noiseExpectation(tapply(as.numeric(rescol),vcol,sum),sigma)
+  checkTwoNVecs(sumX,sumXY)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))
 }
@@ -38,13 +43,15 @@ momentsLNoise <- function(vcol,rescol,sigma) {
 #' @return conditonal count structure
 momentsLSmooth <- function(vcol,rescol,sigma) {
   # count queries
-  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum) + sigma
+  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum) 
+  namesX <- names(sumX)
+  sumX <- sumX + sigma
+  names(sumX) <- namesX
   sumXY <- tapply(as.numeric(rescol),vcol,sum)
+  checkTwoNVecs(sumX,sumXY)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))
 }
-
-
 
 
 
@@ -61,7 +68,7 @@ expectCode <- function(vname,vcol,counts,rescol) {
   sumXY <- listLookup(vcol,counts$sumXY)
   sum1 <- rep(sum(as.numeric(counts$sumX)),
               length(vcol))
-  sumY <- rep(sum(as.numeric(counts$sumX)*as.numeric(counts$sumXY)),
+  sumY <- rep(sum(as.numeric(counts$sumXY)),
               length(vcol))
   if(!is.null(rescol)) {
     # Jackknife adjust entries by removing self from counts

@@ -1,4 +1,29 @@
 
+# check that we have two numeric lists both with names
+# and names in same order
+checkTwoNVecs <- function(vec1,vec2) {
+  if(!is.numeric(vec1)) {
+    stop('vec1 not numeric')
+  }
+  if(!is.numeric(vec2)) {
+    stop('vec2 not numeric')
+  }
+  n <- length(vec1)
+  if(n!=length(vec2)) {
+    stop('lengths do not match')
+  }
+  nm1 <- names(vec1)
+  if(is.null(nm1)||(length(nm1)!=n)) {
+    stop("names 1 not good")
+  }
+  nm2 <- names(vec2)
+  if(is.null(nm2)||(length(nm2)!=n)) {
+    stop("names 2 not good")
+  }
+  if(!all(nm1==nm2)) {
+    stop("name mismatch")
+  }
+}
 
 rmse <- function(pred,truth) {
   sqrt(sum((pred-truth)^2)/length(truth))
