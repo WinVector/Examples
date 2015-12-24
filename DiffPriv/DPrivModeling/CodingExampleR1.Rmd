@@ -69,15 +69,18 @@ findSigma <- function(cl,
     force(dCal)
     bindToEnv(objNames=sourcedFns)
     function(sigma) {
-      bCoder <- trainEffectCoderR(dTrain,yName,vars,sigma)
-      dTrainB <- bCoder$codeFrameR(dTrain)
-      dCalB <- bCoder$codeFrameR(dCal)
-      varsB <- setdiff(colnames(dTrainB),yVars)
-      formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-      modelB <- lm(formulaB,data=dTrainB)
-      dCalB$pred <- predict(modelB,newdata=dCalB)
-      scoreB <- rmse(dCalB$pred,dCalB[[yName]])
-      list(scoreB=scoreB,sigma=sigma)
+      scoresB <- numeric(3)
+      for(rep in seq_len(length(scoresB))) {
+        bCoder <- trainEffectCoderR(dTrain,yName,vars,sigma)
+        dTrainB <- bCoder$codeFrameR(dTrain)
+        dCalB <- bCoder$codeFrameR(dCal)
+        varsB <- setdiff(colnames(dTrainB),yVars)
+        formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
+        modelB <- lm(formulaB,data=dTrainB)
+        dCalB$pred <- predict(modelB,newdata=dCalB)
+        scoresB[[rep]] <- rmse(dCalB$pred,dCalB[[yName]])
+      }
+      list(scoreB=mean(scoresB),sigma=sigma)
     }
   }
   
@@ -270,7 +273,7 @@ if(file.exists(fFname)) {
   }
   
   eworker <- mkExpmtRunner()
-  res <- parallel::parLapplyLB(cl,1:3,eworker)
+  res <- parallel::parLapplyLB(cl,1:200,eworker)
   res <- do.call(rbind,res)
   print(paste("writing",fFname))
   saveRDS(res,file=fFname)
@@ -279,7 +282,7 @@ if(file.exists(fFname)) {
 
 ```{r}
 ggplot(data=res,aes(x=testRMSE,color=what)) +
-  geom_density(adjust=0.25,trim=TRUE) + 
+  geom_density(adjust=0.5,trim=TRUE) + 
   ggtitle(paste('test RMSE, noise sigma=',bSigmaBest))
 
 for(w in sort(unique(res$what))) {
@@ -293,23 +296,44 @@ for(w in sort(unique(res$what))) {
 
 rm <- sqldf('
    SELECT
-      r1.repID,
-      r1.testRMSE - r2.testRMSE NrmseMinusTrmse
+      rJ.repID,
+      rN.testRMSE - rJ.testRMSE NrmseMinusTrmse,
+      rN.testRMSE nTestRMSE,
+      rJ.testRMSE jTestRMSE,
+      rN.bSigmaBest
    FROM
-      res r1
+      res rJ
    JOIN
-      res r2
+      res rN
    ON
-      r1.repID=r2.repID
+      rJ.repID=rN.repID
    WHERE
-      r1.what="JackknifeModel" AND
-      r2.what="NoisedModel"
+      rJ.what="JackknifeModel" AND
+      rN.what="NoisedModel"
 ')
 
 ggplot(data=rm,aes(x=NrmseMinusTrmse)) +
-  geom_density(adjust=0.25,trim=TRUE) + 
+  geom_density(adjust=0.5,trim=TRUE) + 
   ggtitle(paste('noise test RMSE minus jackknife test RMSE, noise sigma=',
                 bSigmaBest))
+
+ggplot(data=res[res$what=='NoisedModel',],aes(x=bSigmaBest)) +
+  geom_density(adjust=0.5)
+
+ggplot(data=rm,aes(x=nTestRMSE,y=jTestRMSE)) +
+  geom_point() +
+  geom_abline(slope=1,intercept=0) +
+  coord_fixed() +
+  ggtitle('noised model performance versus jackknifed model performance')
+
+print(WVPlots::ScatterHist(rm,'bSigmaBest','NrmseMinusTrmse',
+                       'sigma selected versus delta performance',
+                         smoothmethod='lm',annot_size=2))
+
+print(WVPlots::ScatterHist(rm,'bSigmaBest','nTestRMSE',
+                       'sigma selected versus performance',
+                         smoothmethod='lm',annot_size=2))
+
 ```
 
 ```{r}
