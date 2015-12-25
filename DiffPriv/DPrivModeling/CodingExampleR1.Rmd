@@ -22,9 +22,13 @@ cl <- parallel::makeCluster(parallel::detectCores())
 
 
 ```{r}
+
+
+fnFitter <- dFitter
+
 set.seed(232567)
 vplan <- list(designVar('x1',10)
-      #         ,designNoiseVar('n1',500)
+               ,designNoiseVar('n1',500)
               )
 yVars <- c('yCat','yNumeric')
 yName <- 'yNumeric'
@@ -51,7 +55,8 @@ findSigma <- function(cl,
     force(dTrain)
     force(vars)
     force(dCal)
-    bindToEnv(objNames=sourcedFns)
+    bindToEnv(objNames=sourcedFns,
+              fnFitter)
     function(sigma) {
       scoresB <- numeric(3)
       for(rep in seq_len(length(scoresB))) {
@@ -59,9 +64,8 @@ findSigma <- function(cl,
         dTrainB <- bCoder$codeFrameR(dTrain)
         dCalB <- bCoder$codeFrameR(dCal)
         varsB <- setdiff(colnames(dTrainB),yVars)
-        formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-        modelB <- lm(formulaB,data=dTrainB)
-        dCalB$pred <- predict(modelB,newdata=dCalB)
+        preds <- fnFitter(yName,varsB,dTrainB,dCalB) 
+        dCalB$pred <- preds$appPred
         scoresB[[rep]] <- rmse(dCalB$pred,dCalB[[yName]])
       }
       list(scoreB=mean(scoresB),sigma=sigma)
@@ -114,15 +118,13 @@ bCoder <- trainEffectCoderR(dTrain,yName,vars,0)
 dTrainB <- bCoder$codeFrameR(dTrain)
 dTestB <- bCoder$codeFrameR(dTest)
 varsB <- setdiff(colnames(dTrainB),yVars)
-formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-modelB <- lm(formulaB,data=dTrainB)
-print(summary(modelB))
-dTrainB$pred <- predict(modelB,newdata=dTrainB)
+preds <- fnFitter(yName,varsB,dTrainB,dTestB,verbose=TRUE)
+dTrainB$pred <- preds$trainPred
 print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
 print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                            'naive effects model train',
                            smoothmethod='lm',annot_size=2))
-dTestB$pred <- predict(modelB,newdata=dTestB)
+dTestB$pred <- preds$appPred
 print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
 print(WVPlots::ScatterHist(dTestB,'pred',yName,
                            'naive effects model test',
@@ -136,15 +138,13 @@ bCoder <- trainEffectCoderR(dTrain,yName,vars,bSigmaBest)
 dTrainB <- bCoder$codeFrameR(dTrain)
 dTestB <- bCoder$codeFrameR(dTest)
 varsB <- setdiff(colnames(dTrainB),yVars)
-formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-modelB <- lm(formulaB,data=dTrainB)
-print(summary(modelB))
-dTrainB$pred <- predict(modelB,newdata=dTrainB)
+preds <- fnFitter(yName,varsB,dTrainB,dTestB,verbose=TRUE)
+dTrainB$pred <- preds$trainPred
 print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
 print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                            paste('effects model train, sigma=',bSigmaBest),
                            smoothmethod='lm',annot_size=2))
-dTestB$pred <- predict(modelB,newdata=dTestB)
+dTestB$pred <- preds$appPred
 print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
 print(WVPlots::ScatterHist(dTestB,'pred',yName,
                            paste('effects model test, sigma=',bSigmaBest),
@@ -159,15 +159,13 @@ bCoder <- trainEffectCoderR(dTrain,yName,vars,0)
 dTrainB <- jackknifeEffectCodeR(dTrain,yName,vars)
 dTestB <- bCoder$codeFrameR(dTest)
 varsB <- setdiff(colnames(dTrainB),yVars)
-formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-modelB <- lm(formulaB,data=dTrainB)
-print(summary(modelB))
-dTrainB$pred <- predict(modelB,newdata=dTrainB)
+preds <- fnFitter(yName,varsB,dTrainB,dTestB,verbose=TRUE)
+dTrainB$pred <- preds$trainPred
 print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
 print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                        'effects model train, jackknifed',
                          smoothmethod='lm',annot_size=2))
-dTestB$pred <- predict(modelB,newdata=dTestB)
+dTestB$pred <- preds$appPred
 print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
 print(WVPlots::ScatterHist(dTestB,'pred',yName,
                        'effects model test, jackknifed',
@@ -182,7 +180,10 @@ if(file.exists(fFname)) {
 } else {
   mkExpmtRunner <- function(vplan) {
     force(vplan)
-    bindToEnv(objNames=sourcedFns,findSigma,sourcedFns)
+    bindToEnv(objNames=sourcedFns,
+              findSigma,
+              sourcedFns,
+              fnFitter)
     function(repID) {
       # set up experiment
       yVars <- c('yCat','yNumeric')
@@ -197,11 +198,10 @@ if(file.exists(fFname)) {
       dTrainB <- bCoder$codeFrameR(dTrain)
       dTestB <- bCoder$codeFrameR(dTest)
       varsB <- setdiff(colnames(dTrainB),yVars)
-      formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-      modelB <- lm(formulaB,data=dTrainB)
-      dTrainB$pred <- predict(modelB,newdata=dTrainB)
+      preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
+      dTrainB$pred <- preds$trainPred
       trainRMSE <- rmse(dTrainB$pred,dTrainB[[yName]])
-      dTestB$pred <- predict(modelB,newdata=dTestB)
+      dTestB$pred <- preds$appPred
       testRMSE <- rmse(dTestB$pred,dTestB[[yName]])
       f1 <- data.frame(repID=repID,
                        bSigmaBest=NA,
@@ -221,11 +221,10 @@ if(file.exists(fFname)) {
       dTrainB <- bCoder$codeFrameR(dTrain)
       dTestB <- bCoder$codeFrameR(dTest)
       varsB <- setdiff(colnames(dTrainB),yVars)
-      formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-      modelB <- lm(formulaB,data=dTrainB)
-      dTrainB$pred <- predict(modelB,newdata=dTrainB)
+      preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
+      dTrainB$pred <- preds$trainPred
       trainRMSE <- rmse(dTrainB$pred,dTrainB[[yName]])
-      dTestB$pred <- predict(modelB,newdata=dTestB)
+      dTestB$pred <- preds$appPred
       testRMSE <- rmse(dTestB$pred,dTestB[[yName]])
       f2 <- data.frame(repID=repID,
                        bSigmaBest=bSigmaBest,
@@ -239,11 +238,10 @@ if(file.exists(fFname)) {
       dTrainB <- jackknifeEffectCodeR(dTrain,yName,vars)
       dTestB <- bCoder$codeFrameR(dTest)
       varsB <- setdiff(colnames(dTrainB),yVars)
-      formulaB <- paste(yName,paste(varsB,collapse=' + '),sep=' ~ ')
-      modelB <- lm(formulaB,data=dTrainB)
-      dTrainB$pred <- predict(modelB,newdata=dTrainB)
+      preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
+      dTrainB$pred <- preds$trainPred
       trainRMSE <- rmse(dTrainB$pred,dTrainB[[yName]])
-      dTestB$pred <- predict(modelB,newdata=dTestB)
+      dTestB$pred <- preds$appPred
       testRMSE <- rmse(dTestB$pred,dTestB[[yName]])
       f3 <- data.frame(repID=repID,
                        bSigmaBest=NA,
@@ -256,7 +254,7 @@ if(file.exists(fFname)) {
   }
   
   eworker <- mkExpmtRunner(vplan)
-  res <- parallel::parLapplyLB(cl,1:200,eworker)
+  res <- parallel::parLapplyLB(cl,1:10,eworker)
   res <- do.call(rbind,res)
   print(paste("writing",fFname))
   saveRDS(res,file=fFname)
