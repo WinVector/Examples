@@ -1,11 +1,11 @@
 ---
 title: "CodingExampleR1"
 author: "Win-Vector LLC"
-date: "December 18, 2015"
+date: "December 25, 2015"
 output: html_document
 ---
 
-```{r, echo=FALSE, results='hide', warning=FALSE}
+```{r startup, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 source('utils.R')
 source('modelR.R')
 source('mkExample.R')
@@ -21,8 +21,7 @@ cl <- parallel::makeCluster(parallel::detectCores())
 ```
 
 
-```{r}
-
+```{r define, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 yVars <- c('yCat','yNumeric')
 yName <- 'yNumeric'
 
@@ -32,19 +31,8 @@ vplan1 <- list(designVar('x1',10))
 vplan2 <- list(vplan1[[1]],
                designNoiseVar('n1',500))
 
-experiments <- list(
-  list(vplan=vplan1,fnFitter=lrFitter,
-       eName="one variable, linear regression"),
-  list(vplan=vplan2,fnFitter=lrFitter,
-       eName="one variable plus noise variable, linear regression"),
-  list(vplan=vplan1,fnFitter=dFitter,
-       eName="one variable, diagonal regression"),
-  list(vplan=vplan2,fnFitter=dFitter,
-       eName="one variable plus noise variable, diagonal regression")
-)
 
-
-for(expmt in experiments) {
+runBigExpmt <- function(expmt) {
   set.seed(232567)
   vplan <- expmt$vplan
   fnFitter <- expmt$fnFitter
@@ -136,16 +124,21 @@ for(expmt in experiments) {
   dTrainB <- bCoder$codeFrameR(dTrain)
   dTestB <- bCoder$codeFrameR(dTest)
   varsB <- setdiff(colnames(dTrainB),yVars)
-  preds <- fnFitter(yName,varsB,dTrainB,dTestB,verbose=TRUE)
+  preds <- fnFitter(yName,varsB,dTrainB,dTestB,
+                    what=paste(eName,'naive effects model'),
+                    verbose=TRUE)
   dTrainB$pred <- preds$trainPred
-  print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+  print(paste(eName,'naive effects model train rmse',
+              rmse(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                              paste(eName,
                                    'naive effects model train',
                                    sep='\n'),
                              smoothmethod='lm',annot_size=2))
   dTestB$pred <- preds$appPred
-  print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+  print(paste(eName,
+              'naive effects model test rmse',
+              rmse(dTestB$pred,dTestB[[yName]])))
   print(WVPlots::ScatterHist(dTestB,'pred',yName,
                              paste(eName,
                                    'naive effects model test',
@@ -158,16 +151,22 @@ for(expmt in experiments) {
   dTrainB <- bCoder$codeFrameR(dTrain)
   dTestB <- bCoder$codeFrameR(dTest)
   varsB <- setdiff(colnames(dTrainB),yVars)
-  preds <- fnFitter(yName,varsB,dTrainB,dTestB,verbose=TRUE)
+  preds <- fnFitter(yName,varsB,dTrainB,dTestB,
+                    what=paste(eName,'effects model, sigma=',bSigmaBest),
+                    verbose=TRUE)
   dTrainB$pred <- preds$trainPred
-  print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+  print(paste(eName,
+              'Laplace noised',bSigmaBest,'train rmse',
+              rmse(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                              paste(eName,
                                    '\neffects model train, sigma=',
                                    bSigmaBest),
                              smoothmethod='lm',annot_size=2))
   dTestB$pred <- preds$appPred
-  print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+  print(paste(eName,
+              'Laplace noised',bSigmaBest,'test rmse',
+              rmse(dTestB$pred,dTestB[[yName]])))
   print(WVPlots::ScatterHist(dTestB,'pred',yName,
                              paste(eName,
                                    '\neffects model test, sigma=',
@@ -182,16 +181,22 @@ for(expmt in experiments) {
   dTrainB <- jackknifeEffectCodeR(dTrain,yName,vars)
   dTestB <- bCoder$codeFrameR(dTest)
   varsB <- setdiff(colnames(dTrainB),yVars)
-  preds <- fnFitter(yName,varsB,dTrainB,dTestB,verbose=TRUE)
+  preds <- fnFitter(yName,varsB,dTrainB,dTestB,
+                     what=paste(eName,'effects model, jackknifed'),
+                    verbose=TRUE)
   dTrainB$pred <- preds$trainPred
-  print(paste('train rmse',rmse(dTrainB$pred,dTrainB[[yName]])))
+  print(paste(eName,
+              'jackknifed train rmse',
+              rmse(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                              paste(eName,
                                    'effects model train, jackknifed',
                                    sep='\n'),
                              smoothmethod='lm',annot_size=2))
   dTestB$pred <- preds$appPred
-  print(paste('test rmse',rmse(dTestB$pred,dTestB[[yName]])))
+  print(paste(eName,
+              'jackknifed test rmse',
+              rmse(dTestB$pred,dTestB[[yName]])))
   print(WVPlots::ScatterHist(dTestB,'pred',yName,
                              paste(eName,
                                    'effects model test, jackknifed',
@@ -284,7 +289,7 @@ for(expmt in experiments) {
   
   for(w in sort(unique(res$what))) {
     print("********")
-    print(w)
+    print(paste(eName,w))
     ri <- res[res$what==w,]
     print(summary(ri$testRMSE))
     print(sqrt(var(ri$testRMSE)))
@@ -307,7 +312,7 @@ for(expmt in experiments) {
    WHERE
       rJ.what="JackknifeModel" AND
       rN.what="NoisedModel"
-')
+   ')
   
   print(ggplot(data=rm,aes(x=NrmseMinusJrmse)) +
     geom_density(adjust=0.5,trim=TRUE) + 
@@ -326,22 +331,45 @@ for(expmt in experiments) {
                   'noised model performance versus jackknifed model performance',
                   sep='\n')))
   
-  print(WVPlots::ScatterHist(rm,'bSigmaBest','NrmseMinusJrmse',
-                             paste(eName,
-                                   'sigma selected versus delta performance',
-                                   sep='\n'),
-                             smoothmethod='lm',annot_size=2))
-  
-  print(WVPlots::ScatterHist(rm,'bSigmaBest','nTestRMSE',
-                             paste(eName,
-                                   'sigma selected versus performance',
-                                   sep='\n'),
-                             smoothmethod='lm',annot_size=2))
   print("*************************************************************")
 }
 ```
 
-```{r}
+
+*****
+
+one variable, linear regression
+-------------
+
+```{r ovlr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=vplan1,fnFitter=lrFitter,
+                 eName="one variable, linear regression"))
+```
+
+*****
+
+one variable plus noise variable, linear regression
+-------------
+
+```{r ovnlr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=vplan2,fnFitter=lrFitter,
+                 eName="one variable plus noise variable, linear regression"))
+```
+
+
+*****
+
+one variable plus noise variable, diagonal regression
+-------------
+
+```{r ovndr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=vplan2,fnFitter=dFitter,
+                 eName="one variable plus noise variable, diagonal regression"))
+```
+
+*****
+
+```{r shutdown, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 if(!is.null(cl)) {
   parallel::stopCluster(cl)
   cl <- NULL

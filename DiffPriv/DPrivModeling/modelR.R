@@ -168,10 +168,12 @@ jackknifeEffectCodeR <- function(d,yName,varNames) {
 
 # standard linear regression
 lrFitter <- function(yVar,xVars,trainData,applicationData,
+                     what='',
                      verbose=FALSE) {
   formulaL <- paste(yVar,paste(xVars,collapse=' + '),sep=' ~ ')
   modelL <- lm(formulaL,data=trainData)
   if(verbose) {
+    print(paste(what,"fit model:"))
     print(summary(modelL))
   }
   list(trainPred=predict(modelL,newdata=trainData),
@@ -181,6 +183,7 @@ lrFitter <- function(yVar,xVars,trainData,applicationData,
 # diagonal fitter- assumes dc term zero and all variables 
 # perfectly independent
 dFitter <- function(yVar,xVars,trainData,applicationData,
+                    what='',
                     verbose=FALSE) {
   trainPred <- numeric(nrow(trainData))
   appPred <- numeric(nrow(applicationData))
@@ -194,6 +197,7 @@ dFitter <- function(yVar,xVars,trainData,applicationData,
   }
   names(betas) <- xVars
   if(verbose) {
+    print(paste(what,"fit model:"))
     print(betas)
   }
   list(trainPred=trainPred,
