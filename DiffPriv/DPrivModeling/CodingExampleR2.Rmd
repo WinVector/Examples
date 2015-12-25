@@ -1,5 +1,5 @@
 ---
-title: "CodingExampleR1"
+title: "CodingExampleR2"
 author: "Win-Vector LLC"
 date: "December 18, 2015"
 output: html_document
@@ -24,7 +24,7 @@ cl <- parallel::makeCluster(parallel::detectCores())
 ```{r}
 set.seed(232567)
 vplan <- list(designVar('x1',10)
-      #         ,designNoiseVar('n1',500)
+               ,designNoiseVar('n1',500)
               )
 yVars <- c('yCat','yNumeric')
 yName <- 'yNumeric'
