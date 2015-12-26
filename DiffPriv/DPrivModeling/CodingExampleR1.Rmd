@@ -45,69 +45,8 @@ runBigExpmt <- function(expmt) {
   dCal <- generateExample(vplan,10000)   # Used to pick sigma
   dTest <- generateExample(vplan,10000)  # Pure holdout test
   
-  
-  findSigma <- function(cl,
-                        yName,
-                        yVars,
-                        dTrain,
-                        vars,
-                        dCal) {
-    mkWorker1 <- function(yName,
-                          yVars,
-                          dTrain,
-                          vars,
-                          dCal) {
-      force(yName)
-      force(yVars)
-      force(dTrain)
-      force(vars)
-      force(dCal)
-      bindToEnv(objNames=sourcedFns,
-                fnFitter)
-      function(sigma) {
-        scoresB <- numeric(3)
-        for(rep in seq_len(length(scoresB))) {
-          bCoder <- trainEffectCoderR(dTrain,yName,vars,sigma)
-          dTrainB <- bCoder$codeFrameR(dTrain)
-          dCalB <- bCoder$codeFrameR(dCal)
-          varsB <- setdiff(colnames(dTrainB),yVars)
-          preds <- fnFitter(yName,varsB,dTrainB,dCalB) 
-          dCalB$pred <- preds$appPred
-          scoresB[[rep]] <- rmse(dCalB$pred,dCalB[[yName]])
-        }
-        list(scoreB=mean(scoresB),sigma=sigma)
-      }
-    }
-    
-    sigmaTargets <- (seq_len(41)-1)
-    worker <- mkWorker1(yName,
-                        yVars,
-                        dTrain,
-                        vars,
-                        dCal)
-    if(!is.null(cl)) {
-      results <- parallel::parLapplyLB(cl,sigmaTargets,worker)
-    } else {
-      results <- vector(mode='list',length=length(sigmaTargets))
-      for(ii in seq_len(length(sigmaTargets))) {
-        results[[ii]] <- worker(sigmaTargets[[ii]])
-      }
-    }
-    
-    bSigmaBest = 0
-    bestB = Inf
-    for(res in results) {
-      sigma <- res$sigma
-      scoreB <- res$scoreB
-      if(scoreB<bestB) {
-        bestB <- scoreB
-        bSigmaBest <- sigma
-      }
-    }
-    bSigmaBest
-  }
-  
-  bSigmaBest <- findSigma(cl,
+  bSigmaBest <- findSigmaR(cl,
+                           fnFitter,
                           yName,
                           yVars,
                           dTrain,
@@ -206,7 +145,6 @@ runBigExpmt <- function(expmt) {
   mkExpmtRunner <- function(vplan) {
     force(vplan)
     bindToEnv(objNames=sourcedFns,
-              findSigma,
               sourcedFns,
               fnFitter)
     function(repID) {
@@ -236,7 +174,8 @@ runBigExpmt <- function(expmt) {
                        stringsAsFactors = FALSE)
       
       # sigma model
-      bSigmaBest <- findSigma(NULL,
+      bSigmaBest <- findSigmaR(NULL,
+                               fnFitter,
                               yName,
                               yVars,
                               dTrain,

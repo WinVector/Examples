@@ -218,3 +218,55 @@ dFitter <- function(yVar,xVars,trainData,applicationData,
 }
 
 
+
+findSigmaR <- function(cl,
+                       fnFitter,
+                       yName,
+                       yVars,
+                       dTrain,
+                       vars,
+                       dCal,
+                       sigmaTargets=(seq_len(41)-1)) {
+  force(fnFitter)
+  force(yName)
+  force(yVars)
+  force(dTrain)
+  force(vars)
+  force(dCal)
+  bindToEnv(objNames=sourcedFns)
+  worker <- function(sigma) {
+    scoresB <- numeric(3)
+    for(rep in seq_len(length(scoresB))) {
+      bCoder <- trainEffectCoderR(dTrain,yName,vars,sigma)
+      dTrainB <- bCoder$codeFrameR(dTrain)
+      dCalB <- bCoder$codeFrameR(dCal)
+      varsB <- setdiff(colnames(dTrainB),yVars)
+      preds <- fnFitter(yName,varsB,dTrainB,dCalB) 
+      dCalB$pred <- preds$appPred
+      scoresB[[rep]] <- rmse(dCalB$pred,dCalB[[yName]])
+    }
+    list(scoreB=mean(scoresB),sigma=sigma)
+  }
+  
+  if(!is.null(cl)) {
+    results <- parallel::parLapplyLB(cl,sigmaTargets,worker)
+  } else {
+    results <- vector(mode='list',length=length(sigmaTargets))
+    for(ii in seq_len(length(sigmaTargets))) {
+      results[[ii]] <- worker(sigmaTargets[[ii]])
+    }
+  }
+  
+  bSigmaBest = 0
+  bestB = Inf
+  for(res in results) {
+    sigma <- res$sigma
+    scoreB <- res$scoreB
+    if(scoreB<bestB) {
+      bestB <- scoreB
+      bSigmaBest <- sigma
+    }
+  }
+  bSigmaBest
+}
+
