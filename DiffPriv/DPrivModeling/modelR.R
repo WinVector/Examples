@@ -172,12 +172,18 @@ lrFitter <- function(yVar,xVars,trainData,applicationData,
                      verbose=FALSE) {
   formulaL <- paste(yVar,paste(xVars,collapse=' + '),sep=' ~ ')
   modelL <- lm(formulaL,data=trainData)
+  trainPred=predict(modelL,newdata=trainData)
+  appPred=predict(modelL,newdata=applicationData)
   if(verbose) {
     print(paste(what,"fit model:"))
     print(summary(modelL))
+    print(paste(" train rmse",
+                rmse(trainPred,trainData[[yVar]])))
+    print(paste(" application rmse",
+                rmse(appPred,applicationData[[yVar]])))
   }
-  list(trainPred=predict(modelL,newdata=trainData),
-       appPred=predict(modelL,newdata=applicationData))
+  list(trainPred=trainPred,
+       appPred=appPred)
 }
 
 # diagonal fitter- assumes dc term zero and all variables 
@@ -191,6 +197,9 @@ dFitter <- function(yVar,xVars,trainData,applicationData,
   for(ii in seq_len(length(xVars))) {
     xV <- xVars[[ii]]
     beta <- sum(trainData[[xV]]*trainData[[yVar]])/sum(trainData[[xV]]^2)
+    if(is.nan(beta)||is.infinite(beta)||is.na(beta)) {
+      beta <- 0.0
+    }
     betas[[ii]] <- beta
     trainPred <- trainPred + beta*trainData[[xV]]
     appPred <- appPred + beta*applicationData[[xV]]
@@ -199,6 +208,10 @@ dFitter <- function(yVar,xVars,trainData,applicationData,
   if(verbose) {
     print(paste(what,"fit model:"))
     print(betas)
+    print(paste(" train rmse",
+                rmse(trainPred,trainData[[yVar]])))
+    print(paste(" application rmse",
+                rmse(appPred,applicationData[[yVar]])))
   }
   list(trainPred=trainPred,
        appPred=appPred)

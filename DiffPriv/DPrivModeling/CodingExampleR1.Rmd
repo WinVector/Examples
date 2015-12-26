@@ -27,9 +27,8 @@ yName <- 'yNumeric'
 
 
 set.seed(232567)
-vplan1 <- list(designVar('x1',10))
-vplan2 <- list(vplan1[[1]],
-               designNoiseVar('n1',500))
+vX1 <- designVar('x1',10)
+vN1 <- designNoiseVar('n1',500)
 
 
 runBigExpmt <- function(expmt) {
@@ -335,6 +334,15 @@ runBigExpmt <- function(expmt) {
 }
 ```
 
+*****
+
+one noise variable, linear regression
+-------------
+
+```{r nvlr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=list(vN1),fnFitter=lrFitter,
+                 eName="one noise variable, linear regression"))
+```
 
 *****
 
@@ -342,9 +350,10 @@ one variable, linear regression
 -------------
 
 ```{r ovlr, echo=FALSE, warning=FALSE, message=FALSE}
-runBigExpmt(list(vplan=vplan1,fnFitter=lrFitter,
+runBigExpmt(list(vplan=list(vX1),fnFitter=lrFitter,
                  eName="one variable, linear regression"))
 ```
+
 
 *****
 
@@ -352,7 +361,7 @@ one variable plus noise variable, linear regression
 -------------
 
 ```{r ovnlr, echo=FALSE, warning=FALSE, message=FALSE}
-runBigExpmt(list(vplan=vplan2,fnFitter=lrFitter,
+runBigExpmt(list(vplan=list(vX1,vN1),fnFitter=lrFitter,
                  eName="one variable plus noise variable, linear regression"))
 ```
 
@@ -363,7 +372,7 @@ one variable plus noise variable, diagonal regression
 -------------
 
 ```{r ovndr, echo=FALSE, warning=FALSE, message=FALSE}
-runBigExpmt(list(vplan=vplan2,fnFitter=dFitter,
+runBigExpmt(list(vplan=list(vX1,vN1),fnFitter=dFitter,
                  eName="one variable plus noise variable, diagonal regression"))
 ```
 
