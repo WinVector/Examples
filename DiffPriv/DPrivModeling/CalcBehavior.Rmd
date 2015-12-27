@@ -3,6 +3,10 @@ title: "CalcBehavior"
 output: html_document
 ---
 
+An attempt to semi-theoretically analyze the efficacy of different nested training
+methods.  The first step is estimating y conditioned on group, the second is a 
+glm() model on top of this estimate.  The nested model usually gives trouble as the
+group variable can hide degrees of freedom and cause over-fitting.
 
 ```{r}
 library('polynom')
@@ -18,33 +22,36 @@ set.seed(23225)
 k <- 2
 probOn <- polynomial(c(0,1))
 gGroups <- paste('g',1:k,sep='')
-# n <- 7
-# d <- data.frame(group=sample(gGroups,n,replace=TRUE),
-#                 one=1,
-#                 y=FALSE,
-#                 stringsAsFactors=FALSE)
 d <- data.frame(group=rep(gGroups,3),
-                one=1,
                 y=FALSE,
                 stringsAsFactors=FALSE)
 n <- nrow(d)
 dTest <- data.frame(group=gGroups,
                     stringsAsFactors=FALSE)
 
-ests <- function(d) {
+#' compute the direct expected value of y per group
+#'
+#' @param d data frame with y and group columns
+#' @return named vector with grouped y-means
+empiricalEst <- function(d) {
+  d$one <- 1.0
   num <- aggregate(y~group,data=d,FUN=sum)
   den <- aggregate(one~group,data=d,FUN=sum)
+  if(!all(all.equal(num$group,den$group)==TRUE)) {
+    stop("name mismatch")
+  }
   est <- num$y/den$one
   names(est) <- num$group
   est
 }
 
-naiveEst <- function(d) {
-  est <- ests(d)
-  as.numeric(est[d$group])
-}
-
-jackknifeEst <- function(d,jackDenom=1) {
+#' compute the jackknifed expected value of y per group
+#'
+#' @param d data frame with y and group columns
+#' @param jackDenom denominator of current observation to pull off in estimate, 1 is standard jackknife, 2 is one half jackknife
+#' @return named vector with jackknifed grouped y-means
+jackknifeEst <- function(d,jackDenom) {
+  d$one <- 1.0
   num <- aggregate(y~group,data=d,FUN=sum)
   numM <- num$y
   names(numM) <- num$group
@@ -53,68 +60,76 @@ jackknifeEst <- function(d,jackDenom=1) {
   denM <- den$one
   names(denM) <- den$group
   denV <- denM[d$group]
+  if(!all(all.equal(num$group,den$group)==TRUE)) {
+    stop("name mismatch")
+  }
   v <- as.numeric((numV-d$y/jackDenom)/(denV-1/jackDenom))
   v[is.na(v)|is.infinite(v)|is.nan(v)] <- 0
   v
 }
 
-
-estimateExpectedPrediction <- function(d,dTest) {
+#' Fit a glm() on top of the dEstimate column to the d$y column, then apply this model to dTest
+#'
+#' Simulates the second stage of a 2-stage modeling process.
+#' @param d data frame with y column
+#' @param dEst numeric with one sub-model prediction per row of d
+#' @param dTest frame to score on has group and est columns
+#' @return dTest predictions
+estimateExpectedPrediction <- function(d,dEst,dTest) {
+  # catch cases unsafe for glm
   if(all(d$y) || all(!d$y) || 
-     ((max(d$est)-min(d$est))<=1.0e-5)) {
+     ((max(dEst)-min(dEst))<=1.0e-5)) {
     return(dTest$est)
   }
+  d$est <- dEst
   m <- glm(y~0+est,data=d,family=binomial(link='logit'))
   predict(m,newdata=dTest,type='response')
 }
 
 ys <- expand.grid( rep( list(0:1), n))==1
-nPredEstMin <- 0
-jPredEstMin <- 0
-jPredEst2Min <- 0
-nPredEstMean <- 0
-jPredEstMean <- 0
-jPredEst2Mean <- 0
-nPredEstMax <- 0
-jPredEstMax <- 0
-jPredEst2Max <- 0
+nPredExpectedMin <- 0
+jPredExpectedMin <- 0
+jPredExpected2Min <- 0
+nPredExpectedMean <- 0
+jPredExpectedMean <- 0
+jPredExpected2Mean <- 0
+nPredExpectedMax <- 0
+jPredExpectedMax <- 0
+jPredExpected2Max <- 0
 for(ii in seq_len(nrow(ys))) {
   y <- as.logical(ys[ii,])
   d$y <- y
   py <- probOn^(sum(y))*(1-probOn)^(length(y)-sum(y))
-  est <- ests(d)
-  dTest$est <- as.numeric(est[dTest$group])
-  d$est <- naiveEst(d)
-  nPred <- estimateExpectedPrediction(d,dTest)
-  nPredEstMin <- nPredEstMin + min(nPred)*py
-  nPredEstMean <- nPredEstMean + mean(nPred)*py
-  nPredEstMax <- nPredEstMax + max(nPred)*py
-  d$est <- jackknifeEst(d,1)
-  jPred <- estimateExpectedPrediction(d,dTest)
-  jPredEstMin <- jPredEstMin + min(jPred)*py
-  jPredEstMean <- jPredEstMean + mean(jPred)*py
-  jPredEstMax <- jPredEstMax + max(jPred)*py
-  d$est <- jackknifeEst(d,2)
-  jPred2 <- estimateExpectedPrediction(d,dTest)
-  jPredEst2Min <- jPredEst2Min + min(jPred2)*py
-  jPredEst2Mean <- jPredEst2Mean + mean(jPred2)*py
-  jPredEst2Max <- jPredEst2Max + max(jPred2)*py
+  empEstD <- empiricalEst(d)
+  dTest$est <- as.numeric(empEstD[dTest$group])
+  nPred <- estimateExpectedPrediction(d,empEstD[d$group],dTest)
+  nPredExpectedMin <- nPredExpectedMin + min(nPred)*py
+  nPredExpectedMean <- nPredExpectedMean + mean(nPred)*py
+  nPredExpectedMax <- nPredExpectedMax + max(nPred)*py
+  jPred <- estimateExpectedPrediction(d,jackknifeEst(d,1),dTest)
+  jPredExpectedMin <- jPredExpectedMin + min(jPred)*py
+  jPredExpectedMean <- jPredExpectedMean + mean(jPred)*py
+  jPredExpectedMax <- jPredExpectedMax + max(jPred)*py
+  jPred2 <- estimateExpectedPrediction(d,jackknifeEst(d,2),dTest)
+  jPredExpected2Min <- jPredExpected2Min + min(jPred2)*py
+  jPredExpected2Mean <- jPredExpected2Mean + mean(jPred2)*py
+  jPredExpected2Max <- jPredExpected2Max + max(jPred2)*py
 }
 
 print('naive prediction')
-print(nPredEstMin)
-print(nPredEstMean)
-print(nPredEstMax)
+print(nPredExpectedMin)
+print(nPredExpectedMean)
+print(nPredExpectedMax)
 
 print('jackknife prediction')
-print(jPredEstMin)
-print(jPredEstMean)
-print(jPredEstMax)
+print(jPredExpectedMin)
+print(jPredExpectedMean)
+print(jPredExpectedMax)
 
 print('jackknife 2 prediction')
-print(jPredEstMin)
-print(jPredEstMean)
-print(jPredEstMax)
+print(jPredExpectedMin)
+print(jPredExpectedMean)
+print(jPredExpectedMax)
 
 print('ideal prediction')
 print(probOn)
@@ -123,23 +138,24 @@ plotD <- data.frame(x=seq(0,1,by=0.01),
                     stringsAsFactors = FALSE)
 plotD2 <- plotD
 plotD2$what <- 'naive prediction'
-plotD2$estMin <- as.function(nPredEstMin)(plotD$x)
-plotD2$estMean <- as.function(nPredEstMean)(plotD$x)
-plotD2$estMax <- as.function(nPredEstMax)(plotD$x)
+plotD2$expectedMin <- as.function(nPredExpectedMin)(plotD$x)
+plotD2$expectedMean <- as.function(nPredExpectedMean)(plotD$x)
+plotD2$expectedMax <- as.function(nPredExpectedMax)(plotD$x)
 plotD3 <- plotD
 plotD3$what <- 'jackknife prediction'
-plotD3$estMin <- as.function(jPredEstMin)(plotD$x)
-plotD3$estMean <- as.function(jPredEstMean)(plotD$x)
-plotD3$estMax <- as.function(jPredEstMax)(plotD$x)
+plotD3$expectedMin <- as.function(jPredExpectedMin)(plotD$x)
+plotD3$expectedMean <- as.function(jPredExpectedMean)(plotD$x)
+plotD3$expectedMax <- as.function(jPredExpectedMax)(plotD$x)
 plotD4 <- plotD
 plotD4$what <- 'jackknife 2 prediction'
-plotD4$estMin <- as.function(jPredEst2Min)(plotD$x)
-plotD4$estMean <- as.function(jPredEst2Mean)(plotD$x)
-plotD4$estMax <- as.function(jPredEst2Max)(plotD$x)
+plotD4$expectedMin <- as.function(jPredExpected2Min)(plotD$x)
+plotD4$expectedMean <- as.function(jPredExpected2Mean)(plotD$x)
+plotD4$expectedMax <- as.function(jPredExpected2Max)(plotD$x)
 plotD <- rbind(plotD2,plotD3,plotD4)
 
-ggplot(data=rbind(plotD2,plotD3),mapping=aes(x=x,y=estMean,
-                                             ymin=estMin,ymax=estMax,
+ggplot(data=rbind(plotD2,plotD3),mapping=aes(x=x,
+                                             y=expectedMean,
+                                             ymin=expectedMin,ymax=expectedMax,
                               color=what,fill=what)) +
   geom_ribbon(alpha=0.5) +
   geom_abline() + 
@@ -149,8 +165,8 @@ ggplot(data=rbind(plotD2,plotD3),mapping=aes(x=x,y=estMean,
 
 ggplot(data=rbind(plotD3,plotD4),
        mapping=aes(x=x,
-                   y=estMean,
-                   ymin=estMin,ymax=estMax,
+                   y=expectedMean,
+                   ymin=expectedMin,ymax=expectedMax,
                               color=what,fill=what)) +
   geom_ribbon(alpha=0.5) +
   geom_abline() + 
@@ -158,30 +174,39 @@ ggplot(data=rbind(plotD3,plotD4),
   coord_fixed() +
   ggtitle(paste('predictions, n=',n))
 
+plotDA <- rbind(plotD2,plotD3,plotD4)
+plotDA$expectedMaxError <- pmax(abs(plotDA$x-plotDA$expectedMin),
+                               abs(plotDA$expectedMax-plotDA$x))
+ggplot(data=plotDA,mapping=aes(x=x,y=expectedMaxError,
+                              color=what,fill=what)) +
+  geom_line() +
+  ggtitle(paste('max error in estimates, n=',n))
+
+
 
 plotR <- data.frame(x=seq(0,1,by=0.01),
                     stringsAsFactors = FALSE)
 plotR1ratio <- as.function(probOn)(plotR$x)
 plotR2 <- plotR
 plotR2$what <- 'naive prediction'
-plotR2$ratioMin <- as.function(nPredEstMin)(plotR$x)/plotR1ratio
-plotR2$ratioMean <- as.function(nPredEstMean)(plotR$x)/plotR1ratio
-plotR2$ratioMax <- as.function(nPredEstMax)(plotR$x)/plotR1ratio
+plotR2$expectedRatioMin <- as.function(nPredExpectedMin)(plotR$x)/plotR1ratio
+plotR2$expectedRatioMean <- as.function(nPredExpectedMean)(plotR$x)/plotR1ratio
+plotR2$expectedRatioMax <- as.function(nPredExpectedMax)(plotR$x)/plotR1ratio
 plotR3 <- plotR
 plotR3$what <- 'jackknife prediction'
-plotR3$ratioMin <- as.function(jPredEstMin)(plotR$x)/plotR1ratio
-plotR3$ratioMean <- as.function(jPredEstMean)(plotR$x)/plotR1ratio
-plotR3$ratioMax <- as.function(jPredEstMax)(plotR$x)/plotR1ratio
+plotR3$expectedRatioMin <- as.function(jPredExpectedMin)(plotR$x)/plotR1ratio
+plotR3$expectedRatioMean <- as.function(jPredExpectedMean)(plotR$x)/plotR1ratio
+plotR3$expectedRatioMax <- as.function(jPredExpectedMax)(plotR$x)/plotR1ratio
 plotR4 <- plotR
 plotR4$what <- 'jackknife 2 prediction'
-plotR4$ratioMin <- as.function(jPredEst2Min)(plotR$x)/plotR1ratio
-plotR4$ratioMean <- as.function(jPredEst2Mean)(plotR$x)/plotR1ratio
-plotR4$ratioMax <- as.function(jPredEst2Max)(plotR$x)/plotR1ratio
+plotR4$expectedRatioMin <- as.function(jPredExpected2Min)(plotR$x)/plotR1ratio
+plotR4$expectedRatioMean <- as.function(jPredExpected2Mean)(plotR$x)/plotR1ratio
+plotR4$expectedRatioMax <- as.function(jPredExpected2Max)(plotR$x)/plotR1ratio
 
 ggplot(data=rbind(plotR2,plotR3),
        mapping=aes(x=x,
-                   y=ratioMean,
-                   ymin=ratioMin,ymax=ratioMax,
+                   y=expectedRatioMean,
+                   ymin=expectedRatioMin,ymax=expectedRatioMax,
                    color=what,fill=what)) +
   geom_ribbon(alpha=0.5) +
   geom_line() + 
@@ -190,13 +215,24 @@ ggplot(data=rbind(plotR2,plotR3),
 
 ggplot(data=rbind(plotR3,plotR4),
        mapping=aes(x=x,
-                   y=ratioMean,
-                   ymin=ratioMin,ymax=ratioMax,
+                   y=expectedRatioMean,
+                   ymin=expectedRatioMin,ymax=expectedRatioMax,
                    color=what,fill=what)) +
   geom_ribbon(alpha=0.5) +
   geom_line() +
   geom_hline(yintercept=1) +
   ggtitle(paste('prediction ratios, n=',n))
+
+
+plotRA <- rbind(plotR2,plotR3,plotR4)
+plotRA$expectedMaxAlbsLogRelError <- pmax(abs(log(plotRA$expectedRatioMin)),
+                               abs(log(plotRA$expectedRatioMax)))
+ggplot(data=plotRA,
+       mapping=aes(x=x,
+                   y=expectedMaxAlbsLogRelError,
+                   color=what,fill=what)) +
+  geom_line() +
+  ggtitle(paste('prediction expected abs log error ratio, n=',n))
 
 ```
 
