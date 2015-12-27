@@ -169,6 +169,11 @@ jPredExpectedMax <- 0
 jPredExpected2Max <- 0
 sPredExpectedMax <- 0
 
+# run through each possible realization of the training outcome
+# vector y.  Each situation is weigthed by the probability of 
+# seeing this y-vector (though the outcomes in the situation
+# are conditionally indpendent of this unknown probabilty 
+# given the realized y).
 ys <- expand.grid( rep( list(0:1), n))==1
 for(ii in seq_len(nrow(ys))) {
   y <- as.logical(ys[ii,])
@@ -194,29 +199,7 @@ for(ii in seq_len(nrow(ys))) {
   sPredExpectedMax <- sPredExpectedMax + max(sPred)*py
 }
 
-print('naive prediction')
-print(nPredExpectedMin)
-print(nPredExpectedMean)
-print(nPredExpectedMax)
 
-print('jackknife prediction')
-print(jPredExpectedMin)
-print(jPredExpectedMean)
-print(jPredExpectedMax)
-
-print('jackknife 2 prediction')
-print(jPredExpectedMin)
-print(jPredExpectedMean)
-print(jPredExpectedMax)
-
-print('split prediction')
-print(sPredExpectedMin)
-print(sPredExpectedMean)
-print(sPredExpectedMax)
-
-
-print('ideal prediction')
-print(probOn)
 
 plotD <- data.frame(x=seq(0,1,by=0.01),
                     stringsAsFactors = FALSE)
