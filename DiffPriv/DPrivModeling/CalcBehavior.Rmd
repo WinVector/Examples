@@ -16,13 +16,18 @@ library('ggplot2')
 # est formed different ways
 set.seed(23225)
 k <- 2
-n <- 7
 probOn <- polynomial(c(0,1))
 gGroups <- paste('g',1:k,sep='')
-d <- data.frame(group=sample(gGroups,n,replace=TRUE),
+# n <- 7
+# d <- data.frame(group=sample(gGroups,n,replace=TRUE),
+#                 one=1,
+#                 y=FALSE,
+#                 stringsAsFactors=FALSE)
+d <- data.frame(group=rep(gGroups,3),
                 one=1,
                 y=FALSE,
                 stringsAsFactors=FALSE)
+n <- nrow(d)
 dTest <- data.frame(group=gGroups,
                     stringsAsFactors=FALSE)
 
