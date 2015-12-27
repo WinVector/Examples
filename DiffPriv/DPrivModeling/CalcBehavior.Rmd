@@ -1,0 +1,119 @@
+---
+title: "CalcBehavior"
+output: html_document
+---
+
+
+```{r}
+library('polynom')
+library('ggplot2')
+
+
+# y_i = 1 with probability 1/2 + e, 0 otherwise
+# k = # of groups
+# n = # of examples
+# B logistic regresion solution to y ~ 0 + est
+# est formed different ways
+set.seed(23225)
+e <- 0.1
+k <- 2
+n <- 7
+probOn <- polynomial(c(1/2,e))
+gGroups <- paste('g',1:k,sep='')
+d <- data.frame(group=sample(gGroups,n,replace=TRUE),
+                one=1,
+                y=FALSE,
+                stringsAsFactors=FALSE)
+
+naiveEst <- function(d) {
+  num <- aggregate(y~group,data=d,FUN=sum)
+  den <- aggregate(one~group,data=d,FUN=sum)
+  est <- num$y/den$one
+  names(est) <- num$group
+  as.numeric(est[d$group])
+}
+
+jackknifeEst <- function(d,jackDenom=1) {
+  num <- aggregate(y~group,data=d,FUN=sum)
+  numM <- num$y
+  names(numM) <- num$group
+  numV <- numM[d$group]
+  den <- aggregate(one~group,data=d,FUN=sum)
+  denM <- den$one
+  names(denM) <- den$group
+  denV <- denM[d$group]
+  v <- as.numeric((numV-d$y/jackDenom)/(denV-1/jackDenom))
+  v[is.na(v)|is.infinite(v)|is.nan(v)] <- 0
+  v
+}
+
+
+estimateExpectedPrediction <- function(d) {
+  if(all(d$y)) {
+    return(1)
+  }
+  if(all(!d$y)) {
+    return(0)
+  }
+  if(max(d$est)-min(d$est)<1.0e-5) {
+    return(mean(d$y))
+  }
+  m <- glm(y~0+est,data=d,family=binomial(link='logit'))
+  d$pred <- predict(m,newdata=d,type='response')
+  gpred <- aggregate(pred~group,data=d,FUN=mean)
+  # each group weighted equally
+  return(mean(gpred$pred))
+}
+
+ys <- expand.grid( rep( list(0:1), n))==1
+nPredEst <- 0
+jPredEst <- 0
+jPredEst2 <- 0
+for(ii in seq_len(nrow(ys))) {
+  y <- as.logical(ys[ii,])
+  d$y <- y
+  py <- probOn^(sum(y))*(1-probOn)^(length(y)-sum(y))
+  d$est <- naiveEst(d)
+  nPred <- estimateExpectedPrediction(d)
+  nPredEst <- nPredEst + nPred*py
+  d$est <- jackknifeEst(d,1)
+  jPred <- estimateExpectedPrediction(d)
+  jPredEst <- jPredEst + jPred*py
+  d$est <- jackknifeEst(d,2)
+  jPred2 <- estimateExpectedPrediction(d)
+  jPredEst2 <- jPredEst2 + jPred2*py
+}
+
+print('naive prediction')
+print(nPredEst)
+
+print('jackknife prediction')
+print(jPredEst)
+
+print('jackknife 2 prediction')
+print(jPredEst2)
+
+print('ideal prediction')
+print(probOn)
+
+plotD <- data.frame(x=seq(0,(1-0.5)/e,by=0.01),
+                    stringsAsFactors = FALSE)
+plotD1 <- plotD
+plotD1$what <- 'IdealPrediction'
+plotD1$est <- as.function(probOn)(plotD$x)
+plotD2 <- plotD
+plotD2$what <- 'naive prediction'
+plotD2$est <- as.function(nPredEst)(plotD$x)
+plotD3 <- plotD
+plotD3$what <- 'jackknife prediction'
+plotD3$est <- as.function(jPredEst)(plotD$x)
+plotD4 <- plotD
+plotD4$what <- 'jackknife 2 prediction'
+plotD4$est <- as.function(jPredEst2)(plotD$x)
+plotD <- rbind(plotD1,plotD2,plotD3,plotD4)
+
+ggplot(data=plotD,mapping=aes(x=x,y=est,color=what)) +
+  geom_line() + geom_point(alpha=0.5) +
+  ggtitle(paste('predictions, n=',n))
+```
+
