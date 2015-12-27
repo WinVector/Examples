@@ -23,12 +23,19 @@ d <- data.frame(group=sample(gGroups,n,replace=TRUE),
                 one=1,
                 y=FALSE,
                 stringsAsFactors=FALSE)
+dTest <- data.frame(group=gGroups,
+                    stringsAsFactors=FALSE)
 
-naiveEst <- function(d) {
+ests <- function(d) {
   num <- aggregate(y~group,data=d,FUN=sum)
   den <- aggregate(one~group,data=d,FUN=sum)
   est <- num$y/den$one
   names(est) <- num$group
+  est
+}
+
+naiveEst <- function(d) {
+  est <- ests(d)
   as.numeric(est[d$group])
 }
 
@@ -47,21 +54,16 @@ jackknifeEst <- function(d,jackDenom=1) {
 }
 
 
-estimateExpectedPrediction <- function(d) {
+estimateExpectedPrediction <- function(d,dTest) {
   if(all(d$y)) {
     return(1)
   }
   if(all(!d$y)) {
     return(0)
   }
-  if(max(d$est)-min(d$est)<1.0e-5) {
-    return(mean(d$y))
-  }
   m <- glm(y~0+est,data=d,family=binomial(link='logit'))
-  d$pred <- predict(m,newdata=d,type='response')
-  gpred <- aggregate(pred~group,data=d,FUN=mean)
-  # each group weighted equally
-  return(mean(gpred$pred))
+  dTest$pred <- predict(m,newdata=dTest,type='response')
+  return(mean(dTest$pred))
 }
 
 ys <- expand.grid( rep( list(0:1), n))==1
@@ -72,14 +74,16 @@ for(ii in seq_len(nrow(ys))) {
   y <- as.logical(ys[ii,])
   d$y <- y
   py <- probOn^(sum(y))*(1-probOn)^(length(y)-sum(y))
+  est <- ests(d)
+  dTest$est <- as.numeric(est[dTest$group])
   d$est <- naiveEst(d)
-  nPred <- estimateExpectedPrediction(d)
+  nPred <- estimateExpectedPrediction(d,dTest)
   nPredEst <- nPredEst + nPred*py
   d$est <- jackknifeEst(d,1)
-  jPred <- estimateExpectedPrediction(d)
+  jPred <- estimateExpectedPrediction(d,dTest)
   jPredEst <- jPredEst + jPred*py
   d$est <- jackknifeEst(d,2)
-  jPred2 <- estimateExpectedPrediction(d)
+  jPred2 <- estimateExpectedPrediction(d,dTest)
   jPredEst2 <- jPredEst2 + jPred2*py
 }
 
@@ -114,5 +118,29 @@ plotD <- rbind(plotD1,plotD2,plotD3,plotD4)
 ggplot(data=plotD,mapping=aes(x=x,y=est,color=what)) +
   geom_line() + geom_point(alpha=0.5) +
   ggtitle(paste('predictions, n=',n))
+
+
+
+plotR <- data.frame(x=seq(0,1,by=0.01),
+                    stringsAsFactors = FALSE)
+plotR1 <- plotR
+plotR1$what <- 'IdealPrediction'
+plotR1$ratio <- as.function(probOn)(plotR$x)
+plotR2 <- plotR
+plotR2$what <- 'naive prediction'
+plotR2$ratio <- as.function(nPredEst)(plotR$x)/plotR1$ratio
+plotR3 <- plotR
+plotR3$what <- 'jackknife prediction'
+plotR3$ratio <- as.function(jPredEst)(plotR$x)/plotR1$ratio
+plotR4 <- plotR
+plotR4$what <- 'jackknife 2 prediction'
+plotR4$ratio <- as.function(jPredEst2)(plotR$x)/plotR1$ratio
+plotR1$ratio <- 1
+plotR <- rbind(plotR1,plotR2,plotR3,plotR4)
+
+ggplot(data=plotR,mapping=aes(x=x,y=ratio,color=what)) +
+  geom_line() + geom_point(alpha=0.5) +
+  ggtitle(paste('prediction ratios, n=',n))
+
 ```
 
