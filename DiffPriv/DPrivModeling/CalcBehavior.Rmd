@@ -55,21 +55,21 @@ jackknifeEst <- function(d,jackDenom=1) {
 
 
 estimateExpectedPrediction <- function(d,dTest) {
-  if(all(d$y)) {
-    return(1)
-  }
-  if(all(!d$y)) {
-    return(0)
+  if(all(d$y) || all(!d$y) || 
+     ((max(d$est)-min(d$est))<=1.0e-5)) {
+    return(dTest$est)
   }
   m <- glm(y~0+est,data=d,family=binomial(link='logit'))
-  dTest$pred <- predict(m,newdata=dTest,type='response')
-  return(mean(dTest$pred))
+  predict(m,newdata=dTest,type='response')
 }
 
 ys <- expand.grid( rep( list(0:1), n))==1
-nPredEst <- 0
-jPredEst <- 0
-jPredEst2 <- 0
+nPredEstMin <- 0
+jPredEstMin <- 0
+jPredEst2Min <- 0
+nPredEstMax <- 0
+jPredEstMax <- 0
+jPredEst2Max <- 0
 for(ii in seq_len(nrow(ys))) {
   y <- as.logical(ys[ii,])
   d$y <- y
@@ -78,68 +78,93 @@ for(ii in seq_len(nrow(ys))) {
   dTest$est <- as.numeric(est[dTest$group])
   d$est <- naiveEst(d)
   nPred <- estimateExpectedPrediction(d,dTest)
-  nPredEst <- nPredEst + nPred*py
+  nPredEstMin <- nPredEstMin + min(nPred)*py
+  nPredEstMax <- nPredEstMax + max(nPred)*py
   d$est <- jackknifeEst(d,1)
   jPred <- estimateExpectedPrediction(d,dTest)
-  jPredEst <- jPredEst + jPred*py
+  jPredEstMin <- jPredEstMin + min(jPred)*py
+  jPredEstMax <- jPredEstMax + max(jPred)*py
   d$est <- jackknifeEst(d,2)
   jPred2 <- estimateExpectedPrediction(d,dTest)
-  jPredEst2 <- jPredEst2 + jPred2*py
+  jPredEst2Min <- jPredEst2Min + min(jPred2)*py
+  jPredEst2Max <- jPredEst2Max + max(jPred2)*py
 }
 
 print('naive prediction')
-print(nPredEst)
+print(nPredEstMin)
+print(nPredEstMax)
 
 print('jackknife prediction')
-print(jPredEst)
+print(jPredEstMin)
+print(jPredEstMax)
 
 print('jackknife 2 prediction')
-print(jPredEst2)
+print(jPredEstMin)
+print(jPredEstMax)
 
 print('ideal prediction')
 print(probOn)
 
 plotD <- data.frame(x=seq(0,1,by=0.01),
                     stringsAsFactors = FALSE)
-plotD1 <- plotD
-plotD1$what <- 'IdealPrediction'
-plotD1$est <- as.function(probOn)(plotD$x)
 plotD2 <- plotD
 plotD2$what <- 'naive prediction'
-plotD2$est <- as.function(nPredEst)(plotD$x)
+plotD2$estMin <- as.function(nPredEstMin)(plotD$x)
+plotD2$estMax <- as.function(nPredEstMax)(plotD$x)
 plotD3 <- plotD
 plotD3$what <- 'jackknife prediction'
-plotD3$est <- as.function(jPredEst)(plotD$x)
+plotD3$estMin <- as.function(jPredEstMin)(plotD$x)
+plotD3$estMax <- as.function(jPredEstMax)(plotD$x)
 plotD4 <- plotD
 plotD4$what <- 'jackknife 2 prediction'
-plotD4$est <- as.function(jPredEst2)(plotD$x)
-plotD <- rbind(plotD1,plotD2,plotD3,plotD4)
+plotD4$estMin <- as.function(jPredEst2Min)(plotD$x)
+plotD4$estMax <- as.function(jPredEst2Max)(plotD$x)
+plotD <- rbind(plotD2,plotD3,plotD4)
 
-ggplot(data=plotD,mapping=aes(x=x,y=est,color=what)) +
-  geom_line() + geom_point(alpha=0.5) +
+ggplot(data=rbind(plotD2,plotD3),mapping=aes(x=x,ymin=estMin,ymax=estMax,
+                              color=what,fill=what)) +
+  geom_ribbon(alpha=0.5) +
+  geom_abline() + 
+  coord_fixed() +
   ggtitle(paste('predictions, n=',n))
 
+ggplot(data=rbind(plotD3,plotD4),
+       mapping=aes(x=x,ymin=estMin,ymax=estMax,
+                              color=what,fill=what)) +
+  geom_ribbon(alpha=0.5) +
+  geom_abline() + 
+  coord_fixed() +
+  ggtitle(paste('predictions, n=',n))
 
 
 plotR <- data.frame(x=seq(0,1,by=0.01),
                     stringsAsFactors = FALSE)
-plotR1 <- plotR
-plotR1$what <- 'IdealPrediction'
-plotR1$ratio <- as.function(probOn)(plotR$x)
+plotR1ratio <- as.function(probOn)(plotR$x)
 plotR2 <- plotR
 plotR2$what <- 'naive prediction'
-plotR2$ratio <- as.function(nPredEst)(plotR$x)/plotR1$ratio
+plotR2$ratioMin <- as.function(nPredEstMin)(plotR$x)/plotR1ratio
+plotR2$ratioMax <- as.function(nPredEstMax)(plotR$x)/plotR1ratio
 plotR3 <- plotR
 plotR3$what <- 'jackknife prediction'
-plotR3$ratio <- as.function(jPredEst)(plotR$x)/plotR1$ratio
+plotR3$ratioMin <- as.function(jPredEstMin)(plotR$x)/plotR1ratio
+plotR3$ratioMax <- as.function(jPredEstMax)(plotR$x)/plotR1ratio
 plotR4 <- plotR
 plotR4$what <- 'jackknife 2 prediction'
-plotR4$ratio <- as.function(jPredEst2)(plotR$x)/plotR1$ratio
-plotR1$ratio <- 1
-plotR <- rbind(plotR1,plotR2,plotR3,plotR4)
+plotR4$ratioMin <- as.function(jPredEst2Min)(plotR$x)/plotR1ratio
+plotR4$ratioMax <- as.function(jPredEst2Max)(plotR$x)/plotR1ratio
 
-ggplot(data=plotR,mapping=aes(x=x,y=ratio,color=what)) +
-  geom_line() + geom_point(alpha=0.5) +
+ggplot(data=rbind(plotR2,plotR3),
+       mapping=aes(x=x,ymin=ratioMin,ymax=ratioMax,
+                   color=what,fill=what)) +
+  geom_ribbon(alpha=0.5) +
+  geom_hline(yintercept=1) +
+  ggtitle(paste('prediction ratios, n=',n))
+
+ggplot(data=rbind(plotR3,plotR4),
+       mapping=aes(x=x,ymin=ratioMin,ymax=ratioMax,
+                   color=what,fill=what)) +
+  geom_ribbon(alpha=0.5) +
+  geom_hline(yintercept=1) +
   ggtitle(paste('prediction ratios, n=',n))
 
 ```
