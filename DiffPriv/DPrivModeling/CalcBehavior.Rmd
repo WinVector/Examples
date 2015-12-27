@@ -9,16 +9,15 @@ library('polynom')
 library('ggplot2')
 
 
-# y_i = 1 with probability 1/2 + e, 0 otherwise
+# y_i = 1 with probability x, 0 otherwise
 # k = # of groups
 # n = # of examples
 # B logistic regresion solution to y ~ 0 + est
 # est formed different ways
 set.seed(23225)
-e <- 0.1
 k <- 2
 n <- 7
-probOn <- polynomial(c(1/2,e))
+probOn <- polynomial(c(0,1))
 gGroups <- paste('g',1:k,sep='')
 d <- data.frame(group=sample(gGroups,n,replace=TRUE),
                 one=1,
@@ -96,7 +95,7 @@ print(jPredEst2)
 print('ideal prediction')
 print(probOn)
 
-plotD <- data.frame(x=seq(0,(1-0.5)/e,by=0.01),
+plotD <- data.frame(x=seq(0,1,by=0.01),
                     stringsAsFactors = FALSE)
 plotD1 <- plotD
 plotD1$what <- 'IdealPrediction'
