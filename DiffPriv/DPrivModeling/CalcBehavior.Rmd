@@ -4,30 +4,70 @@ output: html_document
 ---
 
 An attempt to semi-theoretically analyze the efficacy of different nested training
-methods.  The first step is estimating y conditioned on group, the second is a 
+methods.
+
+In this "d" is our training data frame.  We will use it to model y~group (group being a string-valued variable) for every possible y vector (y is TRUE/FALSE so there are 2^nrow(d) such frames).  We want to estimate the out of sample performance of our model, so we evaluate on a new data frame called dTest (which has exactly one row per level).
+
+```{r}
+set.seed(23225)
+k <- 2   # number of groups, we are going to use group id to predict y
+gGroups <- paste('g',1:k,sep='')
+d <- data.frame(group=rep(gGroups,3),
+                y=FALSE,
+                stringsAsFactors=FALSE)
+print(d)
+
+n <- nrow(d)
+print(n)
+
+dTest <- data.frame(group=gGroups,
+                    stringsAsFactors=FALSE)
+print(dTest)
+```
+
+
+We are going to form estimates of the form P(y=TRUE|group).  The model will
+be est_group is some sort of empirical estimate per-group derived from training
+and then the overall model is of the form P(y|group)~s(b*est_group) where s is the sigmoid
+function and b is estimated by logistic regression.  For this case (a single variable)
+this second outer model is not needed.  We also could alternately model a logistic regression directly on the group labels.
+
+What we are trying to do is make a simple example showing the problems one can run
+into when building a nested model which is a method used when the group variable takes
+on a very large number of values (such as zip codes) (see http://www.win-vector.com/blog/2012/07/modeling-trick-impact-coding-of-categorical-variables-with-many-levels/ ).  We are deliberately looking for the over-fit that comes from such a nested model, and what methods decrease this undesirable effect (see: http://winvector.github.io/DiffPriv/DiffPriv.pdf ).
+
+The idea in this exercise is we are going to have the unknown true probablity P(y|group) as identically x (x, being a variable we vary from 0 to 1) for all groups.  The inner conditoned estimate (called "est") is estimated one of a few ways including:
+
+ * Naive or empirical esimate: est_group = N(y|group)/N(group)
+ * Jackknifed estimate: est_group = (N(y|group)-selfY)/(N(group)-1)
+ * Half Jackknifed: est_group = (N(y|group)-selfY/2)/(N(group)-1/2)
+ * Split: est_group = N(y|group in first half of training data)/N(group in first half of training data)
+
+The second stage (or overall model) is then simulated using logistic regression (R's glm() command).  We estimate P(y|group) as s(b*group_est) (b being the fit coefficient, for the split case we use only the disjoint second half of the data for estimation of b).
+
+The idea is: in many cases the naive or empirical estimate is already over-fitting (or memorizing training data).  So we would would like the outter modeling procedure to correct this (or at least not make this worse).  However, in the naive case the outter fitting procedure is pretty much forced to pick a coefficient b=1 and does not correct.  However, if there is some de-coupling of the empirical estimates the fitter is allowed to see from the actual training data (such as Jackknife, split procedures, or even differential privacy established through the introduction of noise as in slide 18 of http://www.slideshare.net/SessionsEvents/misha-bilenko-principal-researcher-microsoft ) then we get better generalization performance (b is picked less than 1).
+
+It is the relative strength or statistical effiency of each of these techniques we wish to demonstrate.  To do this we are going to assume the group labels of our data set are fixed (they being the fixed experimental design) and then assume we see the y-lables with y=TRUE with probablity x (x being a parameter we will vary from 0 through 1).  Because for each x there are exactly 2^nrow(d) possible y assignments and we can exactly compute the probability of any y assignment we can sum over every possible observed data set weighted according to the exact probability of each data set occuring.   For each possible observed data set we can compute the outcomes and we thus know the exact probabilities of each possible outcome.  In fact we can write these probabilities and expectations as polynomials in x, allowing us to leave x as a parameter to be explored later (versus having to substitue in a specific value).  In this manner we are going to estimate the following summaries of the fits (as functions of x):
+
+ * The expected value of max_group s(b*group_est) over all models. That is: for each composite model (empirical estimate plus outter model) we find which group it things has the largest probabilty and report this probability.
+ * The expected value of min_group s(b*group_est) the smallest prediction
+ * The expected value of mean_group s(b*group_est) the expected mid-prediction
+ 
+In all cases the expectation is taken over all possible realizaitons of the traning vector y with y=TRUE having probability x (x a variable to be filled in later).
+
+
+The first step is estimating y conditioned on group, the second is a 
 glm() model on top of this estimate.  The nested model usually gives trouble as the
 group variable can hide degrees of freedom and cause over-fitting.
+
+
+
 
 ```{r}
 library('polynom')
 library('ggplot2')
 
 
-# y_i = 1 with probability x, 0 otherwise
-# k = # of groups
-# n = # of examples
-# B logistic regresion solution to y ~ 0 + est
-# est formed different ways
-set.seed(23225)
-k <- 2
-probOn <- polynomial(c(0,1))
-gGroups <- paste('g',1:k,sep='')
-d <- data.frame(group=rep(gGroups,3),
-                y=FALSE,
-                stringsAsFactors=FALSE)
-n <- nrow(d)
-dTest <- data.frame(group=gGroups,
-                    stringsAsFactors=FALSE)
 
 #' compute the direct expected value of y per group
 #'
@@ -111,6 +151,10 @@ splitEstimateExpectedPrediction <- function(d,dTest) {
   m <- glm(y~0+est,data=dB,family=binomial(link='logit'))
   predict(m,newdata=dTest,type='response')
 }
+
+
+probOn <- polynomial(c(0,1))  # polnomial x representing chance of y=TRUE
+
 
 nPredExpectedMin <- 0
 jPredExpectedMin <- 0
