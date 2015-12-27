@@ -60,9 +60,10 @@ momentsLSmooth <- function(vcol,rescol,sigma) {
 #' @param vname independnet variable name
 #' @param vcol depedent variable values
 #' @param counts conditional count structure
-#' @param rescol if not null the idependent column to Jacknife out of the counts
+#' @param rescol if not null the idependent column to Jackknife out of the counts
+#' @param jackDen Jackknifing denominator, 1 = standard
 #' @return encoded data frame
-expectCode <- function(vname,vcol,counts,rescol) {
+expectCode <- function(vname,vcol,counts,rescol,jackDen=1) {
   smFactor <- 1.0e-3
   sumX <- listLookup(vcol,counts$sumX)
   sumXY <- listLookup(vcol,counts$sumXY)
@@ -72,10 +73,10 @@ expectCode <- function(vname,vcol,counts,rescol) {
               length(vcol))
   if(!is.null(rescol)) {
     # Jackknife adjust entries by removing self from counts
-    sumX <- sumX - 1
-    sumXY <- sumXY - rescol
-    sum1 <- sum1 - 1
-    sumY <- sumY - rescol
+    sumX <- sumX - 1/jackDen
+    sumXY <- sumXY - rescol/jackDen
+    sum1 <- sum1 - 1/jackDen
+    sumY <- sumY - rescol/jackDen
   }
   # perform the expectation calculation, vectorized
   meanY <- sumY/sum1

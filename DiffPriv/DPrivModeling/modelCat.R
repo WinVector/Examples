@@ -21,9 +21,10 @@ conditionalCounts <- function(vcol,rescol,sigma) {
 #' @param vname independnet variable name
 #' @param vcol depedent variable values
 #' @param counts conditional count structure
-#' @param rescol if not null the idependent column to Jacknife out of the counts
+#' @param rescol if not null the idependent column to Jackknife out of the counts
+#' @param jackDen Jackknifing denominator, 1 = standard
 #' @return encoded data frame
-bayesCode <- function(vname,vcol,counts,rescol) {
+bayesCode <- function(vname,vcol,counts,rescol,jackDen=1) {
   smFactor <- 1.0e-3
   nCandT <- listLookup(vcol,counts$nCandT) #  sum of true examples for given C
   nCandF <- listLookup(vcol,counts$nCandF) #  sum of false examples for given C
@@ -32,10 +33,10 @@ bayesCode <- function(vname,vcol,counts,rescol) {
   nF <- rep(sum(as.numeric(counts$nCandF)),length(vcol))  #  sum of false examples (vector)
   if(!is.null(rescol)) {
     # Jackknife adjust entries by removing self from counts
-    nCandT <- nCandT - ifelse(rescol,1,0)
-    nT <- nT - ifelse(rescol,1,0)
-    nCandF <- nCandF - ifelse(rescol,0,1)
-    nF <- nF - ifelse(rescol,0,1)
+    nCandT <- nCandT - ifelse(rescol,1,0)/jackDen
+    nT <- nT - ifelse(rescol,1,0)/jackDen
+    nCandF <- nCandF - ifelse(rescol,0,1)/jackDen
+    nF <- nF - ifelse(rescol,0,1)/jackDen
   }
   # perform the Bayesian calculation, vectorized
   probT <- nT/pmax(nT+nF,1.0e-3)   # unconditional probabilty target is true
