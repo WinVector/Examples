@@ -13,7 +13,7 @@ set.seed(23225)
 k <- 2   # number of groups, we are going to use group id to predict y
 gGroups <- paste('g',1:k,sep='')
 d <- data.frame(group=rep(gGroups,3),
-                y=FALSE,
+                y=NA,
                 stringsAsFactors=FALSE)
 print(d)
 
@@ -127,6 +127,18 @@ estimateExpectedPrediction <- function(d,dEst,dTest) {
 }
 
 
+naiveModel <- function(d,dTest) {
+  as.numeric(empiricalEst(d)[dTest$group])
+}
+
+jackknifeModel <- function(d,dTest) {
+  estimateExpectedPrediction(d,jackknifeEst(d,1),dTest)
+}
+
+jackknifeModel2 <- function(d,dTest) {
+  estimateExpectedPrediction(d,jackknifeEst(d,2),dTest)
+}
+
 #' Split train nested model.  Assumes design can be split in half
 #'
 #' Simulates the second stage of a 2-stage modeling process.
@@ -153,77 +165,65 @@ splitEstimateExpectedPrediction <- function(d,dTest) {
 }
 
 
-probOn <- polynomial(c(0,1))  # polnomial x representing chance of y=TRUE
 
 
-nPredExpectedMin <- 0
-jPredExpectedMin <- 0
-jPredExpected2Min <- 0
-sPredExpectedMin <- 0
-nPredExpectedMean <- 0
-jPredExpectedMean <- 0
-jPredExpected2Mean <- 0
-sPredExpectedMean <- 0
-nPredExpectedMax <- 0
-jPredExpectedMax <- 0
-jPredExpected2Max <- 0
-sPredExpectedMax <- 0
-
-# run through each possible realization of the training outcome
-# vector y.  Each situation is weigthed by the probability of 
-# seeing this y-vector (though the outcomes in the situation
-# are conditionally indpendent of this unknown probabilty 
-# given the realized y).
-ys <- expand.grid( rep( list(0:1), n))==1
-for(ii in seq_len(nrow(ys))) {
-  y <- as.logical(ys[ii,])
-  d$y <- y
-  py <- probOn^(sum(y))*(1-probOn)^(length(y)-sum(y))
-  empEstD <- empiricalEst(d)
-  dTest$est <- as.numeric(empEstD[dTest$group])
-  nPred <- estimateExpectedPrediction(d,empEstD[d$group],dTest)
-  nPredExpectedMin <- nPredExpectedMin + min(nPred)*py
-  nPredExpectedMean <- nPredExpectedMean + mean(nPred)*py
-  nPredExpectedMax <- nPredExpectedMax + max(nPred)*py
-  jPred <- estimateExpectedPrediction(d,jackknifeEst(d,1),dTest)
-  jPredExpectedMin <- jPredExpectedMin + min(jPred)*py
-  jPredExpectedMean <- jPredExpectedMean + mean(jPred)*py
-  jPredExpectedMax <- jPredExpectedMax + max(jPred)*py
-  jPred2 <- estimateExpectedPrediction(d,jackknifeEst(d,2),dTest)
-  jPredExpected2Min <- jPredExpected2Min + min(jPred2)*py
-  jPredExpected2Mean <- jPredExpected2Mean + mean(jPred2)*py
-  jPredExpected2Max <- jPredExpected2Max + max(jPred2)*py
-  sPred <- splitEstimateExpectedPrediction(d,dTest)
-  sPredExpectedMin <- sPredExpectedMin + min(sPred)*py
-  sPredExpectedMean <- sPredExpectedMean + mean(sPred)*py
-  sPredExpectedMax <- sPredExpectedMax + max(sPred)*py
+#' evaluate a strategy by returning summary statistics
+#'
+#' @param d training data frame
+#' @param dTest evaluation data frame
+#' @param strat strategy to apply
+#' @param what name of strategy
+#' @return scores
+evalModelingStrategy <- function(d,dTest,strat,what) {
+  predExpectedMin <- 0
+  predExpectedMean <- 0
+  predExpectedMax <- 0
+  probOn <- polynomial(c(0,1))  # polnomial x representing chance of y=TRUE
+  # run through each possible realization of the training outcome
+  # vector y.  Each situation is weigthed by the probability of 
+  # seeing this y-vector (though the outcomes in the situation
+  # are conditionally indpendent of this unknown probabilty 
+  # given the realized y).
+  ys <- expand.grid( rep( list(0:1), n))==1
+  for(ii in seq_len(nrow(ys))) {
+    y <- as.logical(ys[ii,])
+    d$y <- y
+    py <- probOn^(sum(y))*(1-probOn)^(length(y)-sum(y))
+    dTest$est <- as.numeric(empiricalEst(d)[dTest$group])
+    pred <- strat(d,dTest)
+    predExpectedMin <- predExpectedMin + min(pred)*py
+    predExpectedMean <- predExpectedMean + mean(pred)*py
+    predExpectedMax <- predExpectedMax + max(pred)*py
+  }
+  x <- seq(0,1,by=0.01)
+  plotD <- data.frame(x=x,
+                      what=what,
+                      expectedMin=as.function(predExpectedMin)(x),
+                      expectedMean=as.function(predExpectedMean)(x),
+                      expectedMax=as.function(predExpectedMax)(x),
+                      stringsAsFactors = FALSE)
+  plotD$expectedRatioMin <- plotD$expectedMin/plotD$x
+  plotD$expectedRatioMean <- plotD$expectedMean/plotD$x
+  plotD$expectedRatioMax <- plotD$expectedMax/plotD$x
+  list(
+    plotD=plotD,
+    predExpectedMin=predExpectedMin,
+    predExpectedMean=predExpectedMean,
+    predExpectedMax=predExpectedMax
+  )
 }
 
 
 
-plotD <- data.frame(x=seq(0,1,by=0.01),
-                    stringsAsFactors = FALSE)
-plotD2 <- plotD
-plotD2$what <- 'naive prediction'
-plotD2$expectedMin <- as.function(nPredExpectedMin)(plotD$x)
-plotD2$expectedMean <- as.function(nPredExpectedMean)(plotD$x)
-plotD2$expectedMax <- as.function(nPredExpectedMax)(plotD$x)
-plotD3 <- plotD
-plotD3$what <- 'jackknife prediction'
-plotD3$expectedMin <- as.function(jPredExpectedMin)(plotD$x)
-plotD3$expectedMean <- as.function(jPredExpectedMean)(plotD$x)
-plotD3$expectedMax <- as.function(jPredExpectedMax)(plotD$x)
-plotD4 <- plotD
-plotD4$what <- 'jackknife 2 prediction'
-plotD4$expectedMin <- as.function(jPredExpected2Min)(plotD$x)
-plotD4$expectedMean <- as.function(jPredExpected2Mean)(plotD$x)
-plotD4$expectedMax <- as.function(jPredExpected2Max)(plotD$x)
-plotD5 <- plotD
-plotD5$what <- 'split prediction'
-plotD5$expectedMin <- as.function(sPredExpectedMin)(plotD$x)
-plotD5$expectedMean <- as.function(sPredExpectedMean)(plotD$x)
-plotD5$expectedMax <- as.function(sPredExpectedMax)(plotD$x)
 
+plotD2 <- evalModelingStrategy(d,dTest,naiveModel,
+                               'naive prediction')$plotD
+plotD3 <-  evalModelingStrategy(d,dTest,jackknifeModel,
+                                'jackknife prediction')$plotD
+plotD4 <-  evalModelingStrategy(d,dTest,jackknifeModel2,
+                                'jackknife 2 prediction')$plotD
+plotD5 <- evalModelingStrategy(d,dTest,splitEstimateExpectedPrediction,
+                               'split prediction')$plotD
 
 ggplot(data=rbind(plotD2,plotD3),mapping=aes(x=x,
                                              y=expectedMean,
@@ -267,32 +267,7 @@ ggplot(data=plotDA,mapping=aes(x=x,y=expectedMaxError,
 
 
 
-plotR <- data.frame(x=seq(0,1,by=0.01),
-                    stringsAsFactors = FALSE)
-plotR1ratio <- as.function(probOn)(plotR$x)
-plotR2 <- plotR
-plotR2$what <- 'naive prediction'
-plotR2$expectedRatioMin <- as.function(nPredExpectedMin)(plotR$x)/plotR1ratio
-plotR2$expectedRatioMean <- as.function(nPredExpectedMean)(plotR$x)/plotR1ratio
-plotR2$expectedRatioMax <- as.function(nPredExpectedMax)(plotR$x)/plotR1ratio
-plotR3 <- plotR
-plotR3$what <- 'jackknife prediction'
-plotR3$expectedRatioMin <- as.function(jPredExpectedMin)(plotR$x)/plotR1ratio
-plotR3$expectedRatioMean <- as.function(jPredExpectedMean)(plotR$x)/plotR1ratio
-plotR3$expectedRatioMax <- as.function(jPredExpectedMax)(plotR$x)/plotR1ratio
-plotR4 <- plotR
-plotR4$what <- 'jackknife 2 prediction'
-plotR4$expectedRatioMin <- as.function(jPredExpected2Min)(plotR$x)/plotR1ratio
-plotR4$expectedRatioMean <- as.function(jPredExpected2Mean)(plotR$x)/plotR1ratio
-plotR4$expectedRatioMax <- as.function(jPredExpected2Max)(plotR$x)/plotR1ratio
-plotR5 <- plotR
-plotR5$what <- 'split prediction'
-plotR5$expectedRatioMin <- as.function(sPredExpectedMin)(plotR$x)/plotR1ratio
-plotR5$expectedRatioMean <- as.function(sPredExpectedMean)(plotR$x)/plotR1ratio
-plotR5$expectedRatioMax <- as.function(sPredExpectedMax)(plotR$x)/plotR1ratio
-
-
-ggplot(data=rbind(plotR2,plotR3),
+ggplot(data=rbind(plotD2,plotD3),
        mapping=aes(x=x,
                    y=expectedRatioMean,
                    ymin=expectedRatioMin,ymax=expectedRatioMax,
@@ -302,7 +277,7 @@ ggplot(data=rbind(plotR2,plotR3),
   geom_hline(yintercept=1) +
   ggtitle(paste('prediction ratios, n=',n))
 
-ggplot(data=rbind(plotR3,plotR4),
+ggplot(data=rbind(plotD3,plotD4),
        mapping=aes(x=x,
                    y=expectedRatioMean,
                    ymin=expectedRatioMin,ymax=expectedRatioMax,
@@ -312,7 +287,7 @@ ggplot(data=rbind(plotR3,plotR4),
   geom_hline(yintercept=1) +
   ggtitle(paste('prediction ratios, n=',n))
 
-ggplot(data=rbind(plotR3,plotR5),
+ggplot(data=rbind(plotD3,plotD5),
        mapping=aes(x=x,
                    y=expectedRatioMean,
                    ymin=expectedRatioMin,ymax=expectedRatioMax,
@@ -322,10 +297,10 @@ ggplot(data=rbind(plotR3,plotR5),
   geom_hline(yintercept=1) +
   ggtitle(paste('prediction ratios, n=',n))
 
-plotRA <- rbind(plotR2,plotR3,plotR4,plotR5)
-plotRA$expectedMaxAlbsLogRelError <- pmax(abs(log(plotRA$expectedRatioMin)),
-                               abs(log(plotRA$expectedRatioMax)))
-ggplot(data=plotRA,
+plotDA <- rbind(plotD2,plotD3,plotD4,plotD5)
+plotDA$expectedMaxAlbsLogRelError <- pmax(abs(log(plotDA$expectedRatioMin)),
+                               abs(log(plotDA$expectedRatioMax)))
+ggplot(data=plotDA,
        mapping=aes(x=x,
                    y=expectedMaxAlbsLogRelError,
                    color=what,fill=what,linetype=what)) +
