@@ -12,7 +12,7 @@ In this "d" is our training data frame.  We will use it to model y~group (group 
 set.seed(23225)
 k <- 2   # number of groups, we are going to use group id to predict y
 gGroups <- paste('g',1:k,sep='')
-d <- data.frame(group=rep(gGroups,3),
+d <- data.frame(group=rep(gGroups,2),
                 y=NA,
                 stringsAsFactors=FALSE)
 print(d)
@@ -233,6 +233,7 @@ ggplot(data=rbind(plotD2,plotD3),mapping=aes(x=x,
   geom_abline() + 
   geom_line() +
   coord_fixed() +
+  ylab('expectated estimates') +
   ggtitle(paste('predictions, n=',n))
 
 ggplot(data=rbind(plotD3,plotD4),
@@ -243,6 +244,7 @@ ggplot(data=rbind(plotD3,plotD4),
   geom_ribbon(alpha=0.5) +
   geom_abline() + 
   geom_line() +
+  ylab('expectated estimates') +
   coord_fixed() +
   ggtitle(paste('predictions, n=',n))
 
@@ -254,6 +256,7 @@ ggplot(data=rbind(plotD3,plotD5),
   geom_ribbon(alpha=0.5) +
   geom_abline() + 
   geom_line() +
+  ylab('expectated estimates') +
   coord_fixed() +
   ggtitle(paste('predictions, n=',n))
 
@@ -263,6 +266,7 @@ plotDA$expectedMaxError <- pmax(abs(plotDA$x-plotDA$expectedMin),
 ggplot(data=plotDA,mapping=aes(x=x,y=expectedMaxError,
                               color=what,fill=what,linetype=what)) +
   geom_line() +
+  ylab('expectated error') +
   ggtitle(paste('max error in estimates, n=',n))
 
 
@@ -275,6 +279,7 @@ ggplot(data=rbind(plotD2,plotD3),
   geom_ribbon(alpha=0.5) +
   geom_line() + 
   geom_hline(yintercept=1) +
+  ylab('expected ratios') + 
   ggtitle(paste('prediction ratios, n=',n))
 
 ggplot(data=rbind(plotD3,plotD4),
@@ -285,6 +290,7 @@ ggplot(data=rbind(plotD3,plotD4),
   geom_ribbon(alpha=0.5) +
   geom_line() +
   geom_hline(yintercept=1) +
+  ylab('expected ratios') + 
   ggtitle(paste('prediction ratios, n=',n))
 
 ggplot(data=rbind(plotD3,plotD5),
@@ -295,6 +301,7 @@ ggplot(data=rbind(plotD3,plotD5),
   geom_ribbon(alpha=0.5) +
   geom_line() +
   geom_hline(yintercept=1) +
+  ylab('expected ratios') + 
   ggtitle(paste('prediction ratios, n=',n))
 
 plotDA <- rbind(plotD2,plotD3,plotD4,plotD5)
@@ -305,6 +312,7 @@ ggplot(data=plotDA,
                    y=expectedMaxAlbsLogRelError,
                    color=what,fill=what,linetype=what)) +
   geom_line() +
+  ylab('expected abs log error ratios') + 
   ggtitle(paste('prediction expected abs log error ratio, n=',n))
 
 ```
