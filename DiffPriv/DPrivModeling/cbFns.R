@@ -46,7 +46,7 @@ jackknifeEst <- function(d,jackDenom) {
 #' @param dEst numeric with one sub-model prediction per row of d
 #' @param dTest frame to score on has group and est columns
 #' @return dTest predictions
-estimateExpectedPrediction <- function(d,dEst,dTest,debug=FALSE) {
+estimateExpectedPrediction <- function(d,dEst,dTest) {
   # catch cases unsafe for glm
   if(all(d$y) || all(!d$y) || 
      ((max(dEst)-min(dEst))<=1.0e-5)) {
@@ -58,21 +58,16 @@ estimateExpectedPrediction <- function(d,dEst,dTest,debug=FALSE) {
 }
 
 
-naiveModel <- function(d,dTest,debug=FALSE) {
+naiveModel <- function(d,dTest) {
   as.numeric(empiricalEst(d)[dTest$group])
 }
 
-jackknifeModel <- function(d,dTest,debug=FALSE) {
+jackknifeModel <- function(d,dTest) {
   p <- jackknifeEst(d,1)
-  if(debug) {
-    d$jEst <- p
-    print('dTrain')
-    print(d)
-  }
-  estimateExpectedPrediction(d,p,dTest,debug)
+  estimateExpectedPrediction(d,p,dTest)
 }
 
-jackknifeModel2 <- function(d,dTest,debug=FALSE) {
+jackknifeModel2 <- function(d,dTest) {
   estimateExpectedPrediction(d,jackknifeEst(d,2),dTest)
 }
 
@@ -82,7 +77,7 @@ jackknifeModel2 <- function(d,dTest,debug=FALSE) {
 #' @param d data frame with y column and group column
 #' @param dTest frame to score on has group and est columns
 #' @return dTest predictions
-splitEstimateExpectedPrediction <- function(d,dTest,debug=FALSE) {
+splitEstimateExpectedPrediction <- function(d,dTest) {
   isA <- logical(nrow(d))
   isA[seq_len(floor(nrow(d)/2))] <- TRUE
   dA <- d[isA,]
@@ -103,20 +98,41 @@ splitEstimateExpectedPrediction <- function(d,dTest,debug=FALSE) {
 
 
 
+#' Evaluate probability of y given each row
+#' 
+#' @param d data frame
+#' @param gGroups groups
+pYgivenRow <- function(d,gGroups) {
+  arity <- match(d$group,gGroups) %% 2
+  probs <- list(polynomial(c(0,1)),polynomial(c(1,-1)))
+  probs[arity+1]
+}
+
+#' Evaluate probability of y vector given x
+#' 
+#' @param d data frame
+#' @param y observed ys
+#' @param gGroups groups
+pYsgivenRows <- function(d,y,gGroups) {
+  pYs <- pYgivenRow(d,gGroups)
+  pObs <- ifelse(y,pYs,lapply(pYs,function(x){1-x}))
+  Reduce(function(a,b){a*b},pObs)
+}
+
 
 #' evaluate a strategy by returning summary statistics
 #'
 #' @param d training data frame
 #' @param dTest evaluation data frame
+#' @param gGroups groups
 #' @param strat strategy to apply
 #' @param what name of strategy
 #' @return scores
-evalModelingStrategy <- function(d,dTest,strat,what,
-                                 debug=FALSE) {
-  predExpectedMin <- 0
-  predExpectedMean <- 0
-  predExpectedMax <- 0
-  probOn <- polynomial(c(0,1))  # polnomial x representing chance of y=TRUE
+evalModelingStrategy <- function(d,dTest,gGroups,strat,what) {
+  expectedMeanSquareDiff <- 0
+  expectedBias <- as.list(rep(0,nrow(dTest)))
+  totalProbCheck <- 0
+  pTestPy <- pYgivenRow(dTest,gGroups)
   # run through each possible realization of the training outcome
   # vector y.  Each situation is weigthed by the probability of 
   # seeing this y-vector (though the outcomes in the situation
@@ -125,42 +141,32 @@ evalModelingStrategy <- function(d,dTest,strat,what,
   ys <- expand.grid( rep( list(0:1), n))==1
   for(ii in seq_len(nrow(ys))) {
     y <- as.logical(ys[ii,])
-    if(debug) {
-      print("****")
-      print(y)
-    }
     d$y <- y
-    py <- probOn^(sum(y))*(1-probOn)^(length(y)-sum(y))
+    pTrainYs <- pYsgivenRows(d,y,gGroups)
     ee <- empiricalEst(d)
-    if(debug) {
-      d$empEst <- as.numeric(ee[d$group])
-    }
     dTest$est <- as.numeric(ee[dTest$group])
-    pred <- strat(d,dTest,debug)
-    if(debug) {
-      dTest$pred <- pred
-      print('dTest')
-      print(dTest)
-    }
-    predExpectedMin <- predExpectedMin + min(pred)*py
-    predExpectedMean <- predExpectedMean + mean(pred)*py
-    predExpectedMax <- predExpectedMax + max(pred)*py
+    predTest <- strat(d,dTest)
+    sqDiffs <- lapply(seq_len(length(pTestPy)),function(i){(predTest[[i]]-pTestPy[[i]])^2})
+    meanSqDiff <- Reduce(function(a,b){a+b},sqDiffs)/length(sqDiffs)
+    expectedMeanSquareDiff <- expectedMeanSquareDiff + pTrainYs*meanSqDiff
+    expectedBias <- lapply(seq_len(length(expectedBias)),
+                           function(i){expectedBias[[i]] + pTrainYs*(predTest[[i]]-pTestPy[[i]])})
+    totalProbCheck <- totalProbCheck + pTrainYs
   }
   x <- seq(0,1,by=0.01)
   plotD <- data.frame(x=x,
                       what=what,
-                      expectedMin=as.function(predExpectedMin)(x),
-                      expectedMean=as.function(predExpectedMean)(x),
-                      expectedMax=as.function(predExpectedMax)(x),
+                      expectedMeanSquareDiff=as.function(expectedMeanSquareDiff)(x),
                       stringsAsFactors = FALSE)
-  plotD$expectedRatioMin <- plotD$expectedMin/plotD$x
-  plotD$expectedRatioMean <- plotD$expectedMean/plotD$x
-  plotD$expectedRatioMax <- plotD$expectedMax/plotD$x
+  for(ii in seq_len(nrow(dTest))) {
+    obsName <- paste('expectedBias',dTest[ii,'group'],sep='.')
+    plotD[[obsName]] <- as.function(expectedBias[[ii]])(x)
+  }
   list(
     plotD=plotD,
-    predExpectedMin=predExpectedMin,
-    predExpectedMean=predExpectedMean,
-    predExpectedMax=predExpectedMax
+    totalProbCheck=totalProbCheck,
+    expectedMeanSquareDiff=expectedMeanSquareDiff,
+    expectedBias=expectedBias
   )
 }
 
