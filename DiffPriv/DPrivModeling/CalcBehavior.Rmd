@@ -14,8 +14,10 @@ library('ggplot2')
 source('cbFns.R')
 set.seed(23225)
 
-gGroups <- paste('g',1:2,sep='')
-d <- data.frame(group=sample(gGroups,5,replace=TRUE),
+varValues <- list()
+signalValues <- paste('g',1:2,sep='')
+varValues[['group']] <- signalValues
+d <- data.frame(group=sample(signalValues,7,replace=TRUE),
                 stringsAsFactors=FALSE)
 n <- nrow(d)
 
@@ -23,6 +25,7 @@ n <- nrow(d)
 noiseGroups <- paste('n',1:3,sep='')
 for(gName in noiseGroups) {
   gValues <- paste(gName,1:2,sep='.')
+  varValues[[gName]] <- gValues
   d[[gName]] <- sample(gValues,n,replace=TRUE)
 }
 
@@ -33,10 +36,8 @@ print(d)
 
 print(n)
 
-dTest <- data.frame(group=gGroups,
-                    stringsAsFactors=FALSE)
+dTest <- expand.grid(varValues,stringsAsFactors=FALSE)
 print(dTest)
-print(pYgivenRow(dTest,gGroups))
 ```
 
 
@@ -78,38 +79,22 @@ group variable can hide degrees of freedom and cause over-fitting.
 
 
 ```{r}
-plotD2 <- evalModelingStrategy(d,dTest,gGroups,naiveModel,
+plotD2 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                               naiveModel,
                                'naive prediction')$plotD
-plotD3 <-  evalModelingStrategy(d,dTest,gGroups,jackknifeModel,
+plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                jackknifeModel,
                                 'jackknife prediction')$plotD
-plotD4 <-  evalModelingStrategy(d,dTest,gGroups,jackknifeModel2,
+plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                jackknifeModel2,
                                 'jackknife 2 prediction')$plotD
-plotD5 <- c()
-tryCatch(
-  plotD5 <- evalModelingStrategy(d,dTest,gGroups,splitEstimateExpectedPrediction,
-                              'split prediction')$plotD,
-  error = function(e) {print(e)}
-)
-
-plotDAll <- rbind(plotD2,plotD3,plotD4,plotD5)
+plotDAll <- rbind(plotD2,plotD3,plotD4)
 
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedMeanSquareDiff,
                                  color=what,fill=what)) +
   geom_line() +
   ggtitle(paste('expected square error as a function of signal strength x,\n n=',n))
-
-ggplot(data=plotDAll,mapping=aes(x=x,
-                                 y=expectedBias.g1,
-                                 color=what,fill=what)) +
-  geom_line() +
-  ggtitle(paste('expected bias a function of signal strength x,\n n=',n))
-
-ggplot(data=plotDAll,mapping=aes(x=x,
-                                 y=expectedBias.g2,
-                                 color=what,fill=what)) +
-  geom_line() +
-  ggtitle(paste('expected bias a function of signal strength x,\n n=',n))
 
 
 ```

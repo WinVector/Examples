@@ -2,10 +2,11 @@
 
 #' compute the direct expected value of y per group
 #'
-#' @param d data frame with y and group columns
+#' @param v categorical variable
+#' @param y outcome
 #' @return named vector with grouped y-means
-empiricalEst <- function(d) {
-  d$one <- 1.0
+empiricalEst <- function(v,y) {
+  d <- data.frame(group=v,y=y,one=1.0)
   num <- aggregate(y~group,data=d,FUN=sum)
   den <- aggregate(one~group,data=d,FUN=sum)
   if(!all(all.equal(num$group,den$group)==TRUE)) {
@@ -18,11 +19,12 @@ empiricalEst <- function(d) {
 
 #' compute the jackknifed expected value of y per group
 #'
-#' @param d data frame with y and group columns
+#' @param v categorical variable
+#' @param y outcome
 #' @param jackDenom denominator of current observation to pull off in estimate, 1 is standard jackknife, 2 is one half jackknife
 #' @return named vector with jackknifed grouped y-means
-jackknifeEst <- function(d,jackDenom) {
-  d$one <- 1.0
+jackknifeEst <- function(v,y,jackDenom=1) {
+  d <- data.frame(group=v,y=y,one=1.0)
   num <- aggregate(y~group,data=d,FUN=sum)
   numM <- num$y
   names(numM) <- num$group
@@ -42,58 +44,58 @@ jackknifeEst <- function(d,jackDenom) {
 #' Fit a glm() on top of the dEstimate column to the d$y column, then apply this model to dTest
 #'
 #' Simulates the second stage of a 2-stage modeling process.
-#' @param d data frame with y column
-#' @param dEst numeric with one sub-model prediction per row of d
+#' @param d data frame with vars and y column
+#' @param vars
 #' @param dTest frame to score on has group and est columns
 #' @return dTest predictions
-estimateExpectedPrediction <- function(d,dEst,dTest) {
+estimateExpectedPrediction <- function(d,vars,dTest) {
   # catch cases unsafe for glm
-  if(all(d$y) || all(!d$y) || 
-     ((max(dEst)-min(dEst))<=1.0e-5)) {
-    return(dTest$est)
+  if(all(d$y)) {
+    rep(1,length(d$y))
   }
-  d$est <- dEst
-  m <- glm(y~est,data=d,family=binomial(link='logit'))
+  if(all(!d$y)) {
+    rep(0,length(d$y))
+  }
+  f <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
+  m <- glm(f,data=d,family=binomial(link='logit'))
   predict(m,newdata=dTest,type='response')
 }
 
 
-naiveModel <- function(d,dTest) {
-  as.numeric(empiricalEst(d)[dTest$group])
-}
-
-jackknifeModel <- function(d,dTest) {
-  p <- jackknifeEst(d,1)
-  estimateExpectedPrediction(d,p,dTest)
-}
-
-jackknifeModel2 <- function(d,dTest) {
-  estimateExpectedPrediction(d,jackknifeEst(d,2),dTest)
-}
-
-#' Split train nested model.  Assumes design can be split in half
-#'
-#' Simulates the second stage of a 2-stage modeling process.
-#' @param d data frame with y column and group column
-#' @param dTest frame to score on has group and est columns
-#' @return dTest predictions
-splitEstimateExpectedPrediction <- function(d,dTest) {
-  isA <- logical(nrow(d))
-  isA[seq_len(floor(nrow(d)/2))] <- TRUE
-  dA <- d[isA,]
-  dB <- d[!isA,]
-  if(!all(all.equal(sort(unique(dA$group)),
-                    sort(unique(dB$group)))==TRUE)) {
-    stop("bad split")
+naiveModel <- function(d,vars,dTest) {
+  d2 <- data.frame(y=d$y,
+                   stringsAsFactors=FALSE)
+  dTest2 <- dTest
+  for(vi in vars) {
+    ei <- empiricalEst(d[[vi]],d$y)
+    d2[[vi]] <- as.numeric(ei[d[[vi]]])
+    dTest2[[vi]] <- as.numeric(ei[dTest[[vi]]])
   }
-  dB$est <- empiricalEst(dA)[dB$group]
-  # catch cases unsafe for glm
-  if(all(dB$y) || all(!dB$y) || 
-     ((max(dB$est)-min(dB$est))<=1.0e-5)) {
-    return(dTest$est)
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
+jackknifeModel <- function(d,vars,dTest) {
+  d2 <- data.frame(y=d$y,
+                   stringsAsFactors=FALSE)
+  dTest2 <- dTest
+  for(vi in vars) {
+    ei <- empiricalEst(d[[vi]],d$y)
+    d2[[vi]] <- jackknifeEst(d[[vi]],d$y,1)
+    dTest2[[vi]] <- as.numeric(ei[dTest[[vi]]])
   }
-  m <- glm(y~0+est,data=dB,family=binomial(link='logit'))
-  predict(m,newdata=dTest,type='response')
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
+jackknifeModel2 <- function(d,vars,dTest) {
+  d2 <- data.frame(y=d$y,
+                   stringsAsFactors=FALSE)
+  dTest2 <- dTest
+  for(vi in vars) {
+    ei <- empiricalEst(d[[vi]],d$y)
+    d2[[vi]] <- jackknifeEst(d[[vi]],d$y,2)
+    dTest2[[vi]] <- as.numeric(ei[dTest[[vi]]])
+  }
+  estimateExpectedPrediction(d2,vars,dTest2)
 }
 
 
@@ -101,9 +103,9 @@ splitEstimateExpectedPrediction <- function(d,dTest) {
 #' Evaluate probability of y given each row
 #' 
 #' @param d data frame
-#' @param gGroups groups
-pYgivenRow <- function(d,gGroups) {
-  arity <- match(d$group,gGroups) %% 2
+#' @param signalGroupLevels groups
+pYgivenRow <- function(d,signalGroupLevels) {
+  arity <- match(d$group,signalGroupLevels) %% 2
   probs <- list(polynomial(c(0,1)),polynomial(c(1,-1)))
   probs[arity+1]
 }
@@ -112,9 +114,9 @@ pYgivenRow <- function(d,gGroups) {
 #' 
 #' @param d data frame
 #' @param y observed ys
-#' @param gGroups groups
-pYsgivenRows <- function(d,y,gGroups) {
-  pYs <- pYgivenRow(d,gGroups)
+#' @param signalGroupLevels groups
+pYsgivenRows <- function(d,y,signalGroupLevels) {
+  pYs <- pYgivenRow(d,signalGroupLevels)
   pObs <- ifelse(y,pYs,lapply(pYs,function(x){1-x}))
   Reduce(function(a,b){a*b},pObs)
 }
@@ -124,33 +126,34 @@ pYsgivenRows <- function(d,y,gGroups) {
 #'
 #' @param d training data frame
 #' @param dTest evaluation data frame
-#' @param gGroups groups
+#' @param signalGroupLevels signal group levels (group named group)
+#' @param noiseGroups noise group variable names
 #' @param strat strategy to apply
 #' @param what name of strategy
 #' @return scores
-evalModelingStrategy <- function(d,dTest,gGroups,strat,what) {
+evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
+                                 strat,what) {
   expectedMeanSquareDiff <- 0
-  expectedBias <- as.list(rep(0,nrow(dTest)))
   totalProbCheck <- 0
-  pTestPy <- pYgivenRow(dTest,gGroups)
+  pTestPy <- pYgivenRow(dTest,signalGroupLevels)
+  allVars <- union("group",noiseGroups)
   # run through each possible realization of the training outcome
   # vector y.  Each situation is weigthed by the probability of 
   # seeing this y-vector (though the outcomes in the situation
   # are conditionally indpendent of this unknown probabilty 
   # given the realized y).
-  ys <- expand.grid( rep( list(0:1), n))==1
+  ys <- expand.grid( rep( list(0:1), n),stringsAsFactors=FALSE)==1
   for(ii in seq_len(nrow(ys))) {
     y <- as.logical(ys[ii,])
     d$y <- y
-    pTrainYs <- pYsgivenRows(d,y,gGroups)
-    ee <- empiricalEst(d)
+    pTrainYs <- pYsgivenRows(d,y,signalGroupLevels)
+    ee <- empiricalEst(d$group,d$y)
     dTest$est <- as.numeric(ee[dTest$group])
-    predTest <- strat(d,dTest)
-    sqDiffs <- lapply(seq_len(length(pTestPy)),function(i){(predTest[[i]]-pTestPy[[i]])^2})
+    predTest <- strat(d,allVars,dTest)
+    sqDiffs <- lapply(seq_len(length(pTestPy)),
+                      function(i){(predTest[[i]]-pTestPy[[i]])^2})
     meanSqDiff <- Reduce(function(a,b){a+b},sqDiffs)/length(sqDiffs)
     expectedMeanSquareDiff <- expectedMeanSquareDiff + pTrainYs*meanSqDiff
-    expectedBias <- lapply(seq_len(length(expectedBias)),
-                           function(i){expectedBias[[i]] + pTrainYs*(predTest[[i]]-pTestPy[[i]])})
     totalProbCheck <- totalProbCheck + pTrainYs
   }
   x <- seq(0,1,by=0.01)
@@ -158,15 +161,10 @@ evalModelingStrategy <- function(d,dTest,gGroups,strat,what) {
                       what=what,
                       expectedMeanSquareDiff=as.function(expectedMeanSquareDiff)(x),
                       stringsAsFactors = FALSE)
-  for(ii in seq_len(nrow(dTest))) {
-    obsName <- paste('expectedBias',dTest[ii,'group'],sep='.')
-    plotD[[obsName]] <- as.function(expectedBias[[ii]])(x)
-  }
   list(
     plotD=plotD,
     totalProbCheck=totalProbCheck,
-    expectedMeanSquareDiff=expectedMeanSquareDiff,
-    expectedBias=expectedBias
+    expectedMeanSquareDiff=expectedMeanSquareDiff
   )
 }
 
