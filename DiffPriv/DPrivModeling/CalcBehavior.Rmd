@@ -8,7 +8,7 @@ methods.
 
 In this "d" is our training data frame.  We will use it to model y~group (group being a string-valued variable) for every possible y vector (y is TRUE/FALSE so there are 2^nrow(d) such frames).  We want to estimate the out of sample performance of our model, so we evaluate on a new data frame called dTest (which has exactly one row per level).
 
-```{r}
+```{r , warning=FALSE,message=FALSE}
 library('polynom')
 library('ggplot2')
 source('cbFns.R')
@@ -22,7 +22,7 @@ d <- data.frame(group=sample(signalValues,7,replace=TRUE),
 n <- nrow(d)
 
 # add in noise groups
-noiseGroups <- paste('n',1:3,sep='')
+noiseGroups <- paste('n',1:5,sep='')
 for(gName in noiseGroups) {
   gValues <- paste(gName,1:2,sep='.')
   varValues[[gName]] <- gValues
