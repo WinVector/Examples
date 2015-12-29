@@ -112,7 +112,7 @@ trainBayesCoder <- function(d,yName,varNames,sigma) {
 jackknifeBayesCode <- function(d,yName,varNames) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,bayesCode,0) 
   coder$what <- 'BayesCoder'
-  dc <- codeFrame(d,coder,d[[yName]])
+  codeFrame(d,coder,d[[yName]])
 }
 
 
@@ -165,7 +165,7 @@ trainCountCoder <- function(d,yName,varNames,sigma) {
 jackknifeCountCode <- function(d,yName,varNames) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,countCode,0) 
   coder$what <- 'countCoder'
-  dc <- codeFrame(d,coder,d[[yName]])
+  codeFrame(d,coder,d[[yName]])
 }
 
 

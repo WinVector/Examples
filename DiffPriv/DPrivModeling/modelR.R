@@ -162,7 +162,7 @@ trainEffectCoderLSmooth <- function(d,yName,varNames,sigma) {
 jackknifeEffectCodeR <- function(d,yName,varNames) {
   coder <- trainCoderR(d,yName,varNames,moments,expectCode,0) 
   coder$what <- 'EffectCoder'
-  dc <- codeFrameR(d,coder,d[[yName]])
+  codeFrameR(d,coder,d[[yName]])
 }
 
 
