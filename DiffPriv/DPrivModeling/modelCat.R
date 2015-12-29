@@ -79,12 +79,19 @@ trainCoder <- function(d,yName,varNames,maker,coder,sigma) {
 #' @param rescol optional dependent varaible to Jacknife out
 #' @return encoded data frame
 codeFrame <- function(d,codes,rescol) {
-  nd <- data.frame(d[[codes$yName]],
-                   stringsAsFactors = FALSE)
-  colnames(nd) <- codes$yName
+  nd <- c()
+  if(codes$yName %in% colnames(d)) {
+    nd <- data.frame(d[[codes$yName]],
+                     stringsAsFactors = FALSE)
+    colnames(nd) <- codes$yName
+  }
   for(varName in names(codes$codes)) {
     nf <- codes$coder(varName,d[[varName]],codes$codes[[varName]],rescol)
-    nd <- cbind(nd,nf)
+    if(is.null(nd)) {
+      nd <- nf
+    } else {
+      nd <- cbind(nd,nf)
+    }
   }
   nd
 }
