@@ -4,7 +4,7 @@
 #' 
 #' @param vcol character vector independent variable
 #' @param rescol logical vector dependent variable
-#' @param sigma scalar Laplze noise level to apply
+#' @param sigma scalar Laplace noise level to apply
 #' @return conditonal count structure
 conditionalCounts <- function(vcol,rescol,sigma) {
   # count queries
@@ -109,6 +109,8 @@ trainBayesCoder <- function(d,yName,varNames,sigma) {
   coder$codeFrame <- function(df) codeFrame(df,coder,c())
   coder
 }
+
+
 
 #' Jacknife encode a dataframe through Bayes encoding.
 #' 

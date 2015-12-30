@@ -17,6 +17,7 @@ source('cbFns.R')
 source('bindValues.R')
 commonFns <- ls()
 parallelCluster <- parallel::makeCluster(parallel::detectCores())
+# parallelCluster <- c()
 set.seed(23225)
 
 varValues <- list()

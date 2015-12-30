@@ -137,13 +137,15 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
     }
   }
   
+  yList <-  mkYList(n)
+  worker <-  mkWorker()
   if(!is.null(parallelCluster)) {
-    resList <- parallel::parLapply(parallelCluster,
-                                   mkYList(n),
-                                   mkWorker())
+    resList <- parallel::parLapply(parallelCluster,yList,worker)
   } else {
-    resList <- lapply(mkYList(n),
-                      mkWorker())
+    resList <- vector('list',length(yList))
+    for(iii in seq_len(length(yList))) {
+      resList[[iii]] <- worker(yList[[iii]])
+    }
   }
   
   expectedDeviance <- extractSum(resList,'expectedDeviance')
