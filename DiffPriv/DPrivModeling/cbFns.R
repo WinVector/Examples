@@ -34,21 +34,27 @@ estimateExpectedPrediction <- function(d,vars,dTest) {
 }
 
 
-naiveModel <- function(d,vars,dTest) {
+naiveModel <- function(d,vars,dTest,stratarg) {
   coder <- trainBayesCoder(d,'y',vars,0)
   d2 <- coder$codeFrame(d)
   dTest2 <- coder$codeFrame(dTest)
   estimateExpectedPrediction(d2,vars,dTest2)
 }
 
-
-
-jackknifeModel <- function(d,vars,dTest) {
+jackknifeModel <- function(d,vars,dTest,stratarg) {
   coder <- trainBayesCoder(d,'y',vars,0)
   d2 <- jackknifeBayesCode(d,'y',vars)
   dTest2 <- coder$codeFrame(dTest)
   estimateExpectedPrediction(d2,vars,dTest2)
 }
+
+noisedModel <-  function(d,vars,dTest,stratarg) {
+  coder <- trainBayesCoder(d,'y',vars,stratarg)
+  d2 <- coder$codeFrame(d)
+  dTest2 <- coder$codeFrame(dTest)
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
 
 
 
@@ -94,12 +100,13 @@ extractSum <- function(vlist,vname) {
 #' @param signalGroupLevels signal group levels (group named group)
 #' @param noiseGroups noise group variable names
 #' @param strat strategy to apply
+#' @param stratarg an extra argument for the strategy
 #' @param what name of strategy
 #' @param parallelCluster cluster to run on
 #' @param commonFns names of functions needed to run
 #' @return scores
 evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
-                                 strat,what,
+                                 strat,stratarg,what,
                                  parallelCluster,commonFns) {
   pTestPy <- pYgivenRow(dTest,signalGroupLevels)
   allVars <- union("group",noiseGroups)
@@ -109,12 +116,12 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
   # are conditionally indpendent of this unknown probabilty 
   # given the realized y).
   mkWorker <- function() {
-    bindToEnv(d,signalGroupLevels,allVars,dTest,pTestPy,strat,
+    bindToEnv(d,signalGroupLevels,allVars,dTest,pTestPy,strat,stratarg,
               objNames=commonFns)
     function(y) {
       d$y <- y
       pTrainYs <- pYsgivenRows(d,y,signalGroupLevels)
-      predTest <- strat(d,allVars,dTest)
+      predTest <- strat(d,allVars,dTest,stratarg)
       # deviance score
       scores <- lapply(seq_len(length(pTestPy)),
                        function(i) {

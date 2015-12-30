@@ -86,28 +86,15 @@ group variable can hide degrees of freedom and cause over-fitting.
 
 ```{r}
 plotD2 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                naiveModel,
+                                naiveModel,c(),
                                 'naive prediction',
                                 parallelCluster,commonFns)$plotD
 plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                jackknifeModel,
+                                jackknifeModel,c(),
                                 'jackknife prediction',
                                 parallelCluster,commonFns)$plotD
-
-mkNoisedModel <- function(sigma) {
-  force(sigma)
-  function(d,vars,dTest) {
-    coder <- trainBayesCoder(d,'y',vars,3)
-    d2 <- coder$codeFrame(d)
-    dTest2 <- coder$codeFrame(dTest)
-    estimateExpectedPrediction(d2,vars,dTest2)
-  }
-}
-
-
-nm3 <- mkNoisedModel(3)
 plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                nm3,
+                                noisedModel,3,
                                 'noised (sigma=3) prediction',
                                 parallelCluster,commonFns)$plotD
 
