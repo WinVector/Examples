@@ -33,6 +33,12 @@ errorRate <- function(pred,truth) {
   sum((pred>=0.5)!=truth)/length(truth)
 }
 
+meanDeviance <- function(pred,pY) {
+  eps <- 1.e-5
+  -2*(pY*log2(pmax(eps,pred)) + 
+        (1-pY)*log2(pmax(eps,1-pred)))
+}
+
 
 rlaplace <- function(n,sigma) {
   if(sigma<=0) {

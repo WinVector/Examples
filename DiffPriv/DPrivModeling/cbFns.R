@@ -1,0 +1,158 @@
+
+
+zapBad <- function(v) {
+  v <- as.numeric(v)
+  v[is.na(v)|is.infinite(v)|is.nan(v)] <- 0
+  v
+}
+
+
+
+
+#' Fit a glm() on top of the dEstimate column to the d$y column, then apply this model to dTest
+#'
+#' Simulates the second stage of a 2-stage modeling process.
+#' @param d data frame with vars and y column
+#' @param vars
+#' @param dTest frame to score on has group and est columns
+#' @return dTest predictions
+estimateExpectedPrediction <- function(d,vars,dTest) {
+  # catch cases unsafe for glm
+  if(all(d$y)) {
+    rep(1,length(d$y))
+  }
+  if(all(!d$y)) {
+    rep(0,length(d$y))
+  }
+  oldw <- getOption("warn")
+  options(warn = -1)
+  f <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
+  m <- glm(f,data=d,family=binomial(link='logit'))
+  p <- predict(m,newdata=dTest,type='response')
+  options(warn = oldw)
+  p
+}
+
+
+naiveModel <- function(d,vars,dTest) {
+  coder <- trainBayesCoder(d,'y',vars,0)
+  d2 <- coder$codeFrame(d)
+  dTest2 <- coder$codeFrame(dTest)
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
+
+
+jackknifeModel <- function(d,vars,dTest) {
+  coder <- trainBayesCoder(d,'y',vars,0)
+  d2 <- jackknifeBayesCode(d,'y',vars)
+  dTest2 <- coder$codeFrame(dTest)
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
+
+
+#' Evaluate probability of y given each row
+#' 
+#' @param d data frame
+#' @param signalGroupLevels groups
+pYgivenRow <- function(d,signalGroupLevels) {
+  arity <- match(d$group,signalGroupLevels) %% 2
+  probs <- list(polynom::polynomial(c(0,1)),
+                polynom::polynomial(c(1,-1)))
+  probs[arity+1]
+}
+
+#' Evaluate probability of y vector given x
+#' 
+#' @param d data frame
+#' @param y observed ys
+#' @param signalGroupLevels groups
+pYsgivenRows <- function(d,y,signalGroupLevels) {
+  pYs <- pYgivenRow(d,signalGroupLevels)
+  pObs <- ifelse(y,pYs,lapply(pYs,function(x){1-x}))
+  Reduce(function(a,b){a*b},pObs)
+}
+
+
+mkYList <- function(n) {
+  ys <- expand.grid( rep( list(0:1), n),stringsAsFactors=FALSE)==1
+  yList <- lapply(seq_len(nrow(ys)),
+                  function(ii) { as.logical(ys[ii,]) })
+  yList
+}
+
+extractSum <- function(vlist,vname) {
+  vs <- lapply(vlist,function(vi) { vi[[vname]] })
+  Reduce(function(a,b){a+b},vs)
+}
+
+#' evaluate a strategy by returning summary statistics
+#'
+#' @param d training data frame
+#' @param dTest evaluation data frame
+#' @param signalGroupLevels signal group levels (group named group)
+#' @param noiseGroups noise group variable names
+#' @param strat strategy to apply
+#' @param what name of strategy
+#' @param parallelCluster cluster to run on
+#' @param commonFns names of functions needed to run
+#' @return scores
+evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
+                                 strat,what,
+                                 parallelCluster,commonFns) {
+  pTestPy <- pYgivenRow(dTest,signalGroupLevels)
+  allVars <- union("group",noiseGroups)
+  # run through each possible realization of the training outcome
+  # vector y.  Each situation is weigthed by the probability of 
+  # seeing this y-vector (though the outcomes in the situation
+  # are conditionally indpendent of this unknown probabilty 
+  # given the realized y).
+  mkWorker <- function() {
+    bindToEnv(d,signalGroupLevels,allVars,dTest,pTestPy,strat,
+              objNames=commonFns)
+    function(y) {
+      d$y <- y
+      pTrainYs <- pYsgivenRows(d,y,signalGroupLevels)
+      predTest <- strat(d,allVars,dTest)
+      # deviance score
+      scores <- lapply(seq_len(length(pTestPy)),
+                       function(i) {
+                         eps <- 1.e-5
+                         pYi <- pTestPy[[i]]
+                         predi <- predTest[[i]]
+                         -2*(pYi*log2(pmax(eps,predi)) + 
+                               (1-pYi)*log2(pmax(eps,1-predi)))
+                       })
+      meanScore <- Reduce(function(a,b){a+b},scores)/length(scores)
+      list(expectedDeviance=pTrainYs*meanScore,
+           totalProbCheck=pTrainYs)
+    }
+  }
+  
+  if(!is.null(parallelCluster)) {
+    resList <- parallel::parLapply(parallelCluster,
+                                   mkYList(n),
+                                   mkWorker())
+  } else {
+    resList <- lapply(mkYList(n),
+                      mkWorker())
+  }
+  
+  expectedDeviance <- extractSum(resList,'expectedDeviance')
+  totalProbCheck <- extractSum(resList,'totalProbCheck')
+
+  x <- seq(0,1,by=0.01)
+  plotD <- data.frame(x=x,
+                      what=what,
+                      expectedDeviance=as.function(expectedDeviance)(x),
+                      stringsAsFactors = FALSE)
+  list(
+    plotD=plotD,
+    totalProbCheck=totalProbCheck,
+    expectedDeviance=expectedDeviance
+  )
+}
+
+
+
