@@ -75,6 +75,20 @@ mkNoisePlan <- function(d,vars,sigma) {
   noisePlan
 }
 
+mkNoisePlanConst <- function(d,vars,sigma) {
+  noisePlan <- lapply(vars,function(vi) {
+    levs <- sort(unique(d[[vi]]))
+    nlevs <- length(levs)
+    tn <- rep(sigma,nlevs)
+    names(tn) <- levs
+    tf <- rep(sigma,nlevs)
+    names(tf) <- levs
+    list(tn=tn,tf=tf)
+  })
+  names(noisePlan) <- vars
+  noisePlan
+}
+
 noiseCountFixed <- function(orig,noise) {
   x <- orig + noise[names(orig)]
   x <- pmax(x,1.0e-3)
