@@ -61,8 +61,22 @@ noisedModel <-  function(d,vars,dTest,stratarg) {
 
 
 
+mkNoisePlan <- function(d,vars,sigma) {
+  noisePlan <- lapply(vars,function(vi) {
+    levs <- sort(unique(d[[vi]]))
+    nlevs <- length(levs)
+    tn <- rlaplace(nlevs,sigma)
+    names(tn) <- levs
+    tf <- rlaplace(nlevs,sigma)
+    names(tf) <- levs
+    list(tn=tn,tf=tf)
+  })
+  names(noisePlan) <- vars
+  noisePlan
+}
+
 noiseCountFixed <- function(orig,noise) {
-  x <- orig + noise
+  x <- orig + noise[names(orig)]
   x <- pmax(x,1.0e-3)
   x
 }
@@ -77,9 +91,9 @@ noiseCountFixed <- function(orig,noise) {
 conditionalCountsFixed <- function(vnam,vcol,rescol,noisePlan) {
   # count queries
   nCandT <- noiseCountFixed(tapply(as.numeric(rescol),vcol,sum),
-                            noisePlan$tn[[vnam]])   #  sum of true examples for a given C (vector)
+                            noisePlan[[vnam]]$tn)   #  sum of true examples for a given C (vector)
   nCandF <- noiseCountFixed(tapply(as.numeric(!rescol),vcol,sum),
-                            noisePlan$fn[[vnam]])  #  sum of false examples for a give C (vector)
+                            noisePlan[[vnam]]$tf)  #  sum of false examples for a give C (vector)
   checkTwoNVecs(nCandT,nCandF)
   list(nCandT=as.list(nCandT),nCandF=as.list(nCandF))
 }

@@ -57,7 +57,7 @@ What we are trying to do is make a simple example showing the problems one can r
 into when building a nested model which is a method used when the group variable takes
 on a very large number of values (such as zip codes) (see http://www.win-vector.com/blog/2012/07/modeling-trick-impact-coding-of-categorical-variables-with-many-levels/ ).  We are deliberately looking for the over-fit that comes from such a nested model, and what methods decrease this undesirable effect (see: http://winvector.github.io/DiffPriv/DiffPriv.pdf ).
 
-The idea in this exercise is we are going to have the unknown true probablity P(y|group) as 1-x or x depending on the group label (x, being a variable we vary from 0 to 1) for all groups.  The inner conditoned estimate (called "est") is estimated one of a few ways including:
+The idea in this exercise is we are going to have the unknown true probablity P(y|group) as 1-x or x depending on the group label (x, being a variable we vary from 0 to 1) for all groups.  The inner conditoned estimate (called "est") can be estimated a few ways including:
 
  * Naive or empirical esimate: est_group = N(y|group)/N(group)
  * Jackknifed estimate: est_group = (N(y|group)-selfY)/(N(group)-1)
@@ -94,18 +94,24 @@ plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 'jackknife prediction',
                                 parallelCluster,commonFns)$plotD
 sigma <- 3
-plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModel,sigma,
-                                paste('noised (sigma=',sigma,') prediction'),
+# plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+#                                 noisedModel,sigma,
+#                                 paste('noised (sigma=',sigma,') prediction'),
+#                                 parallelCluster,commonFns)$plotD
+noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
+plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                noisedModelFixed,noisePlan,
+                                paste('fixed noise (sigma=',sigma,') prediction'),
                                 parallelCluster,commonFns)$plotD
 
-plotDAll <- rbind(plotD2,plotD3,plotD4)
+
+plotDAll <- rbind(plotD2,plotD3,plotD5)
 
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
                                  color=what,fill=what)) +
-  geom_line() +
-  ggtitle(paste('expected test deviance as a function of signal strength x,\n n=',n))
+  geom_line(size=2,alpha=0.5) +
+  ggtitle(paste('Expected test deviance\n n=',n))
 ```
 
 
