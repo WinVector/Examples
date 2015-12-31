@@ -98,14 +98,28 @@ sigma <- 3
 #                                 noisedModel,sigma,
 #                                 paste('noised (sigma=',sigma,') prediction'),
 #                                 parallelCluster,commonFns)$plotD
-noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
-plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModelFixed,noisePlan,
-                                paste('fixed noise (sigma=',sigma,') prediction'),
-                                parallelCluster,commonFns)$plotD
+#                                 
 
+# search for best example sigma (assumes we know sample plan, which is reasonable)
+# could in theory anneal the noise parameters directly
+bestArea <- 0
+bestSigma <- 0
+plotDS <- c()
+for(sigma in 1:5) {
+  noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
+  plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                  noisedModelFixed,noisePlan,
+                                  paste('fixed noise (sigma=',sigma,') prediction',sep=''),
+                                  parallelCluster,commonFns)$plotD
+  areaEst <- mean(plotD5$expectedDeviance)
+  if(is.null(plotDS)||(areaEst<bestArea)) {
+    bestArea <- areaEst
+    bestSigma <- sigma
+    plotDS <- plotD5
+  }
+}
+plotDAll <- rbind(plotD2,plotD3,plotDS)
 
-plotDAll <- rbind(plotD2,plotD3,plotD5)
 
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
