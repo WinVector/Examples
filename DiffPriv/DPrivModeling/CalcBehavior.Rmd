@@ -17,7 +17,6 @@ source('cbFns.R')
 source('bindValues.R')
 commonFns <- ls()
 parallelCluster <- parallel::makeCluster(parallel::detectCores())
-# parallelCluster <- c()
 set.seed(23225)
 
 varValues <- list()
@@ -94,9 +93,10 @@ plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 jackknifeModel,c(),
                                 'jackknife prediction',
                                 parallelCluster,commonFns)$plotD
+sigma <- 3
 plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModel,3,
-                                'noised (sigma=3) prediction',
+                                noisedModel,sigma,
+                                paste('noised (sigma=',sigma,') prediction'),
                                 parallelCluster,commonFns)$plotD
 
 plotDAll <- rbind(plotD2,plotD3,plotD4)

@@ -2,11 +2,12 @@
 
 #' Compute counts of rescol conditioned on level of vcol
 #' 
+#' @param vnam character name of independent variable
 #' @param vcol character vector independent variable
 #' @param rescol logical vector dependent variable
 #' @param sigma scalar Laplace noise level to apply
 #' @return conditonal count structure
-conditionalCounts <- function(vcol,rescol,sigma) {
+conditionalCounts <- function(vnam,vcol,rescol,sigma) {
   # count queries
   nCandT <- noiseCount(tapply(as.numeric(rescol),vcol,sum),sigma)   #  sum of true examples for a given C (vector)
   nCandF <- noiseCount(tapply(as.numeric(!rescol),vcol,sum),sigma)  #  sum of false examples for a give C (vector)
@@ -59,15 +60,15 @@ bayesCode <- function(vname,vcol,counts,rescol,jackDen=1) {
 #' @param varnames dependent variable names
 #' @param maker
 #' @param coder
-#' @param sigma degree of Laplace smoothing
-trainCoder <- function(d,yName,varNames,maker,coder,sigma) {
-  codes <- lapply(varNames,function(vnam) { maker(d[[vnam]],d[[yName]],sigma) })
+#' @param param parameter for maker
+trainCoder <- function(d,yName,varNames,maker,coder,param) {
+  codes <- lapply(varNames,function(vnam) { maker(vnam,d[[vnam]],d[[yName]],param) })
   names(codes) <- varNames
   list(yName=yName,
        varNames=varNames,
        maker=maker,
        coder=coder,
-       sigma=sigma,
+       param=param,
        codes=codes)
 }
 

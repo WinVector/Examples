@@ -48,8 +48,59 @@ jackknifeModel <- function(d,vars,dTest,stratarg) {
   estimateExpectedPrediction(d2,vars,dTest2)
 }
 
+#' @param stratarg sigma for the laplace noising
 noisedModel <-  function(d,vars,dTest,stratarg) {
   coder <- trainBayesCoder(d,'y',vars,stratarg)
+  d2 <- coder$codeFrame(d)
+  dTest2 <- coder$codeFrame(dTest)
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
+
+
+
+
+
+noiseCountFixed <- function(orig,noise) {
+  x <- orig + noise
+  x <- pmax(x,1.0e-3)
+  x
+}
+
+#' Compute counts of rescol conditioned on level of vcol
+#' 
+#' @param vnam character name of independent variable
+#' @param vcol character vector independent variable
+#' @param rescol logical vector dependent variable
+#' @param noisePlan pre-built noise plan
+#' @return conditonal count structure
+conditionalCountsFixed <- function(vnam,vcol,rescol,noisePlan) {
+  # count queries
+  nCandT <- noiseCountFixed(tapply(as.numeric(rescol),vcol,sum),
+                            noisePlan$tn[[vnam]])   #  sum of true examples for a given C (vector)
+  nCandF <- noiseCountFixed(tapply(as.numeric(!rescol),vcol,sum),
+                            noisePlan$fn[[vnam]])  #  sum of false examples for a give C (vector)
+  checkTwoNVecs(nCandT,nCandF)
+  list(nCandT=as.list(nCandT),nCandF=as.list(nCandF))
+}
+
+#' Return a Bayes coding plan, with fixed noise
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @param noisePlan pre-built noise plan
+#' @return Bayes encoding plan
+trainBayesCoderFixed <- function(d,yName,varNames,noisePlan) {
+  coder <- trainCoder(d,yName,varNames,conditionalCountsFixed,bayesCode,noisePlan) 
+  coder$what <- 'BayesCoder'
+  coder$codeFrame <- function(df) codeFrame(df,coder,c())
+  coder
+}
+
+#' @param stratarg noisePlan pre-built noise for the Laplace smoothing
+noisedModelFixed <-  function(d,vars,dTest,stratarg) {
+  coder <- trainBayesCoderFixed(d,'y',vars,stratarg)
   d2 <- coder$codeFrame(d)
   dTest2 <- coder$codeFrame(dTest)
   estimateExpectedPrediction(d2,vars,dTest2)
