@@ -8,7 +8,7 @@ methods.
 
 In this "d" is our training data frame.  We will use it to model y~group (group being a string-valued variable) for every possible y vector (y is TRUE/FALSE so there are 2^nrow(d) such frames).  We want to estimate the out of sample performance of our model, so we evaluate on a new data frame called dTest (which has exactly one row per level).
 
-```{r , warning=FALSE,message=FALSE}
+```{r start, warning=FALSE,message=FALSE}
 library('polynom')
 library('ggplot2')
 source('utils.R')
@@ -20,12 +20,12 @@ parallelCluster <- parallel::makeCluster(parallel::detectCores())
 set.seed(23225)
 
 varValues <- list()
-signalValues <- paste('g',1:2,sep='')
+signalValues <- paste('g',1:4,sep='')
 varValues[['group']] <- signalValues
 # add in noise groups
 noiseGroups <- paste('n',1:3,sep='')
 for(gName in noiseGroups) {
-  gValues <- paste(gName,1:3,sep='.')
+  gValues <- paste(gName,1:4,sep='.')
   varValues[[gName]] <- gValues
 }
 
@@ -34,11 +34,7 @@ dTest <- expand.grid(varValues,stringsAsFactors=FALSE)
 print(head(dTest))
 print(dim(dTest))
 
-ready <- FALSE
-while(!ready) {
-  d <- dTest[sample.int(nrow(dTest),10,replace=TRUE),]
-  ready <- length(unique(d$group))==length(signalValues)
-}
+d <- dTest[sample.int(nrow(dTest),10,replace=TRUE),]
 n <- nrow(d)
 # placeholder for y
 d$y <- NA
@@ -84,7 +80,11 @@ group variable can hide degrees of freedom and cause over-fitting.
 
 
 
-```{r}
+```{r calc}
+# plotD1 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+#                                 splitModel,c(),
+#                                 'split prediction',
+#                                 parallelCluster,commonFns)$plotD
 plotD2 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 naiveModel,c(),
                                 'naive prediction',
@@ -96,39 +96,30 @@ plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 sigma <- 4
 noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
 plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModel,sigma,
+                                noisedModelFixed,noisePlan,
                                 paste('fixed noise (sigma=',sigma,') prediction',sep=''),
                                 parallelCluster,commonFns)$plotD
                                 
 
-# search for best example sigma (assumes we know sample plan, which is reasonable)
-# could in theory anneal the detailed noise parameters directly
-bestArea <- 0
-bestSigma <- 0
-plotDS <- c()
-for(sigma in 1:5) {
-  noisePlan <- mkNoisePlanConst(d,unique(c('group',noiseGroups)),sigma)
-  plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                  noisedModelFixed,noisePlan,
-                                  paste('constant adjusted (sigma=',sigma,') prediction',sep=''),
-                                  parallelCluster,commonFns)$plotD
-  areaEst <- mean(plotD5$expectedDeviance)
-  if(is.null(plotDS)||(areaEst<bestArea)) {
-    bestArea <- areaEst
-    bestSigma <- sigma
-    plotDS <- plotD5
-  }
-}
-plotDAll <- rbind(plotD2,plotD3,plotD4,plotDS)
+# noisePlanC <- mkNoisePlanConst(d,unique(c('group',noiseGroups)),sigma)
+# plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+#                                 noisedModelFixed,noisePlanC,
+#                                 paste('constant adjusted (sigma=',sigma,') prediction',sep=''),
+#                                 parallelCluster,commonFns)$plotD
+
+```
+
+```{r plot}
+plotDAll <- rbind(plotD2,plotD3,plotD4)
 
 
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
                                  color=what,fill=what)) +
-  geom_line(size=2,alpha=0.5) +
+  geom_line(size=2) +
+  scale_color_brewer(palette='Dark2') +
   ggtitle(paste('Expected test deviance\n n=',n))
 ```
-
 
 ```{r shutdown, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 if(!is.null(parallelCluster)) {

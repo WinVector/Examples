@@ -54,6 +54,7 @@ noiseCount <- function(orig,sigma) {
     x <- orig
   }
   x <- pmax(x,1.0e-3)
+  names(x) <- names(orig)
   x
 }
 

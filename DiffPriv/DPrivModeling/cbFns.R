@@ -56,6 +56,16 @@ noisedModel <-  function(d,vars,dTest,stratarg) {
   estimateExpectedPrediction(d2,vars,dTest2)
 }
 
+splitModel <- function(d,vars,dTest,stratarg) {
+  # can use deterministic split as rows are
+  # in a random order in the intended example
+  dSplit1 <- logical(nrow(d))
+  dSplit1[seq_len(floor(nrow(d)/2))] <- TRUE
+  coder <- trainBayesCoder(d[dSplit1,],'y',vars,0)
+  d2 <- coder$codeFrame(d[!dSplit1,])
+  dTest2 <- coder$codeFrame(dTest)
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
 
 
 
@@ -90,8 +100,9 @@ mkNoisePlanConst <- function(d,vars,sigma) {
 }
 
 noiseCountFixed <- function(orig,noise) {
-  x <- orig + noise[names(orig)]
+  x <- zapBad(orig + noise[names(orig)])
   x <- pmax(x,1.0e-3)
+  names(x) <- names(orig)
   x
 }
 
