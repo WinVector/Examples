@@ -93,11 +93,17 @@ plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 'jackknife prediction',
                                 parallelCluster,commonFns)$plotD
 sigma <- 4
-noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
-plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModelFixed,noisePlan,
-                                paste('Laplace noise (sigma=',sigma,') prediction',sep=''),
-                                parallelCluster,commonFns)$plotD
+lnPlots <- lapply(1:20,
+                 function(i) {
+                   noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
+                   evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                                   noisedModelFixed,noisePlan,
+                                                   paste('Laplace noise (sigma=',sigma,') prediction\ntry=',i,sep=''),
+                                                   parallelCluster,commonFns)$plotD
+                   
+                 }
+)
+plotD4 <- lnPlots[[1]]
 
 # plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 #                                 noisedModel,sigma,
@@ -114,13 +120,62 @@ plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 ```
 
 ```{r plot}
+# show performance
+plotD4$rep <- c()
 plotDAll <- rbind(plotD2,plotD3,plotD4)
-
-
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
                                  color=what,fill=what)) +
-  geom_line() +
+  geom_line(size=2) +
+  scale_color_brewer(palette='Dark2') +
+  ggtitle(paste('Expected test deviance\n n=',n))
+
+# show many different Laplace noised models
+lnPlots <- lapply(seq_len(length(lnPlots)),
+                  function(i) {
+                    p <- lnPlots[[i]]
+                    p$rep <- i
+                    p
+                  })
+lPlotFrame <- do.call(rbind,lnPlots)
+laPlotFrame <- aggregate(expectedDeviance~x,data=lPlotFrame,FUN=mean)
+laPlotFrame$what <- 'mean Laplace noised model'
+ggplot() +
+  geom_line(data=lPlotFrame,mapping=aes(x=x,
+                                 y=expectedDeviance,
+                                 group=rep),
+            alpha=0.2) +
+  geom_line(data=laPlotFrame,mapping=aes(x=x,
+                                 y=expectedDeviance),
+            size=2,color='#d95f02') +
+  ggtitle('Expected test deviance\nLaplace noised models')
+ends <- lPlotFrame[lPlotFrame$x==0 | lPlotFrame$x==1,]
+eagg <- aggregate(expectedDeviance~rep,data=ends,FUN=max)$expectedDeviance
+min(eagg)
+greatExample <- which.min(eagg)
+
+# show performance of mean-of Laplaced models, note this isn't achieved 
+# by any of hte individual models
+plotDAll <- rbind(plotD2,plotD3,laPlotFrame)
+ggplot(data=plotDAll,mapping=aes(x=x,
+                                 y=expectedDeviance,
+                                 color=what,fill=what)) +
+  geom_line(size=2) +
+  scale_color_brewer(palette='Dark2') +
+  ggtitle(paste('Expected test deviance\n n=',n))
+
+# show a really good example
+# this example is not achievable in practice as it is is acheived
+# by the noise model guessing the relation between the variable "group"
+# and P[y=TRUE].  This relation is fixed in our example- but would
+# not be known in advance (so we could not pick the best curve ahead of time).
+plotDG <- lnPlots[[greatExample]]
+plotDG$rep <- c()
+plotDAll <- rbind(plotD2,plotD3,plotDG)
+ggplot(data=plotDAll,mapping=aes(x=x,
+                                 y=expectedDeviance,
+                                 color=what,fill=what)) +
+  geom_line(size=2) +
   scale_color_brewer(palette='Dark2') +
   ggtitle(paste('Expected test deviance\n n=',n))
 ```
