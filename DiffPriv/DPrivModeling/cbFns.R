@@ -19,10 +19,10 @@ zapBad <- function(v) {
 estimateExpectedPrediction <- function(d,vars,dTest) {
   # catch cases unsafe for glm
   if(all(d$y)) {
-    rep(1,length(d$y))
+    return(rep(1,nrow(dTest)))
   }
   if(all(!d$y)) {
-    rep(0,length(d$y))
+    return(rep(0,nrow(dTest)))
   }
   oldw <- getOption("warn")
   options(warn = -1)
@@ -152,10 +152,9 @@ noisedModelFixed <-  function(d,vars,dTest,stratarg) {
 #' 
 #' @param d data frame
 #' @param signalGroupLevels groups
-pYgivenRow <- function(d,signalGroupLevels) {
+pEachYgivenRow <- function(d,xs,signalGroupLevels) {
   arity <- match(d$group,signalGroupLevels) %% 2
-  probs <- list(polynom::polynomial(c(0,1)),
-                polynom::polynomial(c(1,-1)))
+  probs <- list(xs,1-xs)
   probs[arity+1]
 }
 
@@ -164,10 +163,11 @@ pYgivenRow <- function(d,signalGroupLevels) {
 #' @param d data frame
 #' @param y observed ys
 #' @param signalGroupLevels groups
-pYsgivenRows <- function(d,y,signalGroupLevels) {
-  pYs <- pYgivenRow(d,signalGroupLevels)
+pJointYsgivenRows <- function(d,xs,y,signalGroupLevels) {
+  pYs <- pEachYgivenRow(d,xs,signalGroupLevels)
   pObs <- ifelse(y,pYs,lapply(pYs,function(x){1-x}))
-  Reduce(function(a,b){a*b},pObs)
+  v <- Reduce(function(a,b){a*b},pObs)
+  v
 }
 
 
@@ -180,7 +180,8 @@ mkYList <- function(n) {
 
 extractSum <- function(vlist,vname) {
   vs <- lapply(vlist,function(vi) { vi[[vname]] })
-  Reduce(function(a,b){a+b},vs)
+  v <- Reduce(function(a,b){a+b},vs)
+  v
 }
 
 #' evaluate a strategy by returning summary statistics
@@ -198,7 +199,8 @@ extractSum <- function(vlist,vname) {
 evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
                                  strat,stratarg,what,
                                  parallelCluster,commonFns) {
-  pTestPy <- pYgivenRow(dTest,signalGroupLevels)
+  xs <- seq(0,1,by=0.05)
+  pTestPy <- pEachYgivenRow(dTest,xs,signalGroupLevels)
   allVars <- union("group",noiseGroups)
   # run through each possible realization of the training outcome
   # vector y.  Each situation is weigthed by the probability of 
@@ -210,7 +212,7 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
               objNames=commonFns)
     function(y) {
       d$y <- y
-      pTrainYs <- pYsgivenRows(d,y,signalGroupLevels)
+      pTrainYs <- pJointYsgivenRows(d,xs,y,signalGroupLevels)
       predTest <- strat(d,allVars,dTest,stratarg)
       # deviance score
       scores <- lapply(seq_len(length(pTestPy)),
@@ -221,6 +223,7 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
                          -2*(pYi*log2(pmax(eps,predi)) + 
                                (1-pYi)*log2(pmax(eps,1-predi)))
                        })
+      print("break")
       meanScore <- Reduce(function(a,b){a+b},scores)/length(scores)
       list(expectedDeviance=pTrainYs*meanScore,
            totalProbCheck=pTrainYs)
@@ -241,10 +244,9 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
   expectedDeviance <- extractSum(resList,'expectedDeviance')
   totalProbCheck <- extractSum(resList,'totalProbCheck')
 
-  x <- seq(0,1,by=0.01)
-  plotD <- data.frame(x=x,
+  plotD <- data.frame(x=xs,
                       what=what,
-                      expectedDeviance=as.function(expectedDeviance)(x),
+                      expectedDeviance=expectedDeviance,
                       stringsAsFactors = FALSE)
   list(
     plotD=plotD,

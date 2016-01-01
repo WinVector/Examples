@@ -9,7 +9,6 @@ methods.
 In this "d" is our training data frame.  We will use it to model y~group (group being a string-valued variable) for every possible y vector (y is TRUE/FALSE so there are 2^nrow(d) such frames).  We want to estimate the out of sample performance of our model, so we evaluate on a new data frame called dTest (which has exactly one row per level).
 
 ```{r start, warning=FALSE,message=FALSE}
-library('polynom')
 library('ggplot2')
 source('utils.R')
 source('modelCat.R')
@@ -97,12 +96,17 @@ sigma <- 4
 noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
 plotD4 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 noisedModelFixed,noisePlan,
-                                paste('fixed noise (sigma=',sigma,') prediction',sep=''),
+                                paste('Laplace noise (sigma=',sigma,') prediction',sep=''),
                                 parallelCluster,commonFns)$plotD
+
+# plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+#                                 noisedModel,sigma,
+#                                 paste('varying Laplace noise (sigma=',sigma,') prediction',sep=''),
+#                                 parallelCluster,commonFns)$plotD
                                 
 
 # noisePlanC <- mkNoisePlanConst(d,unique(c('group',noiseGroups)),sigma)
-# plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+# plotD6 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 #                                 noisedModelFixed,noisePlanC,
 #                                 paste('constant adjusted (sigma=',sigma,') prediction',sep=''),
 #                                 parallelCluster,commonFns)$plotD
@@ -116,7 +120,7 @@ plotDAll <- rbind(plotD2,plotD3,plotD4)
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
                                  color=what,fill=what)) +
-  geom_line(size=2) +
+  geom_line() +
   scale_color_brewer(palette='Dark2') +
   ggtitle(paste('Expected test deviance\n n=',n))
 ```
