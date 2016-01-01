@@ -1,0 +1,245 @@
+---
+title: "FixedPoint"
+author: "John Mount"
+date: "January 1, 2016"
+output: html_document
+---
+
+Let's take a break from statistics and data science to think a bit about programming language theory, and how the theory relates to the programming language used in the [R analysis platform](https://cran.r-project.org) (the language is technically called "S", but we are going to just call the whole analysis system "R").
+
+Our reasoning is: if you want to work as a modern data scientist you have to program (this is not optional for reasons of documentation, sharing and scientific repeatability).  If you do program you are going to have to eventually think a bit about programming theory (hopefully not too early in your studies, but it will happen).  Let's use R's powerful programming language (and implementation) to dive into some deep issues in programming language theory:
+
+ * References versus values
+ * Function abstraction
+ * Equational reasoning
+ * Recursion
+ * Substitution and evaluation
+ * Fixed point theory
+ 
+To do this we will translate some common ideas from a theory called "the lambda calculus" into R (where we can actually execute them).  This translation largely involves changing the word "lambda" to "function" and introducing some parenthesis (which I think greatly improve readability, part of the mystery of the lambda calculus is how unreadable its preferred notation actually is).
+
+Lots of ink is spilled on the ideas of "functional languages being based on the [lambda calculus](https://en.wikipedia.org/wiki/Lambda_calculus)."  This misses the point of the lambda calculus.  Most functional programming languages deliberately include powerful features deliberately not found in the lambda calculus (such as being able to efficiently name and re-use variables and values).  The interesting fact about the lambda calculus is that a re-writing system as seemingly weak as what is presented already can simulate the features that are directly implemented in typical functional.
+
+Typical functional languages have more features than the lambda calculus, so in principle may be harder to reason about than the lambda calculus.  In practice the lambda calculus is itself fairly hard to reason about due to fundamental issues of recursion, lack of helpful type annotations, and illegibility due to overuse of associative notation (the shunning of helpful parenthesis).
+
+But let's play with this in R a bit as it actually does help our "functional thinking" to see how equational reasoning, function creation, function application, and recursion are related.
+
+The usual first example of a recursive function is the factorial function.  Factorial is defined over the non-negative integers as:
+
+ * factorial(0) = 1
+ * factorial(x) = x*factorial(x-1)
+
+It is usually written as x! (so x! is shorthand for factorial(x)).  Now we are not really interested in the factorial() function as:
+
+ * It is already implement in R as factorial() (see help('factorial')).
+ * Any recursive implementation of is going to very slow compared to a more standard "(special function)[https://en.wikipedia.org/wiki/Special_functions]" implementation.
+ * You can't even compute factorial(200) over double precision floating point- so a small look-up table could do all the work.
+ 
+But it is a somewhat familiar function that is a one of the simplest examples of recursion.  Here is a recursive implementation written in R:
+
+```{r}
+# typical example recursive function
+# function uses the fact it knows its own name to call itself
+fact <- function(x) {
+  if(x<=0) {
+       return(1)
+    } else {
+       return(x*fact(x-1))
+    }
+}
+fact(5)
+```
+
+
+Now suppose your programming language was weaker, maybe functions don't have names (like in the lambda calculus), or you don't trust calling yourself directly (like subroutines in early FORTRAN).  You could try the following.  build a function returning a function (actually a very powerful ability) notice the new function may call its supplied argument (as a function) up to once
+
+
+```{r}
+factstep <- function(h) {
+  function(x) {
+    if(x<=0) {
+       return(1)
+    } else {
+       return(x*h(x-1))
+    }
+  }
+}
+
+factstep(NULL)(0)
+```
+
+Compose this beast with itself a few time, we are using that each returned function is a new anonymous function (and thus has separate state) to make sure calls don't interfere.  The idea is: this would work even in FORTRAN if FORTRAN allowed us to create anonymous subroutines at run-time.  What we are showing is the bookkeeping involved in function definition is already strong enough to support limited recursion (we don't need) a separate facility for that, though R does have such).
+
+```{r}
+f5 <- factstep(factstep(factstep(factstep(factstep(factstep(NULL))))))
+f5(3)
+f5(4)
+```
+
+But f5 isn't the best implementation of factorial.  It doesn't work for long.
+
+```{r}
+tryCatch(
+  f5(6),
+  error=function(e) print(e))
+```
+
+One way to solve this is introduce what is called a fixed point function.  We used the fact we know our own function name (i.e. fix can call self) to define a function called "fix" that calculates fixed points of other functions.  The idea is: By definition fix(f) is f(fix(f)).  The idea is fix(factstep) will be a function that knows how to recurse or call itself enough times.  The function fix() should obey equations like the following:
+
+ * fix(f) = f(fix(f))
+ 
+So if x = fix(f) we have (by substitution) x = f(x), or x is a fixed point of f() (f being an arbitrary function).  In our case we will write fact1 = fix(factstep) and have fact1 = factstep(fact1), which means we don't alter fact11 by one more application of factstep.  fact1 is a function that seems to have an arbitrary number of applications of factstep rolled into it.  So it is natural to suppose that fact1(x) = factorial(x) as both functions seem to obey the same recurrence relations.
+
+This sort of direct algebra over functions is still using the fact we have explicit names on the functions (which we are also using as variable names) This does require the power to call yourself, but what we are showing is we can bootstrap one self-recursive function into a source of self-recursive functions.
+
+Here is fix written in R:
+
+```{r}
+fix <- function(f) { f(fix(f)) }
+```
+
+This gives us enough power to implement recursion/iteration for any function. This ability to write a function in terms of an expression or equation involving itself by name is considered ground breaking. Alan Kay called such an expression in the LISP 1.5 Programmer's Manual "Maxwell’s Equations of Software!" (see [here](http://www.michaelnielsen.org/ddi/lisp-as-the-maxwells-equations-of-software/) for some details).  It is somewhat mind-blowing that both
+
+ * You can write fix in terms of itself
+ * The language implementation then essentially solves the above recursive equation (by mere substitution) and you use this to build recursive functions at well.
+
+For example:
+
+```{r}
+fact1 <- fix(factstep)
+fact1(5)
+fact1(3)
+(factstep(fact1))(3)  # same answer
+fact1(10)
+```
+
+Fixed points are a bit less mysterious when applied to simpler functions, such as constants (which are their own fixed points as they ignore their argument).
+
+```{r}
+# We can also apply this to a simple function like the following
+g <- function(x) { 9 }
+
+# applying the fixing operator is the same as evaluating such a simple function
+fix(g)
+g(fix(g))  # same answer
+```
+
+Note: fix(g) is not a fixed-point of fix().  We do not have fix(g) = fix(fix(g)) and fix() can not find it's own fixed point: fix(fix).  fix(fix) fails to terminate even under R's lazy argument semantics.  Also this fix() doesn't work in languages that don't have lazy-argument semantics (which is most languages except R and Haskel).
+
+```{r}
+# Bonus question: what is fix(fix)?
+tryCatch(
+  fix(fix),
+  error=function(e) print(e))
+```
+
+Why did that blow up even under R's lazy evaluation semantics?  Because fix() always tried to use its argument, which caused the argument to be instantiated and in turn triggered unboudned recursion.  Notice factstep() doesn't always use its argument, so it doesn't necessarily recurse forever.
+
+The above method depended on R's lazy evaluation semantics.  What if you are working with a language that has more standard aggressive evaluation semantics (arguments are evaluated before calling a function, meaning they are evaluated even if they don't end up getting used).  You can implement a fixed point operator by explicitly hiding your argument in a function construction abstraction as follows:
+
+```{r}
+# Fixed point function, two argument version (works under most semantics, including Python)
+fix2 <- function(f) { function(x) f(fix2(f))(x) }
+
+fact2 <- fix2(factstep)
+fact2(5)
+fact2(3)
+```
+
+The idea being: with function introduction you can implement your own lazy evaluation scheme.
+
+The main feature we used up until now is the fact we know the name of the function we are working with (and and thus conveniently evaluate it more than once and pass it around).  A natural question is: if you didn't have this naming convenience (as you do not in the pure lambda calculus, which works only over values without variables) can you still implement recursion on your own?  The answer is use and one of the methods is an expression called "the Y combinator."
+
+Here is the Y combinator version (version without using own name) of implementing recursion.  Again, you don't have to do this if you have any of the following features already available:
+
+ * Variable names
+ * Language supplied recursion
+ * A fixed point operator
+
+The Y combinator implements a fixed point function using only: function creation (eta-abstraction) and application (beta-reduction) and NOT using your variable names name (in this case Y).  The trick is: we can use any value passed in twice.  So even though we may not have variables and names, we can give some other values access to to related values (enough to implement fixed point calculations and recursion ourselves).
+
+Here is the Y combinator written in R:
+
+```{r}
+# Y combinator written in R
+Y <-
+  function(f) {
+    (function(z) {
+      f(function(v) {
+        z(z)(v)
+      })
+    })(function(z) {
+      f(function(v) {
+        z(z)(v)
+      })
+    })
+  }
+```
+
+Y has the property for any function g(): Y(g) = g(Y(g)), exactly the equation fix() obeyed.  This is often witten without parenthesis as Y g = g Y g.  Either way Y is a solution to an equation over functions.  What we wrote above isn't the equation Y is the solution of, but an explicit solution for Y that does not involve Y refirent to itself.  Notice it involves function introduction.  The traditional way of writing the above function in lambda calculus notation is:
+
+  * Y = lambda f . ( lambda x. f(x x)) ( lambda x.f(x x) )
+
+Understand that the earlier R code is the same using R's function introduction notation ("function" instead of "lambda") and explicit introduction of more parenthesis to show the preferred association of operations.
+
+Let's prove what we have is a solution to the claimed recurrence equation.  We are working over the lambda calculus, which is a theory of transformations of values The main inference step is function application or beta-reduction
+
+ * function(x) { ... } xvalue -> {...} with x replaced by xvalue throughout
+
+The other step is eta-conversion which says the following two forms should be considered equivalent:
+
+  * function(x) g(x) <--> g
+
+Parenthesis and variable names are added and removed for convenience.  Function application can be written as f(x) or as f x.  (Notation associates to the left so z(z)(v) is equivalent to (z(z))(v).)
+
+Proof: 
+
+We are going to show one pattern of substitution that converts Y(g) to g(Y(g)).
+
+The rules of the lambda calculus are that if one form can be converted to another then they are considered to be equivalent, and so we are done.
+
+It is a non-trivial fact that the lambda-calculus is consistent.  This is the Church-Rosser theorem and says if P -> Q (we can transform P to Q) and P -> R (we can transform P to R) then there is a form S such that Q->S and R->S.  The idea is convertible statements form equivalence classes, so it makes sense to call them equivalent.  So if we can find a conversion in any order of operations we are done (i.e. we are free to try operations in the order we want).
+
+For clarity let's introduce a substitution
+
+    T = function(f) ( function(z) { f(function(v) { z(z)(v) }) })
+     so Y = function(f) { T(f)(T(f)) }
+     Y(g) = (function(f) { T(f)(T(f)) })(g)                    # by definition
+         = T(g)(T(g))                                          # function application, call this equation 2
+         = ( function(z) { g(function(v) { z(z)(v) }) })(T(g)) # expanding left T(g)
+         = g(function(v) { T(g)(T(g))(v) })                    # function application
+         = g(T(g)(T(g)))                                       # eta conversion on inside g() argument
+         = g(Y(g))                                             # substitute in equation 2
+
+
+Let's try it:
+
+```{r}
+fact3 <- Y(factstep)
+fact3(5)
+fact3(3)
+```
+
+```{r}
+# Bonus question: what is Y(Y)?
+tryCatch(
+  Y(Y),
+  error=function(e) print(e))
+```
+
+Remember in R we don't actually need the Y combinator as we have direct access to a large number of additional powerful constructs deliberately not found in the lambda calculus (where the Y combinator is must known):
+
+ * Named variables (allowing re-use of values)
+ * Explicit recursion (allowing direct definition of recursive functions)
+ * Lazy evaluation (allowing recursion through mere substitution and evaluation)
+ 
+R can also choose implement the Y combinator because we have all of the essential lambda calculus tools directly available in R:
+
+ * Evaluation (reductions)
+ * Function introduction (abstraction)
+
+And this concludes our excursion into programming language theory.
+
+
+
+
