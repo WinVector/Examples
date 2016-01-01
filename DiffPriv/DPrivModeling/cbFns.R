@@ -199,7 +199,7 @@ extractSum <- function(vlist,vname) {
 evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
                                  strat,stratarg,what,
                                  parallelCluster,commonFns) {
-  xs <- seq(0,1,by=0.05)
+  xs <- seq(0,1,by=0.01)
   pTestPy <- pEachYgivenRow(dTest,xs,signalGroupLevels)
   allVars <- union("group",noiseGroups)
   # run through each possible realization of the training outcome
