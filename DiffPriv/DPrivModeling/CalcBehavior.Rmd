@@ -183,7 +183,7 @@ ggplot(data=plotDAll,mapping=aes(x=x,
   scale_color_brewer(palette='Dark2') +
   ggtitle(paste('Expected test deviance\n n=',n))
 
-# show average is hard to achieve
+# show average in relation to others
 plotDAll <- rbind(laPlotFrame,plotDv1,plotDv2)
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,

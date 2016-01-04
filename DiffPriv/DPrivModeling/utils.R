@@ -35,8 +35,8 @@ errorRate <- function(pred,truth) {
 
 meanDeviance <- function(pred,pY) {
   eps <- 1.e-5
-  -2*(pY*log2(pmax(eps,pred)) + 
-        (1-pY)*log2(pmax(eps,1-pred)))
+  mean(-2*(pY*log2(pmax(eps,pred)) + 
+        (1-pY)*log2(pmax(eps,1-pred))))
 }
 
 
@@ -76,6 +76,35 @@ listLookup <- function(vcol,maplist) {
   }
   vals[!seen] <- 0
   vals
+}
+
+
+mkNoisePlan <- function(d,vars,sigma) {
+  noisePlan <- lapply(vars,function(vi) {
+    levs <- sort(unique(d[[vi]]))
+    nlevs <- length(levs)
+    tn <- rlaplace(nlevs,sigma)
+    names(tn) <- levs
+    tf <- rlaplace(nlevs,sigma)
+    names(tf) <- levs
+    list(tn=tn,tf=tf)
+  })
+  names(noisePlan) <- vars
+  noisePlan
+}
+
+mkNoisePlanConst <- function(d,vars,sigma) {
+  noisePlan <- lapply(vars,function(vi) {
+    levs <- sort(unique(d[[vi]]))
+    nlevs <- length(levs)
+    tn <- rep(sigma,nlevs)
+    names(tn) <- levs
+    tf <- rep(sigma,nlevs)
+    names(tf) <- levs
+    list(tn=tn,tf=tf)
+  })
+  names(noisePlan) <- vars
+  noisePlan
 }
 
 

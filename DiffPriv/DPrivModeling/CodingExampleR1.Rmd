@@ -218,7 +218,7 @@ runBigExpmt <- function(expmt) {
   }
   
   eworker <- mkExpmtRunner(vplan)
-  res <- parallel::parLapplyLB(cl,1:200,eworker)
+  res <- parallel::parLapplyLB(cl,1:20,eworker)
   res <- do.call(rbind,res)
   
   print(ggplot(data=res,aes(x=testRMSE,color=what)) +

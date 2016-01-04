@@ -178,4 +178,73 @@ jackknifeCountCode <- function(d,yName,varNames) {
   codeFrame(d,coder,d[[yName]])
 }
 
+# standard logisticRegression
+glmFitter <- function(yVar,
+                      xVars,trainData,applicationData,
+                     what='',
+                     verbose=FALSE) {
+  formulaL <- paste(yVar,paste(xVars,collapse=' + '),sep=' ~ ')
+  modelL <- glm(formulaL,data=trainData,family=binomial)
+  trainPred=predict(modelL,newdata=trainData,type='response')
+  appPred=predict(modelL,newdata=applicationData,type='response')
+  if(verbose) {
+    print(paste(what,"fit model:"))
+    print(summary(modelL))
+  }
+  list(trainPred=trainPred,
+       appPred=appPred)
+}
+
+
+findSigmaC <- function(cl,
+                       fnFitter,
+                       yName,
+                       yVars,
+                       dTrain,
+                       vars,
+                       dCal,
+                       sigmaTargets=(seq_len(41)-1)) {
+  force(fnFitter)
+  force(yName)
+  force(yVars)
+  force(dTrain)
+  force(vars)
+  force(dCal)
+  bindToEnv(objNames=sourcedFns)
+  worker <- function(sigma) {
+    scoresB <- numeric(3)
+    for(rep in seq_len(length(scoresB))) {
+      bCoder <- trainBayesCoder(dTrain,yName,vars,sigma)
+      dTrainB <- bCoder$codeFrame(dTrain)
+      dCalB <- bCoder$codeFrame(dCal)
+      varsB <- setdiff(colnames(dTrainB),yVars)
+      preds <- fnFitter(yName,varsB,dTrainB,dCalB) 
+      dCalB$pred <- preds$appPred
+      scoresB[[rep]] <- meanDeviance(dCalB$pred,dCalB[[yName]])
+    }
+    list(scoreB=mean(scoresB),sigma=sigma)
+  }
+  
+  if(!is.null(cl)) {
+    results <- parallel::parLapplyLB(cl,sigmaTargets,worker)
+  } else {
+    results <- vector(mode='list',length=length(sigmaTargets))
+    for(ii in seq_len(length(sigmaTargets))) {
+      results[[ii]] <- worker(sigmaTargets[[ii]])
+    }
+  }
+  
+  bSigmaBest = 0
+  bestB = Inf
+  for(res in results) {
+    sigma <- res$sigma
+    scoreB <- res$scoreB
+    if(scoreB<bestB) {
+      bestB <- scoreB
+      bSigmaBest <- sigma
+    }
+  }
+  bSigmaBest
+}
+
 

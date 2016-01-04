@@ -1,0 +1,308 @@
+---
+title: "CodingExampleC1"
+author: "Win-Vector LLC"
+date: "January 4, 2016"
+output: html_document
+---
+
+```{r startup, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+source('utils.R')
+source('modelCat.R')
+source('mkExample.R')
+source('cbFns.R')
+source('bindValues.R')
+sourcedFns <- ls()
+# devtools::install_github("WinVector/WVPlots")
+library("WVPlots")
+# devtools::install_github('WinVector/vtreat')
+library('vtreat')
+options(gsubfn.engine = "R")
+library('sqldf')
+cl <- parallel::makeCluster(parallel::detectCores())
+```
+
+
+```{r define, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+yVars <- c('yCat','yNumeric')
+yName <- 'yCat'
+
+
+set.seed(232567)
+vX1 <- designVar('x1',10)
+vN1 <- designNoiseVar('n1',500)
+
+
+runBigExpmt <- function(expmt) {
+  set.seed(232567)
+  vplan <- expmt$vplan
+  fnFitter <- expmt$fnFitter
+  eName <- expmt$eName
+  
+  print("*************************************************************")
+  print(eName)
+  
+  dTrain <- generateExample(vplan,2000)  # Training set
+  vars <- setdiff(colnames(dTrain),yVars)
+  dCal <- generateExample(vplan,10000)   # Used to pick sigma
+  dTest <- generateExample(vplan,10000)  # Pure holdout test
+  
+  bSigmaBest <- findSigmaC(cl,
+                           fnFitter,
+                           yName,
+                           yVars,
+                           dTrain,
+                           vars,
+                           dCal) 
+  
+  print(paste('bSigmaBest',bSigmaBest))
+  
+  
+  
+  print('naive effects model')
+  bCoder <- trainBayesCoder(dTrain,yName,vars,0)
+  dTrainB <- bCoder$codeFrame(dTrain)
+  dTestB <- bCoder$codeFrame(dTest)
+  varsB <- setdiff(colnames(dTrainB),yVars)
+  preds <- fnFitter(yName,varsB,dTrainB,dTestB,
+                    what=paste(eName,'naive effects model'),
+                    verbose=TRUE)
+  dTrainB$pred <- preds$trainPred
+  print(paste(eName,'naive effects model train mean deviance',
+              meanDeviance(dTrainB$pred,dTrainB[[yName]])))
+  print(WVPlots::DoubleDensityPlot(dTrainB,'pred',yName,
+                                   paste(eName,
+                                         'naive effects model train',
+                                         sep='\n')))
+  print(WVPlots::ROCPlot(dTrainB,'pred',yName,
+                         paste(eName,
+                               'naive effects model train',
+                               sep='\n')))
+  dTestB$pred <- preds$appPred
+  print(paste(eName,
+              'naive effects model test mean deviance',
+              meanDeviance(dTestB$pred,dTestB[[yName]])))
+  print(WVPlots::DoubleDensityPlot(dTestB,'pred',yName,
+                             paste(eName,
+                                   'naive effects model test',
+                                   sep='\n')))
+  print(WVPlots::ROCPlot(dTestB,'pred',yName,
+                             paste(eName,
+                                   'naive effects model test',
+                                   sep='\n')))
+  
+  
+  print(paste('effects model, sigma=',bSigmaBest))
+  bCoder <- trainBayesCoder(dTrain,yName,vars,bSigmaBest)
+  dTrainB <- bCoder$codeFrame(dTrain)
+  dTestB <- bCoder$codeFrame(dTest)
+  varsB <- setdiff(colnames(dTrainB),yVars)
+  preds <- fnFitter(yName,varsB,dTrainB,dTestB,
+                    what=paste(eName,'effects model, sigma=',bSigmaBest),
+                    verbose=TRUE)
+  dTrainB$pred <- preds$trainPred
+  print(paste(eName,
+              'Laplace noised',bSigmaBest,'train mean deviance',
+              meanDeviance(dTrainB$pred,dTrainB[[yName]])))
+  print(WVPlots::DoubleDensityPlot(dTrainB,'pred',yName,
+                             paste(eName,
+                                   '\neffects model train, sigma=',
+                                   bSigmaBest)))
+  print(WVPlots::ROCPlot(dTrainB,'pred',yName,
+                             paste(eName,
+                                   '\neffects model train, sigma=',
+                                   bSigmaBest)))
+  dTestB$pred <- preds$appPred
+  print(paste(eName,
+              'Laplace noised',bSigmaBest,'test mean deviance',
+              meanDeviance(dTestB$pred,dTestB[[yName]])))
+  print(WVPlots::DoubleDensityPlot(dTestB,'pred',yName,
+                             paste(eName,
+                                   '\neffects model test, sigma=',
+                                   bSigmaBest)))
+   print(WVPlots::ROCPlot(dTestB,'pred',yName,
+                             paste(eName,
+                                   '\neffects model test, sigma=',
+                                   bSigmaBest)))
+  
+  
+  print('effects model, jacknifed')
+  bCoder <- trainBayesCoder(dTrain,yName,vars,0)
+  # dTrainB <- bCoder$codeFrame(dTrain)
+  # dTrainB <- bCoder$codeFrame(dCal)
+  dTrainB <- jackknifeBayesCode(dTrain,yName,vars)
+  dTestB <- bCoder$codeFrame(dTest)
+  varsB <- setdiff(colnames(dTrainB),yVars)
+  preds <- fnFitter(yName,varsB,dTrainB,dTestB,
+                     what=paste(eName,'effects model, jackknifed'),
+                    verbose=TRUE)
+  dTrainB$pred <- preds$trainPred
+  print(paste(eName,
+              'jackknifed train mean deviance',
+              meanDeviance(dTrainB$pred,dTrainB[[yName]])))
+  print(WVPlots::DoubleDensityPlot(dTrainB,'pred',yName,
+                             paste(eName,
+                                   'effects model train, jackknifed',
+                                   sep='\n')))
+  print(WVPlots::ROCPlot(dTrainB,'pred',yName,
+                             paste(eName,
+                                   'effects model train, jackknifed',
+                                   sep='\n')))
+  dTestB$pred <- preds$appPred
+  print(paste(eName,
+              'jackknifed test mean deviance',
+              meanDeviance(dTestB$pred,dTestB[[yName]])))
+  print(WVPlots::DoubleDensityPlot(dTestB,'pred',yName,
+                             paste(eName,
+                                   'effects model test, jackknifed',
+                                   sep='\n')))
+  print(WVPlots::ROCPlot(dTestB,'pred',yName,
+                             paste(eName,
+                                   'effects model test, jackknifed',
+                                   sep='\n')))
+  
+  
+  mkExpmtRunner <- function(vplan) {
+    force(vplan)
+    bindToEnv(objNames=sourcedFns,
+              sourcedFns,
+              fnFitter)
+    function(repID) {
+      # set up experiment
+      yVars <- c('yCat','yNumeric')
+      yName <- 'yCat'
+      dTrain <- generateExample(vplan,2000)  # Training set
+      vars <- setdiff(colnames(dTrain),yVars)
+      dCal <- generateExample(vplan,10000)   # Used to pick sigma
+      dTest <- generateExample(vplan,10000)  # Pure holdout test
+      
+      # run naive mode
+      bCoder <- trainBayesCoder(dTrain,yName,vars,0)
+      dTrainB <- bCoder$codeFrame(dTrain)
+      dTestB <- bCoder$codeFrame(dTest)
+      varsB <- setdiff(colnames(dTrainB),yVars)
+      preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
+      dTrainB$pred <- preds$trainPred
+      dTestB$pred <- preds$appPred
+      testMeanDeviance <- meanDeviance(dTestB$pred,dTestB[[yName]])
+      f1 <- data.frame(repID=repID,
+                       bSigmaBest=NA,
+                       what='NaiveModel',
+                       testMeanDeviance=testMeanDeviance,
+                       stringsAsFactors = FALSE)
+      
+      # Laplace sigma model
+      bSigmaBest <- findSigmaC(NULL,
+                               fnFitter,
+                               yName,
+                               yVars,
+                               dTrain,
+                               vars,
+                               dCal) 
+      bCoder <- trainBayesCoder(dTrain,yName,vars,bSigmaBest)
+      dTrainB <- bCoder$codeFrame(dTrain)
+      dTestB <- bCoder$codeFrame(dTest)
+      varsB <- setdiff(colnames(dTrainB),yVars)
+      preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
+      dTrainB$pred <- preds$trainPred
+      dTestB$pred <- preds$appPred
+      testMeanDeviance <- meanDeviance(dTestB$pred,dTestB[[yName]])
+      f2 <- data.frame(repID=repID,
+                       bSigmaBest=bSigmaBest,
+                       what='NoisedModel',
+                       testMeanDeviance=testMeanDeviance,
+                       stringsAsFactors = FALSE)
+      
+      # many sigma models averaged
+      stratarg <- lapply(1:10,
+                 function(i) {
+                   noisePlan <- mkNoisePlan(dTrain,vars,bSigmaBest)
+                 })
+      dTrain$y <- dTrain[[yName]]  # TODO: pass yName
+      dTestB$pred <- noisedModelFixedV2(dTrain,vars,dTest,stratarg)
+      testMeanDeviance <- meanDeviance(dTestB$pred,dTestB[[yName]])
+      f3 <- data.frame(repID=repID,
+                       bSigmaBest=bSigmaBest,
+                       what='AverageManyNoisedModels',
+                       testMeanDeviance=testMeanDeviance,
+                       stringsAsFactors = FALSE)
+      
+      # jackknifed model
+      bCoder <- trainBayesCoder(dTrain,yName,vars,0)
+      dTrainB <- jackknifeBayesCode(dTrain,yName,vars)
+      dTestB <- bCoder$codeFrame(dTest)
+      varsB <- setdiff(colnames(dTrainB),yVars)
+      preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
+      dTrainB$pred <- preds$trainPred
+      dTestB$pred <- preds$appPred
+      testMeanDeviance <- meanDeviance(dTestB$pred,dTestB[[yName]])
+      f4 <- data.frame(repID=repID,
+                       bSigmaBest=NA,
+                       what='JackknifeModel',
+                       testMeanDeviance=testMeanDeviance,
+                       stringsAsFactors = FALSE)
+      rbind(f1,f2,f3,f4)
+    }
+  }
+  
+  eworker <- mkExpmtRunner(vplan)
+  res <- parallel::parLapplyLB(cl,1:20,eworker)
+  res <- do.call(rbind,res)
+  
+  print(ggplot(data=res,aes(x=testMeanDeviance,color=what)) +
+    geom_density(adjust=0.5,trim=TRUE) + 
+    ggtitle(paste(eName,'test MeanDeviance, noised model',sep='\n')))
+  
+  for(w in sort(unique(res$what))) {
+    print("********")
+    print(paste(eName,w))
+    ri <- res[res$what==w,]
+    print(summary(ri$testMeanDeviance))
+    print(sqrt(var(ri$testMeanDeviance)))
+    print("********")
+  }
+  
+ 
+  print("*************************************************************")
+}
+```
+
+*****
+
+one noise variable,  logistic regression
+-------------
+
+```{r nvlr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=list(vN1),fnFitter=glmFitter,
+                 eName="one noise variable, logistic regression"))
+```
+
+*****
+
+one variable,  logistic regression
+-------------
+
+```{r ovlr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=list(vX1),fnFitter=glmFitter,
+                 eName="one variable, logistic regression"))
+```
+
+
+*****
+
+one variable plus noise variable,  logistic regression
+-------------
+
+```{r ovnlr, echo=FALSE, warning=FALSE, message=FALSE}
+runBigExpmt(list(vplan=list(vX1,vN1),fnFitter=glmFitter,
+                 eName="one variable plus noise variable, logistic regression"))
+```
+
+
+*****
+
+```{r shutdown, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+if(!is.null(cl)) {
+  parallel::stopCluster(cl)
+  cl <- NULL
+}
+```
