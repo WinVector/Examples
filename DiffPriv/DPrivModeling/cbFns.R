@@ -145,6 +145,30 @@ noisedModelFixed <-  function(d,vars,dTest,stratarg) {
   estimateExpectedPrediction(d2,vars,dTest2)
 }
 
+#' one fit on averged data frame
+#' @param stratarg list of noisePlans pre-built noise for the Laplace smoothing
+noisedModelFixedV1 <-  function(d,vars,dTest,stratarg) {
+  d2 <- c()
+  dTest2 <- c()
+  for(si in stratarg) {
+    coder <- trainBayesCoderFixed(d,'y',vars,si)
+    d2i <- coder$codeFrame(d)
+    dTest2i <- coder$codeFrame(dTest)
+    if(is.null(d2)) {
+      d2 <- d2i
+      dTest2 <- dTest2i
+    } else {
+      d2 <- d2 + d2i
+      dTest2 <- dTest2 + dTest2i
+    }
+  }
+  d2 <- d2/length(stratarg)
+  d2$y <- d$y
+  dTest2 <- dTest2/length(stratarg)
+  dTest2$y <- dTest$y
+  estimateExpectedPrediction(d2,vars,dTest2)
+}
+
 
 
 
@@ -223,7 +247,6 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
                          -2*(pYi*log2(pmax(eps,predi)) + 
                                (1-pYi)*log2(pmax(eps,1-predi)))
                        })
-      print("break")
       meanScore <- Reduce(function(a,b){a+b},scores)/length(scores)
       list(expectedDeviance=pTrainYs*meanScore,
            totalProbCheck=pTrainYs)
