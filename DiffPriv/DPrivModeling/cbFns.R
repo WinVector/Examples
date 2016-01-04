@@ -169,6 +169,24 @@ noisedModelFixedV1 <-  function(d,vars,dTest,stratarg) {
   estimateExpectedPrediction(d2,vars,dTest2)
 }
 
+#' many fits, average prediction
+#' @param stratarg list of noisePlans pre-built noise for the Laplace smoothing
+noisedModelFixedV2 <-  function(d,vars,dTest,stratarg) {
+  pred <- c()
+  for(si in stratarg) {
+    coder <- trainBayesCoderFixed(d,'y',vars,si)
+    d2 <- coder$codeFrame(d)
+    dTest2 <- coder$codeFrame(dTest)
+    pi <- estimateExpectedPrediction(d2,vars,dTest2)
+    if(is.null(pred)) {
+      pred <- pi
+    } else {
+      pred <- pred+pi
+    }
+  }
+  pred/length(stratarg)
+}
+
 
 
 

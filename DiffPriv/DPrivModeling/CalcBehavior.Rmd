@@ -121,6 +121,13 @@ plotDv1 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                       sep=''),
                                 parallelCluster,commonFns)$plotD
 
+# average prediction accross re-runs
+plotDv2 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                noisedModelFixedV2,nPlans,
+                                paste('Laplace noise averaged prediction (sigma=',sigma,') prediction',
+                                      sep=''),
+                                parallelCluster,commonFns)$plotD
+
 # plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 #                                 noisedModel,sigma,
 #                                 paste('varying Laplace noise (sigma=',sigma,') prediction',sep=''),
@@ -137,7 +144,7 @@ plotDv1 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 
 ```{r plot}
 # show performance
-plotDAll <- rbind(plotD2,plotD3,plotD4)
+plotDAll <- rbind(plotD2,plotD3,plotD4,plotDv2)
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
                                  color=what,fill=what)) +
@@ -177,7 +184,7 @@ ggplot(data=plotDAll,mapping=aes(x=x,
   ggtitle(paste('Expected test deviance\n n=',n))
 
 # show average is hard to achieve
-plotDAll <- rbind(laPlotFrame,plotDv1)
+plotDAll <- rbind(laPlotFrame,plotDv1,plotDv2)
 ggplot(data=plotDAll,mapping=aes(x=x,
                                  y=expectedDeviance,
                                  color=what,fill=what)) +
