@@ -7,9 +7,8 @@
 #' @param sigma ignored, only for consistency of calling interface
 #' @return conditonal count structure
 moments <- function(vcol,rescol,sigma) {
-  # count queries
-  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum)
   sumXY <- tapply(as.numeric(rescol),vcol,sum)
+  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum)
   checkTwoNVecs(sumX,sumXY)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))
@@ -24,12 +23,22 @@ moments <- function(vcol,rescol,sigma) {
 #' @param sigma scalar Laplace noise level to apply
 #' @return conditonal count structure
 momentsLNoise <- function(vcol,rescol,sigma) {
-  # count queries
-  sumX <- noiseCount(tapply(rep(1.0,length(rescol)),vcol,sum),sigma)
+  sumXY <- tapply(as.numeric(rescol),vcol,sum)
+  sumX <- tapply(rep(1.0,length(rescol)),vcol,sum)
+  denomNoise <- 0
+  numNoise <- 0
+  if(sigma>0) {
+    denomNoise <- rlaplace(length(sumX),sigma)
+    numNoise <- rlaplace(length(sumX),sigma)
+#     # imitate adding a few observations with mean zero y 
+#     numNoise <- numNoise*sqrt(pmax(0,denomNoise))
+    denomNoise <- pmax(1.e-3,denomNoise)
+  }
   namesX <- names(sumX)
-  sumX <- pmax(1.0,sumX) # kills names
+  sumX <- pmax(1.0,sumX+denomNoise) # kills names
   names(sumX) <- namesX
-  sumXY <- noiseExpectation(tapply(as.numeric(rescol),vcol,sum),sigma)
+  sumXY <- sumXY+numNoise
+  names(sumXY) <- namesX
   checkTwoNVecs(sumX,sumXY)
   list(sumX=as.list(sumX),
        sumXY=as.list(sumXY))

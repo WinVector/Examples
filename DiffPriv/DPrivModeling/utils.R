@@ -25,9 +25,10 @@ checkTwoNVecs <- function(vec1,vec2) {
   }
 }
 
-zapBad <- function(v) {
-  v <- as.numeric(v)
+zapBad <- function(vorig) {
+  v <- as.numeric(vorig)
   v[is.na(v)|is.infinite(v)|is.nan(v)] <- 0
+  names(v) <- names(vorig)
   v
 }
 
@@ -71,6 +72,7 @@ noiseExpectation <- function(orig,sigma) {
   } else {
     x <- orig
   }
+  names(x) <- names(orig)
   x
 }
 
