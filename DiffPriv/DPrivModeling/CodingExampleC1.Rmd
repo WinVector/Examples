@@ -9,7 +9,6 @@ output: html_document
 source('utils.R')
 source('modelCat.R')
 source('mkExample.R')
-source('cbFns.R')
 source('bindValues.R')
 sourcedFns <- ls()
 # devtools::install_github("WinVector/WVPlots")
@@ -127,8 +126,6 @@ runBigExpmt <- function(expmt) {
   
   print('effects model, jacknifed')
   bCoder <- trainBayesCoder(dTrain,yName,vars,0)
-  # dTrainB <- bCoder$codeFrame(dTrain)
-  # dTrainB <- bCoder$codeFrame(dCal)
   dTrainB <- jackknifeBayesCode(dTrain,yName,vars)
   dTestB <- bCoder$codeFrame(dTest)
   varsB <- setdiff(colnames(dTrainB),yVars)
@@ -217,8 +214,7 @@ runBigExpmt <- function(expmt) {
                  function(i) {
                    noisePlan <- mkNoisePlan(dTrain,vars,bSigmaBest)
                  })
-      dTrain$y <- dTrain[[yName]]  # TODO: pass yName
-      dTestB$pred <- noisedModelFixedV2(dTrain,vars,dTest,stratarg)
+      dTestB$pred <- noisedModelFixedV2(dTrain,yName,vars,dTest,stratarg)
       testMeanDeviance <- meanDeviance(dTestB$pred,dTestB[[yName]])
       f3 <- data.frame(repID=repID,
                        bSigmaBest=bSigmaBest,

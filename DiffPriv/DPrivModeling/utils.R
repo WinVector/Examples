@@ -25,6 +25,13 @@ checkTwoNVecs <- function(vec1,vec2) {
   }
 }
 
+zapBad <- function(v) {
+  v <- as.numeric(v)
+  v[is.na(v)|is.infinite(v)|is.nan(v)] <- 0
+  v
+}
+
+
 rmse <- function(pred,truth) {
   sqrt(sum((pred-truth)^2)/length(truth))
 }

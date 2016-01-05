@@ -1,163 +1,10 @@
 
 
-zapBad <- function(v) {
-  v <- as.numeric(v)
-  v[is.na(v)|is.infinite(v)|is.nan(v)] <- 0
-  v
-}
+
+# y is hard-coded as "y" in this file
 
 
 
-
-#' Fit a glm() on top of the dEstimate column to the d$y column, then apply this model to dTest
-#'
-#' Simulates the second stage of a 2-stage modeling process.
-#' @param d data frame with vars and y column
-#' @param vars
-#' @param dTest frame to score on has group and est columns
-#' @return dTest predictions
-estimateExpectedPrediction <- function(d,vars,dTest) {
-  # catch cases unsafe for glm
-  if(all(d$y)) {
-    return(rep(1,nrow(dTest)))
-  }
-  if(all(!d$y)) {
-    return(rep(0,nrow(dTest)))
-  }
-  oldw <- getOption("warn")
-  options(warn = -1)
-  f <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
-  m <- glm(f,data=d,family=binomial(link='logit'))
-  p <- predict(m,newdata=dTest,type='response')
-  options(warn = oldw)
-  p
-}
-
-
-naiveModel <- function(d,vars,dTest,stratarg) {
-  coder <- trainBayesCoder(d,'y',vars,0)
-  d2 <- coder$codeFrame(d)
-  dTest2 <- coder$codeFrame(dTest)
-  estimateExpectedPrediction(d2,vars,dTest2)
-}
-
-jackknifeModel <- function(d,vars,dTest,stratarg) {
-  coder <- trainBayesCoder(d,'y',vars,0)
-  d2 <- jackknifeBayesCode(d,'y',vars)
-  dTest2 <- coder$codeFrame(dTest)
-  estimateExpectedPrediction(d2,vars,dTest2)
-}
-
-#' @param stratarg sigma for the laplace noising
-noisedModel <-  function(d,vars,dTest,stratarg) {
-  coder <- trainBayesCoder(d,'y',vars,stratarg)
-  d2 <- coder$codeFrame(d)
-  dTest2 <- coder$codeFrame(dTest)
-  estimateExpectedPrediction(d2,vars,dTest2)
-}
-
-splitModel <- function(d,vars,dTest,stratarg) {
-  # can use deterministic split as rows are
-  # in a random order in the intended example
-  dSplit1 <- logical(nrow(d))
-  dSplit1[seq_len(floor(nrow(d)/2))] <- TRUE
-  coder <- trainBayesCoder(d[dSplit1,],'y',vars,0)
-  d2 <- coder$codeFrame(d[!dSplit1,])
-  dTest2 <- coder$codeFrame(dTest)
-  estimateExpectedPrediction(d2,vars,dTest2)
-}
-
-
-
-
-
-noiseCountFixed <- function(orig,noise) {
-  x <- zapBad(orig + noise[names(orig)])
-  x <- pmax(x,1.0e-3)
-  names(x) <- names(orig)
-  x
-}
-
-#' Compute counts of rescol conditioned on level of vcol
-#' 
-#' @param vnam character name of independent variable
-#' @param vcol character vector independent variable
-#' @param rescol logical vector dependent variable
-#' @param noisePlan pre-built noise plan
-#' @return conditonal count structure
-conditionalCountsFixed <- function(vnam,vcol,rescol,noisePlan) {
-  # count queries
-  nCandT <- noiseCountFixed(tapply(as.numeric(rescol),vcol,sum),
-                            noisePlan[[vnam]]$tn)   #  sum of true examples for a given C (vector)
-  nCandF <- noiseCountFixed(tapply(as.numeric(!rescol),vcol,sum),
-                            noisePlan[[vnam]]$tf)  #  sum of false examples for a give C (vector)
-  checkTwoNVecs(nCandT,nCandF)
-  list(nCandT=as.list(nCandT),nCandF=as.list(nCandF))
-}
-
-#' Return a Bayes coding plan, with fixed noise
-#' 
-#' @param d data.frame
-#' @param yName name of dependent variable
-#' @param varnames names of independent variables
-#' @param noisePlan pre-built noise plan
-#' @return Bayes encoding plan
-trainBayesCoderFixed <- function(d,yName,varNames,noisePlan) {
-  coder <- trainCoder(d,yName,varNames,conditionalCountsFixed,bayesCode,noisePlan) 
-  coder$what <- 'BayesCoder'
-  coder$codeFrame <- function(df) codeFrame(df,coder,c())
-  coder
-}
-
-#' @param stratarg noisePlan pre-built noise for the Laplace smoothing
-noisedModelFixed <-  function(d,vars,dTest,stratarg) {
-  coder <- trainBayesCoderFixed(d,'y',vars,stratarg)
-  d2 <- coder$codeFrame(d)
-  dTest2 <- coder$codeFrame(dTest)
-  estimateExpectedPrediction(d2,vars,dTest2)
-}
-
-#' one fit on averged data frame
-#' @param stratarg list of noisePlans pre-built noise for the Laplace smoothing
-noisedModelFixedV1 <-  function(d,vars,dTest,stratarg) {
-  d2 <- c()
-  dTest2 <- c()
-  for(si in stratarg) {
-    coder <- trainBayesCoderFixed(d,'y',vars,si)
-    d2i <- coder$codeFrame(d)
-    dTest2i <- coder$codeFrame(dTest)
-    if(is.null(d2)) {
-      d2 <- d2i
-      dTest2 <- dTest2i
-    } else {
-      d2 <- d2 + d2i
-      dTest2 <- dTest2 + dTest2i
-    }
-  }
-  d2 <- d2/length(stratarg)
-  d2$y <- d$y
-  dTest2 <- dTest2/length(stratarg)
-  dTest2$y <- dTest$y
-  estimateExpectedPrediction(d2,vars,dTest2)
-}
-
-#' many fits, average prediction
-#' @param stratarg list of noisePlans pre-built noise for the Laplace smoothing
-noisedModelFixedV2 <-  function(d,vars,dTest,stratarg) {
-  pred <- c()
-  for(si in stratarg) {
-    coder <- trainBayesCoderFixed(d,'y',vars,si)
-    d2 <- coder$codeFrame(d)
-    dTest2 <- coder$codeFrame(dTest)
-    pi <- estimateExpectedPrediction(d2,vars,dTest2)
-    if(is.null(pred)) {
-      pred <- pi
-    } else {
-      pred <- pred+pi
-    }
-  }
-  pred/length(stratarg)
-}
 
 
 
@@ -227,7 +74,7 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
     function(y) {
       d$y <- y
       pTrainYs <- pJointYsgivenRows(d,xs,y,signalGroupLevels)
-      predTest <- strat(d,allVars,dTest,stratarg)
+      predTest <- strat(d,'y',allVars,dTest,stratarg)
       # deviance score
       scores <- lapply(seq_len(length(pTestPy)),
                        function(i) {
