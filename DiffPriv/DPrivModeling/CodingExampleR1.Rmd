@@ -94,7 +94,7 @@ runBigExpmt <- function(expmt) {
                     verbose=TRUE)
   dTrainB$pred <- preds$trainPred
   print(paste(eName,
-              'Laplace noised',bSigmaBest,'train rmse',
+              'Noised',bSigmaBest,'train rmse',
               rmse(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::ScatterHist(dTrainB,'pred',yName,
                              paste(eName,
@@ -103,7 +103,7 @@ runBigExpmt <- function(expmt) {
                              smoothmethod='lm',annot_size=2))
   dTestB$pred <- preds$appPred
   print(paste(eName,
-              'Laplace noised',bSigmaBest,'test rmse',
+              'Noised',bSigmaBest,'test rmse',
               rmse(dTestB$pred,dTestB[[yName]])))
   print(WVPlots::ScatterHist(dTestB,'pred',yName,
                              paste(eName,
@@ -218,7 +218,7 @@ runBigExpmt <- function(expmt) {
   }
   
   eworker <- mkExpmtRunner(vplan)
-  res <- parallel::parLapplyLB(cl,1:20,eworker)
+  res <- parallel::parLapplyLB(cl,1:100,eworker)
   res <- do.call(rbind,res)
   
   print(ggplot(data=res,aes(x=testRMSE,color=what)) +

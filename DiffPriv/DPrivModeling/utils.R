@@ -48,30 +48,23 @@ meanDeviance <- function(pred,pY) {
 }
 
 
-rlaplace <- function(n,sigma) {
+countNoise <- function(n,sigma) {
   if(sigma<=0) {
     return(numeric(n))
   }
-  rexp(n,rate = 1/sigma) - rexp(n,rate = 1/sigma)
+  # rlaplace is: rexp(n,rate = 1/sigma) - rexp(n,rate = 1/sigma)
+  # using pmax(0,rlaplace) a lot of places- might be better to use rexp()
+  # in those situations
+  rexp(n,rate = 1/sigma)
 }
 
 noiseCount <- function(orig,sigma) {
   if(sigma>0) {
-    x <- orig + rlaplace(length(orig),sigma)
+    x <- orig + countNoise(length(orig),sigma)
   } else {
     x <- orig
   }
   x <- pmax(x,1.0e-3)
-  names(x) <- names(orig)
-  x
-}
-
-noiseExpectation <- function(orig,sigma) {
-  if(sigma>0) {
-    x <- orig + rlaplace(length(orig),sigma)
-  } else {
-    x <- orig
-  }
   names(x) <- names(orig)
   x
 }
@@ -92,9 +85,9 @@ mkNoisePlan <- function(d,vars,sigma) {
   noisePlan <- lapply(vars,function(vi) {
     levs <- sort(unique(d[[vi]]))
     nlevs <- length(levs)
-    tn <- rlaplace(nlevs,sigma)
+    tn <- countNoise(nlevs,sigma)
     names(tn) <- levs
-    tf <- rlaplace(nlevs,sigma)
+    tf <- countNoise(nlevs,sigma)
     names(tf) <- levs
     list(tn=tn,tf=tf)
   })

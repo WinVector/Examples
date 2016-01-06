@@ -5,7 +5,7 @@
 #' @param vnam character name of independent variable
 #' @param vcol character vector independent variable
 #' @param rescol logical vector dependent variable
-#' @param sigma scalar Laplace noise level to apply
+#' @param sigma scalar noise level to apply
 #' @return conditonal count structure
 conditionalCounts <- function(vnam,vcol,rescol,sigma) {
   # count queries
@@ -102,7 +102,7 @@ codeFrame <- function(d,codes,rescol) {
 #' @param d data.frame
 #' @param yName name of dependent variable
 #' @param varnames names of independent variables
-#' @param sigma Laplace smoothing degree
+#' @param sigma noising degree
 #' @return Bayes encoding plan
 trainBayesCoder <- function(d,yName,varNames,sigma) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,bayesCode,sigma) 
@@ -157,7 +157,7 @@ countCode <- function(vname,vcol,codes,rescol) {
 #' @param d data.frame
 #' @param yName name of dependent variable
 #' @param varnames names of independent variables
-#' @param sigma Laplace smoothing degree
+#' @param sigma noising degree
 #' @return count coding plan
 trainCountCoder <- function(d,yName,varNames,sigma) {
   coder <- trainCoder(d,yName,varNames,conditionalCounts,countCode,sigma) 
@@ -265,7 +265,7 @@ jackknifeModel <- function(d,yName,vars,dTest,stratarg) {
   estimateExpectedPrediction(d2,yName,vars,dTest2)
 }
 
-#' @param stratarg sigma for the laplace noising
+#' @param stratarg sigma for the noising
 noisedModel <-  function(d,yName,vars,dTest,stratarg) {
   coder <- trainBayesCoder(d,yName,vars,stratarg)
   d2 <- coder$codeFrame(d)
@@ -326,7 +326,7 @@ trainBayesCoderFixed <- function(d,yName,varNames,noisePlan) {
   coder
 }
 
-#' @param stratarg noisePlan pre-built noise for the Laplace smoothing
+#' @param stratarg noisePlan pre-built noise for the noising
 noisedModelFixed <-  function(d,yName,vars,dTest,stratarg) {
   coder <- trainBayesCoderFixed(d,yName,vars,stratarg)
   d2 <- coder$codeFrame(d)
@@ -335,7 +335,7 @@ noisedModelFixed <-  function(d,yName,vars,dTest,stratarg) {
 }
 
 #' one fit on averged data frame
-#' @param stratarg list of noisePlans pre-built noise for the Laplace smoothing
+#' @param stratarg list of noisePlans pre-built noise for the noising
 noisedModelFixedV1 <-  function(d,yName,vars,dTest,stratarg) {
   d2 <- c()
   dTest2 <- c()
@@ -359,7 +359,7 @@ noisedModelFixedV1 <-  function(d,yName,vars,dTest,stratarg) {
 }
 
 #' many fits, average prediction
-#' @param stratarg list of noisePlans pre-built noise for the Laplace smoothing
+#' @param stratarg list of noisePlans pre-built noise for the noising
 noisedModelFixedV2 <-  function(d,yName,vars,dTest,stratarg) {
   pred <- c()
   for(si in stratarg) {

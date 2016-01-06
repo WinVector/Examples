@@ -28,14 +28,17 @@ momentsLNoise <- function(vcol,rescol,sigma) {
   denomNoise <- 0
   numNoise <- 0
   if(sigma>0) {
-    denomNoise <- rlaplace(length(sumX),sigma)
-    numNoise <- rlaplace(length(sumX),sigma)
-#     # imitate adding a few observations with mean zero y 
-#     numNoise <- numNoise*sqrt(pmax(0,denomNoise))
-    denomNoise <- pmax(1.e-3,denomNoise)
+#     # closest to known practice: Laplace noise in num and den
+#     denomNoise <- pmax(0,countNoise(length(sumX),sigma))
+#     numNoise <- countNoise(length(sumX),sigma)
+    # imitate adding some y=+1 and y=-1 obsevations
+    n1 <- rexp(length(sumX),rate = 1/sigma)
+    n2 <- rexp(length(sumX),rate = 1/sigma)
+    numNoise <- n1-n2
+    denNoise <- n1+n2
   }
   namesX <- names(sumX)
-  sumX <- pmax(1.0,sumX+denomNoise) # kills names
+  sumX <- pmax(1.0e-3,sumX+denomNoise) # kills names
   names(sumX) <- namesX
   sumXY <- sumXY+numNoise
   names(sumXY) <- namesX

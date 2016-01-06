@@ -100,7 +100,7 @@ lnPlots <- lapply(1:20,
                    noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
                    plot <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                                    noisedModelFixed,noisePlan,
-                                                   paste('Laplace noise (sigma=',
+                                                   paste('Noised (sigma=',
                                                          sigma,') prediction\ntry=',
                                                          i,sep=''),
                                                    parallelCluster,commonFns)$plotD
@@ -117,20 +117,20 @@ nPlans <- lapply(lnPlots,
                  })
 plotDv1 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 noisedModelFixedV1,nPlans,
-                                paste('Laplace noise averaged frame (sigma=',sigma,') prediction',
+                                paste('Noised averaged frame (sigma=',sigma,') prediction',
                                       sep=''),
                                 parallelCluster,commonFns)$plotD
 
 # average prediction accross re-runs
 plotDv2 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                 noisedModelFixedV2,nPlans,
-                                paste('Laplace noise averaged prediction (sigma=',sigma,') prediction',
+                                paste('Noised averaged prediction (sigma=',sigma,') prediction',
                                       sep=''),
                                 parallelCluster,commonFns)$plotD
 
 # plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
 #                                 noisedModel,sigma,
-#                                 paste('varying Laplace noise (sigma=',sigma,') prediction',sep=''),
+#                                 paste('varying noise (sigma=',sigma,') prediction',sep=''),
 #                                 parallelCluster,commonFns)$plotD
                                 
 
@@ -152,7 +152,7 @@ ggplot(data=plotDAll,mapping=aes(x=x,
   scale_color_brewer(palette='Dark2') +
   ggtitle(paste('Expected test deviance\n n=',n))
 
-# show many different Laplace noised models
+# show many different noised models
 lnPlotsP <- lapply(seq_len(length(lnPlots)),
                   function(i) {
                     p <- lnPlots[[i]]$plot
@@ -161,7 +161,7 @@ lnPlotsP <- lapply(seq_len(length(lnPlots)),
                   })
 lPlotFrame <- do.call(rbind,lnPlotsP)
 laPlotFrame <- aggregate(expectedDeviance~x,data=lPlotFrame,FUN=mean)
-laPlotFrame$what <- 'mean Laplace noised model'
+laPlotFrame$what <- 'mean noised model'
 ggplot() +
   geom_line(data=lPlotFrame,mapping=aes(x=x,
                                  y=expectedDeviance,
@@ -170,10 +170,10 @@ ggplot() +
   geom_line(data=laPlotFrame,mapping=aes(x=x,
                                  y=expectedDeviance),
             size=2,color='#d95f02') +
-  ggtitle('Expected test deviance\nLaplace noised models')
+  ggtitle('Expected test deviance\nnoised models')
 
 
-# show performance of mean-of Laplaced models, note this isn't achieved 
+# show performance of mean-of noised models, note this isn't achieved 
 # by most of the individual models
 plotDAll <- rbind(plotD2,plotD3,laPlotFrame)
 ggplot(data=plotDAll,mapping=aes(x=x,

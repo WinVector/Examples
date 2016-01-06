@@ -100,7 +100,7 @@ runBigExpmt <- function(expmt) {
                     verbose=TRUE)
   dTrainB$pred <- preds$trainPred
   print(paste(eName,
-              'Laplace noised',bSigmaBest,'train mean deviance',
+              'Noised',bSigmaBest,'train mean deviance',
               meanDeviance(dTrainB$pred,dTrainB[[yName]])))
   print(WVPlots::DoubleDensityPlot(dTrainB,'pred',yName,
                              paste(eName,
@@ -112,7 +112,7 @@ runBigExpmt <- function(expmt) {
                                    bSigmaBest)))
   dTestB$pred <- preds$appPred
   print(paste(eName,
-              'Laplace noised',bSigmaBest,'test mean deviance',
+              'Noised',bSigmaBest,'test mean deviance',
               meanDeviance(dTestB$pred,dTestB[[yName]])))
   print(WVPlots::DoubleDensityPlot(dTestB,'pred',yName,
                              paste(eName,
@@ -187,7 +187,7 @@ runBigExpmt <- function(expmt) {
                        testMeanDeviance=testMeanDeviance,
                        stringsAsFactors = FALSE)
       
-      # Laplace sigma model
+      # sigma noised model
       bSigmaBest <- findSigmaC(NULL,
                                fnFitter,
                                yName,
@@ -241,7 +241,7 @@ runBigExpmt <- function(expmt) {
   }
   
   eworker <- mkExpmtRunner(vplan)
-  res <- parallel::parLapplyLB(cl,1:20,eworker)
+  res <- parallel::parLapplyLB(cl,1:100,eworker)
   res <- do.call(rbind,res)
   
   print(ggplot(data=res,aes(x=testMeanDeviance,color=what)) +
