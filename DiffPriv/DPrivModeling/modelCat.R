@@ -376,6 +376,12 @@ noisedModelFixedV2 <-  function(d,yName,vars,dTest,stratarg) {
   pred/length(stratarg)
 }
 
+
+# const model
+constModel <-  function(d,yName,vars,dTest,stratarg) {
+  rep(mean(d[[yName]]),nrow(dTest))
+}
+
 #' Fit a glm() on top of the dEstimate column to the d$y column, then apply this model to dTest
 #'
 #' Simulates the second stage of a 2-stage modeling process.

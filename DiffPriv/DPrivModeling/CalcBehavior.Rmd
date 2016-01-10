@@ -82,6 +82,11 @@ runExperiment <- function(d,experimentName) {
   print(d)
   print(n)
   print(experimentName)
+  
+  plotObliv <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                  constModel,c(),
+                                  'oblivious model',
+                                  parallelCluster,commonFns)$plotD
   plotNaive <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                   naiveModel,c(),
                                   'naive prediction',
@@ -121,7 +126,7 @@ runExperiment <- function(d,experimentName) {
   
 
   # show performance
-  plotDAll <- rbind(plotNaive,plotJackknife,plotLNoise,plotAvgNoised)
+  plotDAll <- rbind(plotObliv,plotNaive,plotJackknife,plotLNoise,plotAvgNoised)
   print(ggplot(data=plotDAll,mapping=aes(x=x,
                                          y=expectedDeviance,
                                          color=what,fill=what)) +
