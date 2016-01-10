@@ -19,12 +19,12 @@ parallelCluster <- parallel::makeCluster(parallel::detectCores())
 set.seed(23225)
 
 varValues <- list()
-signalValues <- paste('g',1:4,sep='')
+signalValues <- paste('g',1:6,sep='')
 varValues[['group']] <- signalValues
 # add in noise groups
 noiseGroups <- paste('n',1:2,sep='')
 for(gName in noiseGroups) {
-  gValues <- paste(gName,1:4,sep='.')
+  gValues <- paste(gName,1:6,sep='.')
   varValues[[gName]] <- gValues
 }
 allVars <- c('group',noiseGroups)
@@ -160,14 +160,14 @@ runExperiment <- function(d,experimentName) {
 Random experimental design.
 
 ```{r randexpmt}
-dRand <- dTest[sample.int(nrow(dTest),10,replace=TRUE),]
-runExperiment(dRand,'random design (10 rows)')
+dRand <- dTest[sample.int(nrow(dTest),12,replace=TRUE),]
+runExperiment(dRand,'random design (12 rows)')
 ```
 
 Experiment where each level occurs exactly once.
 
 ```{r randexpmt1}
-dOne <- tryFor1design(4,allVars,dTest)
+dOne <- tryFor1design(6,allVars,dTest)
 runExperiment(dOne,'1-design (6 rows)')
 ```
 
