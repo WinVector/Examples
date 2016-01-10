@@ -60,6 +60,7 @@ extractSum <- function(vlist,vname) {
 evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
                                  strat,stratarg,what,
                                  parallelCluster,commonFns) {
+  n <- nrow(d)
   xs <- seq(0,1,by=0.01)
   pTestPy <- pEachYgivenRow(dTest,xs,signalGroupLevels)
   allVars <- union("group",noiseGroups)
@@ -113,6 +114,63 @@ evalModelingStrategy <- function(d,dTest,signalGroupLevels,noiseGroups,
     totalProbCheck=totalProbCheck,
     expectedDeviance=expectedDeviance
   )
+}
+
+
+# try to build an n-row sample where each level that occurs occurs exactly k times
+# uses fact dSource is a complete design
+tryFor1design <- function(n,vars,dSource) {
+  idxSet <- c()
+  while(length(idxSet)!=n) {
+    idxSet <- c()
+    canUse <- rep(TRUE,nrow(dSource))
+    while(any(canUse)&&(length(idxSet)<n)) {
+      possible <- as.list(seq_len(nrow(dSource))[canUse])
+      # sample from a single number vector samples from a sequence up to that number
+      # a but we avoid by wrapping our numbers in a list 
+      idx <- as.numeric(sample(possible,1))
+      idxSet <- c(idxSet,idx)
+      for(v in vars) {
+        canUse <- canUse & (dSource[[v]]!=dSource[[v]][idx])
+      }
+    }
+  }
+  dSource[idxSet,]
+}
+
+# try to build an n-row sample where each level that occurs occurs exactly k times
+# uses fact dSource is a complete design
+tryForkdesign <- function(n,k,vars,dSource) {
+  if(k<=1) {
+    return(tryFor1design(n,vars,dSource))
+  }
+  nvar <- length(vars)
+  # pick symbols we are going to see
+  targets <- lapply(vars,
+                    function(v) {
+                      sample(unique(dSource[[v]]),n/k,replace=FALSE)
+                    })
+  # reduce source to rows involving only those symbols
+  wants <- lapply(seq_len(nvar),
+                  function(i) {
+                    dSource[[vars[[i]]]] %in% targets[[i]]
+                  })
+  want <- Reduce(function(a,b) {a&b},wants)
+  dSource <- dSource[want,]
+  deqk <- c()
+  while(is.null(deqk)) {
+    deqk <- dSource[sample.int(nrow(dSource),n,replace=TRUE),]
+    for(v in allVars) {
+      tab <- table(deqk[[v]])
+      minV <- min(tab)
+      maxV <- max(tab)
+      if((minV!=maxV)||(maxV!=2)) {
+        deqk <- c()
+        break
+      }
+    }
+  }
+  deqk
 }
 
 

@@ -27,18 +27,12 @@ for(gName in noiseGroups) {
   gValues <- paste(gName,1:4,sep='.')
   varValues[[gName]] <- gValues
 }
+allVars <- c('group',noiseGroups)
 
 # complete uniform test design
 dTest <- expand.grid(varValues,stringsAsFactors=FALSE)
 print(head(dTest))
 print(dim(dTest))
-
-d <- dTest[sample.int(nrow(dTest),10,replace=TRUE),]
-n <- nrow(d)
-# placeholder for y
-d$y <- NA
-print(d)
-print(n)
 ```
 
 
@@ -79,119 +73,106 @@ group variable can hide degrees of freedom and cause over-fitting.
 
 
 
-```{r calc}
-# plotD1 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-#                                 splitModel,c(),
-#                                 'split prediction',
-#                                 parallelCluster,commonFns)$plotD
-plotD2 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                naiveModel,c(),
-                                'naive prediction',
-                                parallelCluster,commonFns)$plotD
-plotD3 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                jackknifeModel,c(),
-                                'jackknife prediction',
-                                parallelCluster,commonFns)$plotD
-
-# run multiple noise plans
-sigma <- 4
-lnPlots <- lapply(1:20,
-                 function(i) {
-                   noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
-                   plot <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+```{r defcalc}
+runExperiment <- function(d,experimentName) {
+  print("***********************************")
+  n <- nrow(d)
+  # placeholder for y
+  d$y <- NA
+  print(d)
+  print(n)
+  print(experimentName)
+  plotNaive <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                  naiveModel,c(),
+                                  'naive prediction',
+                                  parallelCluster,commonFns)$plotD
+  plotJackknife <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                  jackknifeModel,c(),
+                                  'jackknife prediction',
+                                  parallelCluster,commonFns)$plotD
+  
+  # run multiple noise plans
+  sigma <- 4
+  lnPlots <- lapply(1:20,
+                    function(i) {
+                      noisePlan <- mkNoisePlan(d,unique(c('group',noiseGroups)),sigma)
+                      plot <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
                                                    noisedModelFixed,noisePlan,
                                                    paste('Noised (sigma=',
                                                          sigma,') prediction\ntry=',
                                                          i,sep=''),
                                                    parallelCluster,commonFns)$plotD
-                   list(noisePlan=noisePlan,
-                        plot=plot)
-                 }
-)
-plotD4 <- lnPlots[[1]]$plot
+                      list(noisePlan=noisePlan,
+                           plot=plot)
+                    }
+  )
+  plotLNoise <- lnPlots[[1]]$plot
+  
+  # run an averaging of noise plans
+  nPlans <- lapply(lnPlots,
+                   function(r) {
+                     r$noisePlan
+                   })
+  plotAvgNoised <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
+                                  noisedModelFixedV2,nPlans,
+                                  paste('Noised averaged prediction (sigma=',sigma,')',
+                                        sep=''),
+                                  parallelCluster,commonFns)$plotD
+  
 
-# run an averaging of noise plans
-nPlans <- lapply(lnPlots,
-                 function(r) {
-                   r$noisePlan
-                 })
-plotDv1 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModelFixedV1,nPlans,
-                                paste('Noised averaged frame (sigma=',sigma,') prediction',
-                                      sep=''),
-                                parallelCluster,commonFns)$plotD
-
-# average prediction accross re-runs
-plotDv2 <- evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-                                noisedModelFixedV2,nPlans,
-                                paste('Noised averaged prediction (sigma=',sigma,') prediction',
-                                      sep=''),
-                                parallelCluster,commonFns)$plotD
-
-# plotD5 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-#                                 noisedModel,sigma,
-#                                 paste('varying noise (sigma=',sigma,') prediction',sep=''),
-#                                 parallelCluster,commonFns)$plotD
-                                
-
-# noisePlanC <- mkNoisePlanConst(d,unique(c('group',noiseGroups)),sigma)
-# plotD6 <-  evalModelingStrategy(d,dTest,signalValues,noiseGroups,
-#                                 noisedModelFixed,noisePlanC,
-#                                 paste('constant adjusted (sigma=',sigma,') prediction',sep=''),
-#                                 parallelCluster,commonFns)$plotD
-
+  # show performance
+  plotDAll <- rbind(plotNaive,plotJackknife,plotLNoise,plotAvgNoised)
+  print(ggplot(data=plotDAll,mapping=aes(x=x,
+                                         y=expectedDeviance,
+                                         color=what,fill=what)) +
+          geom_line(size=2) +
+          scale_color_brewer(palette='Dark2') +
+          ggtitle(paste('Expected test deviance\n',experimentName)))
+  
+  # show many different noised models
+  lnPlotsP <- lapply(seq_len(length(lnPlots)),
+                     function(i) {
+                       p <- lnPlots[[i]]$plot
+                       p$rep <- i
+                       p
+                     })
+  lPlotFrame <- do.call(rbind,lnPlotsP)
+  print(ggplot() +
+          geom_line(data=plotLNoise,mapping=aes(x=x,
+                                                y=expectedDeviance),
+                    color='#7570b3') +
+          geom_line(data=plotAvgNoised,mapping=aes(x=x,
+                                                   y=expectedDeviance),
+                    color='#e7298a') +
+          geom_line(data=lPlotFrame,mapping=aes(x=x,
+                                                y=expectedDeviance,
+                                                group=rep),
+                    alpha=0.2) +
+          ggtitle(paste('Expected test deviance\nnoised models]\n',experimentName)))
+}
 ```
 
-```{r plot}
-# show performance
-plotDAll <- rbind(plotD2,plotD3,plotD4,plotDv2)
-ggplot(data=plotDAll,mapping=aes(x=x,
-                                 y=expectedDeviance,
-                                 color=what,fill=what)) +
-  geom_line(size=2) +
-  scale_color_brewer(palette='Dark2') +
-  ggtitle(paste('Expected test deviance\n n=',n))
+Random experimental design.
 
-# show many different noised models
-lnPlotsP <- lapply(seq_len(length(lnPlots)),
-                  function(i) {
-                    p <- lnPlots[[i]]$plot
-                    p$rep <- i
-                    p
-                  })
-lPlotFrame <- do.call(rbind,lnPlotsP)
-laPlotFrame <- aggregate(expectedDeviance~x,data=lPlotFrame,FUN=mean)
-laPlotFrame$what <- 'mean noised model'
-ggplot() +
-  geom_line(data=lPlotFrame,mapping=aes(x=x,
-                                 y=expectedDeviance,
-                                 group=rep),
-            alpha=0.2) +
-  geom_line(data=laPlotFrame,mapping=aes(x=x,
-                                 y=expectedDeviance),
-            size=2,color='#d95f02') +
-  ggtitle('Expected test deviance\nnoised models')
-
-
-# show performance of mean-of noised models, note this isn't achieved 
-# by most of the individual models
-plotDAll <- rbind(plotD2,plotD3,laPlotFrame)
-ggplot(data=plotDAll,mapping=aes(x=x,
-                                 y=expectedDeviance,
-                                 color=what,fill=what)) +
-  geom_line(size=2) +
-  scale_color_brewer(palette='Dark2') +
-  ggtitle(paste('Expected test deviance\n n=',n))
-
-# show average in relation to others
-plotDAll <- rbind(laPlotFrame,plotDv1,plotDv2)
-ggplot(data=plotDAll,mapping=aes(x=x,
-                                 y=expectedDeviance,
-                                 color=what,fill=what)) +
-  geom_line(size=2) +
-  scale_color_brewer(palette='Dark2') +
-  ggtitle(paste('Expected test deviance\n n=',n))
+```{r randexpmt}
+dRand <- dTest[sample.int(nrow(dTest),10,replace=TRUE),]
+runExperiment(dRand,'random design (10 rows)')
 ```
+
+Experiment where each level occurs exactly once.
+
+```{r randexpmt1}
+dOne <- tryFor1design(4,allVars,dTest)
+runExperiment(dOne,'1-design (6 rows)')
+```
+
+Experiment where each level occurs exactly twice.
+
+```{r randexpmt2}
+dTwo <- tryForkdesign(4,2,allVars,dTest)
+runExperiment(dTwo,'2-design (6 rows)')
+```
+
 
 ```{r shutdown, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 if(!is.null(parallelCluster)) {
