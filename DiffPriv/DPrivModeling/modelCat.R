@@ -379,7 +379,9 @@ noisedModelFixedV2 <-  function(d,yName,vars,dTest,stratarg) {
 
 # const model
 constModel <-  function(d,yName,vars,dTest,stratarg) {
-  rep(mean(d[[yName]]),nrow(dTest))
+  eps <- 1.0e-3
+  pred <- min(1-eps,max(eps,mean(d[[yName]])))
+  rep(pred,nrow(dTest))
 }
 
 #' Fit a glm() on top of the dEstimate column to the d$y column, then apply this model to dTest

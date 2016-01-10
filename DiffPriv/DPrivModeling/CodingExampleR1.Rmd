@@ -156,6 +156,15 @@ runBigExpmt <- function(expmt) {
       dCal <- generateExample(vplan,10000)   # Used to pick sigma
       dTest <- generateExample(vplan,10000)  # Pure holdout test
       
+      # constant model
+      pred <- mean(dTrain[[yName]])
+      testRMSE <- rmse(rep(pred,nrow(dTest)),dTest[[yName]])
+      f0 <- data.frame(repID=repID,
+                       bSigmaBest=NA,
+                       what='ObliviousModel',
+                       testRMSE=testRMSE,
+                       stringsAsFactors = FALSE)
+ 
       # run naive mode
       bCoder <- trainEffectCoderR(dTrain,yName,vars,0)
       dTrainB <- bCoder$codeFrameR(dTrain)
@@ -163,13 +172,11 @@ runBigExpmt <- function(expmt) {
       varsB <- setdiff(colnames(dTrainB),yVars)
       preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
       dTrainB$pred <- preds$trainPred
-      trainRMSE <- rmse(dTrainB$pred,dTrainB[[yName]])
       dTestB$pred <- preds$appPred
       testRMSE <- rmse(dTestB$pred,dTestB[[yName]])
       f1 <- data.frame(repID=repID,
                        bSigmaBest=NA,
                        what='NaiveModel',
-                       trainRMSE=trainRMSE,
                        testRMSE=testRMSE,
                        stringsAsFactors = FALSE)
       
@@ -187,13 +194,11 @@ runBigExpmt <- function(expmt) {
       varsB <- setdiff(colnames(dTrainB),yVars)
       preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
       dTrainB$pred <- preds$trainPred
-      trainRMSE <- rmse(dTrainB$pred,dTrainB[[yName]])
       dTestB$pred <- preds$appPred
       testRMSE <- rmse(dTestB$pred,dTestB[[yName]])
       f2 <- data.frame(repID=repID,
                        bSigmaBest=bSigmaBest,
                        what='NoisedModel',
-                       trainRMSE=trainRMSE,
                        testRMSE=testRMSE,
                        stringsAsFactors = FALSE)
       
@@ -204,16 +209,14 @@ runBigExpmt <- function(expmt) {
       varsB <- setdiff(colnames(dTrainB),yVars)
       preds <- fnFitter(yName,varsB,dTrainB,dTestB) 
       dTrainB$pred <- preds$trainPred
-      trainRMSE <- rmse(dTrainB$pred,dTrainB[[yName]])
       dTestB$pred <- preds$appPred
       testRMSE <- rmse(dTestB$pred,dTestB[[yName]])
       f3 <- data.frame(repID=repID,
                        bSigmaBest=NA,
                        what='JackknifeModel',
-                       trainRMSE=trainRMSE,
                        testRMSE=testRMSE,
                        stringsAsFactors = FALSE)
-      rbind(f1,f2,f3)
+      rbind(f0,f1,f2,f3)
     }
   }
   
@@ -223,7 +226,7 @@ runBigExpmt <- function(expmt) {
   
   print(ggplot(data=res,aes(x=testRMSE,color=what)) +
     geom_density(adjust=0.5,trim=TRUE) + 
-    ggtitle(paste(eName,'test RMSE, noised model',sep='\n')))
+    ggtitle(paste(eName,'test RMSE',sep='\n')))
   
   for(w in sort(unique(res$what))) {
     print("********")
