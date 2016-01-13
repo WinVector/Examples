@@ -1,5 +1,51 @@
 
 
+
+#' Compute counts of rescol conditioned on level of vcol
+#' 
+#' @param vnam character name of independent variable
+#' @param vcol character vector independent variable
+#' @param rescol logical vector dependent variable
+#' @param sigma scalar noise level to apply
+#' @param pruneSig pruning significance
+#' @return conditonal count structure
+conditionalCountsImpl <- function(vnam,vcol,rescol,sigma,pruneSig) {
+  # count queries
+  nCandT <- noiseCount(tapply(as.numeric(rescol),vcol,sum),sigma)   #  sum of true examples for a given C (vector)
+  nCandF <- noiseCount(tapply(as.numeric(!rescol),vcol,sum),sigma)  #  sum of false examples for a give C (vector)
+  checkTwoNVecs(nCandT,nCandF)
+  # compute significance for any downstream use
+  nT <- sum(as.numeric(nCandT))
+  nF <- sum(as.numeric(nCandF))
+  sig <- c()
+  if((!is.null(pruneSig))&&(pruneSig<1)) {
+    sig <- rep(1.0,length(nCandT))
+    names(sig) <- names(nCandT)
+    if((nF>=1)&&(nT>=1)&&(length(nCandT)>1)) {
+      sig <- lapply(names(nCandT),
+                    function(lev) {
+                      nCT <- nCandT[[lev]]
+                      nCF <- nCandF[[lev]]
+                      tab <- matrix(c(nF-nCF,nT-nCT,nCF,nCT),
+                                    nrow=2)
+                      ft <- stats::fisher.test(tab)
+                      ft$p.value
+                    })
+      sig <- as.numeric(sig)
+      names(sig) <- names(nCandT)
+    }
+    keep <- sig<=pruneSig
+    nCandT <- nCandT[keep]
+    nCandF <- nCandF[keep]
+  }
+  list(nT=nT,
+       nF=nF,
+       nCandT=as.list(nCandT),
+       nCandF=as.list(nCandF),
+       sig=sig)
+}
+
+
 #' Compute counts of rescol conditioned on level of vcol
 #' 
 #' @param vnam character name of independent variable
@@ -7,14 +53,21 @@
 #' @param rescol logical vector dependent variable
 #' @param sigma scalar noise level to apply
 #' @return conditonal count structure
-conditionalCounts <- function(vnam,vcol,rescol,sigma) {
-  # count queries
-  nCandT <- noiseCount(tapply(as.numeric(rescol),vcol,sum),sigma)   #  sum of true examples for a given C (vector)
-  nCandF <- noiseCount(tapply(as.numeric(!rescol),vcol,sum),sigma)  #  sum of false examples for a give C (vector)
-  checkTwoNVecs(nCandT,nCandF)
-  list(nCandT=as.list(nCandT),nCandF=as.list(nCandF))
+conditionalCountsNoised <- function(vnam,vcol,rescol,sigma) {
+  conditionalCountsImpl(vnam,vcol,rescol,sigma,c()) 
 }
 
+
+#' Compute counts of rescol conditioned on level of vcol
+#' 
+#' @param vnam character name of independent variable
+#' @param vcol character vector independent variable
+#' @param rescol logical vector dependent variable
+#' @param pruneSig pruning significance
+#' @return conditonal count structure
+conditionalCountsPruned <- function(vnam,vcol,rescol,pruneSig) {
+  conditionalCountsImpl(vnam,vcol,rescol,0.0,pruneSig)
+}
 
 
 #' Encode a categorical variable as a Bayes model
@@ -30,8 +83,8 @@ bayesCode <- function(vname,vcol,counts,rescol,jackDen=1) {
   nCandT <- listLookup(vcol,counts$nCandT) #  sum of true examples for given C
   nCandF <- listLookup(vcol,counts$nCandF) #  sum of false examples for given C
   # dervived values
-  nT <- rep(sum(as.numeric(counts$nCandT)),length(vcol)) #  sum of true examples (vector)
-  nF <- rep(sum(as.numeric(counts$nCandF)),length(vcol))  #  sum of false examples (vector)
+  nT <- rep(counts$nT,length(vcol)) #  sum of true examples (vector)
+  nF <- rep(counts$nF,length(vcol))  #  sum of false examples (vector)
   if(!is.null(rescol)) {
     # Jackknife adjust entries by removing self from counts
     nCandT <- nCandT - ifelse(rescol,1,0)/jackDen
@@ -52,6 +105,8 @@ bayesCode <- function(vname,vcol,counts,rescol,jackDen=1) {
   colnames(z) <- vname
   z
 }
+
+
 
 #' Train a coder from examples
 #' 
@@ -105,7 +160,22 @@ codeFrame <- function(d,codes,rescol) {
 #' @param sigma noising degree
 #' @return Bayes encoding plan
 trainBayesCoder <- function(d,yName,varNames,sigma) {
-  coder <- trainCoder(d,yName,varNames,conditionalCounts,bayesCode,sigma) 
+  coder <- trainCoder(d,yName,varNames,conditionalCountsNoised,bayesCode,sigma) 
+  coder$what <- 'BayesCoder'
+  coder$codeFrame <- function(df) codeFrame(df,coder,c())
+  coder
+}
+
+
+#' Return a Bayes coding plan
+#' 
+#' @param d data.frame
+#' @param yName name of dependent variable
+#' @param varnames names of independent variables
+#' @param pruneSig pruning significance
+#' @return Bayes encoding plan
+trainBayesCoderPruned <- function(d,yName,varNames,pruneSig) {
+  coder <- trainCoder(d,yName,varNames,conditionalCountsPruned,bayesCode,pruneSig) 
   coder$what <- 'BayesCoder'
   coder$codeFrame <- function(df) codeFrame(df,coder,c())
   coder
@@ -120,7 +190,7 @@ trainBayesCoder <- function(d,yName,varNames,sigma) {
 #' @param varnames names of independent variables
 #' @return Jackknife encoded frame
 jackknifeBayesCode <- function(d,yName,varNames) {
-  coder <- trainCoder(d,yName,varNames,conditionalCounts,bayesCode,0) 
+  coder <- trainCoder(d,yName,varNames,conditionalCountsNoised,bayesCode,0) 
   coder$what <- 'BayesCoder'
   codeFrame(d,coder,d[[yName]])
 }
@@ -160,7 +230,7 @@ countCode <- function(vname,vcol,codes,rescol) {
 #' @param sigma noising degree
 #' @return count coding plan
 trainCountCoder <- function(d,yName,varNames,sigma) {
-  coder <- trainCoder(d,yName,varNames,conditionalCounts,countCode,sigma) 
+  coder <- trainCoder(d,yName,varNames,conditionalCountsNoised,countCode,sigma) 
   coder$what <- 'countCoder'
   coder$codeFrame <- function(df) codeFrame(df,coder,c())
   coder
@@ -173,7 +243,7 @@ trainCountCoder <- function(d,yName,varNames,sigma) {
 #' @param varnames names of independent variables
 #' @return Jackknife encoded frame
 jackknifeCountCode <- function(d,yName,varNames) {
-  coder <- trainCoder(d,yName,varNames,conditionalCounts,countCode,0) 
+  coder <- trainCoder(d,yName,varNames,conditionalCountsNoised,countCode,0) 
   coder$what <- 'countCoder'
   codeFrame(d,coder,d[[yName]])
 }
@@ -265,6 +335,17 @@ jackknifeModel <- function(d,yName,vars,dTest,stratarg) {
   estimateExpectedPrediction(d2,yName,vars,dTest2)
 }
 
+
+
+#' @param stratarg significance cutoff
+prunedModel <- function(d,yName,vars,dTest,stratarg) {
+  coder <- trainBayesCoderPruned(d,yName,vars,0)
+  d2 <- coder$codeFrame(d)
+  dTest2 <- coder$codeFrame(dTest)
+  estimateExpectedPrediction(d2,yName,vars,dTest2)
+}
+
+
 #' @param stratarg sigma for the noising
 noisedModel <-  function(d,yName,vars,dTest,stratarg) {
   coder <- trainBayesCoder(d,yName,vars,stratarg)
@@ -309,7 +390,12 @@ conditionalCountsFixed <- function(vnam,vcol,rescol,noisePlan) {
   nCandF <- noiseCountFixed(tapply(as.numeric(!rescol),vcol,sum),
                             noisePlan[[vnam]]$tf)  #  sum of false examples for a give C (vector)
   checkTwoNVecs(nCandT,nCandF)
-  list(nCandT=as.list(nCandT),nCandF=as.list(nCandF))
+  nT <- sum(as.numeric(nCandT))
+  nF <- sum(as.numeric(nCandF))
+  list(nT=nT,
+       nF=nF,
+       nCandT=as.list(nCandT),
+       nCandF=as.list(nCandF))
 }
 
 #' Return a Bayes coding plan, with fixed noise
