@@ -17,7 +17,7 @@ In this note, we discuss principal components regression and some of the issues 
 * The need for pruning.
 * The lack of "_y_-awareness" of the standard dimensionality reduction step.
 
-The purpose of this article is to set the stage for presenting dimensionality reduction techniques more appropriate for predictive modeling, such as _y_-aware principal components analysis, variable pruning, L2-regularized regression, supervised PCR, or partial least squares.  In our follow-up article we describe and demonstrate the idea of _y_-aware scaling.
+The purpose of this article is to set the stage for presenting dimensionality reduction techniques more appropriate for predictive modeling, such as _y_-aware principal components analysis, variable pruning, L2-regularized regression, supervised PCR, or partial least squares.  We do this by working detailed examples and building the relevant graphs.  In our follow-up article we describe and demonstrate the idea of _y_-aware scaling.
 
 Note we will try to say "principal components" (plural) throughout, following Everitt's _The Cambridge Dictionary of Statistics_, though this is not the only common spelling  (e.g. Wikipedia: [Principal component regression](https://en.wikipedia.org/wiki/Principal_component_regression)).  We will work all of our examples in [R](https://cran.r-project.org/).
  
@@ -325,6 +325,7 @@ dotplot_identity(frame = data.frame(pc=1:length(princ$sdev),
                             magnitude=princ$sdev), 
                  xvar="pc",yvar="magnitude") +
   ggtitle("x scaled variables: Magnitudes of singular values")
+sum(princ$sdev^2)
 ```
 
 Now the magnitudes of the singular values suggest that we can try to model the data with only the first twenty principal components. But first, let's look at the variable loadings of the first five principal components.
