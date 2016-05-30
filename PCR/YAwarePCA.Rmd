@@ -2,10 +2,9 @@
 title: "Principal Components Regression, Pt. 2: Y-Aware Methods"
 author: "Nina Zumel, Win-Vector LLC"
 date: "May 7, 2016"
-output: 
-  html_document: 
-    self_contained: no
-    smart: no
+output:
+  md_document:
+    variant: markdown_github
 ---
 
 

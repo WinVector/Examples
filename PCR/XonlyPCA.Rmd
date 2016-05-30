@@ -2,10 +2,9 @@
 title: "Principal Components Regression, Pt.1: The Standard Method"
 author: "Nina Zumel, Win-Vector LLC"
 date: "May 7, 2016"
-output: 
-  html_document: 
-    self_contained: no
-    smart: no
+output:
+  md_document:
+    variant: markdown_github
 ---
 
 This article is from [http://www.win-vector.com/blog/2016/05/pcr_part1_xonly](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
