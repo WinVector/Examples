@@ -1,0 +1,88 @@
+---
+title: "RangerExample"
+author: "Win-Vector LLC"
+date: "May 30, 2016"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r prep, echo=FALSE,message=FALSE,warning=FALSE,results=FALSE}
+library('ranger')
+library('ggplot2')
+library('vtreat')
+library('WVPlots') # to install see: https://github.com/WinVector/WVPlots
+
+set.seed(3525)
+nValues <- 20
+nRows <- 200
+
+mkLevels <- function() {
+  paste0('lev_',formatC(sample.int(nValues,nRows,replace=TRUE),width=3,flag='0'))
+}
+lastChar <- function(v) {
+  v <- as.character(v)
+  lens <- nchar(v)
+  vapply(seq_len(length(v)),
+         function(i) substr(v[[i]],lens[[i]],lens[[i]]),character(1))
+}
+evenOddScore <- function(v) {
+  2*(as.numeric(v) %% 2)-1
+}
+
+dAll <- data.frame(x1=mkLevels(),
+                x2=mkLevels(),
+                x3=mkLevels(),
+                x4=mkLevels(),
+                stringsAsFactors=FALSE)
+dAll$y <-
+  evenOddScore(lastChar(dAll$x1)) +
+  evenOddScore(lastChar(dAll$x2)) +
+  evenOddScore(lastChar(dAll$x3)) +
+  evenOddScore(lastChar(dAll$x4))
+isTrain <- sample.int(nRows,nRows/2,replace = FALSE)
+isTest <- setdiff(seq_len(nrow(dAll)),isTrain)
+dTrain <- dAll[isTrain,]
+dTest <- dAll[isTest,]
+```
+
+```{r data}
+print(head(dTrain))
+```
+
+```{r rangerDafault, warning=FALSE,message=FALSE}
+# default ranger model, treat categoricals as ordered (a very limiting treatment)
+m1 <- ranger(y~x1+x2+x3+x4,data=dTrain, write.forest=TRUE)
+print(m1)
+dTest$rangerDefaultPred <- predict(m1,data=dTest)$predictions
+WVPlots::ScatterHist(dTest,'rangerDefaultPred','y',
+                     'ranger default prediction on test',
+                     smoothmethod='identity',annot_size=3)
+```
+
+```{r rangerUnordered, warning=FALSE,message=FALSE}
+# default ranger model, set categoricals to unordered, now limited to 63 levels
+m2 <- ranger(y~x1+x2+x3+x4,data=dTrain,  write.forest=TRUE,
+             respect.unordered.factors=TRUE)
+print(m2)
+dTest$rangerUnorderedPred <- predict(m2,data=dTest)$predictions
+WVPlots::ScatterHist(dTest,'rangerUnorderedPred','y',
+                     'ranger unordered prediction on test',
+                     smoothmethod='identity',annot_size=3)
+```
+
+```{r rangervtreat, warning=FALSE,message=FALSE}
+# vtreat re-encoded model
+ct <- vtreat::mkCrossFrameNExperiment(dTrain,c('x1','x2','x3','x4'),'y')
+newvars <- ct$treatments$scoreFrame$varName[(ct$treatments$scoreFrame$code=='catN') &
+                                            (ct$treatments$scoreFrame$sig<1)]
+m3 <- ranger(paste('y',paste(newvars,collapse=' + '),sep=' ~ '),data=ct$crossFrame,
+              write.forest=TRUE)
+print(m3)
+dTestTreated <- vtreat::prepare(ct$treatments,dTest,
+                                pruneSig=c(),varRestriction=newvars)
+dTest$rangerNestedPred <- predict(m3,data=dTestTreated)$predictions
+WVPlots::ScatterHist(dTest,'rangerNestedPred','y',
+                     'ranger vtreat nested prediction on test',
+                     smoothmethod='identity',annot_size=3)
+```
