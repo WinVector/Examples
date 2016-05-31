@@ -15,6 +15,8 @@ Principal Components Regression that we think is well worth your time.
 
 ------------------------------------------------------------------------
 
+# Part 1
+
 You can read her first article
 [part 1 here](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
 Principal Components Regression (PCR) is the use of Principal Components
@@ -66,6 +68,8 @@ Components Regression. Please read on
 
 ------------------------------------------------------------------------
 
+# Part 2
+
 In [part 2](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) of
 her series on Principal Components Regression Dr. Nina Zumel illustrates
 so-called *y*-aware techniques. These often neglected methods use the
@@ -100,4 +104,72 @@ be found [here](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
 
 ------------------------------------------------------------------------
 
-Part 3: picking the number of components is coming soon.
+# Wrapping up and part 3 (picking k)
+
+In her series on principal components analysis for regression in
+[R](https://cran.r-project.org) [Win-Vector
+LLC](http://www.win-vector.com/)'s [Dr. Nina
+Zumel](http://www.win-vector.com/site/staff/nina-zumel/) broke the
+demonstration down into the following pieces:
+
+-   [Part 1](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/):
+    the proper preparation of data and use of principal components
+    analysis (particularly for supervised learning or regression).
+-   [Part 2](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/):
+    the introduction of *y*-aware scaling to direct the principal
+    components analysis to preserve variation correlated with the
+    outcome we are trying to predict.
+-   And now [Part
+    3](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/): how to
+    pick the number of components to retain for analysis.
+
+In the earlier parts Dr. Zumel demonstrates common poor practice versus
+best practice and quantifies the degree of available improvement. In
+part 3 she moves from the usual "pick the number of components by
+eyeballing it" non-advice and teaches decisive decision procedures. For
+picking the number of components to retain for analysis there are a
+number of standard techniques in the literature including:
+
+-   Pick 2, as that is all you can legibly graph.
+-   Pick enough to cover some fixed fraction of the variation (say 95%).
+-   (for variance scaled data only) Retain components with singular
+    values at least 1.0.
+-   Look for a "knee in the curve" (the curve being the plot of the
+    singular value magnitudes).
+-   Perform a statistical test to see which singular values are larger
+    than we would expect from an appropriate null hypothesis or
+    noise process.
+
+Dr. Zumel shows that the last method (designing a formal statistical
+test) is particularly easy to encode as a permutation test in the
+*y*-aware setting (there is also an obvious similarly good bootstrap
+test). This is well-founded and pretty much state of the art. It is also
+a great example of why to use a scriptable analysis platform (such as R)
+as it is easy to wrap arbitrarily complex methods into functions and
+then directly perform empirical tests on these methods. The following
+"broken stick" type test yields the following graph which identifies
+five principal components as being significant: ![Replot
+1](http://www.win-vector.com/blog/wp-content/uploads/2016/05/replot-1.png "replot-1.png")
+However, Dr. Zumel goes on to show that in a supervised learning or
+regression setting we can further exploit the structure of the problem
+and replace the traditional component magnitude tests with simple model
+fit significance pruning. The significance method in this case gets the
+stronger result of finding the two principal components that encode the
+known even and odd loadings of the example problem: ![Plotsig
+1](http://www.win-vector.com/blog/wp-content/uploads/2016/05/plotsig-1.png "plotsig-1.png")
+In fact that is sort of her point: significance pruning either on the
+original variables or on the derived latent components is enough to give
+us the right answer. In general we get much better results when (in a
+supervised learning or regression situation) we use knowledge of the
+dependent variable (the "*y*" or outcome) and do *all* of the following:
+
+-   Model fit significance prune incoming variables.
+-   Convert incoming variables into consistent response units by
+    *y*-aware scaling.
+-   Model fit significance prune resulting latent components.
+
+The above will become much clearer and much more specific if you [click
+here to read part 3](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/).
+
+
+
