@@ -348,7 +348,7 @@ In our experience, there are two camps of analysts: those who never use principa
 The general principals are widely applicable, and often re-discovered and re-formulated in useful ways (such as 
 [autoencoders](https://en.wikipedia.org/wiki/Autoencoder)).
 
-In our next note, we will look at some ways to pick the appropriate number of principal components procedurally.
+In our [next note](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/), we will look at some ways to pick the appropriate number of principal components procedurally.
 
 
 ### References
