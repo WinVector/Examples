@@ -1,5 +1,5 @@
 
-R markdown or "knitr" files to produce the Win-Vector LLC articles:
+R markdown or "knitr" files to produce Dr. Nina Zumel's Win-Vector LLC articles:
 
  * [Principal Components Regression, Pt. 1: The Standard Method](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/) ([R markdown source](XonlyPCA.Rmd), [rendered markdown](XonlyPCA.md)).
  * [Principal Components Regression, Pt. 2: Y-Aware Methods](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/) ([R markdown source](YAwarePCA.Rmd), [rendered markdown](YAwarePCA.md)).
