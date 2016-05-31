@@ -1,9 +1,9 @@
 
 R markdown or "knitr" files to produce the Win-Vector LLC articles:
 
- * [XonlyPCA.Rmd](XonlyPCA.Rmd), [Principal Components Regression, Pt. 1: The Standard Method](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/) 
- * [YAwarePCA.Rmd](YAwarePCA.Rmd), [Principal Components Regression, Pt. 2: Y-Aware Methods](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/) 
- * [YAwarePCR_pickK.Rmd](YAwarePCR_pickK.Rmd), [Principal Components Regression, Pt. 3: Picking the Number of Components](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/)
+ * [Principal Components Regression, Pt. 1: The Standard Method](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/) ([R markdown source](XonlyPCA.Rmd), [rendered markdown](XonlyPCA.md)).
+ * [Principal Components Regression, Pt. 2: Y-Aware Methods](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/) ([R markdown source](YAwarePCA.Rmd), [rendered markdown](YAwarePCA.md)).
+ * [Principal Components Regression, Pt. 3: Picking the Number of Components](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/) ([R markdown source](YAwarePCR_pickK.Rmd), [rendered markdown](YAwarePCR_pickK.md)).
 
 If you are trying to download the worksheets from [here](https://github.com/WinVector/Examples/tree/master/PCR) we have (with the help of reader feedback) worked on some instructions to help through the install process [http://www.win-vector.com/blog/2016/05/installing-wvplots-and-knitting-r-markdown/](http://www.win-vector.com/blog/2016/05/installing-wvplots-and-knitting-r-markdown/).
 
@@ -15,7 +15,7 @@ Principal Components Regression that we think is well worth your time.
 
 ------------------------------------------------------------------------
 
-# Part 1
+# Part 1 Principal Components Regression/Analysis: The Standard Methods
 
 You can read her first article
 [part 1 here](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
@@ -68,7 +68,7 @@ Components Regression. Please read on
 
 ------------------------------------------------------------------------
 
-# Part 2
+# Part 2: *Y*-Aware Methods
 
 In [part 2](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) of
 her series on Principal Components Regression Dr. Nina Zumel illustrates
@@ -104,7 +104,7 @@ be found [here](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
 
 ------------------------------------------------------------------------
 
-# Wrapping up and part 3 (picking k)
+# Part 3: picking *k* and wrapping up
 
 In her series on principal components analysis for regression in
 [R](https://cran.r-project.org) [Win-Vector
