@@ -73,10 +73,13 @@ WVPlots::ScatterHist(dTest,'rangerUnorderedPred','y',
 
 ```{r rangervtreat, warning=FALSE,message=FALSE}
 # vtreat re-encoded model
-ct <- vtreat::mkCrossFrameNExperiment(dTrain,c('x1','x2','x3','x4'),'y')
+ct <- vtreat::mkCrossFrameNExperiment(dTrain,
+                                      c('x1','x2','x3','x4'),'y')
+# normally we take all variables, but for this demo we concentrate on 'catN'
 newvars <- ct$treatments$scoreFrame$varName[(ct$treatments$scoreFrame$code=='catN') &
                                             (ct$treatments$scoreFrame$sig<1)]
-m3 <- ranger(paste('y',paste(newvars,collapse=' + '),sep=' ~ '),data=ct$crossFrame,
+m3 <- ranger(paste('y',paste(newvars,collapse=' + '),sep=' ~ '),
+             data=ct$crossFrame,
               write.forest=TRUE)
 print(m3)
 dTestTreated <- vtreat::prepare(ct$treatments,dTest,
@@ -85,4 +88,33 @@ dTest$rangerNestedPred <- predict(m3,data=dTestTreated)$predictions
 WVPlots::ScatterHist(dTest,'rangerNestedPred','y',
                      'ranger vtreat nested prediction on test',
                      smoothmethod='identity',annot_size=3)
+```
+
+Can also use `vtreat` to help binary classification (`vtreat` data prep for multnomial classification currently requres some [encoding tricks](https://en.wikipedia.org/wiki/Multiclass_classification) to emulate).
+
+```{r rangervtreatc, warning=FALSE,message=FALSE}
+dTrain$ypos <- as.factor(as.character(dTrain$y>0))
+dTest$ypos <- as.factor(as.character(dTest$y>0))
+# vtreat re-encoded model
+parallelCluster <- parallel::makeCluster(parallel::detectCores())
+ct <- vtreat::mkCrossFrameCExperiment(dTrain,
+                                      c('x1','x2','x3','x4'),
+                                      'ypos',TRUE,
+                                      parallelCluster=parallelCluster)
+parallel::stopCluster(parallelCluster)                           
+# normally we take all variables, but for this demo we concentrate on 'catB'
+newvars <- ct$treatments$scoreFrame$varName[(ct$treatments$scoreFrame$code=='catB') &
+                                            (ct$treatments$scoreFrame$sig<1)]
+m4 <- ranger(paste('ypos',paste(newvars,collapse=' + '),sep=' ~ '),
+             data=ct$crossFrame,
+             probability=TRUE,
+             write.forest=TRUE)
+print(m4)
+dTestTreated <- vtreat::prepare(ct$treatments,dTest,
+                                pruneSig=c(),varRestriction=newvars)
+dTest$rangerPosdPred <- predict(m4,data=dTestTreated)$predictions[,'TRUE']
+WVPlots::DoubleDensityPlot(dTest,'rangerPosdPred','ypos',
+                     'ranger vtreat nested positive prediction on test')
+WVPlots::ROCPlot(dTest,'rangerPosdPred','ypos',
+                     'ranger vtreat nested positive prediction on test')
 ```

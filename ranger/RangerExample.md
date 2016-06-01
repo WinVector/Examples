@@ -46,13 +46,14 @@ m2 <- ranger(y~x1+x2+x3+x4,data=dTrain,  write.forest=TRUE,
              respect.unordered.factors=TRUE)
 ```
 
-    ## Growing trees.. Progress: 12%. Estimated remaining time: 3 minutes, 43 seconds.
-    ## Growing trees.. Progress: 25%. Estimated remaining time: 3 minutes, 8 seconds.
-    ## Growing trees.. Progress: 38%. Estimated remaining time: 2 minutes, 31 seconds.
-    ## Growing trees.. Progress: 51%. Estimated remaining time: 2 minutes, 2 seconds.
-    ## Growing trees.. Progress: 63%. Estimated remaining time: 1 minute, 30 seconds.
-    ## Growing trees.. Progress: 77%. Estimated remaining time: 57 seconds.
-    ## Growing trees.. Progress: 88%. Estimated remaining time: 29 seconds.
+    ## Growing trees.. Progress: 12%. Estimated remaining time: 3 minutes, 56 seconds.
+    ## Growing trees.. Progress: 24%. Estimated remaining time: 3 minutes, 20 seconds.
+    ## Growing trees.. Progress: 36%. Estimated remaining time: 2 minutes, 44 seconds.
+    ## Growing trees.. Progress: 49%. Estimated remaining time: 2 minutes, 10 seconds.
+    ## Growing trees.. Progress: 61%. Estimated remaining time: 1 minute, 38 seconds.
+    ## Growing trees.. Progress: 74%. Estimated remaining time: 1 minute, 6 seconds.
+    ## Growing trees.. Progress: 86%. Estimated remaining time: 36 seconds.
+    ## Growing trees.. Progress: 98%. Estimated remaining time: 4 seconds.
 
 ``` r
 print(m2)
@@ -84,10 +85,13 @@ WVPlots::ScatterHist(dTest,'rangerUnorderedPred','y',
 
 ``` r
 # vtreat re-encoded model
-ct <- vtreat::mkCrossFrameNExperiment(dTrain,c('x1','x2','x3','x4'),'y')
+ct <- vtreat::mkCrossFrameNExperiment(dTrain,
+                                      c('x1','x2','x3','x4'),'y')
+# normally we take all variables, but for this demo we concentrate on 'catN'
 newvars <- ct$treatments$scoreFrame$varName[(ct$treatments$scoreFrame$code=='catN') &
                                             (ct$treatments$scoreFrame$sig<1)]
-m3 <- ranger(paste('y',paste(newvars,collapse=' + '),sep=' ~ '),data=ct$crossFrame,
+m3 <- ranger(paste('y',paste(newvars,collapse=' + '),sep=' ~ '),
+             data=ct$crossFrame,
               write.forest=TRUE)
 print(m3)
 ```
@@ -117,3 +121,56 @@ WVPlots::ScatterHist(dTest,'rangerNestedPred','y',
 ```
 
 ![](RangerExample_files/figure-markdown_github/rangervtreat-1.png)
+
+Can also use `vtreat` to help binary classification (`vtreat` data prep for multnomial classification currently requres some [encoding tricks](https://en.wikipedia.org/wiki/Multiclass_classification) to emulate).
+
+``` r
+dTrain$ypos <- as.factor(as.character(dTrain$y>0))
+dTest$ypos <- as.factor(as.character(dTest$y>0))
+# vtreat re-encoded model
+parallelCluster <- parallel::makeCluster(parallel::detectCores())
+ct <- vtreat::mkCrossFrameCExperiment(dTrain,
+                                      c('x1','x2','x3','x4'),
+                                      'ypos',TRUE,
+                                      parallelCluster=parallelCluster)
+parallel::stopCluster(parallelCluster)                           
+# normally we take all variables, but for this demo we concentrate on 'catB'
+newvars <- ct$treatments$scoreFrame$varName[(ct$treatments$scoreFrame$code=='catB') &
+                                            (ct$treatments$scoreFrame$sig<1)]
+m4 <- ranger(paste('ypos',paste(newvars,collapse=' + '),sep=' ~ '),
+             data=ct$crossFrame,
+             probability=TRUE,
+             write.forest=TRUE)
+print(m4)
+```
+
+    ## Ranger result
+    ## 
+    ## Call:
+    ##  ranger(paste("ypos", paste(newvars, collapse = " + "), sep = " ~ "),      data = ct$crossFrame, probability = TRUE, write.forest = TRUE) 
+    ## 
+    ## Type:                             Probability estimation 
+    ## Number of trees:                  500 
+    ## Sample size:                      100 
+    ## Number of independent variables:  4 
+    ## Mtry:                             2 
+    ## Target node size:                 10 
+    ## Variable importance mode:         none 
+    ## OOB prediction error:             0.07823836
+
+``` r
+dTestTreated <- vtreat::prepare(ct$treatments,dTest,
+                                pruneSig=c(),varRestriction=newvars)
+dTest$rangerPosdPred <- predict(m4,data=dTestTreated)$predictions[,'TRUE']
+WVPlots::DoubleDensityPlot(dTest,'rangerPosdPred','ypos',
+                     'ranger vtreat nested positive prediction on test')
+```
+
+![](RangerExample_files/figure-markdown_github/rangervtreatc-1.png)
+
+``` r
+WVPlots::ROCPlot(dTest,'rangerPosdPred','ypos',
+                     'ranger vtreat nested positive prediction on test')
+```
+
+![](RangerExample_files/figure-markdown_github/rangervtreatc-2.png)
