@@ -7,6 +7,8 @@ output:
     variant: markdown_github
 ---
 
+Example showing vtreat varaible preperation followed by caret training.
+
 ```{r setup, message=FALSE,warning=FALSE,results=FALSE}
 library('vtreat')
 library('caret')
@@ -82,6 +84,7 @@ dTrainTreated <- cd$crossFrame
 newVars <- scoreFrame$varName[scoreFrame$sig<1/nrow(scoreFrame)]
 dTestTreated <- vtreat::prepare(treatmentPlan,dTest,
                                 pruneSig=NULL,varRestriction=newVars)
+print(newVars)
 
 # train our model using caret
 yForm <- as.formula(paste(yName,paste(newVars,collapse=' + '),sep=' ~ '))
