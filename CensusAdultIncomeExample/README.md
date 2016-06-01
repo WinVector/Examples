@@ -1,6 +1,5 @@
 
-https://github.com/WinVector/Examples/CensusAdultIncomeExample
-
+https://github.com/WinVector/Examples/tree/master/CensusAdultIncomeExample
 
 Simple example showing use of `vtreat` and `caret` to prepare data and fit a model.
 
