@@ -185,7 +185,7 @@ testAccuarcy
 
 Notice the achieved test accuracy is in the ballpark of what was reported for this dataset.
 
-    (From [adult.names description](http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names) )
+    (From http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names )
     Error Accuracy reported as follows, after removal of unknowns from
      |    train/test sets):
      |    C4.5       : 84.46+-0.30
@@ -231,6 +231,8 @@ The theory behind vtreat is fairly important to the correctness of our implement
 -   [vtreat Cross Frames](http://www.win-vector.com/blog/2016/05/vtreat-cross-frames/)
 -   [On Nested Models](http://www.win-vector.com/blog/2016/04/on-nested-models/)
 -   [vtreat manuals](http://winvector.github.io/vtreathtml/)
+-   [Preparing data for analysis using R](http://winvector.github.io/DataPrep/EN-CNTNT-Whitepaper-Data-Prep-Using-R.pdf)
+-   [More on preparing data](http://www.win-vector.com/blog/2016/03/more-on-preparing-data/)
 -   [vtreat on Cran](https://cran.r-project.org/package=vtreat)
 -   [vtreat on Github](https://github.com/WinVector/vtreat)
 
