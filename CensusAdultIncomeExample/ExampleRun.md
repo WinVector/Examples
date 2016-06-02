@@ -225,6 +225,13 @@ And that is all there is to this example. I'd like to emphasize that vtreat step
 
 The point is: we got competitive results on real world data, in a single try (using vtreat to prepare data and caret to tune parameters). The job of the data scientist is to actually work longer on a problem and do better. But having a good start helps.
 
-The theory behind vtreat is fairly important to the correctness of our implementation, and we would love for you to read through some of it: \* [vtreat: designing a package for variable treatment](http://www.win-vector.com/blog/2014/08/vtreat-designing-a-package-for-variable-treatment/) \* [vtreat Cross Frames](http://www.win-vector.com/blog/2016/05/vtreat-cross-frames/) \* [On Nested Models](http://www.win-vector.com/blog/2016/04/on-nested-models/) \* [vtreat manuals](http://winvector.github.io/vtreathtml/) \* [vtreat on Cran](https://cran.r-project.org/package=vtreat) \* [vtreat on Github](https://github.com/WinVector/vtreat)
+The theory behind vtreat is fairly important to the correctness of our implementation, and we would love for you to read through some of it:
+
+-   [vtreat: designing a package for variable treatment](http://www.win-vector.com/blog/2014/08/vtreat-designing-a-package-for-variable-treatment/)
+-   [vtreat Cross Frames](http://www.win-vector.com/blog/2016/05/vtreat-cross-frames/)
+-   [On Nested Models](http://www.win-vector.com/blog/2016/04/on-nested-models/)
+-   [vtreat manuals](http://winvector.github.io/vtreathtml/)
+-   [vtreat on Cran](https://cran.r-project.org/package=vtreat)
+-   [vtreat on Github](https://github.com/WinVector/vtreat)
 
 But operationally, please think of `vtreat` as just adding a couple of lines to your analysis scripts. Again, the raw R markdown source can be found [here](https://github.com/WinVector/Examples/blob/master/CensusAdultIncomeExample/ExampleRun.Rmd) and a rendered copy (with results and graphs) [here](https://github.com/WinVector/Examples/blob/master/CensusAdultIncomeExample/ExampleRun.md).
