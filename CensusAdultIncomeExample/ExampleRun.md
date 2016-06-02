@@ -1,4 +1,4 @@
-This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training.
+This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training. For discussion on this article please see [here](http://www.win-vector.com/blog/2016/06/a-demonstration-of-vtreat-data-preparation/).
 
 In previous writings we have gone to great lengths to [document, explain and motivate `vtreat`](http://winvector.github.io/vtreathtml/). That necessarily gets long and unnecessarily feels complicated.
 
@@ -219,7 +219,7 @@ testAccuarcyComplete
 parallel::stopCluster(parallelCluster)
 ```
 
-This is consistent with our experience that missingness is often actually informative, so in addition to imputing missing values you would like to preserver some notation indicating the missingness (which `vtreat` does in fact do).
+This is consistent with our experience that missingness is often actually informative, so in addition to imputing missing values you would like to preserve some notation indicating the missingness (which `vtreat` does in fact do).
 
 And that is all there is to this example. I'd like to emphasize that vtreat steps were only a few lines in one of the blocks of code. `vtreat` treatment can take some time, but it is usually bearable. By design it is easy to add vtreat to your predictive analytics projects.
 
