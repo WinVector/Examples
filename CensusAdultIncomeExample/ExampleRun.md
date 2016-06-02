@@ -1,4 +1,6 @@
-This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training. For discussion on this article please see [here](http://www.win-vector.com/blog/2016/06/a-demonstration-of-vtreat-data-preparation/).
+This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training.
+
+For discussion on this article please see [here](http://www.win-vector.com/blog/2016/06/a-demonstration-of-vtreat-data-preparation/). Note we have since swithced to `xgboost` in this demonstration inspired by this [nice article](http://blog.revolutionanalytics.com/2016/05/using-caret-to-compare-models.html).
 
 In previous writings we have gone to great lengths to [document, explain and motivate `vtreat`](http://winvector.github.io/vtreathtml/). That necessarily gets long and unnecessarily feels complicated.
 
@@ -9,7 +11,7 @@ First we set things up: load libraries, initialize parallel processing.
 ``` r
 library('vtreat')
 library('caret')
-library('gbm')
+library('xgboost')
 library('doMC')
 library('WVPlots') # see https://github.com/WinVector/WVPlots
 
@@ -94,7 +96,7 @@ system.time({
 ```
 
     ##    user  system elapsed 
-    ##  11.340   2.760  30.872
+    ##  12.140   2.943  33.937
 
 ``` r
 #print(newVars)
@@ -105,52 +107,120 @@ Now we train our model. In this case we are using the caret package to tune para
 ``` r
 # train our model using caret
 system.time({
-  yForm <- as.formula(paste(yName,paste(newVars,collapse=' + '),sep=' ~ '))
-  # from: http://topepo.github.io/caret/training.html
-  fitControl <- trainControl(## 10-fold CV
-    method = "cv",
-    number = 3)
-  model <- train(yForm,
-                 data = dTrainTreated,
-                 method = "gbm",
-                 trControl = fitControl,
-                 verbose = FALSE)
+  # work around "levels must be valid R variable names issue"
+  dTrainTreated$yLogical = as.factor(paste0('v',as.character(dTrainTreated[[yName]]==yTarget)))
+  # from:http://blog.revolutionanalytics.com/2016/05/using-caret-to-compare-models.html
+  # could use accuracy as the tuning metric, but going to demonstrate using AUC
+  ctrl <- trainControl(method = "cv",
+                     number = 5,
+                     summaryFunction=twoClassSummary,   # Use AUC to pick the best model
+                     classProbs=TRUE,
+                     allowParallel = TRUE)
+  model <- train(x=dTrainTreated[,newVars],
+                 y=dTrainTreated$yLogical,
+                 method="xgbTree",
+                 metric="ROC",
+                 trControl=ctrl)
   print(model)
-  dTest$pred <- predict(model,newdata=dTestTreated,type='prob')[,yTarget]
+  dTest$pred <- predict(model,newdata=dTestTreated[,newVars],type='prob')[,'vTRUE']
 })
 ```
 
-    ## Stochastic Gradient Boosting 
+    ## eXtreme Gradient Boosting 
     ## 
     ## 32561 samples
-    ##    64 predictor
-    ##     2 classes: '<=50K', '>50K' 
+    ##    59 predictor
+    ##     2 classes: 'vFALSE', 'vTRUE' 
     ## 
     ## No pre-processing
-    ## Resampling: Cross-Validated (3 fold) 
-    ## Summary of sample sizes: 21707, 21708, 21707 
+    ## Resampling: Cross-Validated (5 fold) 
+    ## Summary of sample sizes: 26049, 26048, 26049, 26049, 26049 
     ## Resampling results across tuning parameters:
     ## 
-    ##   interaction.depth  n.trees  Accuracy   Kappa    
-    ##   1                   50      0.8476398  0.5083558
-    ##   1                  100      0.8556555  0.5561726
-    ##   1                  150      0.8577746  0.5699958
-    ##   2                   50      0.8560855  0.5606650
-    ##   2                  100      0.8593102  0.5810931
-    ##   2                  150      0.8625042  0.5930111
-    ##   3                   50      0.8593717  0.5789289
-    ##   3                  100      0.8649919  0.6017707
-    ##   3                  150      0.8660975  0.6073645
+    ##   eta  max_depth  colsample_bytree  nrounds  ROC        Sens     
+    ##   0.3  1          0.6                50      0.9119288  0.9498786
+    ##   0.3  1          0.6               100      0.9166231  0.9443770
+    ##   0.3  1          0.6               150      0.9192115  0.9449838
+    ##   0.3  1          0.8                50      0.9120844  0.9496764
+    ##   0.3  1          0.8               100      0.9166067  0.9447411
+    ##   0.3  1          0.8               150      0.9192564  0.9453883
+    ##   0.3  2          0.6                50      0.9209832  0.9459547
+    ##   0.3  2          0.6               100      0.9260585  0.9442557
+    ##   0.3  2          0.6               150      0.9275664  0.9435680
+    ##   0.3  2          0.8                50      0.9213899  0.9461165
+    ##   0.3  2          0.8               100      0.9258379  0.9435680
+    ##   0.3  2          0.8               150      0.9273453  0.9434466
+    ##   0.3  3          0.6                50      0.9258975  0.9445793
+    ##   0.3  3          0.6               100      0.9281575  0.9422330
+    ##   0.3  3          0.6               150      0.9288680  0.9411408
+    ##   0.3  3          0.8                50      0.9263265  0.9454693
+    ##   0.3  3          0.8               100      0.9284445  0.9429612
+    ##   0.3  3          0.8               150      0.9291195  0.9420307
+    ##   0.4  1          0.6                50      0.9137344  0.9440939
+    ##   0.4  1          0.6               100      0.9184002  0.9444579
+    ##   0.4  1          0.6               150      0.9208363  0.9438107
+    ##   0.4  1          0.8                50      0.9137965  0.9444175
+    ##   0.4  1          0.8               100      0.9184990  0.9441748
+    ##   0.4  1          0.8               150      0.9207576  0.9439725
+    ##   0.4  2          0.6                50      0.9232521  0.9453074
+    ##   0.4  2          0.6               100      0.9269142  0.9428398
+    ##   0.4  2          0.6               150      0.9278805  0.9428398
+    ##   0.4  2          0.8                50      0.9232426  0.9453074
+    ##   0.4  2          0.8               100      0.9269677  0.9436893
+    ##   0.4  2          0.8               150      0.9280206  0.9433252
+    ##   0.4  3          0.6                50      0.9280836  0.9437298
+    ##   0.4  3          0.6               100      0.9290156  0.9406149
+    ##   0.4  3          0.6               150      0.9288506  0.9402104
+    ##   0.4  3          0.8                50      0.9274379  0.9436489
+    ##   0.4  3          0.8               100      0.9285733  0.9417071
+    ##   0.4  3          0.8               150      0.9284223  0.9401699
+    ##   Spec     
+    ##   0.5646002
+    ##   0.6014574
+    ##   0.6094922
+    ##   0.5649837
+    ##   0.6001824
+    ##   0.6089820
+    ##   0.6137009
+    ##   0.6371665
+    ##   0.6452012
+    ##   0.6128083
+    ##   0.6388252
+    ##   0.6460938
+    ##   0.6388246
+    ##   0.6531089
+    ##   0.6546393
+    ##   0.6327040
+    ##   0.6485183
+    ##   0.6534913
+    ##   0.5893427
+    ##   0.6079619
+    ##   0.6180369
+    ##   0.5883233
+    ##   0.6079634
+    ##   0.6177824
+    ##   0.6241601
+    ##   0.6439266
+    ##   0.6509410
+    ##   0.6277299
+    ##   0.6450742
+    ##   0.6499205
+    ##   0.6487725
+    ##   0.6582097
+    ##   0.6626728
+    ##   0.6478797
+    ##   0.6564238
+    ##   0.6573163
     ## 
-    ## Tuning parameter 'shrinkage' was held constant at a value of 0.1
+    ## Tuning parameter 'gamma' was held constant at a value of 0
     ## 
-    ## Tuning parameter 'n.minobsinnode' was held constant at a value of 10
-    ## Accuracy was used to select the optimal model using  the largest value.
-    ## The final values used for the model were n.trees = 150,
-    ##  interaction.depth = 3, shrinkage = 0.1 and n.minobsinnode = 10.
+    ## Tuning parameter 'min_child_weight' was held constant at a value of 1
+    ## ROC was used to select the optimal model using  the largest value.
+    ## The final values used for the model were nrounds = 150, max_depth = 3,
+    ##  eta = 0.3, gamma = 0, colsample_bytree = 0.8 and min_child_weight = 1.
 
     ##    user  system elapsed 
-    ##  61.908   2.227  36.850
+    ## 163.162   4.227  65.796
 
 Finally we take a look at the results on the held-out test data.
 
@@ -173,15 +243,15 @@ print(confusionMatrix)
 
     ##         pred
     ## truth    FALSE  TRUE
-    ##   <=50K. 11684   751
-    ##   >50K.   1406  2440
+    ##   <=50K. 11700   735
+    ##   >50K.   1322  2524
 
 ``` r
 testAccuarcy <- (confusionMatrix[1,1]+confusionMatrix[2,2])/sum(confusionMatrix)
 testAccuarcy
 ```
 
-    ## [1] 0.8675143
+    ## [1] 0.8736564
 
 Notice the achieved test accuracy is in the ballpark of what was reported for this dataset.
 
@@ -203,8 +273,8 @@ print(confusionMatrixComplete)
 
     ##         pred
     ## truth    FALSE  TRUE
-    ##   <=50K. 10618   742
-    ##   >50K.   1331  2369
+    ##   <=50K. 10639   721
+    ##   >50K.   1253  2447
 
 ``` r
 testAccuarcyComplete <- (confusionMatrixComplete[1,1]+confusionMatrixComplete[2,2])/
@@ -212,7 +282,7 @@ testAccuarcyComplete <- (confusionMatrixComplete[1,1]+confusionMatrixComplete[2,
 testAccuarcyComplete
 ```
 
-    ## [1] 0.8623506
+    ## [1] 0.8689243
 
 ``` r
 # clean up

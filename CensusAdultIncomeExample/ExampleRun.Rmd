@@ -7,7 +7,9 @@ output:
     variant: markdown_github
 ---
 
-This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training.  For discussion on this article please see [here](http://www.win-vector.com/blog/2016/06/a-demonstration-of-vtreat-data-preparation/).
+This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training.  
+
+For discussion on this article please see [here](http://www.win-vector.com/blog/2016/06/a-demonstration-of-vtreat-data-preparation/).  Note we have since swithced to `xgboost` in this demonstration inspired by this [nice article](http://blog.revolutionanalytics.com/2016/05/using-caret-to-compare-models.html).
 
 In previous writings we have gone to great lengths to [document, explain and motivate `vtreat`](http://winvector.github.io/vtreathtml/).  That necessarily gets long and unnecessarily feels complicated.
 
@@ -19,7 +21,7 @@ First we set things up: load libraries, initialize parallel processing.
 ```{r setup, message=FALSE,warning=FALSE,results=FALSE}
 library('vtreat')
 library('caret')
-library('gbm')
+library('xgboost')
 library('doMC')
 library('WVPlots') # see https://github.com/WinVector/WVPlots
 
@@ -109,18 +111,22 @@ Now we train our model.  In this case we are using the caret package to tune par
 ```{r train, cache=TRUE}
 # train our model using caret
 system.time({
-  yForm <- as.formula(paste(yName,paste(newVars,collapse=' + '),sep=' ~ '))
-  # from: http://topepo.github.io/caret/training.html
-  fitControl <- trainControl(## 10-fold CV
-    method = "cv",
-    number = 3)
-  model <- train(yForm,
-                 data = dTrainTreated,
-                 method = "gbm",
-                 trControl = fitControl,
-                 verbose = FALSE)
+  # work around "levels must be valid R variable names issue"
+  dTrainTreated$yLogical = as.factor(paste0('v',as.character(dTrainTreated[[yName]]==yTarget)))
+  # from:http://blog.revolutionanalytics.com/2016/05/using-caret-to-compare-models.html
+  # could use accuracy as the tuning metric, but going to demonstrate using AUC
+  ctrl <- trainControl(method = "cv",
+                     number = 5,
+                     summaryFunction=twoClassSummary,	# Use AUC to pick the best model
+                     classProbs=TRUE,
+                     allowParallel = TRUE)
+  model <- train(x=dTrainTreated[,newVars],
+                 y=dTrainTreated$yLogical,
+                 method="xgbTree",
+                 metric="ROC",
+                 trControl=ctrl)
   print(model)
-  dTest$pred <- predict(model,newdata=dTestTreated,type='prob')[,yTarget]
+  dTest$pred <- predict(model,newdata=dTestTreated[,newVars],type='prob')[,'vTRUE']
 })
 ```
 
