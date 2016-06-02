@@ -289,7 +289,7 @@ testAccuarcyComplete
 parallel::stopCluster(parallelCluster)
 ```
 
-This is consistent with our experience that missingness is often actually informative, so in addition to imputing missing values you would like to preserve some notation indicating the missingness (which `vtreat` does in fact do).
+These two scores are [within noise bounds of each other](http://www.win-vector.com/blog/2015/09/willyourmodelworkpart2/), but it is our experience that missingness is often actually informative, so in addition to imputing missing values you would like to preserve some notation indicating the missingness (which `vtreat` does in fact do).
 
 And that is all there is to this example. I'd like to emphasize that vtreat steps were only a few lines in one of the blocks of code. `vtreat` treatment can take some time, but it is usually bearable. By design it is easy to add vtreat to your predictive analytics projects.
 

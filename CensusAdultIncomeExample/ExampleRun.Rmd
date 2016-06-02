@@ -167,7 +167,8 @@ testAccuarcyComplete
 parallel::stopCluster(parallelCluster)
 ```
 
-This is consistent with our experience that missingness is often actually informative, so in addition to 
+These two scores are [within noise bounds of each other](http://www.win-vector.com/blog/2015/09/willyourmodelworkpart2/), but it is
+our experience that missingness is often actually informative, so in addition to 
 imputing missing values you would like to preserve some notation indicating the missingness (which
 `vtreat` does in fact do).
 
