@@ -1,8 +1,8 @@
-Example showing the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation followed by caret training.
+This article is a demonstration the use of the [R](https://cran.r-project.org) [vtreat](https://github.com/WinVector/vtreat) variable preparation package followed by [caret](http://topepo.github.io/caret/index.html) controlled training.
 
-In previous writings we have gone to great lengths to [document, explain and motivate `vtreat`](https://github.com/WinVector/vtreat). That necessarily gets long and unnecessarily feels complicated.
+In previous writings we have gone to great lengths to [document, explain and motivate `vtreat`](http://winvector.github.io/vtreathtml/). That necessarily gets long and unnecessarily feels complicated.
 
-In this example we are going to show what building a predictive model using `vtreat` best practices looks like assuming you are already in the habit if using vtreat for your data preparation step. We are deliberately not going to explain any steps, but just show the small number of steps we advise routinely using. This is a simple schematic, but not a guide. Of course we do not advise use without understanding (and we work hard to teach the concepts in our writing), but here is what small effort is required to add vtreat to your predictive modeling practice.
+In this example we are going to show what building a predictive model using `vtreat` best practices looks like assuming you were somehow already in the habit of using vtreat for your data preparation step. We are deliberately not going to explain any steps, but just show the small number of steps we advise routinely using. This is a simple schematic, but not a guide. Of course we do not advise use without understanding (and we work hard to teach the concepts in our writing), but want what small effort is required to add `vtreat` to your predictive modeling practice.
 
 First we set things up: load libraries, initialize parallel processing.
 
@@ -20,7 +20,7 @@ parallelCluster <- parallel::makeCluster(ncores)
 registerDoMC(cores=ncores)
 ```
 
-The we load our data. In our case the data is taken from [here](http://archive.ics.uci.edu/ml/machine-learning-databases/adult/) and you can perform all of these steps if you download the contents of the [example git directory](https://github.com/WinVector/Examples/tree/master/CensusAdultIncomeExample). Obviously this has a lot of moving parts (R, R Markdown, Github, R packages)- but is very easy to do a second time (first time can be a bit of learning and preparation).
+The we load our data for analysis. We are going to build a model predicting an income level from other demographic features. The data is taken from [here](http://archive.ics.uci.edu/ml/machine-learning-databases/adult/) and you can perform all of the demonstrated steps if you download the contents of the [example git directory](https://github.com/WinVector/Examples/tree/master/CensusAdultIncomeExample). Obviously this has a lot of moving parts (R, R Markdown, Github, R packages, devtools)- but is very easy to do a second time (first time can be a bit of learning and preparation).
 
 ``` r
 # load data
@@ -64,7 +64,7 @@ dTest <- read.table(
 colnames(dTest) <- colnames
 ```
 
-Now we use vtreat to prepare the data for analysis. The goal of vtreat is to ensure a ready-to-dance data frame in a statistically valid manner. We are respecting the test/train split and building our data preparation plan only on the training data (though we do apply it to the test data). This step hides a huge number of potential problems through automated repairs:
+Now we use `vtreat` to prepare the data for analysis. The goal of vtreat is to ensure a ready-to-dance data frame in a statistically valid manner. We are respecting the test/train split and building our data preparation plan only on the training data (though we do apply it to the test data). This step helps with a huge number of potential problems through automated repairs:
 
 -   re-encoding missing values
 -   dealing with large cardinality categorical variables
@@ -78,97 +78,46 @@ yName <- 'class'
 yTarget <- '>50K'
 varNames <- setdiff(colnames,yName)
 
-
 # build variable encoding plan and prepare simulated out of sample
 # training fame (cross-frame) 
 # http://www.win-vector.com/blog/2016/05/vtreat-cross-frames/
-cd <- vtreat::mkCrossFrameCExperiment(dTrain,varNames,yName,yTarget,
-                                      parallelCluster=parallelCluster)
-treatmentPlan <- cd$treatments
-scoreFrame <- treatmentPlan$scoreFrame
-dTrainTreated <- cd$crossFrame
-# pick our variables
-newVars <- scoreFrame$varName[scoreFrame$sig<1/nrow(scoreFrame)]
-dTestTreated <- vtreat::prepare(treatmentPlan,dTest,
-                                pruneSig=NULL,varRestriction=newVars)
-print(newVars)
+system.time({
+  cd <- vtreat::mkCrossFrameCExperiment(dTrain,varNames,yName,yTarget,
+                                        parallelCluster=parallelCluster)
+  scoreFrame <- cd$treatments$scoreFrame
+  dTrainTreated <- cd$crossFrame
+  # pick our variables
+  newVars <- scoreFrame$varName[scoreFrame$sig<1/nrow(scoreFrame)]
+  dTestTreated <- vtreat::prepare(cd$treatments,dTest,
+                                  pruneSig=NULL,varRestriction=newVars)
+})
 ```
 
-    ##  [1] "age_clean"                              
-    ##  [2] "workclass_lev_NA"                       
-    ##  [3] "workclass_lev_x.Federal.gov"            
-    ##  [4] "workclass_lev_x.Local.gov"              
-    ##  [5] "workclass_lev_x.Private"                
-    ##  [6] "workclass_lev_x.Self.emp.inc"           
-    ##  [7] "workclass_lev_x.Self.emp.not.inc"       
-    ##  [8] "workclass_lev_x.State.gov"              
-    ##  [9] "workclass_catP"                         
-    ## [10] "workclass_catB"                         
-    ## [11] "education_lev_x.10th"                   
-    ## [12] "education_lev_x.11th"                   
-    ## [13] "education_lev_x.Bachelors"              
-    ## [14] "education_lev_x.HS.grad"                
-    ## [15] "education_lev_x.Masters"                
-    ## [16] "education_lev_x.Some.college"           
-    ## [17] "education_catP"                         
-    ## [18] "education_catB"                         
-    ## [19] "education.num_clean"                    
-    ## [20] "marital.status_lev_x.Divorced"          
-    ## [21] "marital.status_lev_x.Married.civ.spouse"
-    ## [22] "marital.status_lev_x.Never.married"     
-    ## [23] "marital.status_lev_x.Separated"         
-    ## [24] "marital.status_lev_x.Widowed"           
-    ## [25] "marital.status_catP"                    
-    ## [26] "marital.status_catB"                    
-    ## [27] "occupation_lev_NA"                      
-    ## [28] "occupation_lev_x.Adm.clerical"          
-    ## [29] "occupation_lev_x.Exec.managerial"       
-    ## [30] "occupation_lev_x.Farming.fishing"       
-    ## [31] "occupation_lev_x.Handlers.cleaners"     
-    ## [32] "occupation_lev_x.Machine.op.inspct"     
-    ## [33] "occupation_lev_x.Other.service"         
-    ## [34] "occupation_lev_x.Prof.specialty"        
-    ## [35] "occupation_lev_x.Sales"                 
-    ## [36] "occupation_lev_x.Tech.support"          
-    ## [37] "occupation_lev_x.Transport.moving"      
-    ## [38] "occupation_catP"                        
-    ## [39] "occupation_catB"                        
-    ## [40] "relationship_lev_x.Husband"             
-    ## [41] "relationship_lev_x.Not.in.family"       
-    ## [42] "relationship_lev_x.Other.relative"      
-    ## [43] "relationship_lev_x.Own.child"           
-    ## [44] "relationship_lev_x.Unmarried"           
-    ## [45] "relationship_lev_x.Wife"                
-    ## [46] "relationship_catP"                      
-    ## [47] "relationship_catB"                      
-    ## [48] "race_lev_x.Black"                       
-    ## [49] "race_lev_x.White"                       
-    ## [50] "race_catP"                              
-    ## [51] "race_catB"                              
-    ## [52] "sex_lev_x.Female"                       
-    ## [53] "sex_lev_x.Male"                         
-    ## [54] "capital.gain_clean"                     
-    ## [55] "capital.loss_clean"                     
-    ## [56] "hours.per.week_clean"                   
-    ## [57] "native.country_lev_x.United.States"     
-    ## [58] "native.country_catP"                    
-    ## [59] "native.country_catB"
+    ##    user  system elapsed 
+    ##  11.340   2.760  30.872
+
+``` r
+#print(newVars)
+```
 
 Now we train our model. In this case we are using the caret package to tune parameters.
 
 ``` r
 # train our model using caret
-yForm <- as.formula(paste(yName,paste(newVars,collapse=' + '),sep=' ~ '))
-# from: http://topepo.github.io/caret/training.html
-fitControl <- trainControl(## 10-fold CV
-  method = "cv",
-  number = 3)
-model <- train(yForm,
-               data = dTrainTreated,
-               method = "gbm",
-               trControl = fitControl,
-               verbose = FALSE)
-print(model)
+system.time({
+  yForm <- as.formula(paste(yName,paste(newVars,collapse=' + '),sep=' ~ '))
+  # from: http://topepo.github.io/caret/training.html
+  fitControl <- trainControl(## 10-fold CV
+    method = "cv",
+    number = 3)
+  model <- train(yForm,
+                 data = dTrainTreated,
+                 method = "gbm",
+                 trControl = fitControl,
+                 verbose = FALSE)
+  print(model)
+  dTest$pred <- predict(model,newdata=dTestTreated,type='prob')[,yTarget]
+})
 ```
 
     ## Stochastic Gradient Boosting 
@@ -179,19 +128,19 @@ print(model)
     ## 
     ## No pre-processing
     ## Resampling: Cross-Validated (3 fold) 
-    ## Summary of sample sizes: 21708, 21707, 21707 
+    ## Summary of sample sizes: 21707, 21708, 21707 
     ## Resampling results across tuning parameters:
     ## 
     ##   interaction.depth  n.trees  Accuracy   Kappa    
-    ##   1                   50      0.8476091  0.5069744
-    ##   1                  100      0.8549799  0.5541129
-    ##   1                  150      0.8569454  0.5683597
-    ##   2                   50      0.8560548  0.5601591
-    ##   2                  100      0.8598016  0.5828506
-    ##   2                  150      0.8625042  0.5936928
-    ##   3                   50      0.8590645  0.5767326
-    ##   3                  100      0.8636098  0.5966290
-    ##   3                  150      0.8656368  0.6056444
+    ##   1                   50      0.8476398  0.5083558
+    ##   1                  100      0.8556555  0.5561726
+    ##   1                  150      0.8577746  0.5699958
+    ##   2                   50      0.8560855  0.5606650
+    ##   2                  100      0.8593102  0.5810931
+    ##   2                  150      0.8625042  0.5930111
+    ##   3                   50      0.8593717  0.5789289
+    ##   3                  100      0.8649919  0.6017707
+    ##   3                  150      0.8660975  0.6073645
     ## 
     ## Tuning parameter 'shrinkage' was held constant at a value of 0.1
     ## 
@@ -200,11 +149,12 @@ print(model)
     ## The final values used for the model were n.trees = 150,
     ##  interaction.depth = 3, shrinkage = 0.1 and n.minobsinnode = 10.
 
-Finally we take a look at the results on the held-out data.
+    ##    user  system elapsed 
+    ##  61.908   2.227  36.850
+
+Finally we take a look at the results on the held-out test data.
 
 ``` r
-# apply predictions and plot
-dTest$pred <- predict(model,newdata=dTestTreated,type='prob')[,yTarget]
 WVPlots::ROCPlot(dTest,'pred',yName,'predictions on test')
 ```
 
@@ -223,26 +173,26 @@ print(confusionMatrix)
 
     ##         pred
     ## truth    FALSE  TRUE
-    ##   <=50K. 11747   688
-    ##   >50K.   1452  2394
+    ##   <=50K. 11684   751
+    ##   >50K.   1406  2440
 
 ``` r
 testAccuarcy <- (confusionMatrix[1,1]+confusionMatrix[2,2])/sum(confusionMatrix)
 testAccuarcy
 ```
 
-    ## [1] 0.8685584
+    ## [1] 0.8675143
 
 Notice the achieved test accuracy is in the ballpark of what was reported for this dataset.
 
-    (From http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names )
+    (From [adult.names description](http://archive.ics.uci.edu/ml/machine-learning-databases/adult/adult.names) )
     Error Accuracy reported as follows, after removal of unknowns from
      |    train/test sets):
      |    C4.5       : 84.46+-0.30
      |    Naive-Bayes: 83.88+-0.30
      |    NBTree     : 85.90+-0.28
 
-We can also compare accuracy on "complete cases":
+We can also compare accuracy on the "complete cases":
 
 ``` r
 dTestComplete <- dTest[complete.cases(dTest[,varNames]),]
@@ -253,8 +203,8 @@ print(confusionMatrixComplete)
 
     ##         pred
     ## truth    FALSE  TRUE
-    ##   <=50K. 10681   679
-    ##   >50K.   1378  2322
+    ##   <=50K. 10618   742
+    ##   >50K.   1331  2369
 
 ``` r
 testAccuarcyComplete <- (confusionMatrixComplete[1,1]+confusionMatrixComplete[2,2])/
@@ -262,21 +212,19 @@ testAccuarcyComplete <- (confusionMatrixComplete[1,1]+confusionMatrixComplete[2,
 testAccuarcyComplete
 ```
 
-    ## [1] 0.863413
-
-This is consistent with our experience that missingness is often informative, so in addition to imputing missing values you would like to preserver some notation indicating the missingness (which `vtreat` does in fact do).
-
-And that is all there is to this example. I'd like to emphasize that vtreat steps were only a few lines in one of the blocks of code. By design it is easy to add vtreat to your predictive analytics projects.
-
-The point is we got competitive results on real world data, in a single try (using vtreat to prepare data and caret to tune parameters). The job of the data scientist is to work longer on a problem and do better. But having a good start helps.
-
-The theory behind vtreat is fairly important and we would love for you to read through some of it: \* [vtreat: designing a package for variable treatment](http://www.win-vector.com/blog/2014/08/vtreat-designing-a-package-for-variable-treatment/) \* [vtreat Cross Frames](http://www.win-vector.com/blog/2016/05/vtreat-cross-frames/) \* [On Nested Models](http://www.win-vector.com/blog/2016/04/on-nested-models/) \* [vtreat manuals](http://winvector.github.io/vtreathtml/) \* [vtreat on Cran](https://cran.r-project.org/package=vtreat) \* [vtreat on Github](https://github.com/WinVector/vtreat)
-
-But operationally, please think of it as just adding a couple of lines to your analysis scripts.
-
-(Lastly clean up!)
+    ## [1] 0.8623506
 
 ``` r
 # clean up
 parallel::stopCluster(parallelCluster)
 ```
+
+This is consistent with our experience that missingness is often actually informative, so in addition to imputing missing values you would like to preserver some notation indicating the missingness (which `vtreat` does in fact do).
+
+And that is all there is to this example. I'd like to emphasize that vtreat steps were only a few lines in one of the blocks of code. `vtreat` treatment can take some time, but it is usually bearable. By design it is easy to add vtreat to your predictive analytics projects.
+
+The point is: we got competitive results on real world data, in a single try (using vtreat to prepare data and caret to tune parameters). The job of the data scientist is to actually work longer on a problem and do better. But having a good start helps.
+
+The theory behind vtreat is fairly important to the correctness of our implementation, and we would love for you to read through some of it: \* [vtreat: designing a package for variable treatment](http://www.win-vector.com/blog/2014/08/vtreat-designing-a-package-for-variable-treatment/) \* [vtreat Cross Frames](http://www.win-vector.com/blog/2016/05/vtreat-cross-frames/) \* [On Nested Models](http://www.win-vector.com/blog/2016/04/on-nested-models/) \* [vtreat manuals](http://winvector.github.io/vtreathtml/) \* [vtreat on Cran](https://cran.r-project.org/package=vtreat) \* [vtreat on Github](https://github.com/WinVector/vtreat)
+
+But operationally, please think of `vtreat` as just adding a couple of lines to your analysis scripts. Again, the raw R markdown source can be found [here](https://github.com/WinVector/Examples/blob/master/CensusAdultIncomeExample/ExampleRun.Rmd) and a rendered copy (with results and graphs) [here](https://github.com/WinVector/Examples/blob/master/CensusAdultIncomeExample/ExampleRun.md).
