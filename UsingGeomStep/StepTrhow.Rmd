@@ -1,0 +1,19 @@
+---
+title: "StepThrows"
+author: "Win-Vector LLC"
+date: "June 3, 2016"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+It would be nice if the included `geom_step` example did not throw, but behaved more like the included `geom_line` example.
+
+```{r error=TRUE}
+library('ggplot2')
+d <- data.frame(x=1,y=1)
+ggplot(data=d,aes(x=x,y=y)) + geom_point()
+ggplot(data=d,aes(x=x,y=y)) + geom_line()
+ggplot(data=d,aes(x=x,y=y)) + geom_step()
+```
+
