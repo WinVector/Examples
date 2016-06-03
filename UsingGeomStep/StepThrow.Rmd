@@ -9,11 +9,20 @@ output:
 
 It would be nice if the included `geom_step` example did not throw, but behaved more like the included `geom_line` example.
 
-```{r error=TRUE}
+```{r setup}
 library('ggplot2')
 d <- data.frame(x=1,y=1)
+```
+
+```{r pointplot,error=TRUE}
 ggplot(data=d,aes(x=x,y=y)) + geom_point()
+```
+
+```{r lineplot,error=TRUE}
 ggplot(data=d,aes(x=x,y=y)) + geom_line()
+```
+
+```{r steplot,error=TRUE}
 ggplot(data=d,aes(x=x,y=y)) + geom_step()
 ```
 

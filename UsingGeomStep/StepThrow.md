@@ -3,10 +3,13 @@ It would be nice if the included `geom_step` example did not throw, but behaved 
 ``` r
 library('ggplot2')
 d <- data.frame(x=1,y=1)
+```
+
+``` r
 ggplot(data=d,aes(x=x,y=y)) + geom_point()
 ```
 
-![](StepThrow_files/figure-markdown_github/unnamed-chunk-1-1.png)
+![](StepThrow_files/figure-markdown_github/pointplot-1.png)
 
 ``` r
 ggplot(data=d,aes(x=x,y=y)) + geom_line()
@@ -15,7 +18,7 @@ ggplot(data=d,aes(x=x,y=y)) + geom_line()
     ## geom_path: Each group consists of only one observation. Do you need to
     ## adjust the group aesthetic?
 
-![](StepThrow_files/figure-markdown_github/unnamed-chunk-1-2.png)
+![](StepThrow_files/figure-markdown_github/lineplot-1.png)
 
 ``` r
 ggplot(data=d,aes(x=x,y=y)) + geom_step()
@@ -23,4 +26,4 @@ ggplot(data=d,aes(x=x,y=y)) + geom_step()
 
     ## Error in grid.Call.graphics(L_lines, x$x, x$y, index, x$arrow): invalid line type
 
-![](StepThrow_files/figure-markdown_github/unnamed-chunk-1-3.png)
+![](StepThrow_files/figure-markdown_github/steplot-1.png)
