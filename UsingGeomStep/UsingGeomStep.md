@@ -1,6 +1,6 @@
 [`geom_step`](http://docs.ggplot2.org/current/geom_path.html) is an interesting geom supplied by the [R](https://cran.r-project.orgli) package [ggplot2](http://ggplot2.org). It is an appropriate rendering option for financial market data and we will show how and why to use it in this article.
 
-Let's take a simple example of plotting market data. In this case we are plotting the "ask price" (the publicly published price an item is available for purchase at a given time), the "bid price" (the publicly published price an item is available for sale at a given time), and "trades" (past purchases and sales).
+Let's take a simple example of plotting market data. In this case we are plotting the "ask price" (the publicly published price an item is available for purchase at a given time), the "bid price" (the publicly published price an item can be sold for at a given time), and "trades" (past purchases and sales).
 
 Most markets maintain these "quoted" prices as an order book and the public ask price is always greater than the public bid price (else we would have a "crossed market"). We can also track recent transactions or trades. Here is some example (made-up) data.
 
@@ -44,7 +44,7 @@ ggplot(data=trades,aes(x=tradeTime,y=tradePrice)) +
 
 ![](UsingGeomStep_files/figure-markdown_github/plottrades-1.png)
 
-There are a lot wrong with such graphs.
+There is a lot wrong with such graphs.
 
 -   We have plotted only past trades, so we have no idea what *we* would have had to pay to buy stock or gotten to sell stock at any time.
 -   The sloped segments "leak information" from the future as right after the trade the line slope tells you if the next trade in the future is going to be at a higher or lower price than the trade at hand. It is important in graphing financial instruments to have graph of where at each time in the graph we are plotting only things that are known by that time. This is also why we should not use standard smoothing curves such as [`geom_smooth`](http://docs.ggplot2.org/current/geom_smooth.html) as the defaults use data from the past and future to perform the smoothing (instead should use a trailing window such as exponential smoothing).
@@ -69,7 +69,7 @@ ggplot() +
 
 The step functions propagate flat lines forward from quote revisions, correctly indicating what ask price and bid price were in effect at all times. Trades are shown as dots since they have no propagation. Each item drawn on the graph at a given time was actually know by that time (so a person or trading strategy would also have access to such information at that time).
 
-Trades that occur nearer the ask price can be considered "buyer initiated" and trades that occur near the bid price are considered can be considered seller initiated, which we can indicate through color.
+Trades that occur nearer the ask price can be considered "buyer initiated" and trades that occur near the bid price are considered can be considered "seller initiated", which we can indicate through color.
 
 ``` r
 mids <- (lastKnownValue(NA,quotes$quoteTime,quotes$askPrice,trades$tradeTime)+
@@ -160,7 +160,7 @@ ggplot() +
 
 The above graph is now using sloped lines to connect ask price and bid price revisions (given the false impression that these intermediate prices were ever available and essentially "leaking information from the future" into the visual presentation). However, we get a graph and a more reasonable warning message: "geom\_path: Each group consists of only one observation." There was only one quote revision on 2016-01-05 so as `facet_wrap` treats each facet as sub-graph (and not as a portal into a single larger graph): days with fewer than 2 quote revisions have trouble drawing paths. The trouble causes the (deceptive) blank facet for 2016-01-05 if we are using simple sloped lines (`geom_line`) and seems to error out on the more complicated `geom_step`.
 
-In my opinion this is something `geom_step` should "fail a bit gentler" on this example (as <code>geom\_line</code> already does). In any case the correct domain specific fix is to regularize the data a bit by adding market open and close information. In many markets the open and closing prices are set by specific mechanisms (such as an opening auction and a closing volume or time weighted average). For our example we will just use last known price (which we have already prepared).
+In my opinion `geom_step` should "fail a bit gentler" on this example (as <code>geom\_line</code> already does). In any case the correct domain specific fix is to regularize the data a bit by adding market open and close information. In many markets the open and closing prices are set by specific mechanisms (such as an opening auction and a closing volume or time weighted average). For our example we will just use last known price (which we have already prepared).
 
 ``` r
 openClose %>% mutate(quoteTime=time) %>% 
