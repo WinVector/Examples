@@ -2,7 +2,7 @@
 
 Let's take a simple example of plotting market data. In this case we are plotting the "ask price" (the publicly published price an item is available for purchase at a given time), the "bid price" (the publicly published price an item is available for sale at a given time), and "trades" (past purchases and sales).
 
-Most market maintain these "quoted" prices as an order book and the public ask price is always greater than the public bid price (else we would have a "crossed market"). We can also track recent transactions or trades. Here is some example (made-up) data.
+Most markets maintain these "quoted" prices as an order book and the public ask price is always greater than the public bid price (else we would have a "crossed market"). We can also track recent transactions or trades. Here is some example (made-up) data.
 
 ``` r
 print(quotes)
