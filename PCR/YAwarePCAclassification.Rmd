@@ -1,0 +1,374 @@
+---
+title: "Principal Components Regression, Pt. 4: Y-Aware Methods for Classification"
+author: "Nina Zumel, John Mount; Win-Vector LLC"
+date: "June 19, 2016"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+
+[Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) demonstrated an effective regression preparation technique (particularly useful for principal components analysis and regression) called [*y*-aware scaling](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/).
+
+In this note we adapt the method for classification problems (instead of regression). This note is a quick copy of Nina Zumel's original article, so we strongly suggest reading the original (and its [backing code](https://github.com/WinVector/Examples/tree/master/PCR)) for more explanation and details.
+
+We will use our variable treatment package [`vtreat`](https://github.com/WinVector/vtreat) in the examples we show in this note, but you can easily implement the approach independently of `vtreat`.
+
+
+## What is classification *Y*-Aware PCA?
+
+Classification *y*-aware PCA is similar to [regression *y*-aware PCA](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/), except we specialize for a classification problem instead of a regression.  This specialization is performed by re-scaling variables to be in "*y* logistic link units."  For a given input (or independent) variable *x* we transform *x* into a "classification link scaled" variable *x'* by applying the following transform:
+
+We determine a classification units scaling for a variable *x* by fitting a logistic regression model between *x* and *y*:
+
+$$ P[y==TRUE] ~ sigmoid(m * x + b) $$
+
+If we then rescale (and recenter) *x* as
+
+$$ x' := m * x - mean(m * x) $$
+
+then *x'* is in *y* logistic link units.  This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own.  This may seem like an odd transform, but the whole point of "link space" for generalized linear models is: link space is hoped to be a place where effects are somewhat linear/additive.
+
+In `vtreat`, the treatment plan created by `designTreatmentsC()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately.  Or you could perform the transform on your own.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=7, fig.height=7, 
+                      echo=TRUE, warning=FALSE, message=FALSE)
+
+library('vtreat')
+library('ggplot2')
+library('tidyr')
+library('WVPlots') # devtools::install_github('WinVector/WVPlots',build_vignettes=TRUE)
+
+barbell_plot = function(frame, xvar, ymin, ymax, colorvar=NULL) {
+  if(is.null(colorvar)) {
+    gplot = ggplot(frame, aes_string(x=xvar))
+  } else {
+    gplot = ggplot(frame, aes_string(x=xvar, color=colorvar))
+  }
+  
+  gplot + geom_point(aes_string(y=ymin)) + 
+    geom_point(aes_string(y=ymax)) +
+    geom_linerange(aes_string(ymin=ymin, ymax=ymax))
+}
+
+dotplot_identity = function(frame, xvar, yvar, colorvar=NULL) {
+  if(is.null(colorvar)) {
+    gplot = ggplot(frame, aes_string(x=xvar, y=yvar, ymax=yvar))
+  } else {
+    gplot = ggplot(frame, aes_string(x=xvar, y=yvar, ymax=yvar, color=colorvar))
+  }
+  
+  gplot + geom_point() + geom_linerange(aes(ymin=0))
+}
+
+extractProjection <- function(ndim,princ) {
+  # pull off the rotation.  
+  proj <- princ$rotation[,1:ndim] 
+  # sign was arbitrary, so flip in convenient form
+  for(i in seq_len(ndim)) {
+    si <- sign(mean(proj[,i]))
+    if(si!=0) {
+      proj[,i] <- proj[,i]*si
+    }
+  }
+  proj
+}
+```
+
+
+```{r mkdata, include=FALSE}
+# build example where even and odd variables are bringing in noisy images
+# of two different signals.
+mkData <- function(n) {
+  for(group in 1:10) {
+    # y is the sum of two effects yA and yB
+    yA <- rnorm(n)
+    yB <- rnorm(n)
+    if(group==1) {
+      d <- data.frame(y=yA+yB+rnorm(n)>=0)
+      code <- 'x'
+    } else {
+      code <- paste0('noise',group-1)
+    }
+    yS <- list(yA,yB)
+    # these variables are correlated with y in in group 1
+    for(i in 1:5) {
+      vi <- yS[[1+(i%%2)]] + rnorm(nrow(d))
+      d[[paste(code,formatC(i,width=2,flag=0),sep='.')]] <-  ncol(d)*vi
+    }
+  }
+  d
+}
+```
+
+
+## An Example of *Y*-Aware PCA
+
+First, let's build our example. We will use a same data similar to the [earlier "x only" discussion](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly), but one where only the sign of *y* is known and
+the task is to predict (classify) this sign.  This problem can be a bit harder as each row of training data brings in a lot
+less information than in the original regression problem.
+
+
+```{r makedata}
+# make data
+set.seed(23525)
+dTrain <- mkData(1000)
+dTest <- mkData(1000)
+```
+
+Let's look at our outcome _y_ and a few of our variables.
+
+```{r firstlook}
+summary(dTrain[, c("y", "x.01", "x.02", "noise1.01", "noise1.02")])
+```
+
+## Is *y*-aware scaling needed for classification problems?
+
+The answer is yes.  Nina Zumel strongly demonstrated the need for *y*-aware scaling
+during principal components analysis data preparation 
+for regression problems in her article series (please see [here](https://github.com/WinVector/Examples/tree/master/PCR)).  Switching to categorical
+data and classification methods doesn't wish away the problem.  Below we show abysmal 
+test performance (AUC about `0.51`) on the traditional *x*-only scaled version of our example problem.
+With proper *y*-aware scaling we will get the test AUC above `0.8`.
+
+```{r noscale}
+varsU <- setdiff(colnames(dTrain),c('y','yN'))
+dmTrainU <- as.matrix(dTrain[,varsU])
+dmTestU <- as.matrix(dTest[,varsU])
+prinu <- prcomp(dmTrainU, center = TRUE, scale. = TRUE)
+projU <- extractProjection(2,prinu)
+projectedTrainU <- as.data.frame(dmTrainU %*% projU,
+                      stringsAsFactors = FALSE)
+projectedTrainU$y <- dTrain$y
+modelU <- glm(y~PC1+PC2,family=binomial,data=projectedTrainU)
+projectedTestU <- as.data.frame(dmTestU %*% projU,
+                      stringsAsFactors = FALSE)
+projectedTestU$y <- dTest$y
+projectedTestU$estimateU <- predict(modelU,type='response',newdata=projectedTestU)
+ROCPlot(projectedTestU,'estimateU','y','Recovered model versus truth on test\n(x scaled)')
+```
+
+## Preparing data using link based *y*-aware scaling
+
+Next, we'll design a treatment plan for the frame, and examine the variable significances, as estimated by `vtreat`.
+
+```{r design1prep}
+# design treatment plan
+treatmentsC <- designTreatmentsC(dTrain,setdiff(colnames(dTrain),'y'),'y',TRUE,
+                                 catScaling=TRUE,
+                                 verbose=FALSE)
+
+scoreFrame = treatmentsC$scoreFrame
+scoreFrame$vartype = ifelse(grepl("noise", scoreFrame$varName), "noise", "signal")
+
+dotplot_identity(scoreFrame, "varName", "sig", "vartype") + 
+  coord_flip()  + ggtitle("vtreat variable significance estimates")+ 
+  scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77")) 
+```
+
+Once again single variable significances are very telling. When this is the case we strongly advise 
+pruning such using these significances.  For this example we will not prune and intentionally leave any problems/issues
+for the downstream principal components analysis.
+
+```{r nexeccross, include=FALSE,eval=FALSE}
+# could also "cross frame this" http://www.win-vector.com/blog/2016/04/on-nested-models/ by replacing the above with:
+plan <- mkCrossFrameCExperiment(dTrain,setdiff(colnames(dTrain),'y'),'y',TRUE,
+                                catScaling=TRUE,
+                                scale=TRUE)
+treatmentsC <- plan$treatments
+scoreFrame = treatmentsC$scoreFrame
+scoreFrame$vartype = ifelse(grepl("noise", scoreFrame$varName), "noise", "signal")
+dTrainCTreatedYScaled <- plan$crossFrame
+```
+
+
+## Categorical *Y*-Aware PCA
+
+### Prepare the frame with *y*-aware scaling
+
+Now let's prepare the treated frame, with scaling turned on. We will deliberately turn off variable 
+pruning by setting `pruneSig = 1`. In real applications, you would want to set `pruneSig` to a value less than one to prune insignificant variables. However, here we turn off variable pruning to show that you can recover some of pruning's benefits via scaling effects, because the scaled noise variables should not have a major effect in the principal components analysis.  Pruning by significance is in fact a good additional precaution complementary to scaling by effects.
+
+```{r workscaled1}
+# prepare the treated frames, with y-aware scaling
+examplePruneSig = 1.0 
+dTrainCTreatedYScaled <- prepare(treatmentsC,dTrain,pruneSig=examplePruneSig,scale=TRUE)
+dTestCTreatedYScaled <- prepare(treatmentsC,dTest,pruneSig=examplePruneSig,scale=TRUE)
+
+# get the variable ranges
+ranges = vapply(dTrainCTreatedYScaled, FUN=function(col) c(min(col), max(col)), numeric(2))
+rownames(ranges) = c("vmin", "vmax") 
+rframe = as.data.frame(t(ranges))  # make ymin/ymax the columns
+rframe$varName = rownames(rframe)
+varnames = setdiff(rownames(rframe), "y")
+rframe = rframe[varnames,]
+rframe$vartype = ifelse(grepl("noise", rframe$varName), "noise", "signal")
+
+# show a few columns
+head(dTrainCTreatedYScaled[, c("y", "x.01_clean", "x.02_clean", "noise1.02_clean", "noise1.02_clean")])
+summary(dTrainCTreatedYScaled[, c("y", "x.01_clean", "x.02_clean", "noise1.02_clean", "noise1.02_clean")])
+barbell_plot(rframe, "varName", "vmin", "vmax", "vartype") +
+  coord_flip() + ggtitle("y-scaled variables: ranges") + 
+  scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
+rframe$range <- rframe$vmax-rframe$vmin
+rframeS <- aggregate(range~vartype,data=rframe,FUN=mean)
+linkSignalToNoise <- rframeS$range[rframeS$vartype=='signal']/
+  rframeS$range[rframeS$vartype=='noise']
+print(linkSignalToNoise)
+```
+
+Notice that after the *y*-aware rescaling, the signal carrying variables have larger ranges than the noise variables.
+
+### The Principal Components Analysis
+
+Now we do the principal components analysis. In this case it is critical that the `scale` parameter in <code>prcomp</code> is set to `FALSE` so that it does not undo our own scaling. Notice the magnitudes of the singular values fall off quickly after the first two to five values. 
+
+```{r scaledpca}
+vars <- setdiff(colnames(dTrainCTreatedYScaled),'y')
+# prcomp defaults to scale. = FALSE, but we already scaled/centered in vtreat- which we don't want to lose.
+dmTrain <- as.matrix(dTrainCTreatedYScaled[,vars])
+dmTest <- as.matrix(dTestCTreatedYScaled[,vars])
+princ <- prcomp(dmTrain, center = FALSE, scale. = FALSE)
+dotplot_identity(frame = data.frame(pc=1:length(princ$sdev), 
+                            magnitude=princ$sdev), 
+                 xvar="pc",yvar="magnitude") +
+  ggtitle("Y-Scaled variables: Magnitudes of singular values")
+```
+
+When we look at the variable loadings of the first five principal components, we see that we recover the even/odd loadings of the original signal variables. `PC1` has the odd variables, and `PC2` has the even variables. These two principal components carry most of the signal. The next three principal components complete the basis for the five original signal variables. The noise variables have very small loadings, compared to the signal variables.
+
+```{r scaledvarload}
+proj <- extractProjection(2,princ)
+rot5 <- extractProjection(5,princ)
+rotf = as.data.frame(rot5)
+rotf$varName = rownames(rotf)
+rotflong = gather(rotf, "PC", "loading", starts_with("PC"))
+rotflong$vartype = ifelse(grepl("noise", rotflong$varName), "noise", "signal")
+
+dotplot_identity(rotflong, "varName", "loading", "vartype") + 
+  facet_wrap(~PC,nrow=1) + coord_flip() + 
+  ggtitle("Y-Scaled Variable loadings, first five principal components") + 
+  scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
+```
+
+Let's look at the projection of the data onto its first two principal components, using color to code the *y* value. Notice that y increases both as we move up and as we move right. We have recovered two features that correlate with an increase in y. In fact, `PC1` corresponds to the odd signal variables, which correspond to process *yB*, and `PC2` corresponds to the even signal variables, which correspond to process *yA*.
+
+```{r scaledplottrain}
+# apply projection
+projectedTrain <- as.data.frame(dmTrain %*% proj,
+                      stringsAsFactors = FALSE)
+# plot data sorted by principal components
+projectedTrain$y <- dTrainCTreatedYScaled$y
+head(projectedTrain)
+ScatterHistC(projectedTrain,'PC1','PC2','y',
+               "Y-Scaled Training Data projected to first two principal components")
+```
+
+Now let's fit a logistic regression model to the first two principal components.
+
+```{r quant1}
+model <- glm(y~PC1+PC2,family=binomial,data=projectedTrain)
+summary(model)
+projectedTrain$estimate <- predict(model,type='response',newdata=projectedTrain)
+ROCPlot(projectedTrain,'estimate','y','Recovered model versus truth (y aware PCA train)')
+```
+
+
+Let's see how the model does on hold-out data.
+
+
+```{r scaledplotest}
+# apply projection
+projectedTest <- as.data.frame(dmTest %*% proj,
+                      stringsAsFactors = FALSE)
+# plot data sorted by principal components
+projectedTest$y <- dTestCTreatedYScaled$y
+ScatterHistC(projectedTest,'PC1','PC2','y',
+               "Y-Scaled Test Data projected to first two principal components")
+```
+
+
+```{r quant1test}
+projectedTest$estimate <- predict(model,type='response',newdata=projectedTest)
+ROCPlot(projectedTest,'estimate','y','Recovered model versus truth (y aware PCA test)')
+```
+
+### Is this significantly different than encoding *y* as a 0/1 indicator and using regression methods?
+
+Another common way to deal with data preparation for classification is to simply re-encode the categorical
+outcome as a numeric indicator target that is `1` on "`TRUE`" instances and `0` elsewhere.  From that
+point on you treat data preparation as a numeric or regression problem (though you can of course treat modeling
+as a classification problem).  This loses some modeling power, but can work well in practice.
+
+The point is the both the *y*-aware regression and classification scaling methods work by picking an affine transform (a scaling followed by a centering) on the input (or independent or *x* variables).   They pick different scales, but if proportions are similar behavior will be similar.
+
+For our simple example data set we don't see much of a difference between the two treatment strategies.   The data is encoded at a different scale, but the most important
+feature (the actual variables being rescaled to have much more range than the noise variables) is preserved.  
+
+As we see below the downstream modeling
+fixes additional issues of scale and we get nearly identical predicted probabilities and classification performance.
+
+```{r zerooneindicator}
+dTrain$yN <- as.numeric(dTrain$y)
+dTest$yN <- as.numeric(dTest$y)
+treatmentsN <- designTreatmentsN(dTrain,setdiff(colnames(dTrain),c('y','yN')),'yN',
+                                 verbose=FALSE)
+examplePruneSigN = 1.0 
+dTrainNTreatedYScaled <- prepare(treatmentsN,dTrain,pruneSig=examplePruneSigN,scale=TRUE)
+
+# get the variable ranges
+rangesN = vapply(dTrainNTreatedYScaled, FUN=function(col) c(min(col), max(col)), numeric(2))
+rownames(rangesN) = c("vmin", "vmax") 
+rframeN = as.data.frame(t(rangesN))  # make ymin/ymax the columns
+rframeN$varName = rownames(rframeN)
+varnamesN = setdiff(rownames(rframeN), c("y","yN"))
+rframeN = rframeN[varnamesN,]
+rframeN$vartype = ifelse(grepl("noise", rframeN$varName), "noise", "signal")
+# show a few columns
+head(dTrainNTreatedYScaled[, c("yN", "x.01_clean", "x.02_clean", "noise1.02_clean", "noise1.02_clean")])
+barbell_plot(rframeN, "varName", "vmin", "vmax", "vartype") +
+  coord_flip() + ggtitle("numeric y-scaled variables: ranges") + 
+  scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
+rframeN$range <- rframeN$vmax-rframeN$vmin
+rframeNS <- aggregate(range~vartype,data=rframeN,FUN=mean)
+indicatorSignalToNoise <- rframeNS$range[rframeNS$vartype=='signal']/
+  rframeNS$range[rframeNS$vartype=='noise']
+print(indicatorSignalToNoise)
+
+dTestNTreatedYScaled <- prepare(treatmentsN,dTest,pruneSig=examplePruneSigN,scale=TRUE)
+varsN <- setdiff(colnames(dTrainNTreatedYScaled),c('y','yN'))
+dmTrainN <- as.matrix(dTrainNTreatedYScaled[,varsN])
+dmTestN <- as.matrix(dTestNTreatedYScaled[,varsN])
+prinn <- prcomp(dmTrainN, center = FALSE, scale. = FALSE)
+
+projN <- extractProjection(2,prinn)
+projectedTrainN <- as.data.frame(dmTrainN %*% projN,
+                      stringsAsFactors = FALSE)
+projectedTrainN$y <- dTrainNTreatedYScaled$y
+head(projectedTrainN)
+modelN <- glm(y~PC1+PC2,family=binomial,data=projectedTrainN)
+projectedTrainN$estimateN <- predict(modelN,type='response',newdata=projectedTrainN)
+ROCPlot(projectedTrainN,'estimateN','y','Recovered model versus truth on train\n(numeric y aware PCA train)')
+
+projectedTestN <- as.data.frame(dmTestN %*% projN,
+                      stringsAsFactors = FALSE)
+projectedTestN$y <- dTestNTreatedYScaled$y
+projectedTestN$estimateN <- predict(modelN,type='response',newdata=projectedTestN)
+ROCPlot(projectedTestN,'estimateN','y','Recovered model versus truth on test\n(numeric y aware PCA train)')
+
+projectedTestN$estimateC <- projectedTest$estimate
+head(projectedTestN[,c('y','estimateC','estimateN')])
+```
+
+Now there is a difference.  The link-scaled *y*-aware procedures give a signal to noise ratio (on the scaled variable, prior to PCA) of `r format(linkSignalToNoise, digits=2,nsmall=2)` and the indicator-scaled *y*-aware procedures give a signal to noise ratio of `r format(indicatorSignalToNoise, digits=2,nsmall=2)`.  So the "right way" method (link based scaling) is a bit better, but not enough of an improvement to drive a big difference.  Likely this is mostly evidence that our toy dataset doesn't expose enough difficulty to show the difference.
+
+
+
+## Conclusion
+
+You can use *y*-aware scaling for data preparation for classification problems.  We suggest using link-based scaling which is scaling by coefficients taken from single variable logistic regressions.  However, we point out that in some cases converting your target *y* into a 0/1 indicator variable and treating the preparation steps as a numeric problem (followed by a proper classification after variable preparation) is not a bad technique.
+
+In all cases the *y*-aware methods demonstrated in Nina Zumel's original article series are well worth trying.
+
