@@ -4,6 +4,7 @@ R markdown or "knitr" files to produce Dr. Nina Zumel's Win-Vector LLC articles:
  * [Principal Components Regression, Pt. 1: The Standard Method](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly/) ([R markdown source](XonlyPCA.Rmd), [rendered markdown](XonlyPCA.md)).
  * [Principal Components Regression, Pt. 2: Y-Aware Methods](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/) ([R markdown source](YAwarePCA.Rmd), [rendered markdown](YAwarePCA.md)).
  * [Principal Components Regression, Pt. 3: Picking the Number of Components](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/) ([R markdown source](YAwarePCR_pickK.Rmd), [rendered markdown](YAwarePCR_pickK.md)).
+ * [Principal Components Regression, Pt. 4: Y-Aware Methods for Classification](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md) (Nina Zumel with John Mount, how to apply the *y*-aware scaling when preparing for classification instead of regression, or working in "link space." [R markdown source](YAwarePCAclassification.Rmd), [rendered markdown](YAwarePCAclassification.md))
 
 If you are trying to download the worksheets from [here](https://github.com/WinVector/Examples/tree/master/PCR) we have (with the help of reader feedback) worked on some instructions to help through the install process [http://www.win-vector.com/blog/2016/05/installing-wvplots-and-knitting-r-markdown/](http://www.win-vector.com/blog/2016/05/installing-wvplots-and-knitting-r-markdown/).
 

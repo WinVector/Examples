@@ -29,7 +29,7 @@ $$ x' := m * x - mean(m * x) $$
 
 then *x'* is in *y* units.  This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own.
 
-In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately.
+In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately.   Our example is a regression example, for the techniques needed for a classification exaple please see [here](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md).
 
 
 ```{r setup, include=FALSE}
