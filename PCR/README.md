@@ -91,12 +91,16 @@ analysis that preserves the relation. Or in other words how to move away
 from a middling result where different values of y (rendered as three
 colors) are hopelessly intermingled when plotted against the first two
 found latent variables as shown below.
+
 ![NewImage](http://www.win-vector.com/blog/wp-content/uploads/2016/05/NewImage-1.png "NewImage.png")
+
 Dr. Zumel shows how to perform a decisive analysis where *y* is somewhat
 sortable by the each of the first two latent variable *and* the first
 two latent variables capture complementary effects, making them good
 mutual candidates for further modeling (as shown below).
+
 ![NewImage](http://www.win-vector.com/blog/wp-content/uploads/2016/05/NewImage.png "NewImage.png")
+
 Click [here (part 2 *y*-aware
 methods)](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) for
 the discussion, examples, and references. Part 1 (*x* only methods) can
@@ -148,15 +152,21 @@ a great example of why to use a scriptable analysis platform (such as R)
 as it is easy to wrap arbitrarily complex methods into functions and
 then directly perform empirical tests on these methods. The following
 "broken stick" type test yields the following graph which identifies
-five principal components as being significant: ![Replot
+five principal components as being significant:
+
+![Replot
 1](http://www.win-vector.com/blog/wp-content/uploads/2016/05/replot-1.png "replot-1.png")
+
 However, Dr. Zumel goes on to show that in a supervised learning or
 regression setting we can further exploit the structure of the problem
 and replace the traditional component magnitude tests with simple model
 fit significance pruning. The significance method in this case gets the
 stronger result of finding the two principal components that encode the
-known even and odd loadings of the example problem: ![Plotsig
+known even and odd loadings of the example problem:
+
+![Plotsig
 1](http://www.win-vector.com/blog/wp-content/uploads/2016/05/plotsig-1.png "plotsig-1.png")
+
 In fact that is sort of her point: significance pruning either on the
 original variables or on the derived latent components is enough to give
 us the right answer. In general we get much better results when (in a
