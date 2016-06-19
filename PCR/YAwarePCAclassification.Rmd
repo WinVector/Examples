@@ -12,7 +12,7 @@ output:
 
 In this note we adapt the method for classification problems (instead of regression). This note is a quick copy of Nina Zumel's original article, so we strongly suggest reading the original (and its [backing code](https://github.com/WinVector/Examples/tree/master/PCR)) for more explanation and details.
 
-We will use our variable treatment package [`vtreat`](https://github.com/WinVector/vtreat) in the examples we show in this note, but you can easily implement the approach independently of `vtreat`.
+We will use our variable treatment package [`vtreat`](https://github.com/WinVector/vtreat) (note: the `catScaling=TRUE` option currently requires using [developtment veraion `0.5.26`](https://github.com/WinVector/vtreat) or newer) in the examples we show in this note, but you can easily implement the approach independently of `vtreat`.
 
 
 ## What is classification *Y*-Aware PCA?
