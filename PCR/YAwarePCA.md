@@ -19,7 +19,7 @@ The coefficient *m* is the slope of the best fit line, so a unit change in *x* c
 
 then *x'* is in *y* units. This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own.
 
-In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately. Our example is a regression example, for the techniques needed for a classification example please see [here](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md).
+In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately. Our current example is a regression example, for the techniques needed for a classification example please see [here](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md).
 
 An Example of *Y*-Aware PCA
 ---------------------------
