@@ -1,11 +1,13 @@
 ---
-title: 'Principal Components Regression, Pt. 3: Picking the Number of Components'
+title: "Principal Components Regression, Pt. 3: Picking the Number of Components"
 author: "Nina Zumel"
 date: "May 19, 2016"
 output:
   md_document:
     variant: markdown_github
 ---
+
+# Principal Components Regression, Pt. 3: Picking the Number of Components
 
 This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: [http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/).
 

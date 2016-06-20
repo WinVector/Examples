@@ -1,3 +1,6 @@
+Principal Components Regression, Pt.1: The Standard Method
+==========================================================
+
 This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <http://www.win-vector.com/blog/2016/05/pcr_part1_xonly>.
 
 In this note, we discuss principal components regression and some of the issues with it:

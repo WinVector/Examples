@@ -1,3 +1,6 @@
+Principal Components Regression, Pt. 3: Picking the Number of Components
+========================================================================
+
 This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/>.
 
 In our [previous note](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) we demonstrated *Y*-Aware PCA and other *y*-aware approaches to dimensionality reduction in a predictive modeling context, specifically Principal Components Regression (PCR). For our examples, we selected the appropriate number of principal components by eye. In this note, we will look at ways to select the appropriate number of principal components in a more automated fashion.

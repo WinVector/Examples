@@ -1,3 +1,8 @@
+Principal Components Regression, Pt. 4: Y-Aware Methods for Classification
+==========================================================================
+
+This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) and [Dr. John Mount](http://www.win-vector.com/site/staff/john-mount/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md>.
+
 [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) demonstrated an effective regression preparation technique (particularly useful for principal components analysis and regression) called [*y*-aware scaling](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware/).
 
 In this note we adapt the method for classification problems (instead of regression). This note is a quick copy of Nina Zumel's original article, so we strongly suggest reading the original (and its [backing code](https://github.com/WinVector/Examples/tree/master/PCR)) for more explanation and details.

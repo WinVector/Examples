@@ -7,6 +7,7 @@ output:
     variant: markdown_github
 ---
 
+# Principal Components Regression, Pt. 2: Y-Aware Methods
 
 This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: [http://www.win-vector.com/blog/2016/05/pcr_part2_yaware](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware).
 
