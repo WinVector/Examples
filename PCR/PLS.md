@@ -36,6 +36,8 @@ dTest <- mkData(1000)
 Use *y*-aware scaling.
 
 ``` r
+ncores <- parallel::detectCores()
+pClus <- parallel::makeCluster(ncores)
 vars <- setdiff(colnames(dTrain),'y')
 print(length(vars))
 ```
@@ -44,17 +46,27 @@ print(length(vars))
 
 ``` r
 formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
-cfe <- vtreat::mkCrossFrameNExperiment(dTrain,vars,'y',scale=TRUE)
 pruneSig = NULL # leaving null to prevent (useful) pruning, in practice set to 1/length(vars) or some such.
-newvars <- setdiff(colnames(cfe$crossFrame),'y')
+useCrossMethod <- TRUE
+if(useCrossMethod) {
+  cfe <- vtreat::mkCrossFrameNExperiment(dTrain,vars,'y',scale=TRUE,parallelCluster=pClus)
+  treatmentPlan <- cfe$treatments
+  newvars <- treatmentPlan$scoreFrame$varName
+  dmTrain <- as.matrix(cfe$crossFrame[,newvars])
+} else {
+  treatmentPlan <- vtreat::designTreatmentsN(dTrain,vars,'y',verbose=FALSE,parallelCluster=pClus)
+  newvars <- treatmentPlan$scoreFrame$varName
+  dmTrain <-  as.matrix(vtreat::prepare(treatmentPlan,dTrain,scale=TRUE,pruneSig=pruneSig)[,newvars],
+                        parallelCluster=pClus)
+}
 print(length(newvars))
 ```
 
     ## [1] 250
 
 ``` r
-dmTrain <- as.matrix(cfe$crossFrame[,newvars])
-dmTest <- as.matrix(vtreat::prepare(cfe$treatments,dTest,scale=TRUE,pruneSig=pruneSig)[,newvars])
+dmTest <- as.matrix(vtreat::prepare(treatmentPlan,dTest,scale=TRUE,pruneSig=pruneSig)[,newvars],
+                     parallelCluster=pClus)
 princ <- prcomp(dmTrain, center = FALSE, scale. = FALSE)
 proj <- extractProjection(2,princ)
 projectedTrain <- as.data.frame(dmTrain %*% proj,
@@ -93,6 +105,10 @@ print(paste("test rsq",testrsq))
 ```
 
     ## [1] "test rsq 0.462992844469711"
+
+``` r
+parallel::stopCluster(pClus)
+```
 
 Use latent components to model (partial least squares).
 
