@@ -1,0 +1,121 @@
+---
+title: "Partial Least Squares"
+author: "John Mount, Win-Vector LLC"
+date: "June 20, 2016"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+Partial least squares on same data as [Principal Components Regression, Pt. 2: Y-Aware Methods](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCA.md).
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=7, fig.height=7,
+                      echo=TRUE, warning=FALSE, message=FALSE)
+
+library('ggplot2')
+library('tidyr')
+library('WVPlots') # devtools::install_github('WinVector/WVPlots',build_vignettes=TRUE)
+
+barbell_plot = function(frame, xvar, ymin, ymax, colorvar=NULL) {
+  if(is.null(colorvar)) {
+    gplot = ggplot(frame, aes_string(x=xvar))
+  } else {
+    gplot = ggplot(frame, aes_string(x=xvar, color=colorvar))
+  }
+  
+  gplot + geom_point(aes_string(y=ymin)) + 
+    geom_point(aes_string(y=ymax)) +
+    geom_linerange(aes_string(ymin=ymin, ymax=ymax)) +
+    ylab("value")
+}
+
+dotplot_identity = function(frame, xvar, yvar, colorvar=NULL) {
+  if(is.null(colorvar)) {
+    gplot = ggplot(frame, aes_string(x=xvar, y=yvar, ymax=yvar))
+  } else {
+    gplot = ggplot(frame, 
+                   aes_string(x=xvar, y=yvar, ymax=yvar, 
+                              color=colorvar))
+  }
+  gplot + geom_point() + geom_linerange(aes(ymin=0))
+}
+
+extractProjection <- function(ndim,princ) {
+  # pull off the rotation.  
+  proj <- princ$rotation[,1:ndim] 
+  # sign was arbitrary, so flip in convenient form
+  for(i in seq_len(ndim)) {
+    si <- sign(mean(proj[,i]))
+    if(si!=0) {
+      proj[,i] <- proj[,i]*si
+    }
+  }
+  proj
+}
+
+rsq <- function(x,y) {
+  1 - sum((y-x)^2)/sum((y-mean(y))^2)
+}
+```
+
+
+```{r mkdata}
+# build example where even and odd variables are bringing in noisy images
+# of two different signals.
+mkData <- function(n) {
+  for(group in 1:10) {
+    # y is the sum of two effects yA and yB
+    yA <- rnorm(n)
+    yB <- rnorm(n)
+    if(group==1) {
+      d <- data.frame(y=yA+yB+rnorm(n))
+      code <- 'x'
+    } else {
+      code <- paste0('noise',group-1)
+    }
+    yS <- list(yA,yB)
+    # these variables are correlated with y in group 1,
+    # but only to each other (and not y) in other groups
+    for(i in 1:5) {
+      vi <- yS[[1+(i%%2)]] + rnorm(nrow(d))
+      d[[paste(code,formatC(i,width=2,flag=0),sep='.')]] <- ncol(d)*vi
+    }
+  }
+  d
+}
+```
+
+
+```{r makedata}
+# make data
+set.seed(23525)
+dTrain <- mkData(1000)
+dTest <- mkData(1000)
+```
+
+Using latent components to model (partial least squares).
+
+```{r plsN}
+library("pls")
+vars <- setdiff(colnames(dTrain),'y')
+formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
+for(ncomp in c(2,5,10,length(vars))) {
+  print("###################")
+  print(paste('ncomp',ncomp))
+  modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, validation = "CV")
+  dTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,ncomp=ncomp,type='response'))
+  ScatterHist(dTrain,'plsNpred','y',paste('pls',ncomp,'model on train'),
+              smoothmethod='identity',annot_size=3)
+  trainrsq <- rsq(dTrain$plsNpred,dTrain$y)
+  print(paste("ncomp",ncomp,"train rsq",trainrsq))
+  dTest$plsNpred <-as.numeric(predict(modelN,newdata=dTest,ncomp=ncomp,type='response'))
+  ScatterHist(dTest,'plsNpred','y',paste('pls',ncomp,'model on test'),
+              smoothmethod='identity',annot_size=3)
+  testrsq <- rsq(dTest$plsNpred,dTest$y)
+  print(paste("ncomp",ncomp,"test rsq",testrsq))
+  print("###################")
+}
+```
+
