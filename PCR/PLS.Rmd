@@ -104,7 +104,8 @@ formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
 for(ncomp in c(2,5,10,length(vars))) {
   print("###################")
   print(paste('ncomp',ncomp))
-  modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, validation = "CV")
+  modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, 
+                 scale=TRUE, validation = "CV")
   dTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,ncomp=ncomp,type='response'))
   ScatterHist(dTrain,'plsNpred','y',paste('pls',ncomp,'model on train'),
               smoothmethod='identity',annot_size=3)

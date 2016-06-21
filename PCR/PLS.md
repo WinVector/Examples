@@ -42,7 +42,8 @@ formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
 for(ncomp in c(2,5,10,length(vars))) {
   print("###################")
   print(paste('ncomp',ncomp))
-  modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, validation = "CV")
+  modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, 
+                 scale=TRUE, validation = "CV")
   dTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,ncomp=ncomp,type='response'))
   ScatterHist(dTrain,'plsNpred','y',paste('pls',ncomp,'model on train'),
               smoothmethod='identity',annot_size=3)
@@ -62,33 +63,33 @@ for(ncomp in c(2,5,10,length(vars))) {
 
 ![](PLS_files/figure-markdown_github/plsN-1.png)
 
-    ## [1] "ncomp 2 train rsq 0.0555802829728064"
+    ## [1] "ncomp 2 train rsq 0.498555119996815"
 
 ![](PLS_files/figure-markdown_github/plsN-2.png)
 
-    ## [1] "ncomp 2 test rsq 0.0196814795451"
+    ## [1] "ncomp 2 test rsq 0.495483374174648"
     ## [1] "###################"
     ## [1] "###################"
     ## [1] "ncomp 5"
 
 ![](PLS_files/figure-markdown_github/plsN-3.png)
 
-    ## [1] "ncomp 5 train rsq 0.211379947079151"
+    ## [1] "ncomp 5 train rsq 0.505145624334339"
 
 ![](PLS_files/figure-markdown_github/plsN-4.png)
 
-    ## [1] "ncomp 5 test rsq 0.150024400253923"
+    ## [1] "ncomp 5 test rsq 0.475329516988425"
     ## [1] "###################"
     ## [1] "###################"
     ## [1] "ncomp 10"
 
 ![](PLS_files/figure-markdown_github/plsN-5.png)
 
-    ## [1] "ncomp 10 train rsq 0.416752914704887"
+    ## [1] "ncomp 10 train rsq 0.505208043148823"
 
 ![](PLS_files/figure-markdown_github/plsN-6.png)
 
-    ## [1] "ncomp 10 test rsq 0.403337625472547"
+    ## [1] "ncomp 10 test rsq 0.475211676076519"
     ## [1] "###################"
     ## [1] "###################"
     ## [1] "ncomp 50"
