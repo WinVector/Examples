@@ -1,10 +1,10 @@
-Partial least squares on same data as [Principal Components Regression, Pt. 2: Y-Aware Methods](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCA.md).
+Partial least squares on similar data to [Principal Components Regression, Pt. 2: Y-Aware Methods](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCA.md).
 
 ``` r
 # build example where even and odd variables are bringing in noisy images
 # of two different signals.
 mkData <- function(n) {
-  for(group in 1:10) {
+  for(group in 1:50) {
     # y is the sum of two effects yA and yB
     yA <- rnorm(n)
     yB <- rnorm(n)
@@ -33,13 +33,74 @@ dTrain <- mkData(1000)
 dTest <- mkData(1000)
 ```
 
-Using latent components to model (partial least squares).
+Use *y*-aware scaling.
+
+``` r
+vars <- setdiff(colnames(dTrain),'y')
+print(length(vars))
+```
+
+    ## [1] 250
+
+``` r
+formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
+cfe <- vtreat::mkCrossFrameNExperiment(dTrain,vars,'y',scale=TRUE)
+pruneSig = NULL # leaving null to prevent (useful) pruning, in practice set to 1/length(vars) or some such.
+newvars <- setdiff(colnames(cfe$crossFrame),'y')
+print(length(newvars))
+```
+
+    ## [1] 250
+
+``` r
+dmTrain <- as.matrix(cfe$crossFrame[,newvars])
+dmTest <- as.matrix(vtreat::prepare(cfe$treatments,dTest,scale=TRUE,pruneSig=pruneSig)[,newvars])
+princ <- prcomp(dmTrain, center = FALSE, scale. = FALSE)
+proj <- extractProjection(2,princ)
+projectedTrain <- as.data.frame(dmTrain %*% proj,
+                      stringsAsFactors = FALSE)
+projectedTrain$y <- dTrain$y
+projectedTest <- as.data.frame(dmTest %*% proj,
+                      stringsAsFactors = FALSE)
+projectedTest$y <- dTest$y
+model <- lm(y~PC1+PC2,data=projectedTrain)
+projectedTrain$pred <- predict(model,newdata = projectedTrain)
+projectedTest$pred <- predict(model,newdata = projectedTest)
+
+ScatterHist(projectedTrain,'pred','y',paste('y-aware 2 component model on train'),
+            smoothmethod='identity',annot_size=3)
+```
+
+![](PLS_files/figure-markdown_github/yaware-1.png)
+
+``` r
+trainrsq <- rsq(projectedTrain$pred,projectedTrain$y)
+print(paste("train rsq",trainrsq))
+```
+
+    ## [1] "train rsq 0.471688060744479"
+
+``` r
+ScatterHist(projectedTest,'pred','y',paste('y-aware 2 component model on test'),
+            smoothmethod='identity',annot_size=3)
+```
+
+![](PLS_files/figure-markdown_github/yaware-2.png)
+
+``` r
+testrsq <- rsq(projectedTest$pred,projectedTest$y)
+print(paste("test rsq",testrsq))
+```
+
+    ## [1] "test rsq 0.462992844469711"
+
+Use latent components to model (partial least squares).
 
 ``` r
 library("pls")
 vars <- setdiff(colnames(dTrain),'y')
 formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
-for(ncomp in c(2,5,10,length(vars))) {
+for(ncomp in c(2,5,10)) {
   print("###################")
   print(paste('ncomp',ncomp))
   modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, 
@@ -63,42 +124,31 @@ for(ncomp in c(2,5,10,length(vars))) {
 
 ![](PLS_files/figure-markdown_github/plsN-1.png)
 
-    ## [1] "ncomp 2 train rsq 0.498555119996815"
+    ## [1] "ncomp 2 train rsq 0.569372530730129"
 
 ![](PLS_files/figure-markdown_github/plsN-2.png)
 
-    ## [1] "ncomp 2 test rsq 0.495483374174648"
+    ## [1] "ncomp 2 test rsq 0.36297252913115"
     ## [1] "###################"
     ## [1] "###################"
     ## [1] "ncomp 5"
 
 ![](PLS_files/figure-markdown_github/plsN-3.png)
 
-    ## [1] "ncomp 5 train rsq 0.505145624334339"
+    ## [1] "ncomp 5 train rsq 0.6073996779179"
 
 ![](PLS_files/figure-markdown_github/plsN-4.png)
 
-    ## [1] "ncomp 5 test rsq 0.475329516988425"
+    ## [1] "ncomp 5 test rsq 0.264559333602527"
     ## [1] "###################"
     ## [1] "###################"
     ## [1] "ncomp 10"
 
 ![](PLS_files/figure-markdown_github/plsN-5.png)
 
-    ## [1] "ncomp 10 train rsq 0.505208043148823"
+    ## [1] "ncomp 10 train rsq 0.609688754759089"
 
 ![](PLS_files/figure-markdown_github/plsN-6.png)
 
-    ## [1] "ncomp 10 test rsq 0.475211676076519"
-    ## [1] "###################"
-    ## [1] "###################"
-    ## [1] "ncomp 50"
-
-![](PLS_files/figure-markdown_github/plsN-7.png)
-
-    ## [1] "ncomp 50 train rsq 0.505208053399192"
-
-![](PLS_files/figure-markdown_github/plsN-8.png)
-
-    ## [1] "ncomp 50 test rsq 0.475199494175666"
+    ## [1] "ncomp 10 test rsq 0.256595542926984"
     ## [1] "###################"
