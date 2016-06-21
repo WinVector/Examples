@@ -135,21 +135,23 @@ Use latent components to model (partial least squares).
 ```{r plsN}
 library("pls")
 vars <- setdiff(colnames(dTrain),'y')
+plotTrain <- dTrain
+plotTest <- dTest
 formula <- paste('y',paste(vars,collapse=' + '),sep=' ~ ')
 for(ncomp in c(2,5,10)) {
   print("###################")
   print(paste('ncomp',ncomp))
   modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, 
                  scale=TRUE, validation = "CV")
-  dTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,ncomp=ncomp,type='response'))
-  ScatterHist(dTrain,'plsNpred','y',paste('pls',ncomp,'model on train'),
+  plotTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,ncomp=ncomp,type='response'))
+  ScatterHist(plotTrain,'plsNpred','y',paste('pls',ncomp,'model on train'),
               smoothmethod='identity',annot_size=3)
-  trainrsq <- rsq(dTrain$plsNpred,dTrain$y)
+  trainrsq <- rsq(plotTrain$plsNpred,plotTrain$y)
   print(paste("ncomp",ncomp,"train rsq",trainrsq))
-  dTest$plsNpred <-as.numeric(predict(modelN,newdata=dTest,ncomp=ncomp,type='response'))
-  ScatterHist(dTest,'plsNpred','y',paste('pls',ncomp,'model on test'),
+  plotTest$plsNpred <-as.numeric(predict(modelN,newdata=dTest,ncomp=ncomp,type='response'))
+  ScatterHist(plotTest,'plsNpred','y',paste('pls',ncomp,'model on test'),
               smoothmethod='identity',annot_size=3)
-  testrsq <- rsq(dTest$plsNpred,dTest$y)
+  testrsq <- rsq(plotTest$plsNpred,plotTest$y)
   print(paste("ncomp",ncomp,"test rsq",testrsq))
   print("###################")
 }
