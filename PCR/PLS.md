@@ -123,12 +123,14 @@ for(ncomp in c(2,5,10)) {
   print(paste('ncomp',ncomp))
   modelN <- plsr(as.formula(formula), ncomp = ncomp, data = dTrain, 
                  scale=TRUE, validation = "CV")
-  plotTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,ncomp=ncomp,type='response'))
+  plotTrain$plsNpred <- as.numeric(predict(modelN,newdata=dTrain,
+                                           ncomp=ncomp,type='response'))
   ScatterHist(plotTrain,'plsNpred','y',paste('pls',ncomp,'model on train'),
               smoothmethod='identity',annot_size=3)
   trainrsq <- rsq(plotTrain$plsNpred,plotTrain$y)
   print(paste("ncomp",ncomp,"train rsq",trainrsq))
-  plotTest$plsNpred <-as.numeric(predict(modelN,newdata=dTest,ncomp=ncomp,type='response'))
+  plotTest$plsNpred <-as.numeric(predict(modelN,newdata=dTest,
+                                         ncomp=ncomp,type='response'))
   ScatterHist(plotTest,'plsNpred','y',paste('pls',ncomp,'model on test'),
               smoothmethod='identity',annot_size=3)
   testrsq <- rsq(plotTest$plsNpred,plotTest$y)
@@ -170,3 +172,48 @@ for(ncomp in c(2,5,10)) {
 
     ## [1] "ncomp 10 test rsq 0.256595542926984"
     ## [1] "###################"
+
+Obviously we could combine the two methods using the `scale=FALSE` setting for `pls::plsr` (as we have already shown for `stats::prcomp`).
+
+``` r
+ncomp = 2
+dTrainC <- as.data.frame(dmTrain)
+dTrainC$y <- dTrain$y
+newvars <- setdiff(colnames(dTrainC),'y')
+dTestC <- as.data.frame(dmTest)
+dTestC$y <- dTest$y
+fB <- formula <- paste('y',paste(newvars,collapse=' + '),sep=' ~ ')
+modelB <- plsr(as.formula(fB), ncomp = ncomp, data = dTrainC, 
+               scale=FALSE, validation = "CV")
+plotTrain$bothPred <- as.numeric(predict(modelB,newdata=dTrainC,
+                                         ncomp=ncomp,type='response'))
+ScatterHist(plotTrain,'bothPred','y',
+            paste('y-aware scaling plus',ncomp,'compoent PLS on train'),
+            smoothmethod='identity',annot_size=3)
+```
+
+![](PLS_files/figure-markdown_github/combined-1.png)
+
+``` r
+trainrsq <- rsq(plotTrain$bothPred,plotTrain$y)
+print(paste("combined train rsq",trainrsq))
+```
+
+    ## [1] "combined train rsq 0.475503092255827"
+
+``` r
+plotTest$bothPred <-as.numeric(predict(modelB,newdata=dTestC,
+                                       ncomp=ncomp,type='response'))
+ScatterHist(plotTest,'bothPred','y',
+              paste('y-aware scaling plus',ncomp,'compoent PLS on test'),
+            smoothmethod='identity',annot_size=3)
+```
+
+![](PLS_files/figure-markdown_github/combined-2.png)
+
+``` r
+testrsq <- rsq(plotTest$bothPred,plotTest$y)
+print(paste("combined test rsq",testrsq))
+```
+
+    ## [1] "combined test rsq 0.463528525860819"
