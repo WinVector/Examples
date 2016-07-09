@@ -56,8 +56,8 @@ if(useCrossMethod) {
 } else {
   treatmentPlan <- vtreat::designTreatmentsN(dTrain,vars,'y',verbose=FALSE,parallelCluster=pClus)
   newvars <- treatmentPlan$scoreFrame$varName
-  dmTrain <-  as.matrix(vtreat::prepare(treatmentPlan,dTrain,scale=TRUE,pruneSig=pruneSig)[,newvars],
-                        parallelCluster=pClus)
+  dmTrain <-  as.matrix(vtreat::prepare(treatmentPlan,dTrain,scale=TRUE,pruneSig=pruneSig,
+                                         parallelCluster=pClus)[,newvars])
 }
 print(length(newvars))
 ```
@@ -65,8 +65,8 @@ print(length(newvars))
     ## [1] 250
 
 ``` r
-dmTest <- as.matrix(vtreat::prepare(treatmentPlan,dTest,scale=TRUE,pruneSig=pruneSig)[,newvars],
-                     parallelCluster=pClus)
+dmTest <- as.matrix(vtreat::prepare(treatmentPlan,dTest,scale=TRUE,pruneSig=pruneSig,
+                                    parallelCluster=pClus)[,newvars])
 princ <- prcomp(dmTrain, center = FALSE, scale. = FALSE)
 proj <- extractProjection(2,princ)
 projectedTrain <- as.data.frame(dmTrain %*% proj,
