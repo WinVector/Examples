@@ -7,7 +7,9 @@ output:
     variant: markdown_github
 ---
 
-This article is from [http://www.win-vector.com/blog/2016/05/pcr_part1_xonly](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
+# Principal Components Regression, Pt.1: The Standard Method
+
+This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: [http://www.win-vector.com/blog/2016/05/pcr_part1_xonly](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly).
 
 
 In this note, we discuss principal components regression and some of the issues with it:
@@ -425,8 +427,7 @@ We see that _y_ is not well ordered by `PC1` and `PC2` here, as it was in the id
 In our next article we will show that we can explain almost 50% of the _y_ variance in this data using only two variables.  This is quite
 good as even the "all variable" model only picks up about that much of the relation and _y_ by design has about 33% unexplainable variation. In addition to showing the standard methods (including variable pruning) we will introduce a technique we call "_y_-aware scaling."
 
-Part 2 (when released) will be found here [http://www.win-vector.com/blog/2016/05/pcr_part2_yaware](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware).
-
+Click [here](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) for part 2 (*y*-aware methods).
 
 ### References
 

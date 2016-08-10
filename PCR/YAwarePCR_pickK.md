@@ -1,4 +1,7 @@
-This article is from <http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/>.
+Principal Components Regression, Pt. 3: Picking the Number of Components
+========================================================================
+
+This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/>.
 
 In our [previous note](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) we demonstrated *Y*-Aware PCA and other *y*-aware approaches to dimensionality reduction in a predictive modeling context, specifically Principal Components Regression (PCR). For our examples, we selected the appropriate number of principal components by eye. In this note, we will look at ways to select the appropriate number of principal components in a more automated fashion.
 
@@ -41,7 +44,7 @@ princ <- prcomp(dmTrain, center = FALSE, scale. = FALSE)
 
 If we examine the magnitudes of the resulting singular values, we see that we should use from two to five principal components for our analysis. In fact, as we showed in the previous post, the first two singular values accurately capture the two unobservable processes that contribute to *y*, and a linear model fit to these two components captures most of the explainable variance in the data, both on training and on hold-out data.
 
-![](YAwarePCR_pickK_files/figure-markdown_github/singularvalues-1.png)<!-- -->
+![](YAwarePCR_pickK_files/figure-markdown_github/singularvalues-1.png)
 
 We picked the number of principal components to use by eye; but it's tricky to implement code based on the strategy "look for a knee in the curve." So how might we automate picking the appropriate number of components in a reliable way?
 
@@ -135,7 +138,7 @@ ggplot(as.data.frame(t(svmat)), aes(x=PC1)) +
   ggtitle("Distribution of magnitudes of first singular value, permuted data")
 ```
 
-![](YAwarePCR_pickK_files/figure-markdown_github/permutation-1.png)<!-- -->
+![](YAwarePCR_pickK_files/figure-markdown_github/permutation-1.png)
 
 Here we show the distribution of the magnitude of the first singular value on the permuted data, and compare it to the magnitude of the actual first singular value (the red vertical line). We see that the actual first singular value is far larger than the magnitude you would expect from data where *x* is not related to *y*. Let's compare all the singular values to their permutation test thresholds. The dashed line is the mean value of each singular value from the permutation tests; the shaded area represents the 98th percentile.
 
@@ -156,7 +159,7 @@ below = which(princ$sdev < pdata$upper)
 lastSV = below[[1]] - 1
 ```
 
-![](YAwarePCR_pickK_files/figure-markdown_github/replot-1.png)<!-- -->
+![](YAwarePCR_pickK_files/figure-markdown_github/replot-1.png)
 
 This test suggests that we should use 5 principal components, which is consistent with what our eye sees. This is perhaps not the "correct" knee in the graph, but it is undoubtably a knee.
 
@@ -194,7 +197,7 @@ scoreFrame$accept = scoreFrame$sig < threshold
 nPC = sum(scoreFrame$accept)
 ```
 
-![](YAwarePCR_pickK_files/figure-markdown_github/plotsig-1.png)<!-- -->
+![](YAwarePCR_pickK_files/figure-markdown_github/plotsig-1.png)
 
 Significance pruning picks 2 principal components, again consistent with our visual assessment. This time, we picked the correct knee: as we saw in the previous post, the first two principal components were sufficient to describe the explainable structure of the problem.
 

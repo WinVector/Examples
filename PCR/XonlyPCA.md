@@ -1,4 +1,7 @@
-This article is from <http://www.win-vector.com/blog/2016/05/pcr_part1_xonly>.
+Principal Components Regression, Pt.1: The Standard Method
+==========================================================
+
+This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <http://www.win-vector.com/blog/2016/05/pcr_part1_xonly>.
 
 In this note, we discuss principal components regression and some of the issues with it:
 
@@ -129,7 +132,7 @@ dotplot_identity(frame = data.frame(pc=1:length(princIdeal$sdev),
   ggtitle("Ideal case: Magnitudes of singular values")
 ```
 
-![](XonlyPCA_files/figure-markdown_github/idealsv-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/idealsv-1.png)
 
 The magnitudes of the singular values tell us that the first two principal components carry most of the signal. We can also look at the variable loadings of the principal components. The plot of the variable loadings is a graphical representation of the coordinates of the principal components. Each coordinate corresponds to the contribution of one of the original variables to that principal component.
 
@@ -140,7 +143,7 @@ dotplot_identity(rotflongIdeal, "varName", "loading", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](XonlyPCA_files/figure-markdown_github/idealsvld-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/idealsvld-1.png)
 
 We see that we recover the even/odd loadings of the original signal variables. `PC1` has the odd variables, and `PC2` has the even variables. The next three principal components complete the basis for the five original variables.
 
@@ -157,7 +160,7 @@ ScatterHistN(projectedTrainIdeal,'PC1','PC2','y',
                "Ideal Data projected to first two principal components")
 ```
 
-![](XonlyPCA_files/figure-markdown_github/idealproj-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/idealproj-1.png)
 
 Notice that the value of *y* increases both as we move up and as we move right. We have recovered two orthogonal features that each correlate with an increase in y (in general the signs of the principal components -- that is, which direction is "positive" -- are arbitrary, so without precautions the above graph can appear flipped). Recall that we constructed the data so that the odd variables (represented by `PC1`) correspond to process *yB* and the even variables (represented by `PC2`) correspond to process *yA*. We have recovered both of these relations in the figure.
 
@@ -186,7 +189,7 @@ dotplot_identity(frame = data.frame(pc=1:length(prinU$sdev),
   ggtitle("Unscaled case: Magnitudes of singular values")
 ```
 
-![](XonlyPCA_files/figure-markdown_github/noscale-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/noscale-1.png)
 
 There is no obvious knee in the magnitudes of the singular values, so we are at a loss as to how many variables we should use. In addition, when we look at the variable loading of the first five principal components, we will see another problem:
 
@@ -206,7 +209,7 @@ dotplot_identity(rot5U, "varName", "loading", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](XonlyPCA_files/figure-markdown_github/noscaleloading-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/noscaleloading-1.png)
 
 The noise variables completely dominate the loading of the first several principal components. Because of the way we deliberately mis-scaled the data, the noise variables are of much larger magnitude than the signal variables, and so the true signal is masked when we decompose the data.
 
@@ -357,7 +360,7 @@ barbell_plot(rframe, "varName", "vmin", "vmax", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](XonlyPCA_files/figure-markdown_github/xonlyexample-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/xonlyexample-1.png)
 
 Note that the signal and noise variables now have commensurate ranges.
 
@@ -375,7 +378,7 @@ dotplot_identity(frame = data.frame(pc=1:length(princ$sdev),
   ggtitle("x scaled variables: Magnitudes of singular values")
 ```
 
-![](XonlyPCA_files/figure-markdown_github/xscaledPCA-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/xscaledPCA-1.png)
 
 ``` r
 sum(princ$sdev^2)
@@ -399,7 +402,7 @@ dotplot_identity(rotflong, "varName", "loading", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](XonlyPCA_files/figure-markdown_github/xscaledload-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/xscaledload-1.png)
 
 The signal variables now have larger loadings than they did in the unscaled case, but the noise variables still dominate the projection, in aggregate swamping out the contributions from the signal variables. The two processes that produced *y* have diffused amongst the principal components, rather than mostly concentrating in the first two, as they did in the ideal case. This is because we constructed the noise variables to have variation and some correlations with each other -- but not be correlated with *y*. PCA doesn't know that we are interested only in variable correlations that are due to *y*, so it must decompose the data to capture as much variation, and as many variable correlations, as possible.
 
@@ -469,7 +472,7 @@ ScatterHist(projectedTrain,'estimate','y','Recovered 20 variable model versus tr
             smoothmethod='identity',annot_size=3)
 ```
 
-![](XonlyPCA_files/figure-markdown_github/quant2-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/quant2-1.png)
 
 ``` r
 trainrsq <- rsq(projectedTrain$estimate,projectedTrain$y)
@@ -533,13 +536,13 @@ ScatterHistN(projectedTrain,'PC1','PC2','y',
                "x scaled Data projected to first two principal components")
 ```
 
-![](XonlyPCA_files/figure-markdown_github/xscaledplot-1.png)<!-- -->
+![](XonlyPCA_files/figure-markdown_github/xscaledplot-1.png)
 
 We see that *y* is not well ordered by `PC1` and `PC2` here, as it was in the ideal case, and as it will be with the *y*-aware PCA.
 
 In our next article we will show that we can explain almost 50% of the *y* variance in this data using only two variables. This is quite good as even the "all variable" model only picks up about that much of the relation and *y* by design has about 33% unexplainable variation. In addition to showing the standard methods (including variable pruning) we will introduce a technique we call "*y*-aware scaling."
 
-Part 2 (when released) will be found here <http://www.win-vector.com/blog/2016/05/pcr_part2_yaware>.
+Click [here](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware) for part 2 (*y*-aware methods).
 
 ### References
 

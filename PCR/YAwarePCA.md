@@ -1,4 +1,7 @@
-This article is from <http://www.win-vector.com/blog/2016/05/pcr_part2_yaware>.
+Principal Components Regression, Pt. 2: Y-Aware Methods
+=======================================================
+
+This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <http://www.win-vector.com/blog/2016/05/pcr_part2_yaware>.
 
 In our [previous note](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly), we discussed some problems that can arise when using standard principal components analysis (specifically, principal components regression) to model the relationship between independent (*x*) and dependent (*y*) variables. In this note, we present some dimensionality reduction techniques that alleviate some of those problems, in particular what we call *Y-Aware Principal Components Analysis*, or *Y-Aware PCA*. We will use our variable treatment package [`vtreat`](https://github.com/WinVector/vtreat) in the examples we show in this note, but you can easily implement the approach independently of `vtreat`.
 
@@ -19,7 +22,7 @@ The coefficient *m* is the slope of the best fit line, so a unit change in *x* c
 
 then *x'* is in *y* units. This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own.
 
-In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately.
+In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately. Our current example is a regression example, for the techniques needed for a classification example please see [here](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md).
 
 An Example of *Y*-Aware PCA
 ---------------------------
@@ -77,7 +80,7 @@ dotplot_identity(scoreFrame, "varName", "sig", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77")) 
 ```
 
-![](YAwarePCA_files/figure-markdown_github/design1prep-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/design1prep-1.png)
 
 Note that the noise variables typically have large significance values, denoting statistical insignificance. Usually we recommend doing some significance pruning on variables before moving on -- see [here](http://www.win-vector.com/blog/2014/02/bad-bayes-an-example-of-why-you-need-hold-out-testing/) for possible consequences of not pruning an over-abundance of variables, and [here](http://www.win-vector.com/blog/2015/08/how-do-you-know-if-your-data-has-signal/) for a discussion of one way to prune, based on significance. For this example, however, we will attempt dimensionality reduction without pruning.
 
@@ -128,7 +131,7 @@ barbell_plot(rframe, "varName", "vmin", "vmax", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](YAwarePCA_files/figure-markdown_github/workscaled1-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/workscaled1-1.png)
 
 Notice that after the *y*-aware rescaling, the signal carrying variables have larger ranges than the noise variables.
 
@@ -148,7 +151,7 @@ dotplot_identity(frame = data.frame(pc=1:length(princ$sdev),
   ggtitle("Y-Scaled variables: Magnitudes of singular values")
 ```
 
-![](YAwarePCA_files/figure-markdown_github/scaledpca-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/scaledpca-1.png)
 
 When we look at the variable loadings of the first five principal components, we see that we recover the even/odd loadings of the original signal variables. `PC1` has the odd variables, and `PC2` has the even variables. These two principal components carry most of the signal. The next three principal components complete the basis for the five original signal variables. The noise variables have very small loadings, compared to the signal variables.
 
@@ -166,7 +169,7 @@ dotplot_identity(rotflong, "varName", "loading", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](YAwarePCA_files/figure-markdown_github/scaledvarload-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/scaledvarload-1.png)
 
 Let's look at the projection of the data onto its first two principal components, using color to code the *y* value. Notice that y increases both as we move up and as we move right. We have recovered two features that correlate with an increase in y. In fact, `PC1` corresponds to the odd signal variables, which correspond to process *yB*, and `PC2` corresponds to the even signal variables, which correspond to process *yA*.
 
@@ -180,7 +183,7 @@ ScatterHistN(projectedTrain,'PC1','PC2','y',
                "Y-Scaled Training Data projected to first two principal components")
 ```
 
-![](YAwarePCA_files/figure-markdown_github/scaledplottrain-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/scaledplottrain-1.png)
 
 Now let's fit a linear regression model to the first two principal components.
 
@@ -217,7 +220,7 @@ ScatterHist(projectedTrain,'estimate','y','Recovered model versus truth (y aware
             smoothmethod='identity',annot_size=3)
 ```
 
-![](YAwarePCA_files/figure-markdown_github/quant1-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/quant1-1.png)
 
 This model, with only two variables, explains 47.52% of the variation in *y*. This is comparable to the variance explained by the model fit to twenty principal components using *x*-only PCA (as well as a model fit to all the original variables) in the previous note.
 
@@ -233,7 +236,7 @@ ScatterHistN(projectedTest,'PC1','PC2','y',
                "Y-Scaled Test Data projected to first two principal components")
 ```
 
-![](YAwarePCA_files/figure-markdown_github/scaledplotest-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/scaledplotest-1.png)
 
 ``` r
 projectedTest$estimate <- predict(model,newdata=projectedTest)
@@ -248,7 +251,7 @@ ScatterHist(projectedTest,'estimate','y','Recovered model versus truth (y aware 
             smoothmethod='identity',annot_size=3)
 ```
 
-![](YAwarePCA_files/figure-markdown_github/quant1test-1.png)<!-- -->
+![](YAwarePCA_files/figure-markdown_github/quant1test-1.png)
 
 We see that this two-variable model captures about 50.64% of the variance in *y* on hold-out -- again, comparable to the hold-out performance of the model fit to twenty principal components using *x*-only PCA. These two principal components also do a *much* better job of capturing the internal structure of the data -- that is, the relationship of the signaling variables to the `yA` and `yB` processes -- than the first two principal components of the *x*-only PCA.
 
@@ -337,7 +340,7 @@ In our experience, there are two camps of analysts: those who never use principa
 
 The general principals are widely applicable, and often re-discovered and re-formulated in useful ways (such as [autoencoders](https://en.wikipedia.org/wiki/Autoencoder)).
 
-In our next note, we will look at some ways to pick the appropriate number of principal components procedurally.
+In our [next note](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/), we will look at some ways to pick the appropriate number of principal components procedurally.
 
 ### References
 

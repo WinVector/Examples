@@ -7,8 +7,9 @@ output:
     variant: markdown_github
 ---
 
+# Principal Components Regression, Pt. 2: Y-Aware Methods
 
-This article is from [http://www.win-vector.com/blog/2016/05/pcr_part2_yaware](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware).
+This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: [http://www.win-vector.com/blog/2016/05/pcr_part2_yaware](http://www.win-vector.com/blog/2016/05/pcr_part2_yaware).
 
 In our [previous note](http://www.win-vector.com/blog/2016/05/pcr_part1_xonly), we discussed some problems that can arise when using standard principal components analysis (specifically, principal components regression) to model the relationship between independent (*x*) and dependent (*y*) variables. In this note, we present some dimensionality reduction techniques that alleviate some of those problems, in particular what we call *Y-Aware Principal Components Analysis*, or *Y-Aware PCA*. We will use our variable treatment package [`vtreat`](https://github.com/WinVector/vtreat) in the examples we show in this note, but you can easily implement the approach independently of `vtreat`.
 
@@ -29,7 +30,7 @@ $$ x' := m * x - mean(m * x) $$
 
 then *x'* is in *y* units.  This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own.
 
-In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately.
+In `vtreat`, the treatment plan created by `designTreatmentsN()` will store the information needed for *y*-aware scaling, so that if you then `prepare` your data with the flag `scale=TRUE`, the resulting treated frame will be scaled appropriately.   Our current example is a regression example, for the techniques needed for a classification example please see [here](https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md).
 
 
 ```{r setup, include=FALSE}
@@ -348,7 +349,7 @@ In our experience, there are two camps of analysts: those who never use principa
 The general principals are widely applicable, and often re-discovered and re-formulated in useful ways (such as 
 [autoencoders](https://en.wikipedia.org/wiki/Autoencoder)).
 
-In our next note, we will look at some ways to pick the appropriate number of principal components procedurally.
+In our [next note](http://www.win-vector.com/blog/2016/05/pcr_part3_pickk/), we will look at some ways to pick the appropriate number of principal components procedurally.
 
 
 ### References

@@ -1,0 +1,85 @@
+---
+title: "ExampleRun2"
+author: "Win-Vector LLC"
+date: "June 1, 2016"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+Example showing caret variable preparation followed by caret training.
+
+```{r setup, message=FALSE,warning=FALSE,results=FALSE}
+library('caret')
+library('gbm')
+library('doMC')
+
+# parallel for caret
+ncores <- parallel::detectCores()
+registerDoMC(cores=ncores)
+```
+
+```{r loaddata}
+# load data
+# data from: http://archive.ics.uci.edu/ml/machine-learning-databases/adult/
+colnames <-
+  c(
+    'age',
+    'workclass',
+    'fnlwgt',
+    'education',
+    'education.num',
+    'marital.status',
+    'occupation',
+    'relationship',
+    'race',
+    'sex',
+    'capital.gain',
+    'capital.loss',
+    'hours.per.week',
+    'native.country',
+    'class'
+  )
+dTrain <- read.table(
+  'adult.data.txt',
+  header = FALSE,
+  sep = ',',
+  strip.white = TRUE,
+  stringsAsFactors = FALSE,
+  na.strings = c('NA', '?', '')
+)
+colnames(dTrain) <- colnames
+dTest <- read.table(
+  'adult.test.txt',
+  skip = 1,
+  header = FALSE,
+  sep = ',',
+  strip.white = TRUE,
+  stringsAsFactors = FALSE,
+  na.strings = c('NA', '?', '')
+)
+colnames(dTest) <- colnames
+```
+
+```{r model}
+# define problem
+yName <- 'class'
+yTarget <- '>50K'
+varNames <- setdiff(colnames,yName)
+
+# Try to use caret to impute missing values
+# looks like methods 'knnImpute' and 'bagImpute' don't like categorical/nominal variables (throw exception).
+# Also need to make sure outcome is not part of imputation plan as it won't be known at application time.
+xform <- preProcess(dTrain[,varNames], method ='medianImpute',na.remove = TRUE)
+dTrainTreated <- predict(xform,dTrain[,varNames],na.action=na.omit)
+# And no obvious (at least to me after reading the documentation and trying experiments) 
+# combination of caret controls seem to remove NA from categorical variables.
+print(summary(is.na(dTrainTreated$native.country)))
+# Could replace NAs in categoricals with a fresh category, but we would also have to watch
+# out for the novel level encoding problem (and we are fixing the data by hand again instead 
+# of using a convenient package service).  Or we could call `model.matrix` per column and NA-out 
+# all indicators of levels that don't code.  We could do it, but it would not be a demonstration of caret.
+# This is not to pick on caret::preProcess, just to point out it has different goals and capabilities.
+```
+
+
