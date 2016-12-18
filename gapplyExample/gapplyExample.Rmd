@@ -132,12 +132,24 @@ Use `gapply` to apply `metric_row` to the predictions for all of the models, and
 #
 # compute performance metrics for all the model types
 #
-predframe %>% replyr::gapply('model',
-                             function(fi) metric_row(fi,yvar=outcome,
-                                                     pred='pred',
-                                                     label='model'),
-                             partitionMethod = 'split') %>%
-  arrange(desc(devExplained))
+replyr::gapply(predframe, 'model',
+               function(fi) metric_row(fi,outcome,
+                                       'pred',
+                                       'model'),
+               partitionMethod = 'split') %>%
+  dplyr::arrange(desc(devExplained))
+
 
 ```
 
+Using `split` explicitly, for comparison:
+
+```{r}
+split(predframe, predframe$model) %>% 
+  lapply(function(fi) {metric_row(fi, outcome, 
+                                  'pred', 
+                                  'model')}) %>% 
+  dplyr::bind_rows() %>%
+  dplyr::arrange(desc(devExplained))
+              
+```
