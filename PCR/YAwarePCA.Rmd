@@ -222,7 +222,7 @@ proj <- extractProjection(2,princ)
 rot5 <- extractProjection(5,princ)
 rotf = as.data.frame(rot5)
 rotf$varName = rownames(rotf)
-rotflong = gather(rotf, "PC", "loading", starts_with("PC"))
+rotflong = gather(rotf, "PC", "loading", dplyr::starts_with("PC"))
 rotflong$vartype = ifelse(grepl("noise", rotflong$varName), "noise", "signal")
 
 dotplot_identity(rotflong, "varName", "loading", "vartype") + 
