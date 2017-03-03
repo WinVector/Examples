@@ -1,0 +1,8 @@
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&#39;sigr&#39;</span>)
+<span class="kw">help</span>(sigr)
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x=</span><span class="dv">1</span>:<span class="dv">5</span>)
+d$y &lt;-<span class="st"> </span><span class="dv">2</span>*d$x</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(d, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>)))</code></pre></div>
+<p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=-0.38, <em>F</em>(1,3)=-0.82, <em>p</em>=n.s.).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapCorTest</span>(d, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>)))</code></pre></div>
+<p><strong>Pearson's product-moment correlation</strong>: (<em>r</em>=1, <em>p</em>&lt;1e-05).</p>

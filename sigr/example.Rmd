@@ -1,0 +1,21 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r}
+library('sigr')
+help(sigr)
+d <- data.frame(x=1:5)
+d$y <- 2*d$x
+```
+
+```{r ftest, results='asis'}
+cat(render(wrapFTest(d, 'x', 'y')))
+```
+
+```{r cortest, results='asis'}
+cat(render(wrapCorTest(d, 'x', 'y')))
+```
+
