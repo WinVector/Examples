@@ -219,7 +219,7 @@ And that is it: `vtreat` data preparation.
 
 I *strongly* advise adding `vtreat` to your data science or predictive analytic work-flows.
 
-And a thanks to Dmitry Larko of h2o for his generous support:
+And a thanks to Dmitry Larko of h2o for his generous advocacy:
 
 ![](http://www.win-vector.com/blog/wp-content/uploads/2016/11/NewImage.png)
 
