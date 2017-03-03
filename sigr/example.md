@@ -10,7 +10,7 @@ d$y <- 2*d$x + rnorm(nrow(d))
 ```
 
 ``` r
-model <- lm(y~x, data=d)
+model <- lm(y~x, d=d)
 d$pred <- predict(model, newdata = d)
 
 summary(model)
@@ -34,15 +34,6 @@ summary(model)
     ## Residual standard error: 0.8001 on 3 degrees of freedom
     ## Multiple R-squared:  0.9583, Adjusted R-squared:  0.9444 
     ## F-statistic: 68.96 on 1 and 3 DF,  p-value: 0.003659
-
-``` r
-broom::glance(model)
-```
-
-    ##   r.squared adj.r.squared     sigma statistic     p.value df    logLik
-    ## 1 0.9583119     0.9444159 0.8000775  68.96306 0.003658704  2 -4.702395
-    ##        AIC     BIC deviance df.residual
-    ## 1 15.40479 14.2331 1.920372           3
 
 ``` r
 cat(render(wrapFTest(model),
@@ -93,3 +84,5 @@ cat(render(wrapCorTest(d, 'x', 'y'),
 ```
 
 **Pearson's product-moment correlation**: (*r*=0.98, *p*=0.0037).
+
+`{r modelr , eval=FALSE, include=FALSE modelr::rmse(model, d) modelr::rsquare(model, d) #modelr::mae(model, d) #modelr::qae(model, d)`

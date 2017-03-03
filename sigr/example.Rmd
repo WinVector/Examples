@@ -17,12 +17,12 @@ d$y <- 2*d$x + rnorm(nrow(d))
 ```
 
 ```{r lm}
-model <- lm(y~x, data=d)
+model <- lm(y~x, d=d)
 d$pred <- predict(model, newdata = d)
 
 summary(model)
-broom::glance(model)
 ```
+
 
 ```{r cortest1, results='asis'}
 cat(render(wrapFTest(model),
@@ -49,4 +49,14 @@ cat(render(wrapCorTest(d, 'x', 'y'),
 ```
 
 
+```{r broom, eval=FALSE, include=FALSE}
+broom::glance(model)
+```
+
+```{r modelr , eval=FALSE, include=FALSE
+modelr::rmse(model, d)
+modelr::rsquare(model, d)
+#modelr::mae(model, d)
+#modelr::qae(model, d)
+```
 

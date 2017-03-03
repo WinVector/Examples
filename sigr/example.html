@@ -1,0 +1,62 @@
+<p><code>sigr</code> formats significance tests.</p>
+<div class="figure">
+<img src="sigr.png" alt="" />
+
+</div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&#39;sigr&#39;</span>)
+d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x=</span><span class="dv">1</span>:<span class="dv">5</span>)
+<span class="kw">set.seed</span>(<span class="dv">353525</span>)
+d$y &lt;-<span class="st"> </span><span class="dv">2</span>*d$x +<span class="st"> </span><span class="kw">rnorm</span>(<span class="kw">nrow</span>(d))</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">model &lt;-<span class="st"> </span><span class="kw">lm</span>(y~x, <span class="dt">d=</span>d)
+d$pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model, <span class="dt">newdata =</span> d)
+
+<span class="kw">summary</span>(model)</code></pre></div>
+<pre><code>## 
+## Call:
+## lm(formula = y ~ x, data = d)
+## 
+## Residuals:
+##         1         2         3         4         5 
+## -0.786973  1.117243 -0.009319 -0.185198 -0.135753 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)   
+## (Intercept)  -1.0473     0.8391  -1.248  0.30053   
+## x             2.1011     0.2530   8.304  0.00366 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.8001 on 3 degrees of freedom
+## Multiple R-squared:  0.9583, Adjusted R-squared:  0.9444 
+## F-statistic: 68.96 on 1 and 3 DF,  p-value: 0.003659</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(model),
+    <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
+<p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=0.96, <em>F</em>(1,3)=69, <em>p</em>=0.0037).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">unclass</span>(<span class="kw">wrapFTest</span>(model))</code></pre></div>
+<pre><code>## $test
+## [1] &quot;F Test&quot;
+## 
+## $numdf
+## [1] 1
+## 
+## $dendf
+## [1] 3
+## 
+## $FValue
+## [1] 68.96306
+## 
+## $R2
+## [1] 0.9583119
+## 
+## $pValue
+## [1] 0.003658704</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(d, <span class="st">&#39;pred&#39;</span>, <span class="st">&#39;y&#39;</span>),
+    <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
+<p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=0.96, <em>F</em>(1,3)=69, <em>p</em>=0.0037).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(d, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>),
+    <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
+<p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=0.14, <em>F</em>(1,3)=0.5, <em>p</em>=n.s.).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapCorTest</span>(d, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>),
+    <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
+<p><strong>Pearson's product-moment correlation</strong>: (<em>r</em>=0.98, <em>p</em>=0.0037).</p>
+<p><code>{r modelr , eval=FALSE, include=FALSE modelr::rmse(model, d) modelr::rsquare(model, d) #modelr::mae(model, d) #modelr::qae(model, d)</code></p>
