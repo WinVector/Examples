@@ -14,11 +14,11 @@ As with other geometric algorithms, principal components analysis is sensitive t
 
 It's easy to determine the scaling for a variable *x* by fitting a linear regression model between *x* and *y*:
 
-\[ y = m * x + b \]
+*y* = *m* \* *x* + *b*
 
 The coefficient *m* is the slope of the best fit line, so a unit change in *x* corresponds (on average) to a change of *m* units in *y*. If we rescale (and recenter) *x* as
 
-\[ x' := m * x - mean(m * x) \]
+*x*′:=*m* \* *x* − *m**e**a**n*(*m* \* *x*)
 
 then *x'* is in *y* units. This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own.
 
@@ -160,7 +160,7 @@ proj <- extractProjection(2,princ)
 rot5 <- extractProjection(5,princ)
 rotf = as.data.frame(rot5)
 rotf$varName = rownames(rotf)
-rotflong = gather(rotf, "PC", "loading", starts_with("PC"))
+rotflong = gather(rotf, "PC", "loading", dplyr::starts_with("PC"))
 rotflong$vartype = ifelse(grepl("noise", rotflong$varName), "noise", "signal")
 
 dotplot_identity(rotflong, "varName", "loading", "vartype") + 
@@ -244,7 +244,7 @@ testrsq = rsq(projectedTest$estimate,projectedTest$y)
 testrsq
 ```
 
-    ## [1] 0.5063724
+    ## [1] 0.5061438
 
 ``` r
 ScatterHist(projectedTest,'estimate','y','Recovered model versus truth (y aware PCA test)',
@@ -253,7 +253,7 @@ ScatterHist(projectedTest,'estimate','y','Recovered model versus truth (y aware 
 
 ![](YAwarePCA_files/figure-markdown_github/quant1test-1.png)
 
-We see that this two-variable model captures about 50.64% of the variance in *y* on hold-out -- again, comparable to the hold-out performance of the model fit to twenty principal components using *x*-only PCA. These two principal components also do a *much* better job of capturing the internal structure of the data -- that is, the relationship of the signaling variables to the `yA` and `yB` processes -- than the first two principal components of the *x*-only PCA.
+We see that this two-variable model captures about 50.61% of the variance in *y* on hold-out -- again, comparable to the hold-out performance of the model fit to twenty principal components using *x*-only PCA. These two principal components also do a *much* better job of capturing the internal structure of the data -- that is, the relationship of the signaling variables to the `yA` and `yB` processes -- than the first two principal components of the *x*-only PCA.
 
 Is this the same as `caret::preProcess`?
 ----------------------------------------
@@ -323,13 +323,13 @@ Other *Y*-aware Approaches to Dimensionality Reduction
 
 If your goal is regression, there are other workable *y*-aware dimension reducing procedures, such as L2-regularized regression or partial least squares. Both methods are also related to principal components analysis (see Hastie, *etal* 2009).
 
-Bair, *etal* proposed a variant of principal components regression that they call *Supervised PCR*. In supervised PCR, *as described in their 2006 paper*, a univariate linear regression model is fit to each variable (after scaling and centering), and any variable whose coefficient (what we called *m* above) has a magnitude less than some threshold \(\theta\) is pruned. PCR is then done on the remaining variables. Conceptually, this is similar to the significance pruning that `vtreat` offers, except that the pruning criterion is "effects-based" (that is, it's based on the magnitude of a parameter, or the strength of an effect) rather than probability-based, such as pruning on significance.
+Bair, *etal* proposed a variant of principal components regression that they call *Supervised PCR*. In supervised PCR, *as described in their 2006 paper*, a univariate linear regression model is fit to each variable (after scaling and centering), and any variable whose coefficient (what we called *m* above) has a magnitude less than some threshold *θ* is pruned. PCR is then done on the remaining variables. Conceptually, this is similar to the significance pruning that `vtreat` offers, except that the pruning criterion is "effects-based" (that is, it's based on the magnitude of a parameter, or the strength of an effect) rather than probability-based, such as pruning on significance.
 
 One issue with an effects-based pruning criterion is that the appropriate pruning threshold varies from problem to problem, and not necessarily in an obvious way. Bair, *etal* find an appropriate threshold via cross-validation. Probability-based thresholds are in some sense more generalizable from problem to problem, since the score is always in probability units -- the same units for all problems. A simple variation of supervised PCR might prune on the *significance* of the coefficient *m*, as determined by its t-statistic. This would be essentially equivalent to significance pruning of the variables via `vtreat` before standard PCR.
 
 Note that [`vtreat` uses the significance of the one-variable model fits, not coefficient significance](http://www.win-vector.com/blog/2015/08/how-do-you-know-if-your-data-has-signal/) to estimate variable significance. When both the dependent and independent variables are numeric, the model significance and the coefficient significance are identical (see Weisberg, *Applied Linear Regression*). In more general modeling situations where either the outcome is categorical or the original input variable is categorical with many degrees of freedom, they are not the same, and, in our opinion, using the model significance is preferable.
 
-In general modeling situations where you are not specifically interested in the structure of the feature space, as described by the principal components, then we recommend significance pruning of the variables. As a rule of thumb, we suggest setting your significance pruning threshold based on the rate at which you can tolerate bad variables slipping into the model. For example, setting the pruning threshold at \(p=0.05\) would let pure noise variables in at the rate of about 1 in 20 in expectation. So a good upper bound on the pruning threshold might be *1/nvar*, where *nvar* is the number of variables. We discuss this issue briefly [here](http://winvector.github.io/vtreathtml/vtreatSignificance.html) in the `vtreat` documentation.
+In general modeling situations where you are not specifically interested in the structure of the feature space, as described by the principal components, then we recommend significance pruning of the variables. As a rule of thumb, we suggest setting your significance pruning threshold based on the rate at which you can tolerate bad variables slipping into the model. For example, setting the pruning threshold at *p* = 0.05 would let pure noise variables in at the rate of about 1 in 20 in expectation. So a good upper bound on the pruning threshold might be *1/nvar*, where *nvar* is the number of variables. We discuss this issue briefly [here](http://winvector.github.io/vtreathtml/vtreatSignificance.html) in the `vtreat` documentation.
 
 `vtreat` does not supply any joint variable dimension reduction as we feel dimension reduction is a modeling task. `vtreat` is intended to limit itself to only necessary "prior to modeling" processing and includes significance pruning reductions because [such pruning can be necessary prior to modeling](http://www.win-vector.com/blog/2014/02/bad-bayes-an-example-of-why-you-need-hold-out-testing/).
 
