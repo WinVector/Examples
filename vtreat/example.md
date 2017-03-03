@@ -75,9 +75,9 @@ Let's finish the modeling task with `vtreat`.
 
 First we run a "cross frame experiment." A cross frame experiment is a sophisticated modeling step that:
 
--   Collects statistics the relations between your original modeling variables and the training outcome.
+-   Collects statistics on the relations between your original modeling variables and the training outcome.
 -   Introduces proposed new transformed modeling variables.
--   Produces a "simulated out of sample" training frame that is a version of your model training data prepared in such a way to simulate having been produced without having looked at that same data during the design of the variable transformations (this is an attempt to eliminate any [nested model bias](http://www.win-vector.com/blog/2016/04/on-nested-models/) introduced by the transform design and application step). This step is performed using cross-validation inspired methods.
+-   Produces a "simulated out of sample" training frame that is a version of your model training data prepared in such a way as to simulate having been produced without having looked at that same data during the design of the variable transformations. This is an attempt to eliminate any [nested model bias](http://www.win-vector.com/blog/2016/04/on-nested-models/) introduced by the transform design and application step. This step is performed using cross-validation inspired methods.
 
 In short `vtreat` thinks very hard on your data (called the design phase). We call `vtreat` and pull out the promised results as follows.
 
@@ -95,13 +95,13 @@ plan <- cfe$treatments
 # get the performance statistics on the derived variables.
 sf <- plan$scoreFrame
 
-# get the simulated out of sample training data.frame
+# get the simulated out of sample transformed training data.frame
 treatedTrain <- cfe$crossFrame
 ```
 
 ### Training a model
 
-The `scoreFrame` collects estimated effects sizes and significances on the new modeling variables. The analyst can use this to evaluate and choose modeling variables. In this example we will use all the derived variables that have a training significance below `1/NumberOfVariables` (which is a fun way to try and avoid [multiple comparison bias](https://en.wikipedia.org/wiki/Bonferroni_correction)) in picking modeling variables.
+The `scoreFrame` collects estimated effects sizes and significances on the new modeling variables. The analyst can use this to evaluate and choose modeling variables. In this example we will use all the derived variables that have a training significance below `1/NumberOfVariables` (which is a fun way to try and avoid [multiple comparison bias](https://en.wikipedia.org/wiki/Bonferroni_correction) in picking modeling variables).
 
 ``` r
 newVars <- sf$varName[sf$sig<1/nrow(sf)]
@@ -118,8 +118,11 @@ model <- ranger(as.formula(f),
                 data = treatedTrain)
 ```
 
-We then prepare a transformed version of the evaluation/test frame using the treatment plan.
-This is done directly using `vtreat::prepare`. We could have converted our training data the same way, but as we said it is more rigorous to use the supplied cross frame (though the nested model bias we are trying to avoid is strongest on high-cardinality categorical variables which are not present in this example). In a real world applications you would keep the `plan` data structure around to treat or prepare any future application data for model application.
+Evaluating a model
+------------------
+
+We now prepare a transformed version of the evaluation/test frame using the treatment plan.
+This is done directly using `vtreat::prepare`. We could have converted our training data the same way, but as we said it is more rigorous to use the supplied cross frame (though the nested model bias we are trying to avoid is strongest on high-cardinality categorical variables, which are not present in this example). In a real world applications you would keep the `plan` data structure around to treat or prepare any future application data for model application.
 
 ``` r
 treatedTest <- vtreat::prepare(plan, dTest, 
@@ -132,7 +135,7 @@ pred <- predict(model,
 treatedTest$pred <- pred$predictions[,positive]
 ```
 
-And we are now ready to examining the model's out of sample performance. In this case we are going to use ROC/AUC as our evaluation.
+And we are now ready to examine the model's out of sample performance. In this case we are going to use ROC/AUC as our evaluation.
 
 ``` r
 library("WVPlots")
@@ -150,9 +153,9 @@ Variable statistics
 
 Let's take a moment and look at the `vtreat` supplied variable statistics. These are roughly the predictive power of each derived column treated as a single variable model. Obviously this [isn't always going to always correlate with the performance of the variable as part of a joint model](http://www.win-vector.com/blog/2016/09/variables-can-synergize-even-in-a-linear-model/); but frankly in real world problems this measure is in fact a useful heuristic.
 
-`vtreat` reports both an effect size (in this case `rsq` which for categorization is a pseudo-Rsquared, or portion of deviance explained) and a significance estimate. `vtreat` also reports the new variable name (`varName`), the original column the variable was derived from (`origName`) and the transformation performed ([`code`](https://cran.r-project.org/web/packages/vtreat/vignettes/vtreatVariableTypes.html)).
+`vtreat` reports both an effect size (in this case `rsq` which for categorization is a pseudo-Rsquared, or portion of deviance explained) and a significance estimate. `vtreat` also reports the new variable name (`varName`), the original column the variable was derived from (`origName`), and the transformation performed ([`code`](https://cran.r-project.org/web/packages/vtreat/vignettes/vtreatVariableTypes.html)).
 
-Below we add an indicator if we used the variable in our model and show a few rows of the `scoreFrame`.
+Below we add an indicator ("`take`") showing if we used the variable in our model and exhibit a few rows of `scoreFrame`.
 
 ``` r
 sf$take <- sf$varName %in% newVars
@@ -175,6 +178,8 @@ One thing I would like to call out is that categorical variables (such as "`V1`"
 Conclusion
 ----------
 
-And that is it `vtreat` data preparation. It is sound, very powerful, and can greatly improve the quality of your predictive models. The package is available from `CRAN` [here](https://CRAN.R-project.org/package=vtreat) and includes a large number of worked vignettes. We have a formal write-up of the technique [here](https://arxiv.org/abs/1611.09477), many articles and tutorials on the methodology [here](http://www.win-vector.com/blog/tag/vtreat/), and a good central resource is [here](https://github.com/WinVector/vtreat).
+And that is it: `vtreat` data preparation.
 
-I *strongly* advise adding `vtreat` to your data science or predictive analytic work-flow.
+`vtreat` data preparation is sound, very powerful, and can greatly improve the quality of your predictive models. The package is available from `CRAN` [here](https://CRAN.R-project.org/package=vtreat) and includes a large number of worked vignettes. We have a formal write-up of the technique [here](https://arxiv.org/abs/1611.09477), many articles and tutorials on the methodology [here](http://www.win-vector.com/blog/tag/vtreat/), and a good central resource is [here](https://github.com/WinVector/vtreat).
+
+I *strongly* advise adding `vtreat` to your data science or predictive analytic work-flows.
