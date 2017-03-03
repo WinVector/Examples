@@ -4,18 +4,49 @@ output:
     variant: markdown_github
 ---
 
+`sigr` formats significance tests.
+
+![](sigr.png)
+
 ```{r}
 library('sigr')
-help(sigr)
 d <- data.frame(x=1:5)
-d$y <- 2*d$x
+set.seed(353525)
+d$y <- 2*d$x + rnorm(nrow(d))
+
 ```
 
+```{r lm}
+model <- lm(y~x, data=d)
+d$pred <- predict(model, newdata = d)
+
+summary(model)
+broom::glance(model)
+```
+
+```{r cortest1, results='asis'}
+cat(render(wrapFTest(model),
+    pSmallCutoff=0))
+```
+```{r print}
+unclass(wrapFTest(model))
+```
+
+```{r cortestp, results='asis'}
+cat(render(wrapFTest(d, 'pred', 'y'),
+    pSmallCutoff=0))
+```
+
+
 ```{r ftest, results='asis'}
-cat(render(wrapFTest(d, 'x', 'y')))
+cat(render(wrapFTest(d, 'x', 'y'),
+    pSmallCutoff=0))
 ```
 
 ```{r cortest, results='asis'}
-cat(render(wrapCorTest(d, 'x', 'y')))
+cat(render(wrapCorTest(d, 'x', 'y'),
+    pSmallCutoff=0))
 ```
+
+
 
