@@ -183,3 +183,7 @@ And that is it: `vtreat` data preparation.
 `vtreat` data preparation is sound, very powerful, and can greatly improve the quality of your predictive models. The package is available from `CRAN` [here](https://CRAN.R-project.org/package=vtreat) and includes a large number of worked vignettes. We have a formal write-up of the technique [here](https://arxiv.org/abs/1611.09477), many articles and tutorials on the methodology [here](http://www.win-vector.com/blog/tag/vtreat/), and a good central resource is [here](https://github.com/WinVector/vtreat).
 
 I *strongly* advise adding `vtreat` to your data science or predictive analytic work-flows.
+
+And a thanks to Dmitry Larko of h2o for his generous support:
+
+![](http://www.win-vector.com/blog/wp-content/uploads/2016/11/NewImage.png)
