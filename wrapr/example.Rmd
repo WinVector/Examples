@@ -92,9 +92,7 @@ let(list(COL = cname, RES = rname),
 )
 ```
 
-I think that this is pretty sweet, and can really level up your dplyr game.
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/nG9fXbhoPJE" frameborder="0" allowfullscreen></iframe>
+I think that this is pretty [sweet](https://www.youtube.com/embed/nG9fXbhoPJE), and can really level up your dplyr game.
 
 `wrapr::let` is available from CRAN and already has a number of satisfied users:
 

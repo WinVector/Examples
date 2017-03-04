@@ -124,10 +124,8 @@ let(list(COL = cname, RES = rname),
     ## 1  1  FALSE
     ## 2 NA   TRUE
 
-I think that this is pretty sweet, and can really level up your dplyr game.
+I think that this is pretty [sweet](https://www.youtube.com/embed/nG9fXbhoPJE), and can really level up your dplyr game.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/nG9fXbhoPJE" frameborder="0" allowfullscreen>
-</iframe>
 `wrapr::let` is available from CRAN and already has a number of satisfied users:
 
 ![](C1v_VNBXUAA8c7M.jpg-large.jpg)
