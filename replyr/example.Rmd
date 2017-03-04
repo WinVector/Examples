@@ -8,12 +8,14 @@ output:
 ---
 
 [`replyr`](https://github.com/WinVector/replyr) is an [`R`](https://cran.r-project.org) package
-that contains extensions, adaptions, and work-arounds to make remote `R` data sources (including
+that contains extensions, adaptions, and work-arounds to make remote `R` `dplyr` data sources (including
 big data systems such as `Spark`) behave more like local data.  This allows the analyst to develop
 and debug procedures that simultaneously work on a variety of data services (in-memory `data.frame`, 
 `SQLite`, `PostgreSQL`, and `Spark2` being the primary supported platforms).
 
 ![](replyrs.png)
+
+## Example
 
 We will just load some data and work a trivial example: taking a quick peek at your data.
 The analyst should always be able to and willing to look at the data.
@@ -35,32 +37,30 @@ print(flts)
 ```
 
 What `replyr` adds to the task of "looking at the data" is a rough 
-equivilent to `base::summary`: a few per-column statistics.
+equivalent to `base::summary`: a few per-column statistics.
 
 ```{r replyr}
 replyr::replyr_summary(flts, 
                        countUniqueNonNum= TRUE)
 ```
 
-(Note the above summary has problems with `NA` (espiecially in `tailnum`),
-which are likely due to how the current combination of Spark2/sparklyr deals with
-missing values. Submitted as [sparklyr issue 528](https://github.com/rstudio/sparklyr/issues/528),
-and [my notes here](https://github.com/WinVector/replyr/blob/master/issues/SparkNAIssue.md).)
+(Note the above summary has problems with `NA` in character columns with `Spark`, that we are working on.)
 
-The point is the `replyr` summary returns data in a data frame, can deal with multiple column types.
+The `replyr` summary returns data in a data frame, and can deal with multiple column types.
+
 We could also use `dplyr::summarize_each` for the task, but it has the minor downside of returning
 the data in a wide form.
 
 ```{r summarizeeach}
 # currently crashes if tailnum left in column list 
-flts %>% summarise_each(funs(min,max,mean,sd),
+flts %>% summarize_each(funs(min,max,mean,sd),
                         year, month, day, dep_time,
                         sched_dep_time, dep_delay, 
                         arr_time, sched_arr_time, 
                         arr_delay, carrier, flight)
 ```
 
-Special code for remote data is needed as none of the obvious suspects (`base::summary`,
+Special code for remote data is needed as none of the obvious candidates (`base::summary`,
 `dplyr::glimpse`, or `broom:glance`) currently (as March 4, 2017) are intended to work
 with remote data sources.
 
@@ -76,7 +76,9 @@ broom::glance(flts)
 
 `replyr_summary` is not the only service `replyr` supplies, `replyr` includes many more
 adaptions [including my own version of case-completion](http://www.win-vector.com/blog/2017/02/the-zero-bug/).
-Roughly `replyr` is where I collect my adaptions so they don't infest application code.
+
+Roughly `replyr` is where I collect my adaptions so they don't infest application code.  It is
+how you use heavy big-data machinery, while keeping you fingers out of the gears.
 
 ```{r cleanup, include=FALSE}
 rm(list=ls())

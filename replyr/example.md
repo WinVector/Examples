@@ -1,6 +1,9 @@
-[`replyr`](https://github.com/WinVector/replyr) is an [`R`](https://cran.r-project.org) package that contains extensions, adaptions, and work-arounds to make remote `R` data sources (including big data systems such as `Spark`) behave more like local data. This allows the analyst to develop and debug procedures that simultaneously work on a variety of data services (in-memory `data.frame`, `SQLite`, `PostgreSQL`, and `Spark2` being the primary supported platforms).
+[`replyr`](https://github.com/WinVector/replyr) is an [`R`](https://cran.r-project.org) package that contains extensions, adaptions, and work-arounds to make remote `R` `dplyr` data sources (including big data systems such as `Spark`) behave more like local data. This allows the analyst to develop and debug procedures that simultaneously work on a variety of data services (in-memory `data.frame`, `SQLite`, `PostgreSQL`, and `Spark2` being the primary supported platforms).
 
 ![](replyrs.png)
+
+Example
+-------
 
 We will just load some data and work a trivial example: taking a quick peek at your data. The analyst should always be able to and willing to look at the data.
 
@@ -30,7 +33,7 @@ print(flts)
     ## #   tailnum <chr>, origin <chr>, dest <chr>, air_time <dbl>,
     ## #   distance <dbl>, hour <dbl>, minute <dbl>, time_hour <dbl>
 
-What `replyr` adds to the task of "looking at the data" is a rough equivilent to `base::summary`: a few per-column statistics.
+What `replyr` adds to the task of "looking at the data" is a rough equivalent to `base::summary`: a few per-column statistics.
 
 ``` r
 replyr::replyr_summary(flts, 
@@ -78,13 +81,15 @@ replyr::replyr_summary(flts,
     ## 18   26.230100   19.300846   <NA>   <NA>
     ## 19 2013.000000    0.000000   <NA>   <NA>
 
-(Note the above summary has problems with `NA` (espiecially in `tailnum`), which are likely due to how the current combination of Spark2/sparklyr deals with missing values. Submitted as [sparklyr issue 528](https://github.com/rstudio/sparklyr/issues/528), and [my notes here](https://github.com/WinVector/replyr/blob/master/issues/SparkNAIssue.md).)
+(Note the above summary has problems with `NA` in character columns with `Spark`, that we are working on.)
 
-The point is the `replyr` summary returns data in a data frame, can deal with multiple column types. We could also use `dplyr::summarize_each` for the task, but it has the minor downside of returning the data in a wide form.
+The `replyr` summary returns data in a data frame, and can deal with multiple column types.
+
+We could also use `dplyr::summarize_each` for the task, but it has the minor downside of returning the data in a wide form.
 
 ``` r
 # currently crashes if tailnum left in column list 
-flts %>% summarise_each(funs(min,max,mean,sd),
+flts %>% summarize_each(funs(min,max,mean,sd),
                         year, month, day, dep_time,
                         sched_dep_time, dep_delay, 
                         arr_time, sched_arr_time, 
@@ -111,7 +116,7 @@ flts %>% summarise_each(funs(min,max,mean,sd),
     ## #   arr_time_sd <dbl>, sched_arr_time_sd <dbl>, arr_delay_sd <dbl>,
     ## #   carrier_sd <dbl>, flight_sd <dbl>
 
-Special code for remote data is needed as none of the obvious suspects (`base::summary`, `dplyr::glimpse`, or `broom:glance`) currently (as March 4, 2017) are intended to work with remote data sources.
+Special code for remote data is needed as none of the obvious candidates (`base::summary`, `dplyr::glimpse`, or `broom:glance`) currently (as March 4, 2017) are intended to work with remote data sources.
 
 ``` r
 summary(flts)
@@ -165,4 +170,6 @@ broom::glance(flts)
 
     ## Error: glance doesn't know how to deal with data of class tbl_sparktbl_sqltbl_lazytbl
 
-`replyr_summary` is not the only service `replyr` supplies, `replyr` includes many more adaptions [including my own version of case-completion](http://www.win-vector.com/blog/2017/02/the-zero-bug/). Roughly `replyr` is where I collect my adaptions so they don't infest application code.
+`replyr_summary` is not the only service `replyr` supplies, `replyr` includes many more adaptions [including my own version of case-completion](http://www.win-vector.com/blog/2017/02/the-zero-bug/).
+
+Roughly `replyr` is where I collect my adaptions so they don't infest application code. It is how you use heavy big-data machinery, while keeping you fingers out of the gears.
