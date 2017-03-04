@@ -4,32 +4,65 @@ output:
     variant: markdown_github
 ---
 
-`sigr` formats significance tests.
+[`sigr`](https://CRAN.R-project.org/package=sigr) is an [`R`](https://cran.r-project.org) package conveniently formats significance tests, allowing the analyst to use the correct test no matter what modeling
+package you use.
 
 ![](sigr.png)
+
+## Model Example
+
+For example take following linear relation between `x` and `y`:
 
 ```{r}
 library('sigr')
 d <- data.frame(x=1:5)
 set.seed(353525)
 d$y <- 2*d$x + rnorm(nrow(d))
-
 ```
+
+`stats::lm()` has among the most complete summaries of all models in `R`, so we
+easily get can see the quality of fit and its significance:
 
 ```{r lm}
 model <- lm(y~x, d=d)
-d$pred <- predict(model, newdata = d)
-
 summary(model)
 ```
 
+`sigr::wrapFTest()` can render the relevant model quality summary.
 
 ```{r cortest1, results='asis'}
 cat(render(wrapFTest(model),
     pSmallCutoff=0))
 ```
+
+`sigr` also carries around the important summary components for use 
+in code.
+
 ```{r print}
 unclass(wrapFTest(model))
+```
+
+In this 
+function it is much like `broom` or `modelr`.
+
+```{r broom}
+broom::glance(model)
+```
+
+```{r modelr}
+modelr::rmse(model, d)
+modelr::rsquare(model, d)
+#modelr::mae(model, d)
+#modelr::qae(model, d)
+```
+
+## Data example
+
+With `sigr` it is also easy to reconstruct quality and significance from the predictions, no matter 
+where they came from (without needing the model data structures).
+
+```{r pred}
+d$pred <- predict(model, newdata = d)
 ```
 
 ```{r cortestp, results='asis'}
@@ -37,26 +70,33 @@ cat(render(wrapFTest(d, 'pred', 'y'),
     pSmallCutoff=0))
 ```
 
+Notice we reconstruct the summary statistic and significance, independent 
+of the model data structures. This means the test is generic and can be used
+on any regression (modulo informing the significance model of the appropriate
+number of parameters).
 
-```{r ftest, results='asis'}
-cat(render(wrapFTest(d, 'x', 'y'),
-    pSmallCutoff=0))
+## Plotting
+
+Because `sigr` can render to "`LaTex`" it can (when used in conjunction with `latex2exp`)
+also produce formatted titles for plots.
+
+
+```{r plot}
+library("ggplot2")
+library("latex2exp")
+
+
+f <- paste0(format(model$coefficients['x'], digits= 3), 
+            '*x + ',
+            format(model$coefficients['(Intercept)'], digits= 3))
+title <- paste0("linear y ~ ", f, " relation")
+subtitle <- latex2exp::TeX(render(wrapFTest(d, 'pred', 'y'), 
+                                          format= 'latex'))
+ggplot(data=d, mapping=aes(x=pred, y=y)) + 
+  geom_point() + geom_abline(color='blue') +
+  xlab(f) +
+  ggtitle(title, 
+          subtitle= subtitle)
 ```
 
-```{r cortest, results='asis'}
-cat(render(wrapCorTest(d, 'x', 'y'),
-    pSmallCutoff=0))
-```
-
-
-```{r broom, eval=FALSE, include=FALSE}
-broom::glance(model)
-```
-
-```{r modelr , eval=FALSE, include=FALSE
-modelr::rmse(model, d)
-modelr::rsquare(model, d)
-#modelr::mae(model, d)
-#modelr::qae(model, d)
-```
 

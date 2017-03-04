@@ -1,15 +1,16 @@
-<p><code>sigr</code> formats significance tests.</p>
+<p><a href="https://CRAN.R-project.org/package=sigr"><code>sigr</code></a> is an <a href="https://cran.r-project.org"><code>R</code></a> package conveniently formats significance tests, allowing the analyst to use the correct test no matter what modeling package you use.</p>
 <div class="figure">
 <img src="sigr.png" alt="" />
 
 </div>
+<h2 id="model-example">Model Example</h2>
+<p>For example take following linear relation between <code>x</code> and <code>y</code>:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&#39;sigr&#39;</span>)
 d &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">x=</span><span class="dv">1</span>:<span class="dv">5</span>)
 <span class="kw">set.seed</span>(<span class="dv">353525</span>)
 d$y &lt;-<span class="st"> </span><span class="dv">2</span>*d$x +<span class="st"> </span><span class="kw">rnorm</span>(<span class="kw">nrow</span>(d))</code></pre></div>
+<p><code>stats::lm()</code> has among the most complete summaries of all models in <code>R</code>, so we easily get can see the quality of fit and its significance:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">model &lt;-<span class="st"> </span><span class="kw">lm</span>(y~x, <span class="dt">d=</span>d)
-d$pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model, <span class="dt">newdata =</span> d)
-
 <span class="kw">summary</span>(model)</code></pre></div>
 <pre><code>## 
 ## Call:
@@ -29,9 +30,11 @@ d$pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model, <spa
 ## Residual standard error: 0.8001 on 3 degrees of freedom
 ## Multiple R-squared:  0.9583, Adjusted R-squared:  0.9444 
 ## F-statistic: 68.96 on 1 and 3 DF,  p-value: 0.003659</code></pre>
+<p><code>sigr::wrapFTest()</code> can render the relevant model quality summary.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(model),
     <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
 <p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=0.96, <em>F</em>(1,3)=69, <em>p</em>=0.0037).</p>
+<p><code>sigr</code> also carries around the important summary components for use in code.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">unclass</span>(<span class="kw">wrapFTest</span>(model))</code></pre></div>
 <pre><code>## $test
 ## [1] &quot;F Test&quot;
@@ -50,13 +53,43 @@ d$pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model, <spa
 ## 
 ## $pValue
 ## [1] 0.003658704</code></pre>
+<p>In this function it is much like <code>broom</code> or <code>modelr</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">broom::<span class="kw">glance</span>(model)</code></pre></div>
+<pre><code>##   r.squared adj.r.squared     sigma statistic     p.value df    logLik
+## 1 0.9583119     0.9444159 0.8000775  68.96306 0.003658704  2 -4.702395
+##        AIC     BIC deviance df.residual
+## 1 15.40479 14.2331 1.920372           3</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">modelr::<span class="kw">rmse</span>(model, d)</code></pre></div>
+<pre><code>## [1] 0.6197373</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">modelr::<span class="kw">rsquare</span>(model, d)</code></pre></div>
+<pre><code>## [1] 0.9583119</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#modelr::mae(model, d)</span>
+<span class="co">#modelr::qae(model, d)</span></code></pre></div>
+<h2 id="data-example">Data example</h2>
+<p>With <code>sigr</code> it is also easy to reconstruct quality and significance from the predictions, no matter where they came from (without needing the model data structures).</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">d$pred &lt;-<span class="st"> </span><span class="kw">predict</span>(model, <span class="dt">newdata =</span> d)</code></pre></div>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(d, <span class="st">&#39;pred&#39;</span>, <span class="st">&#39;y&#39;</span>),
     <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
 <p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=0.96, <em>F</em>(1,3)=69, <em>p</em>=0.0037).</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(d, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>),
-    <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
-<p><strong>F Test</strong> summary: (<i>R<sup>2</sup></i>=0.14, <em>F</em>(1,3)=0.5, <em>p</em>=n.s.).</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">cat</span>(<span class="kw">render</span>(<span class="kw">wrapCorTest</span>(d, <span class="st">&#39;x&#39;</span>, <span class="st">&#39;y&#39;</span>),
-    <span class="dt">pSmallCutoff=</span><span class="dv">0</span>))</code></pre></div>
-<p><strong>Pearson's product-moment correlation</strong>: (<em>r</em>=0.98, <em>p</em>=0.0037).</p>
-<p><code>{r modelr , eval=FALSE, include=FALSE modelr::rmse(model, d) modelr::rsquare(model, d) #modelr::mae(model, d) #modelr::qae(model, d)</code></p>
+<p>Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used on any regression (modulo informing the significance model of the appropriate number of parameters).</p>
+<h2 id="plotting">Plotting</h2>
+<p>Because <code>sigr</code> can render to &quot;<code>LaTex</code>&quot; it can (when used in conjunction with <code>latex2exp</code>) also produce formatted titles for plots.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(<span class="st">&quot;ggplot2&quot;</span>)
+<span class="kw">library</span>(<span class="st">&quot;latex2exp&quot;</span>)
+
+
+f &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="kw">format</span>(model$coefficients[<span class="st">&#39;x&#39;</span>], <span class="dt">digits=</span> <span class="dv">3</span>), 
+            <span class="st">&#39;*x + &#39;</span>,
+            <span class="kw">format</span>(model$coefficients[<span class="st">&#39;(Intercept)&#39;</span>], <span class="dt">digits=</span> <span class="dv">3</span>))
+title &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;linear y ~ &quot;</span>, f, <span class="st">&quot; relation&quot;</span>)
+subtitle &lt;-<span class="st"> </span>latex2exp::<span class="kw">TeX</span>(<span class="kw">render</span>(<span class="kw">wrapFTest</span>(d, <span class="st">&#39;pred&#39;</span>, <span class="st">&#39;y&#39;</span>), 
+                                          <span class="dt">format=</span> <span class="st">&#39;latex&#39;</span>))
+<span class="kw">ggplot</span>(<span class="dt">data=</span>d, <span class="dt">mapping=</span><span class="kw">aes</span>(<span class="dt">x=</span>pred, <span class="dt">y=</span>y)) +<span class="st"> </span>
+<span class="st">  </span><span class="kw">geom_point</span>() +<span class="st"> </span><span class="kw">geom_abline</span>(<span class="dt">color=</span><span class="st">&#39;blue&#39;</span>) +
+<span class="st">  </span><span class="kw">xlab</span>(f) +
+<span class="st">  </span><span class="kw">ggtitle</span>(title, 
+          <span class="dt">subtitle=</span> subtitle)</code></pre></div>
+<div class="figure">
+<img src="example_files/figure-markdown_github/plot-1.png" alt="" />
+
+</div>

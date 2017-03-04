@@ -1,6 +1,11 @@
-`sigr` formats significance tests.
+[`sigr`](https://CRAN.R-project.org/package=sigr) is an [`R`](https://cran.r-project.org) package conveniently formats significance tests, allowing the analyst to use the correct test no matter what modeling package you use.
 
 ![](sigr.png)
+
+Model Example
+-------------
+
+For example take following linear relation between `x` and `y`:
 
 ``` r
 library('sigr')
@@ -9,10 +14,10 @@ set.seed(353525)
 d$y <- 2*d$x + rnorm(nrow(d))
 ```
 
+`stats::lm()` has among the most complete summaries of all models in `R`, so we easily get can see the quality of fit and its significance:
+
 ``` r
 model <- lm(y~x, d=d)
-d$pred <- predict(model, newdata = d)
-
 summary(model)
 ```
 
@@ -35,12 +40,16 @@ summary(model)
     ## Multiple R-squared:  0.9583, Adjusted R-squared:  0.9444 
     ## F-statistic: 68.96 on 1 and 3 DF,  p-value: 0.003659
 
+`sigr::wrapFTest()` can render the relevant model quality summary.
+
 ``` r
 cat(render(wrapFTest(model),
     pSmallCutoff=0))
 ```
 
 **F Test** summary: (<i>R<sup>2</sup></i>=0.96, *F*(1,3)=69, *p*=0.0037).
+
+`sigr` also carries around the important summary components for use in code.
 
 ``` r
 unclass(wrapFTest(model))
@@ -64,6 +73,43 @@ unclass(wrapFTest(model))
     ## $pValue
     ## [1] 0.003658704
 
+In this function it is much like `broom` or `modelr`.
+
+``` r
+broom::glance(model)
+```
+
+    ##   r.squared adj.r.squared     sigma statistic     p.value df    logLik
+    ## 1 0.9583119     0.9444159 0.8000775  68.96306 0.003658704  2 -4.702395
+    ##        AIC     BIC deviance df.residual
+    ## 1 15.40479 14.2331 1.920372           3
+
+``` r
+modelr::rmse(model, d)
+```
+
+    ## [1] 0.6197373
+
+``` r
+modelr::rsquare(model, d)
+```
+
+    ## [1] 0.9583119
+
+``` r
+#modelr::mae(model, d)
+#modelr::qae(model, d)
+```
+
+Data example
+------------
+
+With `sigr` it is also easy to reconstruct quality and significance from the predictions, no matter where they came from (without needing the model data structures).
+
+``` r
+d$pred <- predict(model, newdata = d)
+```
+
 ``` r
 cat(render(wrapFTest(d, 'pred', 'y'),
     pSmallCutoff=0))
@@ -71,18 +117,29 @@ cat(render(wrapFTest(d, 'pred', 'y'),
 
 **F Test** summary: (<i>R<sup>2</sup></i>=0.96, *F*(1,3)=69, *p*=0.0037).
 
+Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used on any regression (modulo informing the significance model of the appropriate number of parameters).
+
+Plotting
+--------
+
+Because `sigr` can render to "`LaTex`" it can (when used in conjunction with `latex2exp`) also produce formatted titles for plots.
+
 ``` r
-cat(render(wrapFTest(d, 'x', 'y'),
-    pSmallCutoff=0))
+library("ggplot2")
+library("latex2exp")
+
+
+f <- paste0(format(model$coefficients['x'], digits= 3), 
+            '*x + ',
+            format(model$coefficients['(Intercept)'], digits= 3))
+title <- paste0("linear y ~ ", f, " relation")
+subtitle <- latex2exp::TeX(render(wrapFTest(d, 'pred', 'y'), 
+                                          format= 'latex'))
+ggplot(data=d, mapping=aes(x=pred, y=y)) + 
+  geom_point() + geom_abline(color='blue') +
+  xlab(f) +
+  ggtitle(title, 
+          subtitle= subtitle)
 ```
 
-**F Test** summary: (<i>R<sup>2</sup></i>=0.14, *F*(1,3)=0.5, *p*=n.s.).
-
-``` r
-cat(render(wrapCorTest(d, 'x', 'y'),
-    pSmallCutoff=0))
-```
-
-**Pearson's product-moment correlation**: (*r*=0.98, *p*=0.0037).
-
-`{r modelr , eval=FALSE, include=FALSE modelr::rmse(model, d) modelr::rsquare(model, d) #modelr::mae(model, d) #modelr::qae(model, d)`
+![](example_files/figure-markdown_github/plot-1.png)
