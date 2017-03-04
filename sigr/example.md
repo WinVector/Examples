@@ -5,7 +5,7 @@
 Model Example
 -------------
 
-For example take following linear relation between `x` and `y`:
+For example, take the following linear relation between `x` and `y`:
 
 ``` r
 library('sigr')
