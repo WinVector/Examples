@@ -1,5 +1,7 @@
 [WVPlots](https://CRAN.R-project.org/package=WVPlots) is a set of `ggplot2` [`R`](https://cran.r-project.org) plotting examples.
 
+![](WVPlots.png)
+
 Some example data science plots in R using `ggplot2`. See <https://github.com/WinVector/WVPlots> for code/details.
 
 ``` r

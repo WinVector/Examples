@@ -13,6 +13,8 @@ knitr::opts_chunk$set(fig.width=6, fig.height=6)
 
 [WVPlots]( https://CRAN.R-project.org/package=WVPlots) is a set of `ggplot2` [`R`](https://cran.r-project.org) plotting examples.
 
+![](WVPlots.png)
+
 <a target="_blank" href="http://www.win-vector.com/site/staff/nina-zumel/">Nina Zumel</a> and <a target="_blank" href="http://www.win-vector.com/site/staff/john-mount/">I</a> have been working on packaging our <a target="_blank" href="http://www.win-vector.com/blog/2011/12/my-favorite-graphs/">favorite graphing techniques</a> in a more reusable way that emphasizes the analysis task at hand over the steps needed to produce a good visualization.  The idea is: we sacrifice some of the flexibility and composability inherent to <a target="_blank" href="http://ggplot2.org">ggplot2</a> in <a target="_blank" href="https://cran.r-project.org">R</a> for a menu of prescribed presentation solutions.
 
 For example the plot below showing both an observed discrete empirical distribution (as stems) and a matching theoretical distribution (as bars) is a built in "one liner."
