@@ -1,0 +1,53 @@
+---
+title: "replyr example"
+author: "John Mount, Win-Vector LLC"
+date: "3/4/2017"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+library("sparklyr")
+library("dplyr")
+library("nycflights13")
+my_db <- sparklyr::spark_connect(version='2.0.0', 
+   master = "local")
+flts <- replyr::replyr_copy_to(my_db, flights)
+```
+
+```{r}
+print(flts)
+```
+
+```{r replyr}
+replyr::replyr_summary(flts, 
+                       countUniqueNonNum= TRUE)
+```
+
+However the above summary has problems with `NA` (espiecially in `tailnum`),
+which are likely due to how the current combination of Spark2/sparklyr deals with
+missing values.
+
+Submitted as [sparklyr issue 528](https://github.com/rstudio/sparklyr/issues/528),
+and [my notes here](https://github.com/WinVector/replyr/blob/master/issues/SparkNAIssue.md).
+
+```{r summarizeeach}
+# currently crashes if tailnum left in column list 
+flts %>% summarise_each(funs(min,max,mean,sd),
+                        year, month, day, dep_time,
+                        sched_dep_time, dep_delay, 
+                        arr_time, sched_arr_time, 
+                        arr_delay, carrier, flight)
+```
+
+```{r otheropts, error=TRUE}
+summary(flts)
+dplyr::glimpse(flts)
+broom::glance(flts)
+```
+
+```{r cleanup, include=FALSE}
+rm(list=ls())
+gc()
+```
