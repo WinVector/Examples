@@ -114,16 +114,17 @@ replyr::replyr_summary(flts,
     ## 18   26.230100   19.300846   <NA>   <NA>
     ## 19 2013.000000    0.000000   <NA>   <NA>
 
-Note: the above summary has problems with `NA` in `character` columns with `Spark`, and thus is mis-reporting the `NA` count in the `tailum` column. We are working on the issue. That is also one of the advantages of taking your work-arounds from a package: when they do improve you can easily incorporate bring the improvements into your own work by a mere package update.
-
 As we see, `replyr` summary returns data in a data frame, and can deal with multiple column types.
+
+Note: the above summary has problems with `NA` in `character` columns with `Spark`, and thus is mis-reporting the `NA` count in the `tailum` column. We are working on the issue. That is also one of the advantages of taking your work-arounds from a package: when they do improve you can easily incorporate bring the improvements into your own work by a mere package update.
 
 We could also use `dplyr::summarize_each` for the task, but it has the minor downside of returning the data in a wide form.
 
 ``` r
 # currently throws if tailnum left in column list 
+vars <- setdiff(colnames(flts), 'tailnum')
 flts %>% summarize_each(funs(min, max, mean, sd), 
-                        -tailnum)
+                        one_of(vars))
 ```
 
     ## Source:   query [1 x 72]
@@ -198,10 +199,10 @@ str(flts)
     ##   .. .. .. ..- attr(*, "conn_id")=<externalptr> 
     ##   .. ..$ monitor      :Classes 'sockconn', 'connection'  atomic [1:1] 5
     ##   .. .. .. ..- attr(*, "conn_id")=<externalptr> 
-    ##   .. ..$ output_file  : chr "/var/folders/7q/h_jp2vj131g5799gfnpzhdp80000gn/T//Rtmp71iVSp/filed928bfb6274_spark.log"
-    ##   .. ..$ spark_context:Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fd2cb0df230> 
-    ##   .. ..$ java_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fd2cb063f08> 
-    ##   .. ..$ hive_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fd2cc6d2140> 
+    ##   .. ..$ output_file  : chr "/var/folders/7q/h_jp2vj131g5799gfnpzhdp80000gn/T//Rtmpeo1REv/filedbad4303f4ed_spark.log"
+    ##   .. ..$ spark_context:Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fba73e107c0> 
+    ##   .. ..$ java_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fba73206468> 
+    ##   .. ..$ hive_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fba73da0978> 
     ##   .. ..- attr(*, "class")= chr [1:3] "spark_connection" "spark_shell_connection" "DBIConnection"
     ##   ..- attr(*, "class")= chr [1:3] "src_spark" "src_sql" "src"
     ##  $ ops:List of 3
@@ -223,10 +224,10 @@ str(flts)
     ##   .. .. .. .. ..- attr(*, "conn_id")=<externalptr> 
     ##   .. .. ..$ monitor      :Classes 'sockconn', 'connection'  atomic [1:1] 5
     ##   .. .. .. .. ..- attr(*, "conn_id")=<externalptr> 
-    ##   .. .. ..$ output_file  : chr "/var/folders/7q/h_jp2vj131g5799gfnpzhdp80000gn/T//Rtmp71iVSp/filed928bfb6274_spark.log"
-    ##   .. .. ..$ spark_context:Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fd2cb0df230> 
-    ##   .. .. ..$ java_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fd2cb063f08> 
-    ##   .. .. ..$ hive_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fd2cc6d2140> 
+    ##   .. .. ..$ output_file  : chr "/var/folders/7q/h_jp2vj131g5799gfnpzhdp80000gn/T//Rtmpeo1REv/filedbad4303f4ed_spark.log"
+    ##   .. .. ..$ spark_context:Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fba73e107c0> 
+    ##   .. .. ..$ java_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fba73206468> 
+    ##   .. .. ..$ hive_context :Classes 'spark_jobj', 'shell_jobj' <environment: 0x7fba73da0978> 
     ##   .. .. ..- attr(*, "class")= chr [1:3] "spark_connection" "spark_shell_connection" "DBIConnection"
     ##   .. ..- attr(*, "class")= chr [1:3] "src_spark" "src_sql" "src"
     ##   ..$ x   :Classes 'ident', 'sql', 'character'  chr "flights"

@@ -59,17 +59,50 @@ replyr::replyr_summary(flts,
                        countUniqueNonNum= TRUE)
 ```
 
-Note: the above summary has problems with `NA` in `character` columns with `Spark`, and thus is mis-reporting the `NA` count in the `tailum` column.  We are working on the issue. That is also one of the advantages of taking your work-arounds from a package: when they do improve you can easily incorporate bring the improvements into your own work by a mere package update.
-
 As we see, `replyr` summary returns data in a data frame, and can deal with multiple column types.
+
+Note: the above summary has problems with `NA` in `character` columns with `Spark`, and thus is mis-reporting the `NA` count in the `tailum` column.  We are working on the issue. That is also one of the advantages of taking your work-arounds from a package: when they do improve you can easily incorporate bring the improvements into your own work by a mere package update.
 
 We could also use `dplyr::summarize_each` for the task, but it has the minor downside of returning
 the data in a wide form.
 
 ```{r summarizeeach}
 # currently throws if tailnum left in column list 
+vars <- setdiff(colnames(flts), 'tailnum')
 flts %>% summarize_each(funs(min, max, mean, sd), 
-                        -tailnum)
+                        one_of(vars))
+```
+
+```{r gatehr, eval=FALSE, include=FALSE}
+# show the kind of work needed to gather this result
+flts %>% summarize_each(funs(min, max, mean, sd), 
+                        one_of(vars)) -> dz
+library("tidyr")
+# a crude gather-like operation
+summarizeV <- function(v) {
+  # get the column type
+  colClass <- flts %>% 
+    head(n=1) %>% 
+    select_(v) %>% 
+    collect() %>% 
+    .[[1]] %>% 
+    is.numeric %>%
+    ifelse(.,'num', 'str')
+  # limit down to summaries from this col
+  dzi <- dz %>% select(starts_with(v))
+  oldNames <- colnames(dzi)
+  newNames <- paste(gsub(paste0('^',v,'_'), '', nms),
+                    colClass, 
+                    sep= '_')
+  dzi %>% 
+    rename_(.dots= setNames(oldNames, newNames)) %>%
+    mutate(column= v, colClass= colClass) %>%
+    select_(.dots= c('column', 'colClass', newNames))
+}
+summaries <- lapply(vars, summarizeV)
+# dplyr::bind_rows works only on local data
+summaries <- lapply(summaries, collect)
+bind_rows(summaries)
 ```
 
 ```{r sume, error=TRUE}
