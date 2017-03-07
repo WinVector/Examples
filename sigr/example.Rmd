@@ -85,6 +85,10 @@ cat(render(wrapFTest(d, 'pred', 'y'),
     pLargeCutoff=1))
 ```
 
+Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used
+on any regression (modulo informing the significance model of the appropriate
+number of parameters).  It also can be used on held-out or test data.
+
 In this mode it is a lot like `ModelMetrics::rmse()` or `caret::postResample()`.
 
 ```{r modelMetics}
@@ -95,10 +99,6 @@ ModelMetrics::rmse(d$y, d$pred)
 caret::postResample(d$y, d$pred)
 ```
 
-
-Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used
-on any regression (modulo informing the significance model of the appropriate
-number of parameters).  It also can be used on held-out or test data.
 
 ### Out of sample example
 

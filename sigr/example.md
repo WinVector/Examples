@@ -161,6 +161,8 @@ cat(render(wrapFTest(d, 'pred', 'y'),
 
 **F Test** summary: (<i>R<sup>2</sup></i>=0.94, *F*(1,3)=50, *p*=0.0059).
 
+Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used on any regression (modulo informing the significance model of the appropriate number of parameters). It also can be used on held-out or test data.
+
 In this mode it is a lot like `ModelMetrics::rmse()` or `caret::postResample()`.
 
 ``` r
@@ -175,8 +177,6 @@ caret::postResample(d$y, d$pred)
 
     ##      RMSE  Rsquared 
     ## 0.3300736 0.9430403
-
-Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used on any regression (modulo informing the significance model of the appropriate number of parameters). It also can be used on held-out or test data.
 
 ### Out of sample example
 
