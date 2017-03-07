@@ -4,20 +4,19 @@ output:
     variant: markdown_github
 ---
 
-[`sigr`](https://CRAN.R-project.org/package=sigr) is an [`R`](https://cran.r-project.org) package conveniently formats significance tests, allowing the analyst to use the correct test no matter what modeling
-package you use.
+[`sigr`](https://CRAN.R-project.org/package=sigr) is a simple [`R`](https://cran.r-project.org) package that conveniently formats a few statistics and their significance tests.  This allows the analyst to use the correct test no matter what modeling package or procedure they use.
 
 ![](sigr.png)
 
 ## Model Example
 
-For example, take the following linear relation between `x` and `y`:
+Let's take as our example the following linear relation between `x` and `y`:
 
 ```{r}
 library('sigr')
-d <- data.frame(x=1:5)
 set.seed(353525)
-d$y <- 2*d$x + rnorm(nrow(d))
+d <- data.frame(x= rnorm(5))
+d$y <- 2*d$x + 0.5*rnorm(nrow(d))
 ```
 
 `stats::lm()` has among the most complete summaries of all models in `R`, so we
@@ -32,8 +31,10 @@ summary(model)
 
 ```{r cortest1, results='asis'}
 cat(render(wrapFTest(model),
-    pSmallCutoff=0))
+    pLargeCutoff=1))
 ```
+
+Note: `sigr` reports the un-adjusted R-squared, as this is the one that significance is reported for in `summary::lm()`.
 
 `sigr` also carries around the important summary components for use 
 in code.
@@ -42,24 +43,38 @@ in code.
 unclass(wrapFTest(model))
 ```
 
-In this 
-function it is much like `broom` or `modelr`.
+In this function `sigr` is much like `broom::glance()` or `modelr::rsquare()`.
 
 ```{r broom}
 broom::glance(model)
 ```
 
 ```{r modelr}
-modelr::rmse(model, d)
 modelr::rsquare(model, d)
-#modelr::mae(model, d)
-#modelr::qae(model, d)
 ```
+
+This is something like what is reported by `caret::train()` (where `caret` controls the model training process).
+
+```{r carettrain}
+cr <- caret::train(y~x, d, 
+                   method = 'lm')
+cr$results
+summary(cr$finalModel)
+```
+
+(I presume `cr$results$Rsquared` is a model quality report and not a consistency of cross-validation procedure report.  If it is a model quality report it is somehow inflated, perhaps by the resampling procedure. So I apologize for using either `caret::train()` or its results incorrectly.  I did read the manual and examples.)
 
 ## Data example
 
+The issue of taking summary statistics (and significances) from models include:
+
+  * Working only from models limits you to models that include the statistic you want.
+  * Working only from models is mostly "in-sample."  You need additional procedures for test or hold-out data.
+
 With `sigr` it is also easy to reconstruct quality and significance from the predictions, no matter 
 where they came from (without needing the model data structures).
+
+### In-sample example
 
 ```{r pred}
 d$pred <- predict(model, newdata = d)
@@ -67,13 +82,58 @@ d$pred <- predict(model, newdata = d)
 
 ```{r cortestp, results='asis'}
 cat(render(wrapFTest(d, 'pred', 'y'),
-    pSmallCutoff=0))
+    pLargeCutoff=1))
 ```
 
-Notice we reconstruct the summary statistic and significance, independent 
-of the model data structures. This means the test is generic and can be used
+In this mode it is a lot like `ModelMetrics::rmse()` or `caret::postResample()`.
+
+```{r modelMetics}
+ModelMetrics::rmse(d$y, d$pred)
+```
+
+```{r caret}
+caret::postResample(d$y, d$pred)
+```
+
+
+Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used
 on any regression (modulo informing the significance model of the appropriate
-number of parameters).
+number of parameters).  And also can be used on held-out or test data.
+
+### Out of sample example
+
+If we had more data we can look at the quality of the prediction on
+that data  (though you have to take care in understanding the number of degrees of freedom is different for held-out data).
+
+```{r test}
+d2 <- data.frame(x= rnorm(5))
+d2$y <- 2*d2$x + 0.5*rnorm(nrow(d2))
+d2$pred <-  predict(model, newdata = d2)
+```
+
+```{r cortestp2, results='asis'}
+cat(render(wrapFTest(d2, 'pred', 'y'),
+    pLargeCutoff=1))
+```
+
+### Exotic model example
+
+We could have used `glmnet` instead of `lm`:
+
+```{r glmnet}
+library("glmnet")
+d$one <- 1 # make sure we have at least 2 columns
+xmat <- as.matrix(d[, c('one','x')])
+glmnetModel <- cv.glmnet(xmat, d$y)
+summary(glmnetModel)
+d$predg <- as.numeric(predict(glmnetModel, 
+                              newx= xmat))
+```
+
+```{r cortestpg, results='asis'}
+cat(render(wrapFTest(d, 'predg', 'y'),
+    pLargeCutoff=1))
+```
 
 ## Plotting
 
@@ -99,4 +159,7 @@ ggplot(data=d, mapping=aes(x=pred, y=y)) +
           subtitle= subtitle)
 ```
 
+## Conclusion
+
+`sigr` computes a few statistics or summaries (with standard significance estimates) and returns the calculation in both machine readable and formatted forms.  For non-standard summaries `sigr` includes some resampling methods for significance estimation. For formatting `sigr` tries to get near the formats specified by "The American Psychological Association." `sigr` works with models (such as `lm` and `glm(family='binomial')`) or data, and is a small package with few dependencies.
 
