@@ -136,12 +136,12 @@ summary(cr$finalModel)
     ## Multiple R-squared:  0.943,  Adjusted R-squared:  0.9241 
     ## F-statistic: 49.67 on 1 and 3 DF,  p-value: 0.005871
 
-(I presume `cr$results$Rsquared` is a model quality report and not a consistency of cross-validation procedure report. If it is a model quality report it is somehow inflated, perhaps by the resampling procedure. So I apologize for using either `caret::train()` or its results incorrectly. I did read the manual and examples.)
+(I presume `cr$results$Rsquared` is a model quality report and not a consistency of cross-validation procedure report. If it is a model quality report it is somehow inflated, perhaps by the resampling procedure. So I apologize for using either `caret::train()` or its results incorrectly.)
 
 Data example
 ------------
 
-The issue of taking summary statistics (and significances) from models include:
+The issues in taking summary statistics (and significances) from models include:
 
 -   Working only from models limits you to models that include the statistic you want.
 -   Working only from models is mostly "in-sample." You need additional procedures for test or hold-out data.
@@ -176,7 +176,7 @@ caret::postResample(d$y, d$pred)
     ##      RMSE  Rsquared 
     ## 0.3300736 0.9430403
 
-Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used on any regression (modulo informing the significance model of the appropriate number of parameters). And also can be used on held-out or test data.
+Notice we reconstruct the summary statistic and significance, independent of the model data structures. This means the test is generic and can be used on any regression (modulo informing the significance model of the appropriate number of parameters). It also can be used on held-out or test data.
 
 ### Out of sample example
 
