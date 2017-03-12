@@ -165,7 +165,11 @@ cfe <- vtreat::mkCrossFrameCExperiment(dTrain, vars,
                                        outcome, positive)
 plan <- cfe$treatments
 sf <- plan$scoreFrame
-newVars <- sf$varName[sf$sig<1/nrow(sf)]
+newVars <- sf$varName[(sf$sig<1/nrow(sf)) & (sf$code!='clean')]
+# Mice doesn't like co-linear columns
+# http://stackoverflow.com/questions/36330570/mice-does-not-impute-certain-columns-but-also-does-not-give-an-error/36331710#36331710
+# http://stackoverflow.com/questions/38146475/r-mice-missing-data-still-exist-after-calling-mice-when-no-of-variable-is-lar
+
 xTrain <- cbind(dTrain[, vars, drop=FALSE],
                 cfe$crossFrame[ , c(newVars,outcome), drop=FALSE])
 xTest <- cbind(dTest[, vars, drop=FALSE],
@@ -189,31 +193,31 @@ impute <- mice(dcomb, method='rf')
 
     ## 
     ##  iter imp variable
-    ##   1   1  V1  V4  V5  V6  V7
-    ##   1   2  V1  V4  V5  V6  V7
-    ##   1   3  V1  V4  V5  V6  V7
-    ##   1   4  V1  V4  V5  V6  V7
-    ##   1   5  V1  V4  V5  V6  V7
-    ##   2   1  V1  V4  V5  V6  V7
-    ##   2   2  V1  V4  V5  V6  V7
-    ##   2   3  V1  V4  V5  V6  V7
-    ##   2   4  V1  V4  V5  V6  V7
-    ##   2   5  V1  V4  V5  V6  V7
-    ##   3   1  V1  V4  V5  V6  V7
-    ##   3   2  V1  V4  V5  V6  V7
-    ##   3   3  V1  V4  V5  V6  V7
-    ##   3   4  V1  V4  V5  V6  V7
-    ##   3   5  V1  V4  V5  V6  V7
-    ##   4   1  V1  V4  V5  V6  V7
-    ##   4   2  V1  V4  V5  V6  V7
-    ##   4   3  V1  V4  V5  V6  V7
-    ##   4   4  V1  V4  V5  V6  V7
-    ##   4   5  V1  V4  V5  V6  V7
-    ##   5   1  V1  V4  V5  V6  V7
-    ##   5   2  V1  V4  V5  V6  V7
-    ##   5   3  V1  V4  V5  V6  V7
-    ##   5   4  V1  V4  V5  V6  V7
-    ##   5   5  V1  V4  V5  V6  V7
+    ##   1   1  V1  V2  V4  V5  V6  V7  V14
+    ##   1   2  V1  V2  V4  V5  V6  V7  V14
+    ##   1   3  V1  V2  V4  V5  V6  V7  V14
+    ##   1   4  V1  V2  V4  V5  V6  V7  V14
+    ##   1   5  V1  V2  V4  V5  V6  V7  V14
+    ##   2   1  V1  V2  V4  V5  V6  V7  V14
+    ##   2   2  V1  V2  V4  V5  V6  V7  V14
+    ##   2   3  V1  V2  V4  V5  V6  V7  V14
+    ##   2   4  V1  V2  V4  V5  V6  V7  V14
+    ##   2   5  V1  V2  V4  V5  V6  V7  V14
+    ##   3   1  V1  V2  V4  V5  V6  V7  V14
+    ##   3   2  V1  V2  V4  V5  V6  V7  V14
+    ##   3   3  V1  V2  V4  V5  V6  V7  V14
+    ##   3   4  V1  V2  V4  V5  V6  V7  V14
+    ##   3   5  V1  V2  V4  V5  V6  V7  V14
+    ##   4   1  V1  V2  V4  V5  V6  V7  V14
+    ##   4   2  V1  V2  V4  V5  V6  V7  V14
+    ##   4   3  V1  V2  V4  V5  V6  V7  V14
+    ##   4   4  V1  V2  V4  V5  V6  V7  V14
+    ##   4   5  V1  V2  V4  V5  V6  V7  V14
+    ##   5   1  V1  V2  V4  V5  V6  V7  V14
+    ##   5   2  V1  V2  V4  V5  V6  V7  V14
+    ##   5   3  V1  V2  V4  V5  V6  V7  V14
+    ##   5   4  V1  V2  V4  V5  V6  V7  V14
+    ##   5   5  V1  V2  V4  V5  V6  V7  V14
 
 ``` r
 reps <- lapply(seq_len(5),
@@ -233,14 +237,14 @@ reps <- lapply(seq_len(5),
 reps <- bind_rows(reps)
 rTrain <- bind_rows(reps$train)
 rTest <- bind_rows(reps$test)
-# mice is skipping V2 and V14 in this pass for some reason
+# mice had been skipping V2 and V14 in this pass for some reason
 problems <- colnames(rTrain)[vapply(rTrain, 
                                     function(ci) {any(is.na(ci))}, 
                                     logical(1))]
 print(problems)
 ```
 
-    ## [1] "V2"  "V14"
+    ## character(0)
 
 ``` r
 xvars <- setdiff(xvars, problems)
