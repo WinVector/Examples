@@ -57,7 +57,7 @@ fb <- function(col1, col2) {
 head(fb('gear', 'carb'))
 ```
 
-Notice we no longer need to quote the source code.  However, without some additional trick the `(!!name)` notation can not be used on the left hand side of an assignment.
+Notice we no longer need to quote the source code.  However, without some additional trick the `(!!name)` notation can not be used on the left hand side of an assignment.  Also note: <code>!!</code> is not a no-op, but is a sufficiently uncommon expression I thought we could use it (some have mentioned using <code>!!!</code> as it is equivalent to <code>!</code> and therefore not strictly necessary).
 
 The real point is a user wants a flexible language with macros and functions (`R` uses an intermediate form called ["an Fexpr"](https://en.wikipedia.org/wiki/Fexpr) for just about everything) that they can both use interactively and program over.  This means they eventually want an execution environment where they can both pass in parametric values (what `R` calls standard evaluation) and the ability to have code elements treated directly as values (a convenience and related to what `R` calls non-standard evaluation).
 
