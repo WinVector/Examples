@@ -46,7 +46,7 @@ head(d)
 
 The point is a standard function (`f()`) can accept user column names and then itself use convenient non-standard evaluation notation (in this case `dplyr`) to perform operations.  This package-based simulation is not as good as actual language support, but simulations like this are how we collect experience with possible new language features.
 
-We can also try a `(!!name)` notation inspired by [recent developments in `dplyr`](https://github.com/hadley/dplyr/commit/8f03f835185370626a566e95d268623b20189e07).
+We can also try a `(!!name)` notation inspired by [recent developments in `dplyr`](https://github.com/hadley/dplyr/commit/8f03f835185370626a566e95d268623b20189e07) and [`hadley/rlang`](https://github.com/hadley/rlang/blob/master/R/tidy-quote.R).
 
 ```{r}
 fb <- function(col1, col2) {
