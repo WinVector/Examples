@@ -52,7 +52,6 @@ print(paste(
   "utils::object.size in global environment",
   utils::object.size(f)
 ))
-
-
-
 ```
+
+(Filed as [pryr issue 37](https://github.com/hadley/pryr/issues/37), and closed.)

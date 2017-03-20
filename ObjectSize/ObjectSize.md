@@ -29,8 +29,8 @@ build1 <- function() {
 f <- build1()
 ```
 
-    ## [1] "serialize size in construction environment 40014326"
-    ## [1] "pryr::object_size in construction environment 19904"
+    ## [1] "serialize size in construction environment 40014302"
+    ## [1] "pryr::object_size in construction environment 19880"
     ## [1] "utils::object.size in construction environment 4608"
 
 ``` r
@@ -40,7 +40,7 @@ print(paste(
 ))
 ```
 
-    ## [1] "serialize size in global environment 40014326"
+    ## [1] "serialize size in global environment 40014302"
 
 ``` r
 print(paste(
@@ -49,7 +49,7 @@ print(paste(
 ))
 ```
 
-    ## [1] "pryr::object_size in global environment 40020168"
+    ## [1] "pryr::object_size in global environment 40020144"
 
 ``` r
 print(paste(
@@ -59,3 +59,5 @@ print(paste(
 ```
 
     ## [1] "utils::object.size in global environment 4608"
+
+(Filed as [pryr issue 37](https://github.com/hadley/pryr/issues/37), and closed.)
