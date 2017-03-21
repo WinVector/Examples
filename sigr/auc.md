@@ -2,11 +2,16 @@
 
 ``` r
 set.seed(224)
-d <- data.frame(x= runif(5),   # predictor
-                y= rnorm(5)>=0 # outcome/truth
-)
-d$cx <- 1-d$x # complement of x
-d$ny <- !d$y  # not y
+
+mkData <- function(n) {
+  d <- data.frame(x= runif(n),   # predictor
+                  y= rnorm(n)>=0 # outcome/truth
+  )
+  d$cx <- 1-d$x # complement of x
+  d$ny <- !d$y  # not y
+  d
+}
+d <- mkData(5)
 print(d)
 ```
 
@@ -76,19 +81,20 @@ aucROCR(d$x, d$y) +
 ##### `AUC`
 
 ``` r
-AUC::auc(AUC::roc(d$x, 
-                  factor(ifelse(d$y, "1", "0")))) +
-  AUC::auc(AUC::roc(d$cx, 
-                  factor(ifelse(d$y, "1", "0"))))
+aucAUC <- function(predictions, target) {
+  AUC::auc(AUC::roc(predictions, 
+                  factor(ifelse(target, "1", "0"))))
+}
+
+aucAUC(d$x, d$y) +
+  aucAUC(d$cx, d$y)
 ```
 
     ## [1] 1
 
 ``` r
-AUC::auc(AUC::roc(d$x, 
-                  factor(ifelse(d$y, "1", "0")))) +
-  AUC::auc(AUC::roc(d$x, 
-                  factor(ifelse(d$ny, "1", "0"))))
+aucAUC(d$x, d$y) +
+  aucAUC(d$x, d$ny)
 ```
 
     ## [1] 1
@@ -153,3 +159,89 @@ pROC::auc(y~x, d, direction= '<') +
 ```
 
     ## [1] 1
+
+### Timing
+
+``` r
+library("microbenchmark")
+
+dTime <- mkData(10000)
+
+ModelMetrics::auc(dTime$y, dTime$x)
+```
+
+    ## [1] 0.5125198
+
+``` r
+sigr::calcAUC(dTime$x, dTime$y)
+```
+
+    ## [1] 0.5125198
+
+``` r
+aucROCR(dTime$x, dTime$y)
+```
+
+    ## [1] 0.5125198
+
+``` r
+aucAUC(dTime$x, dTime$y)
+```
+
+    ## [1] 0.5125198
+
+``` r
+aucCaret(dTime$x, dTime$y)
+```
+
+    ## [1] 0.5125198
+
+``` r
+pROC::auc(y~x, dTime, direction= '<')
+```
+
+    ## Area under the curve: 0.5125
+
+``` r
+res <- microbenchmark(
+  ModelMetrics::auc(dTime$y, dTime$x),
+  sigr::calcAUC(dTime$x, dTime$y),
+  aucROCR(dTime$x, dTime$y),
+  aucAUC(dTime$x, dTime$y),
+  aucCaret(dTime$x, dTime$y),
+  pROC::auc(y~x, dTime, direction= '<')
+)
+
+# select down columns and control units
+library("dplyr")
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+res %>% 
+  group_by(expr) %>%
+  mutate(time = time/1e9) %>% # move from NanoSeconds to seconds
+  summarize(meanTimeS = mean(time), 
+            medianTimeS = median(time)) %>%
+  arrange(medianTimeS)
+```
+
+    ## # A tibble: 6 × 3
+    ##                                       expr   meanTimeS medianTimeS
+    ##                                     <fctr>       <dbl>       <dbl>
+    ## 1      ModelMetrics::auc(dTime$y, dTime$x) 0.002809079 0.002619565
+    ## 2          sigr::calcAUC(dTime$x, dTime$y) 0.009960525 0.004000801
+    ## 3               aucCaret(dTime$x, dTime$y) 0.025471632 0.021540099
+    ## 4                aucROCR(dTime$x, dTime$y) 0.047789639 0.045066673
+    ## 5                 aucAUC(dTime$x, dTime$y) 0.108710819 0.101732337
+    ## 6 pROC::auc(y ~ x, dTime, direction = "<") 0.934411745 0.890861189
