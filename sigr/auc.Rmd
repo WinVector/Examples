@@ -1,4 +1,5 @@
 ---
+always_allow_html: yes
 output:
   md_document:
     variant: markdown_github
@@ -7,6 +8,11 @@ output:
 ##### Setup.
 
 ```{r setup}
+library("dplyr")
+library("plotly")
+library("WVPlots")  # needs dev version from Github
+library("microbenchmark")
+
 set.seed(224)
 
 mkData <- function(n) {
@@ -22,6 +28,33 @@ print(d)
 ```
 
 
+## The effect
+
+We are looking at the facts that 
+`AUC(prediction, outcome) + AUC(1-prediction, outcome) == 1`
+and 
+`AUC(prediction, outcome) + AUC(prediction, !outcome) == 1`.
+
+```{r plotly}
+plotlyROC <- function(predictions, target, title) {
+  rocFrame <- WVPlots::graphROC(d$x, d$y)
+  plot_ly(rocFrame$pointGraph, x = ~FalsePositiveRate, y = ~TruePositiveRate, 
+        type='scatter', mode='lines+markers', hoverinfo= 'text', 
+        text= ~ paste('threshold:', model, 
+                      '</br>FalsePositiveRate:', FalsePositiveRate,
+                      '</br>TruePositiveRate:', TruePositiveRate)) %>%
+    layout(title= title)
+}
+
+plotlyROC(d$x, d$y, 'interactive version of base plot (when rendered to html)')
+```
+
+
+```{r WVPlots}
+WVPlots::ROCPlot(d,'x','y',TRUE,'base plot')
+WVPlots::ROCPlot(d,'cx','y',TRUE,'complemented x')
+WVPlots::ROCPlot(d,'x','ny',TRUE,'negated y')
+```
 
 
 ##### `ModelMetrics`
@@ -127,8 +160,6 @@ pROC::auc(y~x, d, direction= '<') +
 ### Timing
 
 ```{r timing}
-library("microbenchmark")
-
 dTime <- mkData(10000)
 
 ModelMetrics::auc(dTime$y, dTime$x)
@@ -148,7 +179,6 @@ res <- microbenchmark(
 )
 
 # select down columns and control units
-library("dplyr")
 res %>% 
   group_by(expr) %>%
   mutate(time = time/1e9) %>% # move from NanoSeconds to seconds

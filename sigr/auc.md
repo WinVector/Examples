@@ -1,6 +1,45 @@
 ##### Setup.
 
 ``` r
+library("dplyr")
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library("plotly")
+```
+
+    ## Loading required package: ggplot2
+
+    ## 
+    ## Attaching package: 'plotly'
+
+    ## The following object is masked from 'package:ggplot2':
+    ## 
+    ##     last_plot
+
+    ## The following object is masked from 'package:stats':
+    ## 
+    ##     filter
+
+    ## The following object is masked from 'package:graphics':
+    ## 
+    ##     layout
+
+``` r
+library("WVPlots")  # needs dev version from Github
+library("microbenchmark")
+
 set.seed(224)
 
 mkData <- function(n) {
@@ -21,6 +60,45 @@ print(d)
     ## 3 0.3844693  TRUE 0.61553066 FALSE
     ## 4 0.9483048 FALSE 0.05169519  TRUE
     ## 5 0.6525606  TRUE 0.34743940 FALSE
+
+The effect
+----------
+
+We are looking at the facts that `AUC(prediction, outcome) + AUC(1-prediction, outcome) == 1` and `AUC(prediction, outcome) + AUC(prediction, !outcome) == 1`.
+
+``` r
+plotlyROC <- function(predictions, target, title) {
+  rocFrame <- WVPlots::graphROC(d$x, d$y)
+  plot_ly(rocFrame$pointGraph, x = ~FalsePositiveRate, y = ~TruePositiveRate, 
+        type='scatter', mode='lines+markers', hoverinfo= 'text', 
+        text= ~ paste('threshold:', model, 
+                      '</br>FalsePositiveRate:', FalsePositiveRate,
+                      '</br>TruePositiveRate:', TruePositiveRate)) %>%
+    layout(title= title)
+}
+
+plotlyROC(d$x, d$y, 'interactive version of base plot (when rendered to html)')
+```
+
+![](auc_files/figure-markdown_github/plotly-1.png)
+
+``` r
+WVPlots::ROCPlot(d,'x','y',TRUE,'base plot')
+```
+
+![](auc_files/figure-markdown_github/WVPlots-1.png)
+
+``` r
+WVPlots::ROCPlot(d,'cx','y',TRUE,'complemented x')
+```
+
+![](auc_files/figure-markdown_github/WVPlots-2.png)
+
+``` r
+WVPlots::ROCPlot(d,'x','ny',TRUE,'negated y')
+```
+
+![](auc_files/figure-markdown_github/WVPlots-3.png)
 
 ##### `ModelMetrics`
 
@@ -163,44 +241,42 @@ pROC::auc(y~x, d, direction= '<') +
 ### Timing
 
 ``` r
-library("microbenchmark")
-
 dTime <- mkData(10000)
 
 ModelMetrics::auc(dTime$y, dTime$x)
 ```
 
-    ## [1] 0.5125198
+    ## [1] 0.4929622
 
 ``` r
 sigr::calcAUC(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5125198
+    ## [1] 0.4929622
 
 ``` r
 aucROCR(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5125198
+    ## [1] 0.4929622
 
 ``` r
 aucAUC(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5125198
+    ## [1] 0.4929622
 
 ``` r
 aucCaret(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5125198
+    ## [1] 0.4929622
 
 ``` r
 pROC::auc(y~x, dTime, direction= '<')
 ```
 
-    ## Area under the curve: 0.5125
+    ## Area under the curve: 0.493
 
 ``` r
 res <- microbenchmark(
@@ -213,21 +289,6 @@ res <- microbenchmark(
 )
 
 # select down columns and control units
-library("dplyr")
-```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 res %>% 
   group_by(expr) %>%
   mutate(time = time/1e9) %>% # move from NanoSeconds to seconds
@@ -239,9 +300,9 @@ res %>%
     ## # A tibble: 6 × 3
     ##                                       expr   meanTimeS medianTimeS
     ##                                     <fctr>       <dbl>       <dbl>
-    ## 1      ModelMetrics::auc(dTime$y, dTime$x) 0.002809079 0.002619565
-    ## 2          sigr::calcAUC(dTime$x, dTime$y) 0.009960525 0.004000801
-    ## 3               aucCaret(dTime$x, dTime$y) 0.025471632 0.021540099
-    ## 4                aucROCR(dTime$x, dTime$y) 0.047789639 0.045066673
-    ## 5                 aucAUC(dTime$x, dTime$y) 0.108710819 0.101732337
-    ## 6 pROC::auc(y ~ x, dTime, direction = "<") 0.934411745 0.890861189
+    ## 1      ModelMetrics::auc(dTime$y, dTime$x) 0.003050613 0.002610172
+    ## 2          sigr::calcAUC(dTime$x, dTime$y) 0.004916612 0.004320358
+    ## 3               aucCaret(dTime$x, dTime$y) 0.021477965 0.021233159
+    ## 4                aucROCR(dTime$x, dTime$y) 0.045582756 0.044730265
+    ## 5                 aucAUC(dTime$x, dTime$y) 0.116167549 0.113908388
+    ## 6 pROC::auc(y ~ x, dTime, direction = "<") 0.907922767 0.865918709
