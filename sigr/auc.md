@@ -73,6 +73,26 @@ aucROCR(d$x, d$y) +
 
     ## [1] 1
 
+##### `AUC`
+
+``` r
+AUC::auc(AUC::roc(d$x, 
+                  factor(ifelse(d$y, "1", "0")))) +
+  AUC::auc(AUC::roc(d$cx, 
+                  factor(ifelse(d$y, "1", "0"))))
+```
+
+    ## [1] 1
+
+``` r
+AUC::auc(AUC::roc(d$x, 
+                  factor(ifelse(d$y, "1", "0")))) +
+  AUC::auc(AUC::roc(d$x, 
+                  factor(ifelse(d$ny, "1", "0"))))
+```
+
+    ## [1] 1
+
 ##### `caret`
 
 ``` r
@@ -133,21 +153,3 @@ pROC::auc(y~x, d, direction= '<') +
 ```
 
     ## [1] 1
-
-##### `AUC`
-
-``` r
-tryCatch(
-  AUC::auc(AUC::roc(d$x, d$y)),
-  error = function(e) {e})
-```
-
-    ## Warning in is.na(x): is.na() applied to non-(list or vector) of type 'NULL'
-
-    ## Warning in is.na(e2): is.na() applied to non-(list or vector) of type
-    ## 'NULL'
-
-    ## Warning in is.na(e2): is.na() applied to non-(list or vector) of type
-    ## 'NULL'
-
-    ## <simpleError in AUC::roc(d$x, d$y): Not enough distinct predictions to compute area under the ROC curve.>

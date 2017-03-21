@@ -58,6 +58,19 @@ aucROCR(d$x, d$y) +
   aucROCR(d$x, d$ny)
 ```
 
+##### `AUC`
+
+```{r AUC}
+AUC::auc(AUC::roc(d$x, 
+                  factor(ifelse(d$y, "1", "0")))) +
+  AUC::auc(AUC::roc(d$cx, 
+                  factor(ifelse(d$y, "1", "0"))))
+
+AUC::auc(AUC::roc(d$x, 
+                  factor(ifelse(d$y, "1", "0")))) +
+  AUC::auc(AUC::roc(d$x, 
+                  factor(ifelse(d$ny, "1", "0"))))
+```
 
 ##### `caret`
 
@@ -105,12 +118,6 @@ pROC::auc(y~x, d, direction= '<') +
   pROC::auc(ny~x, d, direction= '<')
 ```
 
-##### `AUC`
 
-```{r AUC}
-tryCatch(
-  AUC::auc(AUC::roc(d$x, d$y)),
-  error = function(e) {e})
-```
 
 
