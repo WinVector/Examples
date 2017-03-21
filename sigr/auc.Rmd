@@ -1,0 +1,94 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+##### Setup.
+
+```{r setup}
+set.seed(224)
+d <- data.frame(x= runif(5),   # predictor
+                y= rnorm(5)>=0 # outcome/truth
+)
+d$cx <- 1-d$x # complement of x
+d$ny <- !d$y  # not y
+print(d)
+```
+
+##### `ROCR`
+
+```{r ROCR}
+aucROCR <- function(predictions, target) {
+  pred <- ROCR::prediction(predictions,
+                           target)
+  perf_AUC <- ROCR::performance(pred,
+                                "auc")
+  perf_AUC@y.values[[1]]
+}
+
+aucROCR(d$x, d$y) + 
+  aucROCR(d$cx, d$y)
+aucROCR(d$x, d$y) + 
+  aucROCR(d$x, d$ny)
+```
+
+
+
+
+##### `caret`
+
+```{r caret}
+aucCaret <- function(predictions, target) {
+  classes <- c("class1", "class2")
+  df <- data.frame(obs= ifelse(target, 
+                               "class1", 
+                               "class2"),
+                 pred = ifelse(predictions>0.5, 
+                               "class1", 
+                               "class2"),
+                 class1 = predictions,
+                 class2 = 1-predictions)
+  caret::twoClassSummary(df, lev=classes)[['ROC']]
+}
+
+
+aucCaret(d$x, d$y) + 
+  aucCaret(d$cx, d$y)
+aucCaret(d$x, d$y) + 
+  aucCaret(d$x, d$ny)
+```
+
+##### `sigr`
+
+```{r sigr}
+
+sigr::calcAUC(d$x, d$y) + 
+  sigr::calcAUC(d$cx, d$y)
+sigr::calcAUC(d$x, d$y) +
+  sigr::calcAUC(d$x, d$ny)
+```
+
+##### `pROC`
+
+```{r pROC}
+pROC::auc(y~x, d) + 
+  pROC::auc(y~cx, d) # wrong
+```
+
+More tries with `pROC`.
+
+From `help(roc)` 
+
+> direction	
+>
+> in which direction to make the comparison? "auto" (default): automatically define in which group the median is higher and take the direction accordingly. ">": if the predictor values for the control group are higher than the values of the case group (controls > t >= cases). "<": if the predictor values for the control group are lower or equal than the values of the case group (controls < t <= cases).
+
+```{r pROCretry}
+pROC::auc(y~x, d, direction= '<') + 
+  pROC::auc(y~cx, d, direction= '<')
+pROC::auc(y~x, d, direction= '<') +
+  pROC::auc(ny~x, d, direction= '<')
+```
+
+
