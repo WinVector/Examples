@@ -16,6 +16,31 @@ d$ny <- !d$y  # not y
 print(d)
 ```
 
+
+
+
+##### `ModelMetrics`
+
+
+```{r ModelMetrics}
+ModelMetrics::auc(d$y, d$x) +
+  ModelMetrics::auc(d$y, d$cx)
+
+ModelMetrics::auc(d$y, d$x) +
+  ModelMetrics::auc(d$ny, d$x)
+```
+
+
+##### `sigr`
+
+```{r sigr}
+
+sigr::calcAUC(d$x, d$y) + 
+  sigr::calcAUC(d$cx, d$y)
+sigr::calcAUC(d$x, d$y) +
+  sigr::calcAUC(d$x, d$ny)
+```
+
 ##### `ROCR`
 
 ```{r ROCR}
@@ -32,8 +57,6 @@ aucROCR(d$x, d$y) +
 aucROCR(d$x, d$y) + 
   aucROCR(d$x, d$ny)
 ```
-
-
 
 
 ##### `caret`
@@ -59,15 +82,6 @@ aucCaret(d$x, d$y) +
   aucCaret(d$x, d$ny)
 ```
 
-##### `sigr`
-
-```{r sigr}
-
-sigr::calcAUC(d$x, d$y) + 
-  sigr::calcAUC(d$cx, d$y)
-sigr::calcAUC(d$x, d$y) +
-  sigr::calcAUC(d$x, d$ny)
-```
 
 ##### `pROC`
 
@@ -89,6 +103,14 @@ pROC::auc(y~x, d, direction= '<') +
   pROC::auc(y~cx, d, direction= '<')
 pROC::auc(y~x, d, direction= '<') +
   pROC::auc(ny~x, d, direction= '<')
+```
+
+##### `AUC`
+
+```{r AUC}
+tryCatch(
+  AUC::auc(AUC::roc(d$x, d$y)),
+  error = function(e) {e})
 ```
 
 

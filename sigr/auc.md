@@ -17,6 +17,38 @@ print(d)
     ## 4 0.9483048 FALSE 0.05169519  TRUE
     ## 5 0.6525606  TRUE 0.34743940 FALSE
 
+##### `ModelMetrics`
+
+``` r
+ModelMetrics::auc(d$y, d$x) +
+  ModelMetrics::auc(d$y, d$cx)
+```
+
+    ## [1] 1
+
+``` r
+ModelMetrics::auc(d$y, d$x) +
+  ModelMetrics::auc(d$ny, d$x)
+```
+
+    ## [1] 1
+
+##### `sigr`
+
+``` r
+sigr::calcAUC(d$x, d$y) + 
+  sigr::calcAUC(d$cx, d$y)
+```
+
+    ## [1] 1
+
+``` r
+sigr::calcAUC(d$x, d$y) +
+  sigr::calcAUC(d$x, d$ny)
+```
+
+    ## [1] 1
+
 ##### `ROCR`
 
 ``` r
@@ -71,22 +103,6 @@ aucCaret(d$x, d$y) +
 
     ## [1] 1
 
-##### `sigr`
-
-``` r
-sigr::calcAUC(d$x, d$y) + 
-  sigr::calcAUC(d$cx, d$y)
-```
-
-    ## [1] 1
-
-``` r
-sigr::calcAUC(d$x, d$y) +
-  sigr::calcAUC(d$x, d$ny)
-```
-
-    ## [1] 1
-
 ##### `pROC`
 
 ``` r
@@ -117,3 +133,21 @@ pROC::auc(y~x, d, direction= '<') +
 ```
 
     ## [1] 1
+
+##### `AUC`
+
+``` r
+tryCatch(
+  AUC::auc(AUC::roc(d$x, d$y)),
+  error = function(e) {e})
+```
+
+    ## Warning in is.na(x): is.na() applied to non-(list or vector) of type 'NULL'
+
+    ## Warning in is.na(e2): is.na() applied to non-(list or vector) of type
+    ## 'NULL'
+
+    ## Warning in is.na(e2): is.na() applied to non-(list or vector) of type
+    ## 'NULL'
+
+    ## <simpleError in AUC::roc(d$x, d$y): Not enough distinct predictions to compute area under the ROC curve.>
