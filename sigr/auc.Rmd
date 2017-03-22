@@ -37,7 +37,7 @@ and
 
 ```{r plotly}
 plotlyROC <- function(predictions, target, title) {
-  rocFrame <- WVPlots::graphROC(d$x, d$y)
+  rocFrame <- WVPlots::graphROC(predictions, target)
   plot_ly(rocFrame$pointGraph, x = ~FalsePositiveRate, y = ~TruePositiveRate, 
         type='scatter', mode='lines+markers', hoverinfo= 'text', 
         text= ~ paste('threshold:', model, 
@@ -160,7 +160,8 @@ pROC::auc(y~x, d, direction= '<') +
 ### Timing
 
 ```{r timing}
-dTime <- mkData(10000)
+dTime <- mkData(20000)
+
 
 ModelMetrics::auc(dTime$y, dTime$x)
 sigr::calcAUC(dTime$x, dTime$y)
