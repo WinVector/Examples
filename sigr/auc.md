@@ -243,69 +243,86 @@ pROC::auc(y~x, d, direction= '<') +
 ### Timing
 
 ``` r
-dTime <- mkData(20000)
-
-
+dTime <- mkData(100)
 ModelMetrics::auc(dTime$y, dTime$x)
 ```
 
-    ## [1] 0.5023937
+    ## [1] 0.4248
 
 ``` r
 sigr::calcAUC(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5023937
+    ## [1] 0.4248
 
 ``` r
 aucROCR(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5023937
+    ## [1] 0.4248
 
 ``` r
 aucAUC(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5023937
+    ## [1] 0.4248
 
 ``` r
 aucCaret(dTime$x, dTime$y)
 ```
 
-    ## [1] 0.5023937
+    ## [1] 0.4248
 
 ``` r
 pROC::auc(y~x, dTime, direction= '<')
 ```
 
-    ## Area under the curve: 0.5024
+    ## Area under the curve: 0.4248
 
 ``` r
-res <- microbenchmark(
-  ModelMetrics::auc(dTime$y, dTime$x),
-  sigr::calcAUC(dTime$x, dTime$y),
-  aucROCR(dTime$x, dTime$y),
-  aucAUC(dTime$x, dTime$y),
-  aucCaret(dTime$x, dTime$y),
-  pROC::auc(y~x, dTime, direction= '<')
-)
-
+sizes <- 2^(7:16)
+rlist <- lapply(sizes,
+                function(si) {
+                  dTime <- mkData(si)
+                  res <- microbenchmark(
+                    ModelMetrics::auc(dTime$y, dTime$x),
+                    sigr::calcAUC(dTime$x, dTime$y),
+                    aucROCR(dTime$x, dTime$y),
+                    aucAUC(dTime$x, dTime$y),
+                    aucCaret(dTime$x, dTime$y),
+                    pROC::auc(y~x, dTime, direction= '<'),
+                    times=10L
+                  )
+                  res$size <- si
+                  res
+                })
+res <- bind_rows(rlist)
 # select down columns and control units
 res %>% 
-  group_by(expr) %>%
+  group_by(expr,size) %>%
   mutate(time = time/1e9) %>% # move from NanoSeconds to seconds
   summarize(meanTimeS = mean(time), 
-            medianTimeS = median(time)) %>%
-  arrange(medianTimeS)
+            q1 = quantile(time, probs=0.25),
+            q2 = quantile(time, probs=0.5),
+            q3 = quantile(time, probs=0.75)) %>%
+  arrange(size,expr) -> plt
+plt$expr <- reorder(plt$expr, -plt$q2)
+
+# from: http://stackoverflow.com/a/22227846/6901725
+base_breaks <- function(n = 10){
+    function(x) {
+        axisTicks(log10(range(x, na.rm = TRUE)), log = TRUE, n = n)
+    }
+}
+
+ggplot(plt, aes(x=size, color=expr, fill=expr)) +
+  geom_point(aes(y=meanTimeS)) +
+  geom_line(aes(y=q2)) +
+  geom_ribbon(aes(ymin=q1, ymax=q3), alpha=0.3, color=NA) +
+  scale_x_log10(breaks= base_breaks()) + 
+  scale_y_log10(breaks= base_breaks()) +
+  ylab("time in seconds") +
+  ggtitle("run times by AUC package and data size")
 ```
 
-    ## # A tibble: 6 × 3
-    ##                                       expr   meanTimeS medianTimeS
-    ##                                     <fctr>       <dbl>       <dbl>
-    ## 1      ModelMetrics::auc(dTime$y, dTime$x) 0.003341404 0.003117684
-    ## 2          sigr::calcAUC(dTime$x, dTime$y) 0.005517463 0.004830997
-    ## 3               aucCaret(dTime$x, dTime$y) 0.027308378 0.023015966
-    ## 4                aucROCR(dTime$x, dTime$y) 0.044707984 0.044396452
-    ## 5                 aucAUC(dTime$x, dTime$y) 0.114997049 0.114913717
-    ## 6 pROC::auc(y ~ x, dTime, direction = "<") 1.963505125 1.963772872
+![](auc_files/figure-markdown_github/timing-1.png)
