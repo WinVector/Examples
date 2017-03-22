@@ -35,25 +35,12 @@ We are looking at the facts that
 and 
 `AUC(prediction, outcome) + AUC(prediction, !outcome) == 1`.
 
-```{r plotly}
-plotlyROC <- function(predictions, target, title) {
-  rocFrame <- WVPlots::graphROC(predictions, target)
-  plot_ly(rocFrame$pointGraph, x = ~FalsePositiveRate, y = ~TruePositiveRate, 
-        type='scatter', mode='lines+markers', hoverinfo= 'text', 
-        text= ~ paste('threshold:', model, 
-                      '</br>FalsePositiveRate:', FalsePositiveRate,
-                      '</br>TruePositiveRate:', TruePositiveRate)) %>%
-    layout(title= title)
-}
-
-plotlyROC(d$x, d$y, 'interactive version of base plot (when rendered to html)')
-```
-
 
 ```{r WVPlots}
 WVPlots::ROCPlot(d,'x','y',TRUE,'base plot')
 WVPlots::ROCPlot(d,'cx','y',TRUE,'complemented x')
 WVPlots::ROCPlot(d,'x','ny',TRUE,'negated y')
+WVPlots::ROCPlot(d,'cx','ny',TRUE,'complemented x and negated y')
 ```
 
 
@@ -206,7 +193,7 @@ base_breaks <- function(n = 10){
 }
 
 ggplot(plt, aes(x=size, color=expr, fill=expr)) +
-  geom_point(aes(y=meanTimeS)) +
+  geom_point(aes(y=q2)) +
   geom_line(aes(y=q2)) +
   geom_ribbon(aes(ymin=q1, ymax=q3), alpha=0.3, color=NA) +
   scale_x_log10(breaks= base_breaks()) + 
