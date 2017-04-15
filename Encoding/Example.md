@@ -1,3 +1,41 @@
+[`R`](https://cran.r-project.org) has "one-hot" encoding hidden it most of its modeling paths. Asking an `R` where one-hot encoding is used is like asking a fish where there is water; they can't point to it as it is everywhere.
+
+``` r
+dTrain <-  data.frame(x= c('a','b','b', 'c'),
+                      y= c(1, 2, 1, 2))
+summary(lm(y~x, data= dTrain))
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = y ~ x, data = dTrain)
+    ## 
+    ## Residuals:
+    ##          1          2          3          4 
+    ## -2.914e-16  5.000e-01 -5.000e-01  2.637e-16 
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)   1.0000     0.7071   1.414    0.392
+    ## xb            0.5000     0.8660   0.577    0.667
+    ## xc            1.0000     1.0000   1.000    0.500
+    ## 
+    ## Residual standard error: 0.7071 on 1 degrees of freedom
+    ## Multiple R-squared:    0.5,  Adjusted R-squared:   -0.5 
+    ## F-statistic:   0.5 on 2 and 1 DF,  p-value: 0.7071
+
+Much of the encoding in `R` is essentially based on "contrasts" implemented in `stats::model.matrix` (note: do not use `base::data.matrix` or use [hashing](http://www.win-vector.com/blog/2014/12/a-comment-on-preparing-data-for-classifiers/) before modeling- you might get away with it but they are not in general good technique).
+
+``` r
+data.matrix(dTrain)
+```
+
+    ##      x y
+    ## [1,] 1 1
+    ## [2,] 2 2
+    ## [3,] 2 1
+    ## [4,] 3 2
+
 Model matrix does not store its "one-hot" plan anywhere, so you can not safely assume the same formula applied to two different data sets (say train and application or test) are using compatible encodings!
 
 ``` r
@@ -31,13 +69,14 @@ stats::model.matrix(~x, dTest)
     ## attr(,"contrasts")$x
     ## [1] "contr.treatment"
 
-Let's try the Titanic data set to see encoding in action. `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).
+The above is critical when you are building a model and then later using the model on new data (be it cross-validation data, test date, or future application data). Many `R` users are not familiar with the above issue as encoding is hidden in model training, and encoding new data is stored as part of the model. `Python` `scikit-learn` users coming to `R` often ask where the one-hot encoder is (as it isn't discussed as much in `R` as it is in `scikit-learn`) and even supply a number of one-off packages "porting one-hot encoding to `R`."
+
+The main place an `R` user needs a proper encoder (and that is an encoder that stores its encoding plan in a conveniently re-usable form, which many of the "one-off" packages actually fail to do) is when using machine learning implementation that isn't completely `R`-centric. One such example is [`xgboost`](https://github.com/dmlc/xgboost) which requires (as is typical of machine learning in `scikit-learn`) data to already be encoded as a numeric matrix (instead of a heterogeneous structure such as a `data.frame`). The requires explicit conversion on the part of the `R` user, and many `R` users get it wrong (fail to store the encoding plan somewhere). To make this concrete let's work a simple example.
+
+Let's try the Titanic data set to see encoding in action. Note: we are not working hard on this example (as in adding extra variables derived from cabin layout, commonality of names, and other sophisticated feature transforms)- just plugging the obvious variable into `xgboost`. As we said: `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).
 
 ``` r
 library("titanic")
-library("xgboost")
-library("sigr")
-library("WVPlots")
 
 # select example data set
 data(titanic_train)
@@ -98,14 +137,18 @@ tooDetailed <- c("Ticket", "Cabin", "Name", "PassengerId")
 vars <- setdiff(colnames(titanic_train), c(outcome, tooDetailed))
 
 dTrain <- titanic_train
+```
 
+``` r
+library("xgboost")
+library("sigr")
+library("WVPlots")
 
-
-set.seed(3425656)
+set.seed(4623762)
 crossValPlan <- vtreat::kWayStratifiedY(nrow(dTrain), 
                                         10, 
                                         dTrain, 
-                                        outcome)
+                                        dTrain[[outcome]])
 
 evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
   preds <- rep(NA_real_, nrow(xMatrix))
@@ -130,20 +173,24 @@ evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
 }
 ```
 
-Our preferred way to encode data is to use the `vtreat` package either in the "no variables mode" shown below or in the "y aware" modes we usually teach.
+Our preferred way to encode data is to use the `vtreat` package either in the "no variables mode" shown below differing from the powerful "y aware" modes we usually teach (which are not needed on this dataset until we introduce high-cardinality categorical variables).
 
 ``` r
 library("vtreat")
-set.seed(3425656)
-tplan <- vtreat::designTreatmentsZ(dTrain, vars, verbose=FALSE)
+set.seed(4623762)
+tplan <- vtreat::designTreatmentsZ(dTrain, vars, 
+                                   minFraction= 0,
+                                   verbose=FALSE)
+# restrict to common varaibles types
+# see vignette('vtreatVariableTypes', package = 'vtreat') for details
 sf <- tplan$scoreFrame
-newvars <- sf$varName[sf$code %in% c('clean', 'lev', 'isBad')]
+newvars <- sf$varName[sf$code %in% c("lev", "clean", "isBAD")] 
 trainVtreat <- as.matrix(vtreat::prepare(tplan, dTrain, 
                                          varRestriction = newvars))
 print(dim(trainVtreat))
 ```
 
-    ## [1] 891  14
+    ## [1] 891  20
 
 ``` r
 print(colnames(trainVtreat))
@@ -151,9 +198,11 @@ print(colnames(trainVtreat))
 
     ##  [1] "Pclass_lev_x.1"   "Pclass_lev_x.2"   "Pclass_lev_x.3"  
     ##  [4] "Sex_lev_x.female" "Sex_lev_x.male"   "Age_clean"       
-    ##  [7] "SibSp_clean"      "Parch_lev_x.0"    "Parch_lev_x.1"   
-    ## [10] "Parch_lev_x.2"    "Fare_clean"       "Embarked_lev_x.C"
-    ## [13] "Embarked_lev_x.Q" "Embarked_lev_x.S"
+    ##  [7] "Age_isBAD"        "SibSp_clean"      "Parch_lev_x.0"   
+    ## [10] "Parch_lev_x.1"    "Parch_lev_x.2"    "Parch_lev_x.3"   
+    ## [13] "Parch_lev_x.4"    "Parch_lev_x.5"    "Parch_lev_x.6"   
+    ## [16] "Fare_clean"       "Embarked_lev_x."  "Embarked_lev_x.C"
+    ## [19] "Embarked_lev_x.Q" "Embarked_lev_x.S"
 
 ``` r
 dTrain$predVtreatZ <- evaluateModelingProcedure(trainVtreat,
@@ -164,7 +213,7 @@ sigr::permTestAUC(dTrain,
                   outcome, target)
 ```
 
-    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.02, p<1e-05)."
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.017, p<1e-05)."
 
 ``` r
 WVPlots::ROCPlot(dTrain, 
@@ -175,10 +224,10 @@ WVPlots::ROCPlot(dTrain,
 
 ![](Example_files/figure-markdown_github/vtreatZ-1.png)
 
-Model matrix can perform similar encoding when we only have a single data set.
+Model matrix can perform similar encoding *when* we only have a single data set.
 
 ``` r
-set.seed(3425656)
+set.seed(4623762)
 f <- paste('~ 0 + ', paste(vars, collapse = ' + '))
 # model matrix skips rows with NAs by default,
 # get control of this through an option
@@ -214,7 +263,7 @@ sigr::permTestAUC(dTrain,
                   outcome, target)
 ```
 
-    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.019, p<1e-05)."
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.87, s.d.=0.019, p<1e-05)."
 
 ``` r
 WVPlots::ROCPlot(dTrain, 
@@ -225,7 +274,7 @@ WVPlots::ROCPlot(dTrain,
 
 ![](Example_files/figure-markdown_github/modelmatrix-1.png)
 
-`caret` supplies an encoding functionality properly split between training (`caret::dummyVars`) and application (called `predict()`).
+`caret` also supplies an encoding functionality properly split between training (`caret::dummyVars()`) and application (called `predict()`).
 
 ``` r
 library("caret")
@@ -236,7 +285,7 @@ library("caret")
     ## Loading required package: ggplot2
 
 ``` r
-set.seed(3425656)
+set.seed(4623762)
 f <- paste('~', paste(vars, collapse = ' + '))
 encoder <- caret::dummyVars(as.formula(f), dTrain)
 trainCaret <- predict(encoder, dTrain)
@@ -263,7 +312,7 @@ sigr::permTestAUC(dTrain,
                   outcome, target)
 ```
 
-    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.019, p<1e-05)."
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.85, s.d.=0.017, p<1e-05)."
 
 ``` r
 WVPlots::ROCPlot(dTrain, 
@@ -274,17 +323,33 @@ WVPlots::ROCPlot(dTrain,
 
 ![](Example_files/figure-markdown_github/caret-1.png)
 
-You can also try y-aware encoding, but it isn't adding much in this situation.
+We usually forget to teach `vtreat::designTreatmentsZ()` as it is often dominated by the more powerful y-aware methods `vtreat` supplies (though not for this simple example). `vtreat::designTreatmentsZ` has a number of useful properties:
+
+-   Does not look at the outcome values, so does not require extra care in cross-validation.
+-   Saves its encoding, so can be used correctly on new data.
+
+The above two properties are shared with `caret::dummyVars()`. Additional features of `vtreat::designTreatmentsZ` (that differ from `caret::dummyVars()`'s choices) include:
+
+-   No `NA` values are passed through by `vtreat::prepare()`.
+-   `NA` presence is added as an additional informative column.
+-   A few derived columns (such as pooling of rare levels are made available).
+-   Rare dummy variables are pruned (under a user-controlled threshold) to prevent encoding explosion.
+-   Novel levels (levels that occur during test or application, but not during training) are deliberately passed through as "no training level activated" by `vtreat::prepare()` (`caret::dummyVars()` considers this an error).
+
+################## 
+
+You can also try y-aware encoding, but it isn't adding anything positive in this situation as we have not introduced any high-cardinality categorical variables into this modeling example (the main place y-aware encoding helps).
 
 ``` r
-set.seed(3425656)
+set.seed(4623762)
 # for y aware evaluation must cross-validate whole procedure, designing
 # on data you intend to score on can leak information.
 preds <- rep(NA_real_, nrow(dTrain))
 for(ci in crossValPlan) {
   cfe <- vtreat::mkCrossFrameCExperiment(dTrain[ci$train, , drop=FALSE], 
-                                     vars,
-                                     outcome, target)
+                                         minFraction= 0,
+                                         vars,
+                                         outcome, target)
   tplan <- cfe$treatments
   sf <- tplan$scoreFrame
   newvars <- sf$varName[sf$sig < 1/nrow(sf)]
@@ -315,7 +380,7 @@ sigr::permTestAUC(dTrain,
                   outcome, target)
 ```
 
-    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.85, s.d.=0.019, p<1e-05)."
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.84, s.d.=0.02, p<1e-05)."
 
 ``` r
 WVPlots::ROCPlot(dTrain, 

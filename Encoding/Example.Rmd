@@ -1,11 +1,29 @@
 ---
 title: "EncodingExample"
 author: "Win-Vector LLC"
-date: "4/14/2017"
+date: "4/15/2017"
 output:
   md_document:
     variant: markdown_github
 ---
+
+[`R`](https://cran.r-project.org) has "one-hot" encoding hidden it most of its modeling paths.  Asking an `R`
+where one-hot encoding is used is like asking a fish where there is water; they can't point to it as it is everywhere.
+
+```{r modelenc}
+dTrain <-  data.frame(x= c('a','b','b', 'c'),
+                      y= c(1, 2, 1, 2))
+summary(lm(y~x, data= dTrain))
+```
+
+Much of the encoding in `R` is essentially based on "contrasts" implemented in
+`stats::model.matrix` (note: do not use `base::data.matrix` or use [hashing](http://www.win-vector.com/blog/2014/12/a-comment-on-preparing-data-for-classifiers/) before
+modeling- you might get away with it but they are not in general 
+good technique).
+
+```{r datamatrix}
+data.matrix(dTrain)
+```
 
 Model matrix does not store its "one-hot" plan anywhere, so you can not
 safely assume the same formula applied to two different data sets (say train
@@ -20,13 +38,25 @@ dTest <- data.frame(x= c('b','c'),
 stats::model.matrix(~x, dTest)
 ```
 
-Let's try the Titanic data set to see encoding in action.  `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).
+The above is critical when you are building a model and then later using the model on new
+data (be it cross-validation data, test date, or future application data).  Many 
+`R` users are not familiar with the above issue as encoding is hidden in model training,
+and encoding new data is stored as part of the model.  `Python` `scikit-learn` users coming
+to `R` often ask where the one-hot encoder is (as it isn't discussed as much in `R` as it
+is in `scikit-learn`) and even supply a number of one-off packages "porting one-hot encoding to `R`."
+
+The main place an `R` user needs a proper encoder (and that is an encoder that stores its encoding
+plan in a conveniently re-usable form, which many of the "one-off" packages actually fail to do) is
+when using machine learning implementation that isn't completely `R`-centric.   One such example is
+[`xgboost`](https://github.com/dmlc/xgboost) which requires (as is typical of machine learning in `scikit-learn`)
+data to already be encoded as a numeric matrix (instead of a heterogeneous structure such as a `data.frame`).
+The requires explicit conversion on the part of the `R` user, and many `R` users get it wrong (fail to store the
+encoding plan somewhere).  To make this concrete let's work a simple example.
+
+Let's try the Titanic data set to see encoding in action.  Note: we are not working hard on this example (as in adding extra variables derived from cabin layout, commonality of names, and other sophisticated feature transforms)- just plugging the obvious variable into `xgboost`.  As we said: `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).
 
 ```{r modelingexample}
 library("titanic")
-library("xgboost")
-library("sigr")
-library("WVPlots")
 
 # select example data set
 data(titanic_train)
@@ -42,14 +72,18 @@ tooDetailed <- c("Ticket", "Cabin", "Name", "PassengerId")
 vars <- setdiff(colnames(titanic_train), c(outcome, tooDetailed))
 
 dTrain <- titanic_train
+```
 
+```{r setup}
+library("xgboost")
+library("sigr")
+library("WVPlots")
 
-
-set.seed(3425656)
+set.seed(4623762)
 crossValPlan <- vtreat::kWayStratifiedY(nrow(dTrain), 
                                         10, 
                                         dTrain, 
-                                        outcome)
+                                        dTrain[[outcome]])
 
 evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
   preds <- rep(NA_real_, nrow(xMatrix))
@@ -74,14 +108,18 @@ evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
 }
 ```
 
-Our preferred way to encode data is to use the `vtreat` package either in the "no variables mode" shown below or in the "y aware" modes we usually teach.
+Our preferred way to encode data is to use the `vtreat` package either in the "no variables mode" shown below differing from the powerful "y aware" modes we usually teach (which are not needed on this dataset until we introduce high-cardinality categorical variables).
 
 ```{r vtreatZ}
 library("vtreat")
-set.seed(3425656)
-tplan <- vtreat::designTreatmentsZ(dTrain, vars, verbose=FALSE)
+set.seed(4623762)
+tplan <- vtreat::designTreatmentsZ(dTrain, vars, 
+                                   minFraction= 0,
+                                   verbose=FALSE)
+# restrict to common varaibles types
+# see vignette('vtreatVariableTypes', package = 'vtreat') for details
 sf <- tplan$scoreFrame
-newvars <- sf$varName[sf$code %in% c('clean', 'lev', 'isBad')]
+newvars <- sf$varName[sf$code %in% c("lev", "clean", "isBAD")] 
 trainVtreat <- as.matrix(vtreat::prepare(tplan, dTrain, 
                                          varRestriction = newvars))
 print(dim(trainVtreat))
@@ -98,10 +136,10 @@ WVPlots::ROCPlot(dTrain,
                  'vtreat encoder performance')
 ```
 
-Model matrix can perform similar encoding when we only have a single data set.
+Model matrix can perform similar encoding *when* we only have a single data set.
 
 ```{r modelmatrix}
-set.seed(3425656)
+set.seed(4623762)
 f <- paste('~ 0 + ', paste(vars, collapse = ' + '))
 # model matrix skips rows with NAs by default,
 # get control of this through an option
@@ -129,11 +167,11 @@ WVPlots::ROCPlot(dTrain,
                  'model.matrix encoder performance')
 ```
 
-`caret` supplies an encoding functionality properly split between training (`caret::dummyVars`) and application (called `predict()`).
+`caret` also supplies an encoding functionality properly split between training (`caret::dummyVars()`) and application (called `predict()`).
 
 ```{r caret}
 library("caret")
-set.seed(3425656)
+set.seed(4623762)
 f <- paste('~', paste(vars, collapse = ' + '))
 encoder <- caret::dummyVars(as.formula(f), dTrain)
 trainCaret <- predict(encoder, dTrain)
@@ -152,17 +190,38 @@ WVPlots::ROCPlot(dTrain,
                  'caret encoder performance')
 ```
 
-You can also try y-aware encoding, but it isn't adding much in this situation.
+We usually forget to teach `vtreat::designTreatmentsZ()` as it is often dominated by the
+more powerful y-aware methods `vtreat` supplies (though not for this simple example).
+`vtreat::designTreatmentsZ` has a number of useful properties:
+
+  * Does not look at the outcome values, so does not require extra care in cross-validation.
+  * Saves its encoding, so can be used correctly on new data.
+
+The above two properties are shared with `caret::dummyVars()`.  Additional features 
+of `vtreat::designTreatmentsZ` (that differ from `caret::dummyVars()`'s choices) include:
+
+  * No `NA` values are passed through by `vtreat::prepare()`.
+  * `NA` presence is added as an additional informative column.
+  * A few derived columns (such as pooling of rare levels are made available).
+  * Rare dummy variables are pruned (under a user-controlled threshold) to prevent encoding explosion.
+  * Novel levels (levels that occur during test or application, but not during training) are deliberately passed through as "no training level activated" by `vtreat::prepare()` (`caret::dummyVars()` considers this an error).
+
+##################
+
+You can also try y-aware encoding, but it isn't adding anything positive in this situation as 
+we have not introduced any high-cardinality categorical variables into this modeling example
+(the main place y-aware encoding helps).
 
 ```{r vtreatC}
-set.seed(3425656)
+set.seed(4623762)
 # for y aware evaluation must cross-validate whole procedure, designing
 # on data you intend to score on can leak information.
 preds <- rep(NA_real_, nrow(dTrain))
 for(ci in crossValPlan) {
   cfe <- vtreat::mkCrossFrameCExperiment(dTrain[ci$train, , drop=FALSE], 
-                                     vars,
-                                     outcome, target)
+                                         minFraction= 0,
+                                         vars,
+                                         outcome, target)
   tplan <- cfe$treatments
   sf <- tplan$scoreFrame
   newvars <- sf$varName[sf$sig < 1/nrow(sf)]
