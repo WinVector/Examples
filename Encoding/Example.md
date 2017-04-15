@@ -1,4 +1,6 @@
-[`R`](https://cran.r-project.org) has "one-hot" encoding hidden it most of its modeling paths. Asking an `R` where one-hot encoding is used is like asking a fish where there is water; they can't point to it as it is everywhere.
+[`R`](https://cran.r-project.org) has "one-hot" encoding hidden in most of its modeling paths. Asking an `R` user where one-hot encoding is used is like asking a fish where there is water; they can't point to it as it is everywhere.
+
+For example we can see evidence of one-hot encoding in the variable names chosen by a linear regression:
 
 ``` r
 dTrain <-  data.frame(x= c('a','b','b', 'c'),
@@ -24,7 +26,7 @@ summary(lm(y~x, data= dTrain))
     ## Multiple R-squared:    0.5,  Adjusted R-squared:   -0.5 
     ## F-statistic:   0.5 on 2 and 1 DF,  p-value: 0.7071
 
-Much of the encoding in `R` is essentially based on "contrasts" implemented in `stats::model.matrix` (note: do not use `base::data.matrix` or use [hashing](http://www.win-vector.com/blog/2014/12/a-comment-on-preparing-data-for-classifiers/) before modeling- you might get away with it but they are not in general good technique).
+Much of the encoding in `R` is essentially based on "contrasts" implemented in `stats::model.matrix()` Note: do not use `base::data.matrix()` or use [hashing](http://www.win-vector.com/blog/2014/12/a-comment-on-preparing-data-for-classifiers/) before modeling- you might get away with them (especially with tree based methods), but they are [not in general good technique](http://www.win-vector.com/blog/2014/12/a-comment-on-preparing-data-for-classifiers/) as we show below:
 
 ``` r
 data.matrix(dTrain)
@@ -36,12 +38,13 @@ data.matrix(dTrain)
     ## [3,] 2 1
     ## [4,] 3 2
 
-Model matrix does not store its "one-hot" plan anywhere, so you can not safely assume the same formula applied to two different data sets (say train and application or test) are using compatible encodings!
+`stats::model.matrix()` does not store its one-hot plan in a convenient manner (it can be inferred by pulling the "`contrasts`" attribute plus examining the column names of the first encoding, but the levels identified are not conveniently represented). When directly applying `stats::model.matrix()` you can not safely assume the same formula applied to two different data sets (say train and application or test) are using the same encoding! We demonstrate this below:
 
 ``` r
 dTrain <- data.frame(x= c('a','b','c'), 
                      stringsAsFactors = FALSE)
-stats::model.matrix(~x, dTrain)
+encTrain <- stats::model.matrix(~x, dTrain)
+print(encTrain)
 ```
 
     ##   (Intercept) xb xc
@@ -69,16 +72,17 @@ stats::model.matrix(~x, dTest)
     ## attr(,"contrasts")$x
     ## [1] "contr.treatment"
 
-The above is critical when you are building a model and then later using the model on new data (be it cross-validation data, test date, or future application data). Many `R` users are not familiar with the above issue as encoding is hidden in model training, and encoding new data is stored as part of the model. `Python` `scikit-learn` users coming to `R` often ask where the one-hot encoder is (as it isn't discussed as much in `R` as it is in `scikit-learn`) and even supply a number of one-off packages "porting one-hot encoding to `R`."
+The above mal-coding can be a critical flaw when you are building a model and then later using the model on new data (be it cross-validation data, test data, or future application data). Many `R` users are not familiar with the above issue as encoding is hidden in model training, and how to encode new data is stored as part of the model. `Python` `scikit-learn` users coming to `R` often ask "where is the one-hot encoder" (as it isn't discussed as much in `R` as it is in `scikit-learn`) and even supply a number of (low quality) one-off packages "porting one-hot encoding to `R`."
 
-The main place an `R` user needs a proper encoder (and that is an encoder that stores its encoding plan in a conveniently re-usable form, which many of the "one-off" packages actually fail to do) is when using machine learning implementation that isn't completely `R`-centric. One such example is [`xgboost`](https://github.com/dmlc/xgboost) which requires (as is typical of machine learning in `scikit-learn`) data to already be encoded as a numeric matrix (instead of a heterogeneous structure such as a `data.frame`). The requires explicit conversion on the part of the `R` user, and many `R` users get it wrong (fail to store the encoding plan somewhere). To make this concrete let's work a simple example.
+The main place an `R` user needs a proper encoder (and that is an encoder that stores its encoding plan in a conveniently re-usable form, which many of the "one-off ported from `Python`" packages actually fail to do) is when using a machine learning implementation that isn't completely `R`-centric. One such system is [`xgboost`](https://github.com/dmlc/xgboost) which requires (as is typical of machine learning in `scikit-learn`) data to already be encoded as a numeric matrix (instead of a heterogeneous structure such as a `data.frame`). The requires explicit conversion on the part of the `R` user, and many `R` users get it wrong (fail to store the encoding plan somewhere). To make this concrete let's work a simple example.
 
-Let's try the Titanic data set to see encoding in action. Note: we are not working hard on this example (as in adding extra variables derived from cabin layout, commonality of names, and other sophisticated feature transforms)- just plugging the obvious variable into `xgboost`. As we said: `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).
+Let's try the Titanic data set to see encoding in action. Note: we are not working hard on this example (as in adding extra variables derived from cabin layout, commonality of names, and other sophisticated feature transforms)- just plugging the obvious variable into `xgboost`. As we said: `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model). Also note: differences observed in performance that are below the the sampling noise level should not be considered significant (e.g., all the methods demonstrated here performed about the same).
+
+We bring in our data:
 
 ``` r
+# set up example data set
 library("titanic")
-
-# select example data set
 data(titanic_train)
 str(titanic_train)
 ```
@@ -139,10 +143,13 @@ vars <- setdiff(colnames(titanic_train), c(outcome, tooDetailed))
 dTrain <- titanic_train
 ```
 
+And design our cross-validated modeling experiment:
+
 ``` r
 library("xgboost")
 library("sigr")
 library("WVPlots")
+library("vtreat")
 
 set.seed(4623762)
 crossValPlan <- vtreat::kWayStratifiedY(nrow(dTrain), 
@@ -173,10 +180,9 @@ evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
 }
 ```
 
-Our preferred way to encode data is to use the `vtreat` package either in the "no variables mode" shown below differing from the powerful "y aware" modes we usually teach (which are not needed on this dataset until we introduce high-cardinality categorical variables).
+Our preferred way to encode data is to use the [`vtreat`](https://CRAN.R-project.org/package=vtreat) package in the "no variables mode" shown below (differing from the powerful "y aware" modes we usually teach).
 
 ``` r
-library("vtreat")
 set.seed(4623762)
 tplan <- vtreat::designTreatmentsZ(dTrain, vars, 
                                    minFraction= 0,
@@ -274,7 +280,7 @@ WVPlots::ROCPlot(dTrain,
 
 ![](Example_files/figure-markdown_github/modelmatrix-1.png)
 
-`caret` also supplies an encoding functionality properly split between training (`caret::dummyVars()`) and application (called `predict()`).
+The `caret` package also supplies an encoding functionality properly split between training (`caret::dummyVars()`) and application (called `predict()`).
 
 ``` r
 library("caret")
@@ -336,9 +342,13 @@ The above two properties are shared with `caret::dummyVars()`. Additional featur
 -   Rare dummy variables are pruned (under a user-controlled threshold) to prevent encoding explosion.
 -   Novel levels (levels that occur during test or application, but not during training) are deliberately passed through as "no training level activated" by `vtreat::prepare()` (`caret::dummyVars()` considers this an error).
 
+The `vtreat` y-aware methods include proper nested modeling and y-aware dimension reduction.
+
+`vtreat` is designed "to always work" (always return a pure numeric data frame with no missing values). It also excells in "big data" situations where the statistics it can collect on high cardinality categorical variables can have a huge positive impact in modeling performance. In many cases `vtreat` works around problems that kill the analysis pipeline (such as discovering new variable levels durent test or applicaiton). We teach `vtreat` sore of "bimodally" in both a ["fire and forget" mode](http://www.win-vector.com/blog/2017/03/vtreat-prepare-data/) and a ["all the details on deck" mode](https://arxiv.org/abs/1611.09477) (suitable for formal citation). Either way `vtreat` can make your modeling prodedures stonger, more reliable, and easier.
+
 ################## 
 
-You can also try y-aware encoding, but it isn't adding anything positive in this situation as we have not introduced any high-cardinality categorical variables into this modeling example (the main place y-aware encoding helps).
+You could also try y-aware encoding, but it isn't adding anything positive in this situation as we have not introduced any high-cardinality categorical variables into this modeling example (the main place y-aware encoding helps).
 
 ``` r
 set.seed(4623762)
