@@ -1,0 +1,162 @@
+---
+title: "EncodingExample"
+author: "Win-Vector LLC"
+date: "4/14/2017"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+Model matrix does not store its "one-hot" plan anywhere, so you can not
+safely assume the same formula applied to two different data sets (say train
+and application or test) are using compatible encodings!
+
+```{r modelmatrixexample}
+dTrain <- data.frame(x= c('a','b','c'), 
+                     stringsAsFactors = FALSE)
+stats::model.matrix(~x, dTrain)
+dTest <- data.frame(x= c('b','c'), 
+                     stringsAsFactors = FALSE)
+stats::model.matrix(~x, dTest)
+```
+
+Let's try the Titanic data set to see encoding in action.  `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).
+
+```{r titanicexample}
+library("titanic")
+library("xgboost")
+library("WVPlots")
+
+data(titanic_train)
+str(titanic_train)
+summary(titanic_train)
+
+shouldBeCategorical <- c('PassengerId', 'Pclass', 'Parch')
+for(v in shouldBeCategorical) {
+  titanic_train[[v]] <- as.factor(titanic_train[[v]])
+}
+outcome <- 'Survived'
+tooDetailed <- c("Ticket", "Cabin", "Name", "PassengerId")
+vars <- setdiff(colnames(titanic_train), c(outcome, tooDetailed))
+
+set.seed(3425656)
+crossValPlan <- vtreat::kWayStratifiedY(nrow(titanic_train), 
+                                        10, 
+                                        titanic_train, 
+                                        outcome)
+
+evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
+  preds <- rep(NA_real_, nrow(xMatrix))
+  for(ci in crossValPlan) {
+    model <- xgboost(data= xMatrix[ci$train, ],
+                 label= outcomeV[ci$train],
+                 objective= 'binary:logistic',
+                 nrounds= 1000,
+                 verbose= 0)
+    preds[ci$app] <-  predict(model, xMatrix[ci$app, ])
+  }
+  preds
+}
+```
+
+Our preferred way to encode data is to use the `vtreat` package either in the "no variables mode" shown below or in the "y aware" modes we usually teach.
+
+```{r vtreatZ}
+library("vtreat")
+set.seed(3425656)
+tplan <- vtreat::designTreatmentsZ(titanic_train, vars, verbose=FALSE)
+sf <- tplan$scoreFrame
+newvars <- sf$varName[sf$code %in% c('clean', 'lev', 'isBad')]
+trainVtreat <- as.matrix(vtreat::prepare(tplan, titanic_train, 
+                                         varRestriction = newvars))
+print(dim(trainVtreat))
+print(colnames(trainVtreat))
+titanic_train$predVtreatZ <- evaluateModelingProcedure(trainVtreat,
+                                                       titanic_train[[outcome]]==1,
+                                                       crossValPlan)
+WVPlots::ROCPlot(titanic_train, 
+                 'predVtreatZ', 
+                 outcome, 1, 
+                 'vtreat encoder performance')
+```
+
+Model matrix can perform similar encoding when we only have a single data set.
+
+```{r modelmatrix}
+set.seed(3425656)
+f <- paste('~ 0 + ', paste(vars, collapse = ' + '))
+# model matrix skips rows with NAs by default,
+# get control of this through an option
+oldOpt <- getOption('na.action')
+options(na.action='na.pass')
+trainModelMatrix <- stats::model.matrix(as.formula(f), 
+                                  titanic_train)
+# note model.matrix does not conveniently store the encoding
+# plan, so you may run into difficulty if you were to encode
+# new data which didn't have all the levels seen in the training
+# data.
+options(na.action=oldOpt)
+print(dim(trainModelMatrix))
+print(colnames(trainModelMatrix))
+
+titanic_train$predModelMatrix <- evaluateModelingProcedure(trainModelMatrix,
+                                                     titanic_train[[outcome]]==1,
+                                                     crossValPlan)
+WVPlots::ROCPlot(titanic_train, 
+                 'predModelMatrix', 
+                 outcome, 1, 
+                 'model.matrix encoder performance')
+```
+
+`caret` supplies an encoding functionality properly split between training (`caret::dummyVars`) and application (called `predict()`).
+
+```{r caret}
+library("caret")
+set.seed(3425656)
+f <- paste('~', paste(vars, collapse = ' + '))
+encoder <- caret::dummyVars(as.formula(f), titanic_train)
+trainCaret <- predict(encoder, titanic_train)
+print(dim(trainCaret))
+print(colnames(trainCaret))
+
+titanic_train$predCaret <- evaluateModelingProcedure(trainCaret,
+                                                     titanic_train[[outcome]]==1,
+                                                     crossValPlan)
+WVPlots::ROCPlot(titanic_train, 
+                 'predCaret', 
+                 outcome, 1, 
+                 'caret encoder performance')
+```
+
+You can also try y-aware encoding, but it isn't adding much in this situation.
+
+```{r vtreatC}
+set.seed(3425656)
+# for y aware evaluation must cross-validate whole procedure, designing
+# on data you intend to score on can leak information.
+preds <- rep(NA_real_, nrow(titanic_train))
+for(ci in crossValPlan) {
+  cfe <- vtreat::mkCrossFrameCExperiment(titanic_train[ci$train, , drop=FALSE], 
+                                     vars,
+                                     outcome, 1)
+  tplan <- cfe$treatments
+  sf <- tplan$scoreFrame
+  newvars <- sf$varName[sf$sig < 1/nrow(sf)]
+  trainVtreat <- cfe$crossFrame[ , c(newvars, outcome), drop=FALSE]
+  model <- xgboost(data= as.matrix(trainVtreat[, newvars, drop=FALSE]),
+                   label= trainVtreat[[outcome]]==1,
+                   objective= 'binary:logistic',
+                   nrounds= 1000,
+                   verbose= 0)
+  appVtreat <- vtreat::prepare(tplan, 
+                               titanic_train[ci$app, , drop=FALSE], 
+                               varRestriction = newvars)
+  preds[ci$app] <-  predict(model,
+                            as.matrix(appVtreat[, newvars, drop=FALSE]))
+}
+titanic_train$predVtreatC <- preds
+WVPlots::ROCPlot(titanic_train, 
+                 'predVtreatC', 
+                 outcome, 1, 
+                 'vtreat y-aware encoder performance')
+```
