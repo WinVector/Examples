@@ -58,7 +58,7 @@ plan in a conveniently re-usable form, which many of the "one-off ported from `P
 when using a machine learning implementation that isn't completely `R`-centric.   One such system is
 [`xgboost`](https://github.com/dmlc/xgboost) which requires (as is typical of machine learning in `scikit-learn`)
 data to already be encoded as a numeric matrix (instead of a heterogeneous structure such as a `data.frame`).
-The requires explicit conversion on the part of the `R` user, and many `R` users get it wrong (fail to store the
+This requires explicit conversion on the part of the `R` user, and many `R` users get it wrong (fail to store the
 encoding plan somewhere).  To make this concrete let's work a simple example.
 
 Let's try the Titanic data set to see encoding in action.  Note: we are not working hard on this example (as in adding extra variables derived from cabin layout, commonality of names, and other sophisticated feature transforms)- just plugging the obvious variable into `xgboost`.  As we said: `xgboost` requires a numeric matrix for its input, so unlike many `R` modeling methods we must manage the data encoding ourselves (instead of leaving that to `R` which often hides the encoding plan in the trained model).  Also note: differences observed in performance that are below the the sampling noise level should not be considered significant (e.g., all the methods demonstrated here performed about the same).
@@ -219,7 +219,7 @@ of `vtreat::designTreatmentsZ` (that differ from `caret::dummyVars()`'s choices)
   
 The `vtreat` y-aware methods include proper nested modeling and y-aware dimension reduction.
 
-`vtreat` is designed "to always work" (always return a pure numeric data frame with no missing values).  It also excells in "big data" situations where the statistics it can collect on high cardinality categorical variables can have a huge positive impact in modeling performance.  In many cases `vtreat` works around problems that kill the analysis pipeline (such as discovering new variable levels durent test or applicaiton).  We teach `vtreat` sore of "bimodally" in both a ["fire and forget" mode](http://www.win-vector.com/blog/2017/03/vtreat-prepare-data/) and a ["all the details on deck" mode](https://arxiv.org/abs/1611.09477) (suitable for formal citation).  Either way `vtreat` can make your modeling prodedures stonger, more reliable, and easier.
+`vtreat` is designed "to always work" (always return a pure numeric data frame with no missing values).  It also excels in "big data" situations where the statistics it can collect on high cardinality categorical variables can have a huge positive impact in modeling performance.  In many cases `vtreat` works around problems that kill the analysis pipeline (such as discovering new variable levels during test or application).  We teach `vtreat` sore of "bimodally" in both a ["fire and forget" mode](http://www.win-vector.com/blog/2017/03/vtreat-prepare-data/) and a ["all the details on deck" mode](https://arxiv.org/abs/1611.09477) (suitable for formal citation).  Either way `vtreat` can make your modeling procedures stronger, more reliable, and easier.
 
 ##################
 
