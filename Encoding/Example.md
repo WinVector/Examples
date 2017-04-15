@@ -36,8 +36,10 @@ Let's try the Titanic data set to see encoding in action. `xgboost` requires a n
 ``` r
 library("titanic")
 library("xgboost")
+library("sigr")
 library("WVPlots")
 
+# select example data set
 data(titanic_train)
 str(titanic_train)
 ```
@@ -86,18 +88,23 @@ summary(titanic_train)
     ## 
 
 ``` r
+outcome <- 'Survived'
+target <- 1
 shouldBeCategorical <- c('PassengerId', 'Pclass', 'Parch')
 for(v in shouldBeCategorical) {
   titanic_train[[v]] <- as.factor(titanic_train[[v]])
 }
-outcome <- 'Survived'
 tooDetailed <- c("Ticket", "Cabin", "Name", "PassengerId")
 vars <- setdiff(colnames(titanic_train), c(outcome, tooDetailed))
 
+dTrain <- titanic_train
+
+
+
 set.seed(3425656)
-crossValPlan <- vtreat::kWayStratifiedY(nrow(titanic_train), 
+crossValPlan <- vtreat::kWayStratifiedY(nrow(dTrain), 
                                         10, 
-                                        titanic_train, 
+                                        dTrain, 
                                         outcome)
 
 evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
@@ -128,10 +135,10 @@ Our preferred way to encode data is to use the `vtreat` package either in the "n
 ``` r
 library("vtreat")
 set.seed(3425656)
-tplan <- vtreat::designTreatmentsZ(titanic_train, vars, verbose=FALSE)
+tplan <- vtreat::designTreatmentsZ(dTrain, vars, verbose=FALSE)
 sf <- tplan$scoreFrame
 newvars <- sf$varName[sf$code %in% c('clean', 'lev', 'isBad')]
-trainVtreat <- as.matrix(vtreat::prepare(tplan, titanic_train, 
+trainVtreat <- as.matrix(vtreat::prepare(tplan, dTrain, 
                                          varRestriction = newvars))
 print(dim(trainVtreat))
 ```
@@ -149,12 +156,20 @@ print(colnames(trainVtreat))
     ## [13] "Embarked_lev_x.Q" "Embarked_lev_x.S"
 
 ``` r
-titanic_train$predVtreatZ <- evaluateModelingProcedure(trainVtreat,
-                                                       titanic_train[[outcome]]==1,
+dTrain$predVtreatZ <- evaluateModelingProcedure(trainVtreat,
+                                                       dTrain[[outcome]]==target,
                                                        crossValPlan)
-WVPlots::ROCPlot(titanic_train, 
+sigr::permTestAUC(dTrain, 
+                  'predVtreatZ',
+                  outcome, target)
+```
+
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.02, p<1e-05)."
+
+``` r
+WVPlots::ROCPlot(dTrain, 
                  'predVtreatZ', 
-                 outcome, 1, 
+                 outcome, target, 
                  'vtreat encoder performance')
 ```
 
@@ -170,7 +185,7 @@ f <- paste('~ 0 + ', paste(vars, collapse = ' + '))
 oldOpt <- getOption('na.action')
 options(na.action='na.pass')
 trainModelMatrix <- stats::model.matrix(as.formula(f), 
-                                  titanic_train)
+                                  dTrain)
 # note model.matrix does not conveniently store the encoding
 # plan, so you may run into difficulty if you were to encode
 # new data which didn't have all the levels seen in the training
@@ -191,12 +206,20 @@ print(colnames(trainModelMatrix))
     ## [16] "EmbarkedS"
 
 ``` r
-titanic_train$predModelMatrix <- evaluateModelingProcedure(trainModelMatrix,
-                                                     titanic_train[[outcome]]==1,
+dTrain$predModelMatrix <- evaluateModelingProcedure(trainModelMatrix,
+                                                     dTrain[[outcome]]==target,
                                                      crossValPlan)
-WVPlots::ROCPlot(titanic_train, 
+sigr::permTestAUC(dTrain, 
+                  'predModelMatrix',
+                  outcome, target)
+```
+
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.019, p<1e-05)."
+
+``` r
+WVPlots::ROCPlot(dTrain, 
                  'predModelMatrix', 
-                 outcome, 1, 
+                 outcome, target, 
                  'model.matrix encoder performance')
 ```
 
@@ -215,8 +238,8 @@ library("caret")
 ``` r
 set.seed(3425656)
 f <- paste('~', paste(vars, collapse = ' + '))
-encoder <- caret::dummyVars(as.formula(f), titanic_train)
-trainCaret <- predict(encoder, titanic_train)
+encoder <- caret::dummyVars(as.formula(f), dTrain)
+trainCaret <- predict(encoder, dTrain)
 print(dim(trainCaret))
 ```
 
@@ -232,12 +255,20 @@ print(colnames(trainCaret))
     ## [16] "Embarked"  "EmbarkedC" "EmbarkedQ" "EmbarkedS"
 
 ``` r
-titanic_train$predCaret <- evaluateModelingProcedure(trainCaret,
-                                                     titanic_train[[outcome]]==1,
+dTrain$predCaret <- evaluateModelingProcedure(trainCaret,
+                                                     dTrain[[outcome]]==target,
                                                      crossValPlan)
-WVPlots::ROCPlot(titanic_train, 
+sigr::permTestAUC(dTrain, 
+                  'predCaret',
+                  outcome, target)
+```
+
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.86, s.d.=0.019, p<1e-05)."
+
+``` r
+WVPlots::ROCPlot(dTrain, 
                  'predCaret', 
-                 outcome, 1, 
+                 outcome, target, 
                  'caret encoder performance')
 ```
 
@@ -249,18 +280,18 @@ You can also try y-aware encoding, but it isn't adding much in this situation.
 set.seed(3425656)
 # for y aware evaluation must cross-validate whole procedure, designing
 # on data you intend to score on can leak information.
-preds <- rep(NA_real_, nrow(titanic_train))
+preds <- rep(NA_real_, nrow(dTrain))
 for(ci in crossValPlan) {
-  cfe <- vtreat::mkCrossFrameCExperiment(titanic_train[ci$train, , drop=FALSE], 
+  cfe <- vtreat::mkCrossFrameCExperiment(dTrain[ci$train, , drop=FALSE], 
                                      vars,
-                                     outcome, 1)
+                                     outcome, target)
   tplan <- cfe$treatments
   sf <- tplan$scoreFrame
   newvars <- sf$varName[sf$sig < 1/nrow(sf)]
   trainVtreat <- cfe$crossFrame[ , c(newvars, outcome), drop=FALSE]
   nrounds <- 1000
   cv <- xgb.cv(data= as.matrix(trainVtreat[, newvars, drop=FALSE]),
-                   label= trainVtreat[[outcome]]==1,
+                   label= trainVtreat[[outcome]]==target,
                    objective= 'binary:logistic',
                    nrounds= nrounds,
                    verbose= 0,
@@ -268,20 +299,28 @@ for(ci in crossValPlan) {
   #nrounds  <- which.min(cv$evaluation_log$test_rmse_mean) # regression
   nrounds  <- which.min(cv$evaluation_log$test_error_mean) # classification
   model <- xgboost(data= as.matrix(trainVtreat[, newvars, drop=FALSE]),
-                   label= trainVtreat[[outcome]]==1,
+                   label= trainVtreat[[outcome]]==target,
                    objective= 'binary:logistic',
                    nrounds= nrounds,
                    verbose= 0)
   appVtreat <- vtreat::prepare(tplan, 
-                               titanic_train[ci$app, , drop=FALSE], 
+                               dTrain[ci$app, , drop=FALSE], 
                                varRestriction = newvars)
   preds[ci$app] <-  predict(model,
                             as.matrix(appVtreat[, newvars, drop=FALSE]))
 }
-titanic_train$predVtreatC <- preds
-WVPlots::ROCPlot(titanic_train, 
+dTrain$predVtreatC <- preds
+sigr::permTestAUC(dTrain, 
+                  'predVtreatC',
+                  outcome, target)
+```
+
+    ## [1] "AUC test alt. hyp. AUC>AUC(permuted): (AUC=0.85, s.d.=0.019, p<1e-05)."
+
+``` r
+WVPlots::ROCPlot(dTrain, 
                  'predVtreatC', 
-                 outcome, 1, 
+                 outcome, target, 
                  'vtreat y-aware encoder performance')
 ```
 
