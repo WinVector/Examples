@@ -103,11 +103,20 @@ crossValPlan <- vtreat::kWayStratifiedY(nrow(titanic_train),
 evaluateModelingProcedure <- function(xMatrix, outcomeV, crossValPlan) {
   preds <- rep(NA_real_, nrow(xMatrix))
   for(ci in crossValPlan) {
-    model <- xgboost(data= xMatrix[ci$train, ],
+    nrounds <- 1000
+    cv <- xgb.cv(data= xMatrix[ci$train, ],
                  label= outcomeV[ci$train],
                  objective= 'binary:logistic',
-                 nrounds= 1000,
-                 verbose= 0)
+                 nrounds= nrounds,
+                 verbose= 0,
+                 nfold= 5)
+    #nrounds  <- which.min(cv$evaluation_log$test_rmse_mean) # regression
+    nrounds  <- which.min(cv$evaluation_log$test_error_mean) # classification
+    model <- xgboost(data= xMatrix[ci$train, ],
+                     label= outcomeV[ci$train],
+                     objective= 'binary:logistic',
+                     nrounds= nrounds,
+                     verbose= 0)
     preds[ci$app] <-  predict(model, xMatrix[ci$app, ])
   }
   preds
@@ -249,10 +258,19 @@ for(ci in crossValPlan) {
   sf <- tplan$scoreFrame
   newvars <- sf$varName[sf$sig < 1/nrow(sf)]
   trainVtreat <- cfe$crossFrame[ , c(newvars, outcome), drop=FALSE]
+  nrounds <- 1000
+  cv <- xgb.cv(data= as.matrix(trainVtreat[, newvars, drop=FALSE]),
+                   label= trainVtreat[[outcome]]==1,
+                   objective= 'binary:logistic',
+                   nrounds= nrounds,
+                   verbose= 0,
+                   nfold= 5)
+  #nrounds  <- which.min(cv$evaluation_log$test_rmse_mean) # regression
+  nrounds  <- which.min(cv$evaluation_log$test_error_mean) # classification
   model <- xgboost(data= as.matrix(trainVtreat[, newvars, drop=FALSE]),
                    label= trainVtreat[[outcome]]==1,
                    objective= 'binary:logistic',
-                   nrounds= 1000,
+                   nrounds= nrounds,
                    verbose= 0)
   appVtreat <- vtreat::prepare(tplan, 
                                titanic_train[ci$app, , drop=FALSE], 
