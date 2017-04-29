@@ -1,0 +1,76 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+A lot of customers ask what are a few good things to try while the `Hadoop` vendor is still around demonstrating the new `Spark` cluster (itself often a "proof of concept" or POC cluster).
+
+My currents answer is: load and view a few big files and also try to break the cluster to get the cleanup and recovery procedures while you are not in a panic.
+
+For the "big file" test I suggest having a large file in Hadoop and insisting on seeing something like `spark_write_parquet()` run on it and examing the top of the file through the `head()` command.  
+
+For breaking the cluster, I suggest asking the vendor if they are willing to experiment with you on this and not trying this on any cluster you don't intend to re-format.
+
+Let's break a practice cluster. Do not try this on a `Spark` cluster you are not willing to dispose of.  We are setting this to be a `local` cluster which is a transient cluster `Sparklyr` builds for us.  This transient cluster will go away when we shut down `RStudio`.
+
+
+```{r setup}
+library("sparklyr")
+packageVersion('sparklyr')
+library("dplyr")
+packageVersion('dplyr')
+
+
+# Please see the following video for installation help
+#  https://youtu.be/qnINvPqcRvE
+# spark_install(version = "2.1.0")
+
+# set up a local "practice" Spark instance
+sc <- spark_connect(master = "local",
+                    version = "2.1.0")
+#print(sc)
+```
+
+The following code (which is just one typo away from correct code, typo marked) ruins the transient cluster.  Not only does it throw an error but
+at the very least the connection to the cluster (in this case a temporary local cluster) is damaged (at least with version `1.0.136` , `Sparklyr 0.5.4`, and `dplyr 0.5.0`; all current as of 4-29-2017).
+
+After executing this the refresh "swirl" in the RStudio Spark environment browser throws a pop-up saying "Error: R code execution error" and the console reports the error "Error: Variables must be length 1 or 1. Problem variables: 'database'".
+
+```{r builddata, error=TRUE}
+# build notional data, but do not
+# leave it in the system (so we can
+# demonstrate loading).
+names <- vapply(1:3,
+                function(i) {
+                  di <- data.frame(x=runif(10))
+                  ni <- paste('data', sprintf("%02d", i), sep='_')
+                  hi <- copy_to(sc, di, 
+                                name= , # Typo error: left out ni,
+                                overwrite= TRUE)
+                  #spark_write_parquet(hi, path= ni)
+                  dplyr::db_drop_table(sc, ni)
+                  ni
+                },
+                character(1))
+```
+
+The connection or cluster seems to be damaged.
+
+```{r list, error=TRUE}
+DBI::dbListTables(sc)
+```
+
+Clearing the workspace and re-connecting to the `Spark` cluster does not fix the issue (technically this is a a re-used connection, not a fresh connection):
+
+```{r retry, error=TRUE}
+rm(list=ls())
+gc()
+sc <- spark_connect(master = "local",
+                    version = "2.1.0")
+DBI::dbListTables(sc)
+```
+
+The point is: you are going to make a mistake at least this bad when working with real data.  Rehearse how to deal with this before you attempt real work.
