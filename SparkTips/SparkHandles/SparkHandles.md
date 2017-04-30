@@ -113,38 +113,38 @@ lapply(tableCollection$handle,
     ## 
     ##         a_01
     ##        <dbl>
-    ## 1 0.49587995
-    ## 2 0.52825684
-    ## 3 0.67778846
-    ## 4 0.16127533
-    ## 5 0.04035134
-    ## 6 0.87350050
+    ## 1 0.17158271
+    ## 2 0.13397375
+    ## 3 0.02972442
+    ## 4 0.48990982
+    ## 5 0.83161956
+    ## 6 0.46294927
     ## 
     ## $data_02
     ## Source:   query [6 x 2]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
-    ##        a_02       b_02
-    ##       <dbl>      <dbl>
-    ## 1 0.3679410 0.62483751
-    ## 2 0.6697498 0.29327292
-    ## 3 0.8637405 0.05334572
-    ## 4 0.7298208 0.50183116
-    ## 5 0.4254752 0.69691922
-    ## 6 0.3087400 0.07590462
+    ##         a_02      b_02
+    ##        <dbl>     <dbl>
+    ## 1 0.96522497 0.3531768
+    ## 2 0.34316774 0.4826805
+    ## 3 0.95103905 0.7627694
+    ## 4 0.74743734 0.6508688
+    ## 5 0.05248657 0.4758940
+    ## 6 0.61457383 0.1363878
     ## 
     ## $data_03
     ## Source:   query [6 x 3]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
-    ##         a_03      b_03      c_03
-    ##        <dbl>     <dbl>     <dbl>
-    ## 1 0.96590152 0.7724133 0.2958221
-    ## 2 0.68143015 0.4223004 0.9090244
-    ## 3 0.13725659 0.2756238 0.2222813
-    ## 4 0.06594144 0.1379500 0.3834114
-    ## 5 0.33325658 0.2561333 0.1527903
-    ## 6 0.68229600 0.8385715 0.1413857
+    ##        a_03      b_03       c_03
+    ##       <dbl>     <dbl>      <dbl>
+    ## 1 0.6672825 0.1711225 0.96934094
+    ## 2 0.1435421 0.1724123 0.53129371
+    ## 3 0.7949332 0.8072997 0.05173393
+    ## 4 0.2137769 0.8585870 0.28063665
+    ## 5 0.5197736 0.2449442 0.57633105
+    ## 6 0.2170971 0.9882924 0.51546109
 
 ``` r
 # get dimensions of each table
@@ -186,10 +186,38 @@ print(columnMap)
     ## 6   data_03   c_03
 
 ``` r
+# we have experimental support for expanding columns 
+# in the dev version of replyr
+# https://github.com/WinVector/replyr
+if(requireNamespace('replyr', quietly = TRUE)) {
+  if(exists('expandColumn', 
+            where= asNamespace('replyr'), 
+            mode='function')) {
+    tableCollection %>% 
+      select(tableName, column) %>%
+      replyr::expandColumn('column',
+                           rowidSource= 'tableName',
+                           idxDest= 'columnNumber')
+  }
+}
+```
+
+    ## # A tibble: 6 × 3
+    ##   tableName columnNumber column
+    ##       <chr>        <int>  <chr>
+    ## 1   data_01            1   a_01
+    ## 2   data_02            1   a_02
+    ## 3   data_02            2   b_02
+    ## 4   data_03            1   a_03
+    ## 5   data_03            2   b_03
+    ## 6   data_03            3   c_03
+
+``` r
+spark_disconnect(sc)
 rm(list=ls())
 gc()
 ```
 
     ##          used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells 516567 27.6     940480 50.3   750400 40.1
-    ## Vcells 697256  5.4    1308461 10.0   928383  7.1
+    ## Ncells 524488 28.1     940480 50.3   750400 40.1
+    ## Vcells 719768  5.5    1308461 10.0   928517  7.1

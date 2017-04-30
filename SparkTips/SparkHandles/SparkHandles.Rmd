@@ -111,9 +111,26 @@ columnMap <- tableCollection %>%
   select(tableName, column) %>%
   unnest(column)
 print(columnMap)
+
+# we have experimental support for expanding columns 
+# in the dev version of replyr
+# https://github.com/WinVector/replyr
+if(requireNamespace('replyr', quietly = TRUE)) {
+  if(exists('expandColumn', 
+            where= asNamespace('replyr'), 
+            mode='function')) {
+    tableCollection %>% 
+      select(tableName, column) %>%
+      replyr::expandColumn('column',
+                           rowidSource= 'tableName',
+                           idxDest= 'columnNumber')
+  }
+}
+                       
 ```
 
 ```{r cleanup}
+spark_disconnect(sc)
 rm(list=ls())
 gc()
 ```
