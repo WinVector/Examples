@@ -2,7 +2,7 @@
 Introduction
 ============
 
-Beginning [`R`](https://cran.r-project.org) users often come to the false impression that the popular packages `dplyr` and `tidyr` are both unprecedented in `R` and [*sui generis*](https://en.wikipedia.org/wiki/Sui_generis) inventions (in that there might be no other reasonable way to get the same effects in `R`). These packages and their conventions are high-value, but they are results of evolution and implement a style of programming that has been available in `R` for some time. They "come from somewhere" not having burst on the scene fully armored with spear in hand.
+Beginning [`R`](https://cran.r-project.org) users often come to the false impression that the popular packages `dplyr` and `tidyr` are both all of `R` and [*sui generis*](https://en.wikipedia.org/wiki/Sui_generis) inventions (in that there might be unprecedented and there might no other reasonable way to get the same effects in `R`). These packages and their conventions are high-value, but they are results of evolution and implement a style of programming that has been available in `R` for some time. They evolved in a context, and did not burst on the scene fully armored with spear in hand.
 
 > ![](Birth_Athena_Tegner.jpg)
 >
@@ -16,7 +16,7 @@ We will start with a (very) brief outline of the primary capabilities of `dplyr`
 `dplyr`
 -------
 
-`dplyr` embodies the idea that data manipulation should be broken down into sequential transformations.
+`dplyr` embodies the idea that data manipulation should be broken down into a sequence of transformations.
 
 For example: in `R` if one wishes to add a column to a `data.frame` it is common to perform an "in-place" calculation as shown below:
 
@@ -70,7 +70,7 @@ print(d)
     ## 2  0
     ## 3  1
 
-The idea is to break your data transformation into the sequential application of a small number of "standard verbs" to produce your result. The verbs are "pipelined" or sequenced using the `magrittr` pipe "`%>%`" which can be thought of *as if* the following four statements were to be taken as equivalent:
+The idea is to break your task into the sequential application of a small number of "standard verbs" to produce your result. The verbs are "pipelined" or sequenced using the `magrittr` pipe "`%>%`" which can be thought of [*as if*](http://www.win-vector.com/blog/2017/05/why-to-use-wraprlet/) the following four statements were to be taken as equivalent:
 
 -   `f(x)`
 -   `x %>% f(.)`
