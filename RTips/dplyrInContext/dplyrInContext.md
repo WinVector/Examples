@@ -95,7 +95,7 @@ Fairly complex data transforms can be broken down in terms of these verbs (plus 
 
 Take for example a slightly extended version of one of the complex work-flows from [`dplyr 0.5.0` introduction vignette](https://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html).
 
-The goal is: plot the distribution of average flight arrive delays and flight departure (all averages grouped by date) for dates where either of these averages is at least 30 minutes. The first step is writing down the goal (as we did above), and with that clear someone familiar with `dplyr` can write a pipeline or work-flow as below (we have added the `gather` and `arrange` steps to extend the example a bit):
+The goal is: plot the distribution of average flight arrive delays and flight departure (all averages grouped by date) for dates where either of these averages is at least 30 minutes. The first step is writing down the goal (as we did above). With that clear, someone familiar with `dplyr` can write a pipeline or work-flow as below (we have added the `gather` and `arrange` steps to extend the example a bit):
 
 ``` r
 library("nycflights13")
@@ -168,8 +168,8 @@ We will get back to these substitutions after we discuss `tidyr`.
 `tidyr` is a smaller package than `dplyr` and it mostly supplies the following verbs:
 
 -   `complete()` (a bulk coalsece function)
--   `gather()` (a un-pivot operation)
--   `spread()` (a pivot operation)
+-   `gather()` (a un-pivot operation, related to `stats::reshape()`)
+-   `spread()` (a pivot operation, related to `stats::reshape()`)
 -   `nest()` (a hierarchical data operation)
 -   `unnest()` (opposite of `nest()`, closest analogy might be `base::unlist()`)
 -   `separate()` (split a column into multiple columns)
