@@ -2,7 +2,7 @@
 Introduction
 ============
 
-Beginning [`R`](https://cran.r-project.org) users often come to the false impression that the popular packages `dplyr` and `tidyr` are both all of `R` and [*sui generis*](https://en.wikipedia.org/wiki/Sui_generis) inventions (in that there might be unprecedented and there might no other reasonable way to get the same effects in `R`). These packages and their conventions are high-value, but they are results of evolution and implement a style of programming that has been available in `R` for some time. They evolved in a context, and did not burst on the scene fully armored with spear in hand.
+Beginning [`R`](https://cran.r-project.org) users often come to the false impression that the popular packages `dplyr` and `tidyr` are both all of `R` and [*sui generis*](https://en.wikipedia.org/wiki/Sui_generis) inventions (in that they might be unprecedented and there might no other reasonable way to get the same effects in `R`). These packages and their conventions are high-value, but they are results of evolution and implement a style of programming that has been available in `R` for some time. They evolved in a context, and did not burst on the scene fully armored with spear in hand.
 
 > ![](Birth_Athena_Tegner.jpg)
 >
@@ -151,7 +151,7 @@ ggplot(data= summary1, mapping=aes(x=delayMinutes, color=delayType)) +
 
 ![](dplyrInContext_files/figure-markdown_github/dplyrexample-1.png)
 
-Once you get used to the notation (become familiar with "`%>%`" and the verbs) the above can be read in small pieces and is considered fairly elegant. The warning message indicates it would have been better documentation to have the initial `select()` have been "`select(year, month, day, arr_delay, dep_delay)`" (in addition I feel that `group_by()` should always be writing as close to `summarise()` as is practical). We have intentionally (beyond minor extension) kept the example as is.
+Once you get used to the notation (become familiar with "`%>%`" and the verbs) the above can be read in small pieces and is considered fairly elegant. The warning message indicates it would have been better documentation to have the initial `select()` have been "`select(year, month, day, arr_delay, dep_delay)`" (in addition I feel that `group_by()` should always be written as close to `summarise()` as is practical). We have intentionally (beyond minor extension) kept the example as is.
 
 But `dplyr` is not un-precedented. It was preceeded by the `plyr` package and many of these transformational verbs actually have near equivalents in the `R` name-space `base::`:
 
@@ -220,6 +220,7 @@ flights ->.;
           varying = c('arr', 'dep'),
           timevar = 'delayType', 
           v.names = 'delayMinutes') ->.;
+  # convert reshape ordinals back to original names
   transform(., delayType = c('arr', 'dep')[delayType]) ->.;
   # make sure the data is in the order we expect
   .[order(.$year, .$month, .$day, .$delayType), , drop=FALSE] -> summary2
@@ -254,17 +255,23 @@ ggplot(data= summary2, mapping=aes(x=delayMinutes, color=delayType)) +
 
 ![](dplyrInContext_files/figure-markdown_github/baserexmple-1.png)
 
+``` r
+print(all.equal(as.data.frame(summary1),summary2))
+```
+
+    ## [1] TRUE
+
 The above work-flow is a bit rough, but the simple introduction of a few light-weight wrapper functions would clean up the code *immensely*.
 
 The ugliest bit is the by-hand replacement of the `group_by()`/`summarize()` pair, so that would be a good candidate to wrap in a function (either full [split/apply/combine](https://www.jstatsoft.org/article/view/v040i01) style or some specialization such as [grouped ordered apply](http://www.win-vector.com/blog/2016/12/organize-your-data-manipulation-in-terms-of-grouped-ordered-apply/)).
 
 The `reshape` step is also a bit rough, but I like the explicit specification of `idvars` (without these the person reading the code has little idea what the structure of the intended transform is). This is why even though I prefer the `tidyr::gather()` implementation to `stats::reshape()` I chose to wrap `tidyr::gather()` into a more teachable ["coordinatized data"](http://www.win-vector.com/blog/tag/coordinatized-data/) signature (the idea is: explicit grouping columns were a good idea for `summarize()`, and they are also a good idea for `pivot`/`un-pivot`).
 
-Also, the use of expressions such as "`.$year`" is probably not a bad thing, `dplyr` itself is introducing "data pronouns" to try and reduce ambiguity and would write some of these expressions as "`.data$year`". In fact the `dplyr` authors consider notations such as "`mtcars %>% select(.data["disp"])`" as [recommended notation](https://github.com/tidyverse/rlang/issues/116) (though at this point one is just wrapping the base-`R` version "`mtcars ->.; .[["disp"]]`" in a needless "`select()`").
+Also, the use of expressions such as "`.$year`" is probably not a bad thingl; `dplyr` itself is introducing "data pronouns" to try and reduce ambiguity and would write some of these expressions as "`.data$year`". In fact the `dplyr` authors consider notations such as "`mtcars %>% select(.data["disp"])`" as [recommended notation](https://github.com/tidyverse/rlang/issues/116) (though at this point one is just wrapping the base-`R` version "`mtcars ->.; .[["disp"]]`" in a needless "`select()`").
 
 Conclusion
 ==========
 
 `R` itself is very powerful. That is why additional powerful notations and powerful conventions can be built on top of `R`. `R` also, for all its warts, has always been a platform for statistics and analytics. So: for common data manipulation tasks you should expect `R` does in fact have some ready-made tools.
 
-It is often said "`R` is its packages", but I think that is missing how much `R` packages owe back to design decisions (and restraint) found in "base-`R`".
+It is often said "`R` is its packages", but I think that is missing how much `R` packages owe back to design decisions found in "base-`R`".
