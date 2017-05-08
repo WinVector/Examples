@@ -76,6 +76,7 @@ tableCollection$handle <-
 names(tableCollection$handle) <-
   tableCollection$name
 
+
 # look at the top of each table (also forces
 # evaluation!).
 lapply(tableCollection$handle, 
@@ -87,6 +88,7 @@ lapply(tableCollection$handle,
 ```
 
 ```{r cleanup}
+spark_disconnect(sc)
 rm(list=ls())
 gc()
 ```
