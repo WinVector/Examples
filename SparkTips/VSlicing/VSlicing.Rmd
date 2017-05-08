@@ -1,0 +1,31 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
+
+```{r}
+library("dplyr")
+library("sparklyr")
+sc <- spark_connect(master = "local", version = "2.0.0")
+d <- data.frame(y=c(1,1,1,0,0,0), x=c(1,1,0,0,0,1))
+dS <- copy_to(sc, d)
+model <- ml_logistic_regression(dS, y~x)
+preds <- sdf_predict(model, dS) 
+print(preds)
+pLocal <- collect(preds)
+
+# any idea how to perform this next step on preds
+# inside Spark?
+# Some direct Spark SQL query? (query optimizer rejects [1] notation)?
+# http://stackoverflow.com/questions/33220916/explode-transpose-multiple-columns-in-spark- 
+# http://stackoverflow.com/questions/43589762/sparklyr-how-to-explode-a-list-column-into-t 
+# help("ft_sql_transformer")? # not much to go on
+pLocal$prob <- vapply(pLocal$probability,
+                      function(ri) {ri[[2]]}, numeric(1))
+print(pLocal)
+```

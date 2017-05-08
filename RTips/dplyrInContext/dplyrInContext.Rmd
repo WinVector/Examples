@@ -1,0 +1,228 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
+
+Introduction
+=============
+
+Beginning [`R`](https://cran.r-project.org) users often come to the false impression that the popular packages `dplyr` and `tidyr` are both all of `R` and [*sui generis*](https://en.wikipedia.org/wiki/Sui_generis) inventions (in that they might be unprecedented and there might no other reasonable way to get the same effects in `R`).   These packages and their conventions are high-value, but they are results of evolution and implement a style of programming that has been available in `R` for some time.  They evolved in a context, and did not burst on the scene fully armored with spear in hand.
+
+> ![](Birth_Athena_Tegner.jpg)
+>
+> [Zeus giving birth to Athena, Rudolph Tegner](https://theartstack.com/artist/rudolph-tegner/zeus-giving-birth-athen)
+
+
+`dplyr` and `tidyr`
+=============
+
+We will start with a (very) brief outline of the primary capabilities of  `dplyr` and `tidyr`.
+
+`dplyr`
+-------------
+
+`dplyr` embodies the idea that data manipulation should be broken down into a sequence of transformations.
+
+For example: in `R` if one wishes to add a column to a `data.frame` it is common to perform an "in-place" calculation as shown below:
+
+```{r}
+d <- data.frame(x=c(-1,0,1))
+print(d)
+
+d$absx <- abs(d$x)
+print(d)
+```
+
+This has a couple of disadvantages:
+
+ * The original `d` has been altered, so re-starting calculations (say after we discover a mistake) can be inconvenient.
+ * We have to keep repeating the name of the `data.frame` which is not only verbose (which is not that important an issue), it is a chance to write the wrong name and introduce an error.
+ 
+The "`dplyr`-style" is to write the same code as follows:
+ 
+```{r}
+suppressPackageStartupMessages(library("dplyr"))
+d <- data.frame(x=c(-1,0,1))
+
+d %>% 
+  mutate(absx = abs(x))
+
+# confirm our original data frame is unaltered
+print(d)
+```
+
+The idea is to break your task into the sequential application of a small number of "standard verbs" to produce your result.  The verbs are "pipelined" or sequenced using the `magrittr` pipe "`%>%`" which can be thought of [*as if*](http://www.win-vector.com/blog/2017/05/why-to-use-wraprlet/) the following four statements were to be taken as equivalent:
+
+  * `f(x)`
+  * `x %>% f(.)`
+  * `x %>% f()`
+  * `x %>% f`
+  
+This lets one write a sequence of operations as a left to right pipeline (without explicit nesting of functions or use of numerous intermediate variables).  Some discussion can be found [here](https://cran.r-project.org/web/packages/magrittr/vignettes/magrittr.html).
+  
+
+Primary `dplyr` verbs include the "single table verbs" from the [`dplyr 0.5.0` introduction vignette](https://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html): 
+
+ * `filter()` (and `slice()`)
+ * `arrange()`
+ * `select()` (and `rename()`)
+ * `distinct()`
+ * `mutate()` (and `transmute()`)
+ * `summarise()`
+ * `sample_n()` (and `sample_frac()`)
+ 
+These have high-performance implementations (often in `C++` thanks to [Rcpp](http://www.rcpp.org)) and often have defaults that are safer and better for programming (not [changing types on single column data-frames](http://www.win-vector.com/blog/2015/01/r-bracket-is-a-bit-irregular/), not promoting strings to factors, and so-on).  Not really discussed in the `dplyr 0.5.0` introduction are the `dplyr::*join()` operators which are in fact critical components, but easily explained as standard relational joins (i.e., they are very important implementations, but not novel concepts).
+
+Fairly complex data transforms can be broken down in terms of these verbs (plus some verbs from `tidyr`):
+
+Take for example a slightly extended version of one of the complex work-flows from [`dplyr 0.5.0` introduction vignette](https://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html).
+
+The goal is: plot the distribution of average flight arrive delays and flight departure (all averages grouped by date) for dates where either of these averages is at least 30 minutes. The first step is writing down the goal (as we did above).  With that clear, someone familiar with `dplyr` can write a pipeline or work-flow as below (we have added the `gather` and `arrange` steps to extend the example a bit):
+
+```{r dplyrexample}
+library("nycflights13")
+suppressPackageStartupMessages(library("dplyr"))
+library("tidyr")
+library("ggplot2")
+
+summary1 <- flights %>%
+  group_by(year, month, day) %>%
+  select(arr_delay, dep_delay) %>%
+  summarise(
+    arr = mean(arr_delay, na.rm = TRUE),
+    dep = mean(dep_delay, na.rm = TRUE)
+  ) %>%
+  filter(arr > 30 | dep > 30) %>%
+  gather(key = delayType, 
+         value = delayMinutes, 
+         arr, dep) %>%
+  arrange(year, month, day, delayType)
+
+dim(summary1)
+head(summary1)
+ggplot(data= summary1, mapping=aes(x=delayMinutes, color=delayType)) + 
+  geom_density() + 
+  ggtitle(paste("distribution of mean arrival and departure delays by date",
+                "when either mean delay is at least 30 minutes", sep='\n'),
+          subtitle = "produced by: dplyr/magrittr/tidyr packages")
+```
+
+Once you get used to the notation (become familiar with "`%>%`" and the verbs) the above
+can be read in small pieces and is considered fairly elegant.  The warning message
+indicates it would have been better documentation to have the initial `select()`
+have been "` select(year, month, day, arr_delay, dep_delay)`" (in addition I feel that
+`group_by()` should always be written as close to `summarise()` as is practical). We
+have intentionally (beyond minor extension) kept the example as is.
+
+But `dplyr` is not un-precedented.  It was preceeded by the `plyr` package and many of these
+transformational verbs actually have near equivalents in the `R` name-space `base::`:
+
+ * `dplyr::filter()` ~ `base::subset()`
+ * `dplyr::arrange()` ~ `base::order()`
+ * `dplyr::select()` ~ `base::[]`
+ * `dplyr::mutate()` ~ `base::transform()`
+ 
+We will get back to these substitutions after we discuss `tidyr`.
+
+
+`tidyr`
+-------------
+
+`tidyr` is a smaller package than `dplyr` and it mostly supplies the following 
+verbs:
+
+ * `complete()` (a bulk coalsece function)
+ * `gather()` (a un-pivot operation, related to `stats::reshape()`)
+ * `spread()` (a pivot operation, related to `stats::reshape()`)
+ * `nest()` (a hierarchical data operation)
+ * `unnest()` (opposite of `nest()`, closest analogy might be `base::unlist()`)
+ * `separate()` (split a column into multiple columns)
+ * `extract()` (extract one column)
+ * `expand()` (complete an experimental design)
+
+The most famous `tidyr` verbs are `nest()`, `unnest()`, `gather()`, and `spread()`. We will discuss `gather()` here as it and `spread()` are incremental improvements on `stats::reshape()`.
+
+Note also the `tidyr` package was itself preceded by a package called `reshape2`, which supplied `pivot` capabilities in terms of verbs called `melt()` and `dcast()`.
+
+
+The flights example again
+=============
+
+It may come as a shock to some: but one can roughly "line for line"" translate the "nycflights13" example from the `dplyr 0.5.0` introduction into common methods from `base::` and `stats::` that reproduces the sequence of transforms style. I.e., transformational style is already available in "base- `R`".
+
+By "base-`R`" we mean `R` with only its standard name-spaces (`base`, `util`, `stats` and a few others).  Or "`R` out of the box" (before loading many packages). "base-`R`" is not meant as a pejorative term here.  *We* don't take "base-`R`" to in any way mean "old-`R`", but to denote the core of the language we have decided to use for many analytic tasks.
+
+What we are doing is separating the style of programming taught "as `dplyr`" (itself a signficant contribution) from the implementation (also a significant contribution).  We will replace the use of the `magrittr` pipe "`%>%`" with the [Bizarro Pipe](https://cran.r-project.org/web/packages/replyr/vignettes/BizarroPipe.html) (an effect available in base-`R`) to produce code that works without use of `dplyr`, `tidyr`, or `magrittr`.
+
+
+The translated example:
+
+```{r baserexmple}
+library("nycflights13")
+library("ggplot2")
+
+flights ->.;
+  # select columns we are working with
+  .[c('arr_delay', 'dep_delay', 'year', 'month', 'day')] ->.;
+  # simulate the group_by/summarize by split/lapply/rbind 
+  transform(., key=paste(year, month, day)) ->.;
+  split(., .$key) ->.;
+  lapply(., function(.) { 
+    transform(.,  arr = mean(arr_delay, na.rm = TRUE),
+                  dep = mean(dep_delay, na.rm = TRUE)
+              )[1, , drop=FALSE]
+  }) ->.;
+  do.call(rbind, .) ->.;
+  # filter to either delay at least 30 minutes
+  subset(., arr > 30 | dep > 30) ->.;
+  # select only columns we wish to present
+  .[c('year', 'month', 'day', 'arr', 'dep')] ->.;
+  # get the data into a long form
+  # can't easily use stack as (from help(stack)):
+  #  "stack produces a data frame with two columns""
+  reshape(., 
+          idvar = c('year','month','day'), 
+          direction = 'long', 
+          varying = c('arr', 'dep'),
+          timevar = 'delayType', 
+          v.names = 'delayMinutes') ->.;
+  # convert reshape ordinals back to original names
+  transform(., delayType = c('arr', 'dep')[delayType]) ->.;
+  # make sure the data is in the order we expect
+  .[order(.$year, .$month, .$day, .$delayType), , drop=FALSE] -> summary2
+
+# clean out the row names for clarity of presentation
+rownames(summary2) <- NULL
+
+dim(summary2)
+head(summary2)
+ggplot(data= summary2, mapping=aes(x=delayMinutes, color=delayType)) + 
+  geom_density() + 
+  ggtitle(paste("distribution of mean arrival and departure delays by date",
+                "when either mean delay is at least 30 minutes", sep='\n'),
+          subtitle = "produced by: base/stats packages plus Bizarro Pipe")
+
+print(all.equal(as.data.frame(summary1),summary2))
+```
+
+The above work-flow is a bit rough, but the simple introduction of a few light-weight wrapper functions would clean up the code *immensely*.  
+
+The ugliest bit is the by-hand replacement of the `group_by()`/`summarize()` pair, so that would be a good candidate to wrap in a function (either full [split/apply/combine](https://www.jstatsoft.org/article/view/v040i01) style or some specialization such as [grouped ordered apply](http://www.win-vector.com/blog/2016/12/organize-your-data-manipulation-in-terms-of-grouped-ordered-apply/)).  
+
+The `reshape` step is also a bit rough, but I like the explicit specification of `idvars` (without these the person reading the code has little idea what the structure of the intended transform is). This is why even though I prefer the `tidyr::gather()` implementation to `stats::reshape()` I chose to wrap `tidyr::gather()` into a more teachable ["coordinatized data"](http://www.win-vector.com/blog/tag/coordinatized-data/) signature (the idea is: explicit grouping columns were a good idea for `summarize()`, and they are also a good idea for `pivot`/`un-pivot`).
+
+Also, the use of expressions such as "`.$year`" is probably not a bad thingl; `dplyr` itself is introducing "data pronouns" to try and reduce ambiguity and would write some of these expressions as "`.data$year`".  In fact the `dplyr` authors consider notations such as "`mtcars %>% select(.data["disp"])`" as [recommended notation](https://github.com/tidyverse/rlang/issues/116) (though at this point one is just wrapping the base-`R` version "`mtcars ->.; .[["disp"]]`" in a needless "`select()`").
+
+Conclusion
+=============
+
+`R` itself is very powerful.  That is why additional powerful notations and powerful conventions can be built on top of `R`.  `R` also, for all its warts, has always been a platform for statistics and analytics. So: for common data manipulation tasks you should expect `R` does in fact have some ready-made tools.  
+
+It is often said "`R` is its packages", but I think that is missing how much `R` packages owe back to design decisions found in "base-`R`".
+
+

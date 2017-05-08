@@ -14,7 +14,7 @@ library("sparklyr")
 #packageVersion('sparklyr')
 library("dplyr")
 #packageVersion('dplyr')
-
+library("tidyr")
 
 # Please see the following video for installation help
 #  https://youtu.be/qnINvPqcRvE
@@ -30,10 +30,20 @@ sc <- spark_connect(master = "local",
 # build notional data, but do not
 # leave it in the system (so we can
 # demonstrate loading).
-names <- vapply(1:3,
+tableNames <- vapply(1:3,
                 function(i) {
-                  di <- data.frame(x=runif(10))
-                  ni <- paste('data', sprintf("%02d", i), sep='_')
+                  di <- data.frame(x= runif(10))
+                  colnames(di) <- letters[[1]]
+                  for(j in seq_len(i-1)) {
+                    di[[letters[[j+1]]]] <- runif(nrow(di))
+                  }
+                  colnames(di) <-
+                    paste(colnames(di),
+                          sprintf("%02d", i), 
+                          sep='_')
+                  ni <- paste('data',
+                              sprintf("%02d", i),
+                              sep='_')
                   hi <- copy_to(sc, di, 
                                 name= ni,
                                 overwrite= TRUE)
@@ -50,12 +60,12 @@ names <- vapply(1:3,
 # to the Spark cluster.
 # Could keep handles at this point, 
 #  or get them with:
-#   DBI::dbListTables(sc)/dplyr::tbl(sc, namei)
-tableCollection <- data_frame(name= names)
+#   DBI::dbListTables(sc)/dplyr::tbl(sc, tableNamei)
+tableCollection <- data_frame(tableName= tableNames)
 tableCollection$handle <- lapply(
-  tableCollection$name,
-  function(namei) {
-    spark_read_parquet(sc, namei, namei)
+  tableCollection$tableName,
+  function(tableNamei) {
+    spark_read_parquet(sc, tableNamei, tableNamei)
   }
 )
 ```
@@ -63,18 +73,21 @@ tableCollection$handle <- lapply(
 ```{r finddata}
 # or if we want to grab all tables
 # sparklyr already knows about:
-tableCollection <- data_frame(name = DBI::dbListTables(sc))
+tableCollection <- data_frame(tableName = DBI::dbListTables(sc))
 tableCollection$handle <-
-  lapply(tableCollection$name,
-         function(namei) {
-          dplyr::tbl(sc, namei)
+  lapply(tableCollection$tableName,
+         function(tableNamei) {
+          dplyr::tbl(sc, tableNamei)
          })
 ```
 
 ```{r workwithdata}
-# and names to handles for convenience
+# convenient printing
+print(tableCollection)
+
+# and tableNames to handles for convenience
 names(tableCollection$handle) <-
-  tableCollection$name
+  tableCollection$tableName
 
 
 # look at the top of each table (also forces
@@ -85,6 +98,36 @@ lapply(tableCollection$handle,
 # get dimensions of each table
 lapply(tableCollection$handle, 
        dim)
+```
+
+```{r columns}
+tableCollection$column <- 
+  lapply(tableCollection$handle,
+         colnames)
+
+# tidyr ‘0.6.1’ help(unnest) says:
+# "Each row must have the same number of entries."
+# but that seem not to be an actual constraint.
+columnMap <- tableCollection %>% 
+  select(tableName, column) %>%
+  unnest(column)
+print(columnMap)
+
+# we have experimental support for expanding columns 
+# in the dev version of replyr
+# https://github.com/WinVector/replyr
+if(requireNamespace('replyr', quietly = TRUE)) {
+  if(exists('expandColumn', 
+            where= asNamespace('replyr'), 
+            mode='function')) {
+    tableCollection %>% 
+      select(tableName, column) %>%
+      replyr::expandColumn('column',
+                           rowidSource= 'tableName',
+                           idxDest= 'columnNumber')
+  }
+}
+                       
 ```
 
 ```{r cleanup}
