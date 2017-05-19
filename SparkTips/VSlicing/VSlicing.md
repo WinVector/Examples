@@ -2,6 +2,12 @@
 ``` r
 # devtools::install_github("rstudio/sparklyr")
 suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+```
+
+    ## [1] '0.6.0'
+
+``` r
 library("sparklyr")
 packageVersion("sparklyr")
 ```
@@ -22,7 +28,7 @@ preds <- sdf_predict(model, dS)
 print(preds)
 ```
 
-    ## # Source:   table<sparklyr_tmp_355e2a7dcfaa> [?? x 5]
+    ## # Source:   table<sparklyr_tmp_394a2108953e> [?? x 5]
     ## # Database: spark_connection
     ##       y     x rawPrediction probability prediction
     ##   <dbl> <dbl>        <list>      <list>      <dbl>
@@ -63,7 +69,7 @@ sdf_separate_column(
 )
 ```
 
-    ## # Source:   table<sparklyr_tmp_355e29ccb7b1> [?? x 7]
+    ## # Source:   table<sparklyr_tmp_394a3a7e2a63> [?? x 7]
     ## # Database: spark_connection
     ##       y     x rawPrediction probability prediction        p1        p2
     ##   <dbl> <dbl>        <list>      <list>      <dbl>     <dbl>     <dbl>
@@ -81,5 +87,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  697129 37.3    1168576 62.5   940480 50.3
-    ## Vcells 1168663  9.0    2060183 15.8  1365679 10.5
+    ## Ncells  697142 37.3    1168576 62.5   940480 50.3
+    ## Vcells 1168649  9.0    2060183 15.8  1363404 10.5

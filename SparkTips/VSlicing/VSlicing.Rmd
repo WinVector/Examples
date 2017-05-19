@@ -11,6 +11,7 @@ output:
 ```{r}
 # devtools::install_github("rstudio/sparklyr")
 suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
 library("sparklyr")
 packageVersion("sparklyr")
 
