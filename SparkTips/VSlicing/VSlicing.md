@@ -1,22 +1,15 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 ``` r
-library("dplyr")
+# devtools::install_github("rstudio/sparklyr")
+suppressPackageStartupMessages(library("dplyr"))
+library("sparklyr")
+packageVersion("sparklyr")
 ```
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
+    ## [1] '0.5.4.9003'
 
 ``` r
-library("sparklyr")
-sc <- spark_connect(master = "local", version = "2.0.0")
+sc <- spark_connect(master = "local", version = "2.0.2")
 d <- data.frame(y=c(1,1,1,0,0,0), x=c(1,1,0,0,0,1))
 dS <- copy_to(sc, d)
 model <- ml_logistic_regression(dS, y~x)
@@ -29,9 +22,8 @@ preds <- sdf_predict(model, dS)
 print(preds)
 ```
 
-    ## Source:   query [6 x 5]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
+    ## # Source:   table<sparklyr_tmp_355e2a7dcfaa> [?? x 5]
+    ## # Database: spark_connection
     ##       y     x rawPrediction probability prediction
     ##   <dbl> <dbl>        <list>      <list>      <dbl>
     ## 1     1     1     <dbl [2]>   <dbl [2]>          1
@@ -42,20 +34,14 @@ print(preds)
     ## 6     0     1     <dbl [2]>   <dbl [2]>          1
 
 ``` r
+# extract the probablity locally
 pLocal <- collect(preds)
-
-# any idea how to perform this next step on preds
-# inside Spark?
-# Some direct Spark SQL query? (query optimizer rejects [1] notation)?
-# http://stackoverflow.com/questions/33220916/explode-transpose-multiple-columns-in-spark- 
-# http://stackoverflow.com/questions/43589762/sparklyr-how-to-explode-a-list-column-into-t 
-# help("ft_sql_transformer")? # not much to go on
 pLocal$prob <- vapply(pLocal$probability,
                       function(ri) {ri[[2]]}, numeric(1))
 print(pLocal)
 ```
 
-    ## # A tibble: 6 × 6
+    ## # A tibble: 6 x 6
     ##       y     x rawPrediction probability prediction      prob
     ##   <dbl> <dbl>        <list>      <list>      <dbl>     <dbl>
     ## 1     1     1     <dbl [2]>   <dbl [2]>          1 0.6666667
@@ -64,3 +50,36 @@ print(pLocal)
     ## 4     0     0     <dbl [2]>   <dbl [2]>          0 0.3333333
     ## 5     0     0     <dbl [2]>   <dbl [2]>          0 0.3333333
     ## 6     0     1     <dbl [2]>   <dbl [2]>          1 0.6666667
+
+``` r
+# extract the probablity remotely
+# Solution in dev-version of Sparklyr:
+#  https://github.com/rstudio/sparklyr/issues/648
+#  https://github.com/rstudio/sparklyr/pull/667
+sdf_separate_column(
+    preds,
+    "probability",
+    list("p1"= 1, "p2" = 2)
+)
+```
+
+    ## # Source:   table<sparklyr_tmp_355e29ccb7b1> [?? x 7]
+    ## # Database: spark_connection
+    ##       y     x rawPrediction probability prediction        p1        p2
+    ##   <dbl> <dbl>        <list>      <list>      <dbl>     <dbl>     <dbl>
+    ## 1     1     1     <dbl [2]>   <dbl [2]>          1 0.3333333 0.6666667
+    ## 2     1     1     <dbl [2]>   <dbl [2]>          1 0.3333333 0.6666667
+    ## 3     1     0     <dbl [2]>   <dbl [2]>          0 0.6666667 0.3333333
+    ## 4     0     0     <dbl [2]>   <dbl [2]>          0 0.6666667 0.3333333
+    ## 5     0     0     <dbl [2]>   <dbl [2]>          0 0.6666667 0.3333333
+    ## 6     0     1     <dbl [2]>   <dbl [2]>          1 0.3333333 0.6666667
+
+``` r
+spark_disconnect(sc)
+rm(list=ls())
+gc()
+```
+
+    ##           used (Mb) gc trigger (Mb) max used (Mb)
+    ## Ncells  697129 37.3    1168576 62.5   940480 50.3
+    ## Vcells 1168663  9.0    2060183 15.8  1365679 10.5
