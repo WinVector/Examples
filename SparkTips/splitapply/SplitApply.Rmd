@@ -1,0 +1,68 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r localExample}
+suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+packageVersion("sparklyr")
+
+# local data example of 
+# dplyr::group_by() %>% dplyr::do()
+f <- . %>% 
+  arrange(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width) %>%
+  head(2)
+
+iris %>% 
+  group_by(Species) %>% 
+  do(f(.))
+```
+
+
+```{r Spark}
+# try it again on Spark
+
+sc <- sparklyr::spark_connect(version='2.0.2', 
+                              master = "local")
+diris <- copy_to(sc, iris, 'diris')
+head(diris)
+
+# function with column names matching Spark column names
+f2 <- . %>% 
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  head(2)
+
+diris %>% 
+  group_by(Species) %>% 
+  do(f2(.))
+```
+
+```{r replyr}
+# try it with replyr
+# devtools::install_github('WinVector/replyr')
+library("replyr")
+packageVersion("replyr")
+
+# gapply extract method, only appropriate for small number of
+# groups, could use 'group_by', but that requires f2
+# respect groups (head() does not and slice() isn't available
+# on this verion of Spark/Sparklyr)
+diris %>% 
+  gapply('Species', partitionMethod='extract', f2)
+
+# Or in separate stages
+diris %>% 
+  replyr_split('Species') %>%
+  lapply(f2) %>%
+  replyr_bind_rows()
+```
+
+```{r cleanup}
+sparklyr::spark_disconnect(sc)
+rm(list=ls())
+gc()
+```
