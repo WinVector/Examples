@@ -116,11 +116,15 @@ f2s <- . %>%
 
 diris %>% 
   group_by(Species) %>% 
-  do(f2s(.)) %>% 
-  presentg()
+  do(f2s(.))
 ```
 
-    ## Error in eval(x$expr, data, x$env): object 'Sepal_Length' not found
+    ## # A tibble: 3 x 2
+    ##      Species     V2
+    ##        <chr> <list>
+    ## 1 versicolor <NULL>
+    ## 2  virginica <NULL>
+    ## 3     setosa <NULL>
 
 ``` r
 diris %>%
@@ -140,7 +144,7 @@ library("replyr")
 packageVersion("replyr")
 ```
 
-    ## [1] '0.3.902'
+    ## [1] '0.3.2'
 
 ``` r
 # gapply extract method, only appropriate for small number of
@@ -236,5 +240,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  696292 37.2    1168576 62.5  1168576 62.5
-    ## Vcells 1326029 10.2    2552219 19.5  1885368 14.4
+    ## Ncells  698119 37.3    1168576 62.5  1168576 62.5
+    ## Vcells 1330852 10.2    2552219 19.5  1869081 14.3

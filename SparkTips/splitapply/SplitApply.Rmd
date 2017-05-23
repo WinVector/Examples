@@ -74,8 +74,7 @@ f2s <- . %>%
 
 diris %>% 
   group_by(Species) %>% 
-  do(f2s(.)) %>% 
-  presentg()
+  do(f2s(.))
 
 diris %>%
   group_by(Species) %>%
