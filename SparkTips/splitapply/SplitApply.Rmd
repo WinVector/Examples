@@ -11,6 +11,12 @@ suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 packageVersion("sparklyr")
 
+# function to order columns and rows for unambiguous presentation of results
+present <- . %>%
+  ungroup() %>%
+  select(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width, Species) %>%
+  arrange(Species, Sepal.Length, Sepal.Width, Petal.Length, Petal.Width)
+
 # local data example of 
 # dplyr::group_by() %>% dplyr::do()
 f <- . %>% 
@@ -19,17 +25,25 @@ f <- . %>%
 
 iris %>% 
   group_by(Species) %>% 
-  do(f(.))
+  do(f(.)) %>% 
+  present()
 ```
 
+Notice on spark the same code return empty data.
 
-```{r Spark}
+```{r Spark, error=TRUE}
 # try it again on Spark
 
 sc <- sparklyr::spark_connect(version='2.0.2', 
                               master = "local")
 diris <- copy_to(sc, iris, 'diris')
 head(diris)
+
+# function to order columns and rows for unambiguous presentation of results
+presentg <- . %>%
+  ungroup() %>%
+  select(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width, Species) %>%
+  arrange(Species, Sepal_Length, Sepal_Width, Petal_Length, Petal_Width)
 
 # function with column names matching Spark column names
 f2 <- . %>% 
@@ -40,6 +54,36 @@ diris %>%
   group_by(Species) %>% 
   do(f2(.))
 ```
+
+If the function we are applying is compatible with `dplyr::group_by()`, then we can try a direct application of it per group in as follows.  In this case it does not work, as `head()` is not "group aware":
+
+```{r groubyf, error=TRUE}
+diris %>%
+  group_by(Species) %>%
+  f2 %>%
+  presentg()
+```
+
+
+`dplyr::slice()` also fails.
+
+```{r SparkSlice, error=TRUE}
+f2s <- . %>% 
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  slice(1:2)
+
+diris %>% 
+  group_by(Species) %>% 
+  do(f2s(.)) %>% 
+  presentg()
+
+diris %>%
+  group_by(Species) %>%
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  slice(1:2)
+```
+
+For a moderate number of groups `replyr::replyr_split()` can do the job.
 
 ```{r replyr}
 # try it with replyr
@@ -52,14 +96,30 @@ packageVersion("replyr")
 # respect groups (head() does not and slice() isn't available
 # on this verion of Spark/Sparklyr)
 diris %>% 
-  gapply('Species', partitionMethod='extract', f2)
+  gapply('Species', partitionMethod='extract', f2) %>%
+  presentg()
 
 # Or in separate stages
 diris %>% 
   replyr_split('Species') %>%
   lapply(f2) %>%
-  replyr_bind_rows()
+  replyr_bind_rows() %>%
+  presentg()
 ```
+
+For a large number of groups you must find a way to write your transform entirely in "group_by" compatible verbs.  For this application it appears `row_number()` and `filter()` can be used to re-write our function.
+
+```{r rownumber}
+f3g <- . %>%
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  filter(between(row_number(), 1, 2))
+
+diris %>% 
+  group_by(Species) %>% 
+  f3g() %>%
+  presentg()
+```
+
 
 ```{r cleanup}
 sparklyr::spark_disconnect(sc)

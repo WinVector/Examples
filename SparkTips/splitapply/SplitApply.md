@@ -13,6 +13,12 @@ packageVersion("sparklyr")
     ## [1] '0.5.4'
 
 ``` r
+# function to order columns and rows for unambiguous presentation of results
+present <- . %>%
+  ungroup() %>%
+  select(Sepal.Length, Sepal.Width, Petal.Length, Petal.Width, Species) %>%
+  arrange(Species, Sepal.Length, Sepal.Width, Petal.Length, Petal.Width)
+
 # local data example of 
 # dplyr::group_by() %>% dplyr::do()
 f <- . %>% 
@@ -21,12 +27,10 @@ f <- . %>%
 
 iris %>% 
   group_by(Species) %>% 
-  do(f(.))
+  do(f(.)) %>% 
+  present()
 ```
 
-    ## Source: local data frame [6 x 5]
-    ## Groups: Species [3]
-    ## 
     ## # A tibble: 6 x 5
     ##   Sepal.Length Sepal.Width Petal.Length Petal.Width    Species
     ##          <dbl>       <dbl>        <dbl>       <dbl>     <fctr>
@@ -36,6 +40,8 @@ iris %>%
     ## 4          5.0         2.0          3.5         1.0 versicolor
     ## 5          4.9         2.5          4.5         1.7  virginica
     ## 6          5.6         2.8          4.9         2.0  virginica
+
+Notice on spark the same code return empty data.
 
 ``` r
 # try it again on Spark
@@ -60,6 +66,12 @@ head(diris)
     ## 6          5.4         3.9          1.7         0.4  setosa
 
 ``` r
+# function to order columns and rows for unambiguous presentation of results
+presentg <- . %>%
+  ungroup() %>%
+  select(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width, Species) %>%
+  arrange(Species, Sepal_Length, Sepal_Width, Petal_Length, Petal_Width)
+
 # function with column names matching Spark column names
 f2 <- . %>% 
   arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
@@ -77,6 +89,50 @@ diris %>%
     ## 2  virginica <NULL>
     ## 3     setosa <NULL>
 
+If the function we are applying is compatible with `dplyr::group_by()`, then we can try a direct application of it per group in as follows. In this case it does not work, as `head()` is not "group aware":
+
+``` r
+diris %>%
+  group_by(Species) %>%
+  f2 %>%
+  presentg()
+```
+
+    ## Source:   query [2 x 5]
+    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
+    ## 
+    ## # A tibble: 2 x 5
+    ##   Sepal_Length Sepal_Width Petal_Length Petal_Width Species
+    ##          <dbl>       <dbl>        <dbl>       <dbl>   <chr>
+    ## 1          4.3         3.0          1.1         0.1  setosa
+    ## 2          4.4         2.9          1.4         0.2  setosa
+
+`dplyr::slice()` also fails.
+
+``` r
+f2s <- . %>% 
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  slice(1:2)
+
+diris %>% 
+  group_by(Species) %>% 
+  do(f2s(.)) %>% 
+  presentg()
+```
+
+    ## Error in eval(x$expr, data, x$env): object 'Sepal_Length' not found
+
+``` r
+diris %>%
+  group_by(Species) %>%
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  slice(1:2)
+```
+
+    ## Error in slice_.tbl_spark(.data, .dots = lazyeval::lazy_dots(...)): Slice is not supported in this version of sparklyr
+
+For a moderate number of groups `replyr::replyr_split()` can do the job.
+
 ``` r
 # try it with replyr
 # devtools::install_github('WinVector/replyr')
@@ -92,42 +148,70 @@ packageVersion("replyr")
 # respect groups (head() does not and slice() isn't available
 # on this verion of Spark/Sparklyr)
 diris %>% 
-  gapply('Species', partitionMethod='extract', f2)
+  gapply('Species', partitionMethod='extract', f2) %>%
+  presentg()
 ```
 
     ## Source:   query [6 x 5]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
     ## # A tibble: 6 x 5
-    ##      Species Sepal_Length Sepal_Width Petal_Length Petal_Width
-    ##        <chr>        <dbl>       <dbl>        <dbl>       <dbl>
-    ## 1 versicolor          5.0         2.0          3.5         1.0
-    ## 2 versicolor          4.9         2.4          3.3         1.0
-    ## 3     setosa          4.3         3.0          1.1         0.1
-    ## 4     setosa          4.4         2.9          1.4         0.2
-    ## 5  virginica          4.9         2.5          4.5         1.7
-    ## 6  virginica          5.6         2.8          4.9         2.0
+    ##   Sepal_Length Sepal_Width Petal_Length Petal_Width    Species
+    ##          <dbl>       <dbl>        <dbl>       <dbl>      <chr>
+    ## 1          4.3         3.0          1.1         0.1     setosa
+    ## 2          4.4         2.9          1.4         0.2     setosa
+    ## 3          4.9         2.4          3.3         1.0 versicolor
+    ## 4          5.0         2.0          3.5         1.0 versicolor
+    ## 5          4.9         2.5          4.5         1.7  virginica
+    ## 6          5.6         2.8          4.9         2.0  virginica
 
 ``` r
 # Or in separate stages
 diris %>% 
   replyr_split('Species') %>%
   lapply(f2) %>%
-  replyr_bind_rows()
+  replyr_bind_rows() %>%
+  presentg()
 ```
 
     ## Source:   query [6 x 5]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
     ## # A tibble: 6 x 5
-    ##      Species Sepal_Length Sepal_Width Petal_Length Petal_Width
-    ##        <chr>        <dbl>       <dbl>        <dbl>       <dbl>
-    ## 1 versicolor          5.0         2.0          3.5         1.0
-    ## 2 versicolor          4.9         2.4          3.3         1.0
-    ## 3     setosa          4.3         3.0          1.1         0.1
-    ## 4     setosa          4.4         2.9          1.4         0.2
-    ## 5  virginica          4.9         2.5          4.5         1.7
-    ## 6  virginica          5.6         2.8          4.9         2.0
+    ##   Sepal_Length Sepal_Width Petal_Length Petal_Width    Species
+    ##          <dbl>       <dbl>        <dbl>       <dbl>      <chr>
+    ## 1          4.3         3.0          1.1         0.1     setosa
+    ## 2          4.4         2.9          1.4         0.2     setosa
+    ## 3          4.9         2.4          3.3         1.0 versicolor
+    ## 4          5.0         2.0          3.5         1.0 versicolor
+    ## 5          4.9         2.5          4.5         1.7  virginica
+    ## 6          5.6         2.8          4.9         2.0  virginica
+
+For a large number of groups you must find a way to write your transform entirely in "group\_by" compatible verbs. For this application it appears `row_number()` and `filter()` can be used to re-write our function.
+
+``` r
+f3g <- . %>%
+  arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
+  filter(between(row_number(), 1, 2))
+
+diris %>% 
+  group_by(Species) %>% 
+  f3g() %>%
+  presentg()
+```
+
+    ## Source:   query [6 x 5]
+    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
+    ## 
+    ## # A tibble: 6 x 5
+    ##   Sepal_Length Sepal_Width Petal_Length Petal_Width    Species
+    ##          <dbl>       <dbl>        <dbl>       <dbl>      <chr>
+    ## 1          4.3         3.0          1.1         0.1     setosa
+    ## 2          4.4         2.9          1.4         0.2     setosa
+    ## 3          4.9         2.4          3.3         1.0 versicolor
+    ## 4          5.0         2.0          3.5         1.0 versicolor
+    ## 5          4.9         2.5          4.5         1.7  virginica
+    ## 6          5.6         2.8          4.9         2.0  virginica
 
 ``` r
 sparklyr::spark_disconnect(sc)
@@ -136,5 +220,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  687773 36.8    1168576 62.5  1168576 62.5
-    ## Vcells 1307039 10.0    2552219 19.5  1879769 14.4
+    ## Ncells  696320 37.2    1168576 62.5  1168576 62.5
+    ## Vcells 1326766 10.2    2552219 19.5  1891790 14.5
