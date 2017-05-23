@@ -213,6 +213,21 @@ diris %>%
     ## 5          4.9         2.5          4.5         1.7  virginica
     ## 6          5.6         2.8          4.9         2.0  virginica
 
+Again, you no longer can use `do()` notation:
+
+``` r
+diris %>% 
+  group_by(Species) %>% 
+  do(f3g(.))
+```
+
+    ## # A tibble: 3 x 2
+    ##      Species     V2
+    ##        <chr> <list>
+    ## 1 versicolor <NULL>
+    ## 2  virginica <NULL>
+    ## 3     setosa <NULL>
+
 ``` r
 sparklyr::spark_disconnect(sc)
 rm(list=ls())
@@ -220,5 +235,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  696320 37.2    1168576 62.5  1168576 62.5
-    ## Vcells 1326766 10.2    2552219 19.5  1891790 14.5
+    ## Ncells  696294 37.2    1168576 62.5  1168576 62.5
+    ## Vcells 1326047 10.2    2552219 19.5  1884608 14.4

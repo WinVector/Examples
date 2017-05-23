@@ -120,6 +120,13 @@ diris %>%
   presentg()
 ```
 
+Again, you no longer can use `do()` notation:
+
+```{r rownumberdo, error=TRUE}
+diris %>% 
+  group_by(Species) %>% 
+  do(f3g(.))
+```
 
 ```{r cleanup}
 sparklyr::spark_disconnect(sc)
