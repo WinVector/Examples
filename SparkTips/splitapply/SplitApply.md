@@ -190,6 +190,7 @@ diris %>%
 For a large number of groups you must find a way to write your transform entirely in "group\_by" compatible verbs. For this application it appears `row_number()` and `filter()` can be used to re-write our function.
 
 ``` r
+# group compatible version of function.
 f3g <- . %>%
   arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
   filter(between(row_number(), 1, 2))
@@ -235,5 +236,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  696294 37.2    1168576 62.5  1168576 62.5
-    ## Vcells 1326047 10.2    2552219 19.5  1884608 14.4
+    ## Ncells  696292 37.2    1168576 62.5  1168576 62.5
+    ## Vcells 1326029 10.2    2552219 19.5  1885368 14.4

@@ -110,6 +110,7 @@ diris %>%
 For a large number of groups you must find a way to write your transform entirely in "group_by" compatible verbs.  For this application it appears `row_number()` and `filter()` can be used to re-write our function.
 
 ```{r rownumber}
+# group compatible version of function.
 f3g <- . %>%
   arrange(Sepal_Length, Sepal_Width, Petal_Length, Petal_Width) %>%
   filter(between(row_number(), 1, 2))
