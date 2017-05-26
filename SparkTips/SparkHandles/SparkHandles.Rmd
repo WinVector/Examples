@@ -138,7 +138,7 @@ package, and then use them to organize loading your `Spark` data
 references.  With this practice you will have much less "spaghetti
 code", better document intent, and have a versatile workflow.
 
-The principles we are using are:
+The principles we are using include:
 
  * Keep configuration out of code (i.e., maintain the file list in a spreadsheet).  This makes working with others much easier.
  * Treat configuration as data (i.e., make sure the configuration is a nice regular table so that you can use `R` tools such as `tidyr::unnest()` to work with it).

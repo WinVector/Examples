@@ -183,7 +183,7 @@ print(columnMap)
 
 The idea is: place all of the above functions into a shared script or package, and then use them to organize loading your `Spark` data references. With this practice you will have much less "spaghetti code", better document intent, and have a versatile workflow.
 
-The principles we are using are:
+The principles we are using include:
 
 -   Keep configuration out of code (i.e., maintain the file list in a spreadsheet). This makes working with others much easier.
 -   Treat configuration as data (i.e., make sure the configuration is a nice regular table so that you can use `R` tools such as `tidyr::unnest()` to work with it).
@@ -195,5 +195,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  672653   36    1168576 62.5  1168576 62.5
-    ## Vcells 1171890    9    2060183 15.8  1406471 10.8
+    ## Ncells  672434   36    1168576 62.5  1168576 62.5
+    ## Vcells 1171336    9    2060183 15.8  1405834 10.8
