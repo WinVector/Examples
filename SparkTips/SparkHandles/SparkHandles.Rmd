@@ -8,13 +8,24 @@ output:
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 
+When using `R` to work over a big data system (such as `Spark`) much of your work is over "data handles" and not actual data (data handles are objects that control access to remote data).
+
+Data handles are a lot like sockets or file-handles in that they can
+not be safely serialized and restored (i.e., you can not save them
+into a `.RDS` file and then restore them into another session).  This
+means when you are starting or re-starting a project you must "ready"
+all of your data references.  Your projects will be much easier to
+manage and document if you load your references using the methods we
+show below.
+
+Let's set-up our example `Spark` cluster:
 
 ```{r setup}
 library("sparklyr")
 #packageVersion('sparklyr')
-library("dplyr")
+suppressPackageStartupMessages(library("dplyr"))
 #packageVersion('dplyr')
-library("tidyr")
+suppressPackageStartupMessages(library("tidyr"))
 
 # Please see the following video for installation help
 #  https://youtu.be/qnINvPqcRvE
@@ -26,45 +37,50 @@ sc <- spark_connect(master = "local",
 #print(sc)
 ```
 
+Data is much easier to manage than code, and much easier to compute
+over.  So the more information you can keep as pure data the better
+off you will be.  In this case we are loading the chosen names and
+paths of `parquet` data we wish to work with from an external file
+that is easy for the user to edit.
 
 
 ```{r loaddata}
-tableNames <- c("data_01", "data_02", "data_03")
+# Read user's specification of files and paths.
+userSpecification <- read.csv('tableCollection.csv',
+                             header = TRUE,
+			     strip.white = TRUE,
+			     stringsAsFactors = FALSE)
+print(userSpecification)
+```
 
-# load the parquet files to register them
-# to the Spark cluster.
-# Could keep handles at this point, 
-#  or get them with:
-#   DBI::dbListTables(sc)/dplyr::tbl(sc, tableNamei)
+We can now read these `parquet` files (usually stored in `Hadoop`)
+into our `Spark` environment as follows.
 
-readParquets <- function(tableNames) {
-  tableCollection <- data_frame(tableName= tableNames)
-  tableCollection$handle <- lapply(
-    tableCollection$tableName,
-    function(tableNamei) {
-      spark_read_parquet(sc, tableNamei, tableNamei)
+```{r readp}
+readParquets <- function(userSpecification) {
+  userSpecification <- as_data_frame(userSpecification)
+  userSpecification$handle <- lapply(
+    seq_len(nrow(userSpecification)),
+    function(i) {
+      spark_read_parquet(sc, 
+                         name = userSpecification$tableName[[i]], 
+                         path = userSpecification$tablePath[[i]])
     }
   )
-  tableCollection
+  userSpecification
 }
 
-tableCollection <- readParquets(tableNames)
+tableCollection <- readParquets(userSpecification)
 print(tableCollection)
 ```
 
-```{r finddata}
-# or if we want to grab all tables
-# sparklyr already knows about (note this can be expensive!):
-tableNames <- DBI::dbListTables(sc)
-```
-
 A `data.frame` is a great place to keep what you know about 
-your `Spark` handles in one place.  Let's add some details.
+your `Spark` handles in one place.  Let's add some details
+to our `Spark` handles.
 
 ```{r adddetails}
-addDetails <- function(tableNames) {
-  tableCollection <- data_frame(tableName = tableNames)
-  
+addDetails <- function(tableCollection) {
+  tableCollection <- as_data_frame(tableCollection)
   # get the references
   tableCollection$handle <-
     lapply(tableCollection$tableName,
@@ -87,7 +103,7 @@ addDetails <- function(tableNames) {
   tableCollection
 }
 
-tableCollection <- addDetails(tableNames)
+tableCollection <- addDetails(userSpecification)
 
 # convenient printing
 print(tableCollection)
@@ -98,12 +114,15 @@ lapply(tableCollection$handle,
        head)
 ```
 
+A particularly slick trick is to expand the columns
+column into a taller table that allows us to quickly
+identify which columns are in which tables.
+
 ```{r buildcolumnmap}
 columnDictionary <- function(tableCollection) {
   tableCollection$columns <- 
     lapply(tableCollection$handle,
            colnames)
-  
   columnMap <- tableCollection %>% 
     select(tableName, columns) %>%
     unnest(columns)
@@ -114,21 +133,23 @@ columnMap <- columnDictionary(tableCollection)
 print(columnMap)
 ```
 
-```{r wrongwayto save}
+The idea is: place all of the above functions into a shared script or
+package, and then use them to organize loading your `Spark` data
+references.  With this practice you will have much less "spaghetti
+code", better document intent, and have a versatile workflow.
+
+The principles we are using are:
+
+ * Keep configuration out of code (i.e., maintain the file list in a spreadsheet).  This makes working with others much easier.
+ * Treat configuration as data (i.e., make sure the configuration is a nice regular table so that you can use `R` tools such as `tidyr::unnest()` to work with it).
+
+```{r wrongwaytosave, eval=FALSE, include=FALSE}
 # do not save handles, they are not really re-loadable
 # in all situations.
 saveRDS(tableCollection, 
         file='tableCollectionWrong.RDS')
 ```
 
-```{r right way to save}
-# save as CSV so users can edit it.
-# re-derive all other columns later.
-write.csv(tableCollection[ ,'tableName', drop=FALSE], 
-          quote= FALSE,
-          row.names = FALSE,
-          file='tableCollection.csv')
-```
 
 
 

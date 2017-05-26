@@ -1,4 +1,5 @@
-tableName
-data_01
-data_02
-data_03
+tableName,tablePath
+data_01,data_01
+data_02,data_02
+data_03,data_03
+
