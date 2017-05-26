@@ -1,0 +1,44 @@
+
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
+
+```{r setup}
+library("sparklyr")
+#packageVersion('sparklyr')
+library("dplyr")
+#packageVersion('dplyr')
+library("tidyr")
+
+# Please see the following video for installation help
+#  https://youtu.be/qnINvPqcRvE
+# spark_install(version = "2.0.2")
+
+# set up a local "practice" Spark instance
+sc <- spark_connect(master = "local",
+                    version = "2.0.2")
+#print(sc)
+```
+
+
+
+```{r wrongload, error=TRUE}
+# wrong way to re-load tables (tried to de-serialize handles)
+tableCollection <- readRDS('tableCollectionWrong.RDS')
+print(tableCollection)
+
+head(tableCollection$handle[[1]])
+```
+
+
+```{r cleanup}
+spark_disconnect(sc)
+rm(list=ls())
+gc()
+```

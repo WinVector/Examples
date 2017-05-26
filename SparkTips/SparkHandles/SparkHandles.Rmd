@@ -18,117 +18,111 @@ library("tidyr")
 
 # Please see the following video for installation help
 #  https://youtu.be/qnINvPqcRvE
-# spark_install(version = "2.1.0")
+# spark_install(version = "2.0.2")
 
 # set up a local "practice" Spark instance
 sc <- spark_connect(master = "local",
-                    version = "2.1.0")
+                    version = "2.0.2")
 #print(sc)
 ```
 
-```{r builddata}
-# build notional data, but do not
-# leave it in the system (so we can
-# demonstrate loading).
-tableNames <- vapply(1:3,
-                function(i) {
-                  di <- data.frame(x= runif(10))
-                  colnames(di) <- letters[[1]]
-                  for(j in seq_len(i-1)) {
-                    di[[letters[[j+1]]]] <- runif(nrow(di))
-                  }
-                  colnames(di) <-
-                    paste(colnames(di),
-                          sprintf("%02d", i), 
-                          sep='_')
-                  ni <- paste('data',
-                              sprintf("%02d", i),
-                              sep='_')
-                  hi <- copy_to(sc, di, 
-                                name= ni,
-                                overwrite= TRUE)
-                  spark_write_parquet(hi, path= ni)
-                  dplyr::db_drop_table(sc, ni)
-                  ni
-                },
-                character(1))
-```
 
 
 ```{r loaddata}
+tableNames <- c("data_01", "data_02", "data_03")
+
 # load the parquet files to register them
 # to the Spark cluster.
 # Could keep handles at this point, 
 #  or get them with:
 #   DBI::dbListTables(sc)/dplyr::tbl(sc, tableNamei)
-tableCollection <- data_frame(tableName= tableNames)
-tableCollection$handle <- lapply(
-  tableCollection$tableName,
-  function(tableNamei) {
-    spark_read_parquet(sc, tableNamei, tableNamei)
-  }
-)
+
+readParquets <- function(tableNames) {
+  tableCollection <- data_frame(tableName= tableNames)
+  tableCollection$handle <- lapply(
+    tableCollection$tableName,
+    function(tableNamei) {
+      spark_read_parquet(sc, tableNamei, tableNamei)
+    }
+  )
+  tableCollection
+}
+
+tableCollection <- readParquets(tableNames)
 ```
 
 ```{r finddata}
 # or if we want to grab all tables
-# sparklyr already knows about:
-tableCollection <- data_frame(tableName = DBI::dbListTables(sc))
-tableCollection$handle <-
-  lapply(tableCollection$tableName,
-         function(tableNamei) {
-          dplyr::tbl(sc, tableNamei)
-         })
-```
+# sparklyr already knows about (note this can be expensive!):
+tableNames <- data_frame(tableName = DBI::dbListTables(sc))
 
-```{r workwithdata}
+loadTables <- function(tableNames) {
+  tableCollection <- data_frame(tableName = tableNames)
+  
+  # get the references
+  tableCollection$handle <-
+    lapply(tableCollection$tableName,
+           function(tableNamei) {
+             dplyr::tbl(sc, tableNamei)
+           })
+  
+  # and tableNames to handles for convenience
+  # and printing
+  names(tableCollection$handle) <-
+    tableCollection$tableName
+  
+  # add in some details (note: nrow can be expensive)
+  tableCollection$nrow <- vapply(tableCollection$handle, 
+                                 nrow, 
+                                 numeric(1))
+  tableCollection$ncol <- vapply(tableCollection$handle, 
+                                 ncol, 
+                                 numeric(1))
+  tableCollection
+}
+
 # convenient printing
 print(tableCollection)
-
-# and tableNames to handles for convenience
-names(tableCollection$handle) <-
-  tableCollection$tableName
-
 
 # look at the top of each table (also forces
 # evaluation!).
 lapply(tableCollection$handle, 
        head)
-
-# get dimensions of each table
-lapply(tableCollection$handle, 
-       dim)
 ```
 
-```{r columns}
-tableCollection$column <- 
-  lapply(tableCollection$handle,
-         colnames)
-
-# tidyr ‘0.6.1’ help(unnest) says:
-# "Each row must have the same number of entries."
-# but that seem not to be an actual constraint.
-columnMap <- tableCollection %>% 
-  select(tableName, column) %>%
-  unnest(column)
-print(columnMap)
-
-# we have experimental support for expanding columns 
-# in the dev version of replyr
-# https://github.com/WinVector/replyr
-if(requireNamespace('replyr', quietly = TRUE)) {
-  if(exists('expandColumn', 
-            where= asNamespace('replyr'), 
-            mode='function')) {
-    tableCollection %>% 
-      select(tableName, column) %>%
-      replyr::expandColumn('column',
-                           rowidSource= 'tableName',
-                           idxDest= 'columnNumber')
-  }
+```{r buildcolumnmap}
+columnDictionary <- function(tableCollection) {
+  tableCollection$columns <- 
+    lapply(tableCollection$handle,
+           colnames)
+  
+  columnMap <- tableCollection %>% 
+    select(tableName, columns) %>%
+    unnest(columns)
+  columnMap
 }
-                       
+
+columnMap <- columnDictionary(tableCollection)
+print(columnMap)
 ```
+
+```{r wrongwayto save}
+# do not save handles, they are not really re-loadable
+# in all situations.
+saveRDS(tableCollection, 
+        file='tableCollectionWrong.RDS')
+```
+
+```{r right way to save}
+# save as CSV so users can edit it.
+# re-derive all other columns later.
+write.csv(tableCollection[ ,'tableName', drop=FALSE], 
+          quote= FALSE,
+          row.names = FALSE,
+          file='tableCollection.csv')
+```
+
+
 
 ```{r cleanup}
 spark_disconnect(sc)
