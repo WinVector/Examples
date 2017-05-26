@@ -1,0 +1,77 @@
+---
+title: "Why replyr"
+output: html_document
+---
+
+
+
+Why try `replyr`?  Because it lets you take a number of commmon working patterns and apply them to remote data (such as databases or `Spark`).  Below are some examples.
+
+```{r setup}
+suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+library("tidyr")
+packageVersion("tidyr")
+library("replyr")
+packageVersion("replyr")
+suppressPackageStartupMessages("spaklyr")
+packageVersion("sparklyr")
+
+sc <- sparklyr::spark_connect(version='2.0.2', 
+                              master = "local")
+```
+
+## `dplyr::do`
+
+Taking a few rows from each group of a grouped data set. 
+Note: since we are not enforcing order by an arrange we 
+can't expect the results to always match on database
+or `Spark` data sources.
+
+### `dplyr::do` on local data
+
+From `help('do', package='dplyr')`:
+
+```{r dplyrdolocal}
+by_cyl <- group_by(mtcars, cyl)
+do(by_cyl, head(., 2))
+```
+
+### `dplyr::do` on `Spark`
+
+```{r dplyrdolocalspark}
+mtcars_spark <- copy_to(sc, mtcars)
+by_cyl <- group_by(mtcars_spark, cyl)
+do(by_cyl, head(., 2))
+```
+
+Notice we did not get back usable results.
+
+### `replyr` split/apply
+
+```{r replyrdo}
+mtcars_spark %>%
+  replyr_split('cyl', 
+               partitionMethod = 'extract') %>%
+  lapply(function(di) head(di, 2)) %>%
+  replyr_bind_rows()
+```
+
+### `replyr` gapply
+
+```{r replyrgapply}
+mtcars_spark %>%
+  gapply('cyl',
+         partitionMethod = 'extract',
+         function(di) head(di, 2))
+```
+
+## Handle management
+
+
+
+```{r cleanup}
+sparklyr::spark_disconnect(sc)
+rm(list=ls())
+gc()
+```
