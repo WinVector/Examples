@@ -51,14 +51,26 @@ readParquets <- function(tableNames) {
 }
 
 tableCollection <- readParquets(tableNames)
+print(tableCollection)
 ```
+
+    ## # A tibble: 3 x 2
+    ##   tableName          handle
+    ##       <chr>          <list>
+    ## 1   data_01 <S3: tbl_spark>
+    ## 2   data_02 <S3: tbl_spark>
+    ## 3   data_03 <S3: tbl_spark>
 
 ``` r
 # or if we want to grab all tables
 # sparklyr already knows about (note this can be expensive!):
-tableNames <- data_frame(tableName = DBI::dbListTables(sc))
+tableNames <- DBI::dbListTables(sc)
+```
 
-loadTables <- function(tableNames) {
+A `data.frame` is a great place to keep what you know about your `Spark` handles in one place. Let's add some details.
+
+``` r
+addDetails <- function(tableNames) {
   tableCollection <- data_frame(tableName = tableNames)
   
   # get the references
@@ -83,16 +95,18 @@ loadTables <- function(tableNames) {
   tableCollection
 }
 
+tableCollection <- addDetails(tableNames)
+
 # convenient printing
 print(tableCollection)
 ```
 
-    ## # A tibble: 3 x 2
-    ##   tableName          handle
-    ##       <chr>          <list>
-    ## 1   data_01 <S3: tbl_spark>
-    ## 2   data_02 <S3: tbl_spark>
-    ## 3   data_03 <S3: tbl_spark>
+    ## # A tibble: 3 x 4
+    ##   tableName          handle  nrow  ncol
+    ##       <chr>          <list> <dbl> <dbl>
+    ## 1   data_01 <S3: tbl_spark>    10     1
+    ## 2   data_02 <S3: tbl_spark>    10     2
+    ## 3   data_03 <S3: tbl_spark>    10     3
 
 ``` r
 # look at the top of each table (also forces
@@ -101,7 +115,7 @@ lapply(tableCollection$handle,
        head)
 ```
 
-    ## [[1]]
+    ## $data_01
     ## Source:   query [6 x 1]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
@@ -115,7 +129,7 @@ lapply(tableCollection$handle,
     ## 5 0.9111187
     ## 6 0.8802026
     ## 
-    ## [[2]]
+    ## $data_02
     ## Source:   query [6 x 2]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
@@ -129,7 +143,7 @@ lapply(tableCollection$handle,
     ## 5 0.9747534 0.40327283
     ## 6 0.6054003 0.53224218
     ## 
-    ## [[3]]
+    ## $data_03
     ## Source:   query [6 x 3]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
@@ -192,5 +206,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  666524 35.6    1168576 62.5  1168576 62.5
-    ## Vcells 1156389  8.9    2060183 15.8  1471907 11.3
+    ## Ncells  666977 35.7    1168576 62.5  1168576 62.5
+    ## Vcells 1158507  8.9    2060183 15.8  1390899 10.7

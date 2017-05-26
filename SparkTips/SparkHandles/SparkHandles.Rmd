@@ -49,14 +49,20 @@ readParquets <- function(tableNames) {
 }
 
 tableCollection <- readParquets(tableNames)
+print(tableCollection)
 ```
 
 ```{r finddata}
 # or if we want to grab all tables
 # sparklyr already knows about (note this can be expensive!):
-tableNames <- data_frame(tableName = DBI::dbListTables(sc))
+tableNames <- DBI::dbListTables(sc)
+```
 
-loadTables <- function(tableNames) {
+A `data.frame` is a great place to keep what you know about 
+your `Spark` handles in one place.  Let's add some details.
+
+```{r adddetails}
+addDetails <- function(tableNames) {
   tableCollection <- data_frame(tableName = tableNames)
   
   # get the references
@@ -80,6 +86,8 @@ loadTables <- function(tableNames) {
                                  numeric(1))
   tableCollection
 }
+
+tableCollection <- addDetails(tableNames)
 
 # convenient printing
 print(tableCollection)
