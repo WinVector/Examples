@@ -76,12 +76,14 @@ addDetails <- function(tableCollection) {
            function(tableNamei) {
              dplyr::tbl(sc, tableNamei)
            })
-  
   # and tableNames to handles for convenience
   # and printing
   names(tableCollection$handle) <-
     tableCollection$tableName
-  
+  # add columns
+  tableCollection$columns <- 
+    lapply(tableCollection$handle,
+           colnames)
   # add in some details (note: nrow can be expensive)
   tableCollection$nrow <- vapply(tableCollection$handle, 
                                  nrow, 
@@ -98,12 +100,12 @@ tableCollection <- addDetails(userSpecification)
 print(tableCollection)
 ```
 
-    ## # A tibble: 3 x 5
-    ##   tableName tablePath          handle  nrow  ncol
-    ##       <chr>     <chr>          <list> <dbl> <dbl>
-    ## 1   data_01   data_01 <S3: tbl_spark>    10     1
-    ## 2   data_02   data_02 <S3: tbl_spark>    10     2
-    ## 3   data_03   data_03 <S3: tbl_spark>    10     3
+    ## # A tibble: 3 x 6
+    ##   tableName tablePath          handle   columns  nrow  ncol
+    ##       <chr>     <chr>          <list>    <list> <dbl> <dbl>
+    ## 1   data_01   data_01 <S3: tbl_spark> <chr [1]>    10     1
+    ## 2   data_02   data_02 <S3: tbl_spark> <chr [2]>    10     2
+    ## 3   data_03   data_03 <S3: tbl_spark> <chr [3]>    10     3
 
 ``` r
 # look at the top of each table (also forces
@@ -157,17 +159,14 @@ lapply(tableCollection$handle,
 A particularly slick trick is to expand the columns column into a taller table that allows us to quickly identify which columns are in which tables.
 
 ``` r
-columnDictionary <- function(tableCollection) {
-  tableCollection$columns <- 
-    lapply(tableCollection$handle,
-           colnames)
+expandColumns <- function(tableCollection) {
   columnMap <- tableCollection %>% 
     select(tableName, columns) %>%
     unnest(columns)
   columnMap
 }
 
-columnMap <- columnDictionary(tableCollection)
+columnMap <- expandColumns(tableCollection)
 print(columnMap)
 ```
 
@@ -180,6 +179,24 @@ print(columnMap)
     ## 4   data_03    a_03
     ## 5   data_03    b_03
     ## 6   data_03    c_03
+
+``` r
+# replyr equivilent (dev version)
+tableCollection %>% 
+  select(tableName, columns) %>% 
+  replyr::expandColumn(colName = 'columns',
+                       idxDest = 'columnNumer')
+```
+
+    ## # A tibble: 6 x 3
+    ##   tableName columnNumer columns
+    ##       <chr>       <int>   <chr>
+    ## 1   data_01           1    a_01
+    ## 2   data_02           1    a_02
+    ## 3   data_02           2    b_02
+    ## 4   data_03           1    a_03
+    ## 5   data_03           2    b_03
+    ## 6   data_03           3    c_03
 
 The idea is: place all of the above functions into a shared script or package, and then use them to organize loading your `Spark` data references. With this practice you will have much less "spaghetti code", better document intent, and have a versatile workflow.
 
@@ -195,5 +212,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  672434   36    1168576 62.5  1168576 62.5
-    ## Vcells 1171336    9    2060183 15.8  1405834 10.8
+    ## Ncells  684729 36.6    1168576 62.5  1168576 62.5
+    ## Vcells 1210026  9.3    2060183 15.8  1457033 11.2

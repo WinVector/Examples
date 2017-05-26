@@ -87,12 +87,14 @@ addDetails <- function(tableCollection) {
            function(tableNamei) {
              dplyr::tbl(sc, tableNamei)
            })
-  
   # and tableNames to handles for convenience
   # and printing
   names(tableCollection$handle) <-
     tableCollection$tableName
-  
+  # add columns
+  tableCollection$columns <- 
+    lapply(tableCollection$handle,
+           colnames)
   # add in some details (note: nrow can be expensive)
   tableCollection$nrow <- vapply(tableCollection$handle, 
                                  nrow, 
@@ -119,18 +121,21 @@ column into a taller table that allows us to quickly
 identify which columns are in which tables.
 
 ```{r buildcolumnmap}
-columnDictionary <- function(tableCollection) {
-  tableCollection$columns <- 
-    lapply(tableCollection$handle,
-           colnames)
+expandColumns <- function(tableCollection) {
   columnMap <- tableCollection %>% 
     select(tableName, columns) %>%
     unnest(columns)
   columnMap
 }
 
-columnMap <- columnDictionary(tableCollection)
+columnMap <- expandColumns(tableCollection)
 print(columnMap)
+
+# replyr equivilent (dev version)
+tableCollection %>% 
+  select(tableName, columns) %>% 
+  replyr::expandColumn(colName = 'columns',
+                       idxDest = 'columnNumer')
 ```
 
 The idea is: place all of the above functions into a shared script or
