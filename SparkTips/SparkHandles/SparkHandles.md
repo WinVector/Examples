@@ -1,4 +1,10 @@
+This R-markdown sheet is the accompanying material for the following article: [Managing Spark data handles in R](http://www.win-vector.com/blog/2017/05/managing-spark-data-handles-in-r/).
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+When working with big data with <a href="https://cran.r-project.org"><code>R</code></a> (say, <a href="https://github.com/WinVector/BigDataRStrata2017">using <code>Spark</code> and <code>sparklyr</code></a>) we have found it very convenient to keep data handles in a neat list or <code>data\_frame</code>.
+
+Please read on for our handy hints on keeping your data handles neat.
+
 When using `R` to work over a big data system (such as `Spark`) much of your work is over "data handles" and not actual data (data handles are objects that control access to remote data).
 
 Data handles are a lot like sockets or file-handles in that they can not be safely serialized and restored (i.e., you can not save them into a `.RDS` file and then restore them into another session). This means when you are starting or re-starting a project you must "ready" all of your data references. Your projects will be much easier to manage and document if you load your references using the methods we show below.
@@ -121,40 +127,40 @@ lapply(tableCollection$handle,
     ## # A tibble: 6 x 1
     ##        a_01
     ##       <dbl>
-    ## 1 0.8274947
-    ## 2 0.2876151
-    ## 3 0.6638404
-    ## 4 0.1918336
-    ## 5 0.9111187
-    ## 6 0.8802026
+    ## 1 0.8381920
+    ## 2 0.2152265
+    ## 3 0.4796763
+    ## 4 0.7895052
+    ## 5 0.5568411
+    ## 6 0.2292427
     ## 
     ## $data_02
     ## Source:   query [6 x 2]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
     ## # A tibble: 6 x 2
-    ##        a_02       b_02
-    ##       <dbl>      <dbl>
-    ## 1 0.3937457 0.34936496
-    ## 2 0.0195079 0.74376380
-    ## 3 0.9760512 0.00261368
-    ## 4 0.4388773 0.70325800
-    ## 5 0.9747534 0.40327283
-    ## 6 0.6054003 0.53224218
+    ##         a_02      b_02
+    ##        <dbl>     <dbl>
+    ## 1 0.05961048 0.4676490
+    ## 2 0.05157383 0.6068933
+    ## 3 0.34839793 0.5738879
+    ## 4 0.89676677 0.2294701
+    ## 5 0.82129695 0.9208848
+    ## 6 0.64586787 0.9176204
     ## 
     ## $data_03
     ## Source:   query [6 x 3]
     ## Database: spark connection master=local[4] app=sparklyr local=TRUE
     ## 
     ## # A tibble: 6 x 3
-    ##         a_03      b_03        c_03
-    ##        <dbl>     <dbl>       <dbl>
-    ## 1 0.59512263 0.2615939 0.592753768
-    ## 2 0.72292799 0.7287428 0.003926143
-    ## 3 0.51846687 0.3641869 0.874463146
-    ## 4 0.01174093 0.9648346 0.177722575
-    ## 5 0.86250126 0.3891915 0.857614579
-    ## 6 0.33082723 0.2633013 0.233822140
+    ##         a_03       b_03      c_03
+    ##        <dbl>      <dbl>     <dbl>
+    ## 1 0.32545825 0.06744048 0.6493902
+    ## 2 0.49768306 0.74133497 0.5790545
+    ## 3 0.02933889 0.18580778 0.1952033
+    ## 4 0.57943442 0.54503462 0.6997693
+    ## 5 0.02982490 0.91786826 0.4519192
+    ## 6 0.30321291 0.77739097 0.6126401
 
 A particularly slick trick is to expand the columns column into a taller table that allows us to quickly identify which columns are in which tables.
 
@@ -212,5 +218,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  685555 36.7    1168576 62.5  1168576 62.5
-    ## Vcells 1211367  9.3    2060183 15.8  1457074 11.2
+    ## Ncells  682237 36.5    1168576 62.5  1168576 62.5
+    ## Vcells 1197179  9.2    2060183 15.8  1476115 11.3

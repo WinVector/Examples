@@ -5,8 +5,15 @@ output:
     variant: markdown_github
 ---
 
+This R-markdown sheet is the accompanying material for the following article:
+[Managing Spark data handles in R](http://www.win-vector.com/blog/2017/05/managing-spark-data-handles-in-r/).
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+When working with big data with <a href="https://cran.r-project.org"><code>R</code></a> (say, <a href="https://github.com/WinVector/BigDataRStrata2017">using <code>Spark</code> and <code>sparklyr</code></a>) we have found it very convenient to keep data handles in a neat list or  <code>data_frame</code>.
+
+
+Please read on for our handy hints on keeping your data handles neat.
 
 When using `R` to work over a big data system (such as `Spark`) much of your work is over "data handles" and not actual data (data handles are objects that control access to remote data).
 
