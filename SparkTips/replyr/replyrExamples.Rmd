@@ -1,18 +1,25 @@
 ---
-title: "Why replyr"
-output: html_document
+output:
+  md_document:
+    variant: markdown_github
 ---
 
+<!-- README.md is generated from README.Rmd. Please edit that file -->
 
+# Why `replyr`
+
+`replyr` stands for **RE**mote **PLY**ing of big data for **R**.
 
 Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)?  Because it lets you take a number of commmon working patterns and apply them to remote data (such as databases or `Spark`). 
 
-`replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s:
+For example: `replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
-  * `summary()`
-  * `bind_rows()`
+  * `replyr_summary()`
+  * `replyr_bind_rows()`
   * split/apply/combine (`do`)
-  * `gather`/`spread`
+  * `replyr_moveValuesToRows`/ `replyr_moveValuesToColumns` (`gather`/`spread`)
+  * parametric programming (`wrapr::let` and `replyr::replyr_apply_f_mapped`)
+  * handle tracking
 
 Below are some examples.
 
@@ -24,6 +31,10 @@ packageVersion("dplyr")
 library("tidyr")
 packageVersion("tidyr")
 library("replyr")
+# either:
+#  install.packages("replyr")
+# or
+#  devtools::install_github('WinVector/replyr')
 packageVersion("replyr")
 suppressPackageStartupMessages("spaklyr")
 packageVersion("sparklyr")
@@ -175,6 +186,79 @@ mtcars_spark %>%
 ```
 
 ***
+
+## `wrapr::let`
+
+`wrapr::let` allows execution of arbitrary code with substituted variable names (note this is subtly different than binding values for names as with `base::substitute` or `base::with`).  This allows the user to write arbitrary `dplyr` code in the case of ["parametric variable names"](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/) (that is when variable names are not known at coding time, but will become available later at run time as values in other variables) without directly using the `dplyr` "underbar forms"  (and the direct use of `lazyeval::interp` and `.dots=stats::setNames` to use the `dplyr` "underbar forms").
+
+Example:
+
+```{r  message=FALSE,results='hide',warning=FALSE}
+library('dplyr')
+```
+```{r letexample}
+# nice parametric function we write
+ComputeRatioOfColumns <- function(d,NumeratorColumnName,DenominatorColumnName,ResultColumnName) {
+  wrapr::let(
+    alias=list(NumeratorColumn=NumeratorColumnName,
+               DenominatorColumn=DenominatorColumnName,
+               ResultColumn=ResultColumnName),
+    expr={
+      # (pretend) large block of code written with concrete column names.
+      # due to the let wrapper in this function it will behave as if it was
+      # using the specified paremetric column names.
+      d %>% mutate(ResultColumn = NumeratorColumn/DenominatorColumn)
+    })
+}
+
+# example data
+d <- data.frame(a=1:5, b=3:7)
+
+# example application
+d %>% ComputeRatioOfColumns('a','b','c')
+```
+
+`wrapr::let` makes construction of abstract functions over `dplyr` controlled data much easier.  It is designed for the case where the "`expr`" block is large sequence of statements and pipelines.
+
+`wrapr::let` is based on `gtools::strmacro` by Gregory R. Warnes.
+
+## `replyr::replyr_apply_f_mapped`
+
+`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/).  What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).  
+
+With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data.  So a re-mapping is active as long as a given controlling function is in control.  In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
+
+Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package).  The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`).
+
+```{r rankfn}
+# an external function with hard-coded column names
+DecreaseRankColumnByOne <- function(d) {
+  d$RankColumn <- d$RankColumn - 1
+  d
+}
+```
+
+To apply this function to `d` (which doesn't have the expected column names!) we use  `replyr::replyr_apply_f_mapped()` as follows:
+
+```{r replyrmapf}
+d <- data.frame(Sepal_Length = c(5.8,5.7),
+                Sepal_Width = c(4.0,4.4),
+                Species = 'setosa',
+                rank = c(1,2))
+
+# map our data to expected column names so we can use function
+nmap <- c(GroupColumn='Species',
+          ValueColumn='Sepal_Length',
+          RankColumn='rank')
+print(nmap)
+
+dF <- replyr::replyr_apply_f_mapped(d, DecreaseRankColumnByOne, nmap,
+                                    restrictMapIn = FALSE, 
+                                    restrictMapOut = FALSE)
+print(dF)
+```
+
+`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.
 
 ## Handle management
 
