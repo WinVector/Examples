@@ -10,7 +10,7 @@ output:
 
 `replyr` stands for **RE**mote **PLY**ing of big data for **R**.
 
-Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)?  Because it lets you take a number of commmon working patterns and apply them to remote data (such as databases or `Spark`). 
+Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)?  Because it lets you take a number of common working patterns and apply them to remote data (such as databases or [`Spark`](https://spark.apache.org)). 
 
 For example: `replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
@@ -21,7 +21,14 @@ For example: `replyr` allows users to use the following functions on `Spark` dat
   * Parametric programming (`wrapr::let()` and `replyr::replyr_apply_f_mapped()`).
   * Handle tracking.
 
+You may have already learned to decompose your local data processing into steps including the above,
+so retaining such capabilities makes working with `Spark` and [`sparklyr`](http://spark.rstudio.com) *much* easier.
+
 Below are some examples.
+
+***
+
+# Examples
 
 ***
 
@@ -260,10 +267,63 @@ print(dF)
 
 `replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.
 
+***
+
 ## Handle management
+
+A lot of `Spark` tasks involve creation of intermediate or temporary tables.  This can
+be explicitly (through `dplyr::copy_to()`) and implicit (through `dplyr::compute()`).
+These handles can represent a reference leak.  To deal with this `replyr` supplies 
+record-retaining temporary name generators (and uses the same internally).
+
+For instance to join a few tables it is a good idea to call compute after each 
+join (else the generated `SQL` can become large and unmanageable).  This sort of code
+looks like the following:
+
+```{r joinlist}
+# create example data
+names <- paste('table', 1:5, sep='_')
+tables <- lapply(names, 
+                 function(ni) {
+                   di <- data.frame(key= 1:3)
+                   di[[paste('val',ni,sep='_')]] <- runif(nrow(di))
+                   copy_to(sc, di, ni)
+                 })
+
+# build our temp name generator
+tmpNamGen <- replyr::makeTempNameGenerator('JOINTMP')
+# left join the tables in sequence
+joined <- tables[[1]]
+for(i in seq(2,length(tables))) {
+  ti <- tables[[i]]
+  if(i<length(tables)) {
+    joined <- compute(left_join(joined, ti, by='key'),
+                    name= tmpNamGen())
+  } else {
+    joined <- compute(left_join(joined, ti, by='key'),
+                    name= 'joinres')
+  }
+}
+
+# clean up temps
+temps <- tmpNamGen(dumpList = TRUE)
+print(temps)
+for(ti in temps) {
+  db_drop_table(sc, ti)
+}
+
+# show result
+print(joined)
+```
+
+Careful introduction and management of materialized intermediates can conserve resources
+and greatly improve outcomes.
 
 ***
 
+# Conclusion
+
+If you are serious about `R` controlled data processing in `Spark` you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
 ```{r cleanup}
 sparklyr::spark_disconnect(sc)

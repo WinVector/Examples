@@ -4,18 +4,25 @@ Why `replyr`
 
 `replyr` stands for **RE**mote **PLY**ing of big data for **R**.
 
-Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)? Because it lets you take a number of commmon working patterns and apply them to remote data (such as databases or `Spark`).
+Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)? Because it lets you take a number of common working patterns and apply them to remote data (such as databases or [`Spark`](https://spark.apache.org)).
 
 For example: `replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
--   `replyr_summary()`
--   `replyr_bind_rows()`
--   split/apply/combine (`do`)
--   `replyr_moveValuesToRows`/ `replyr_moveValuesToColumns` (`gather`/`spread`)
--   parametric programming (`wrapr::let` and `replyr::replyr_apply_f_mapped`)
--   handle tracking
+-   Summarizing data: `replyr_summary()`.
+-   Binding tables by row: `replyr_bind_rows()`.
+-   Using the split/apply/combine pattern (`dplyr::do()`): `replyr_split()`, `replyr::gapply()`.
+-   Pivot/anti-pivot (`gather`/`spread`): `replyr_moveValuesToRows()`/ `replyr_moveValuesToColumns()`.
+-   Parametric programming (`wrapr::let()` and `replyr::replyr_apply_f_mapped()`).
+-   Handle tracking.
+
+You may have already learned to decompose your local data processing into steps including the above, so retaining such capabilities makes working with `Spark` and [`sparklyr`](http://spark.rstudio.com) *much* easier.
 
 Below are some examples.
+
+------------------------------------------------------------------------
+
+Examples
+========
 
 ------------------------------------------------------------------------
 
@@ -422,10 +429,76 @@ print(dF)
 
 `replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.
 
+------------------------------------------------------------------------
+
 Handle management
 -----------------
 
+A lot of `Spark` tasks involve creation of intermediate or temporary tables. This can be explicitly (through `dplyr::copy_to()`) and implicit (through `dplyr::compute()`). These handles can represent a reference leak. To deal with this `replyr` supplies record-retaining temporary name generators (and uses the same internally).
+
+For instance to join a few tables it is a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
+
+``` r
+# create example data
+names <- paste('table', 1:5, sep='_')
+tables <- lapply(names, 
+                 function(ni) {
+                   di <- data.frame(key= 1:3)
+                   di[[paste('val',ni,sep='_')]] <- runif(nrow(di))
+                   copy_to(sc, di, ni)
+                 })
+
+# build our temp name generator
+tmpNamGen <- replyr::makeTempNameGenerator('JOINTMP')
+# left join the tables in sequence
+joined <- tables[[1]]
+for(i in seq(2,length(tables))) {
+  ti <- tables[[i]]
+  if(i<length(tables)) {
+    joined <- compute(left_join(joined, ti, by='key'),
+                    name= tmpNamGen())
+  } else {
+    joined <- compute(left_join(joined, ti, by='key'),
+                    name= 'joinres')
+  }
+}
+
+# clean up temps
+temps <- tmpNamGen(dumpList = TRUE)
+print(temps)
+```
+
+    ## [1] "JOINTMP_tsurjpVp5mCf3OZcJhHy_00000"
+    ## [2] "JOINTMP_tsurjpVp5mCf3OZcJhHy_00001"
+    ## [3] "JOINTMP_tsurjpVp5mCf3OZcJhHy_00002"
+
+``` r
+for(ti in temps) {
+  db_drop_table(sc, ti)
+}
+
+# show result
+print(joined)
+```
+
+    ## Source:   query [3 x 6]
+    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
+    ## 
+    ## # A tibble: 3 x 6
+    ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
+    ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
+    ## 1     1  0.35591735   0.1738268  0.09585686   0.6069589 0.362533869
+    ## 2     2  0.07574927   0.4151571  0.75228174   0.3278396 0.003319759
+    ## 3     3  0.78779612   0.8826985  0.50151998   0.6920921 0.892572297
+
+Careful introduction and management of materialized intermediates can conserve resources and greatly improve outcomes.
+
 ------------------------------------------------------------------------
+
+Conclusion
+==========
+
+If you are serious about `R` controlled data processing in `Spark` you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
 ``` r
 sparklyr::spark_disconnect(sc)
@@ -434,5 +507,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  762890 40.8    1442291 77.1  1168576 62.5
-    ## Vcells 1409734 10.8    2552219 19.5  1867706 14.3
+    ## Ncells  764192 40.9    1442291 77.1  1168576 62.5
+    ## Vcells 1414439 10.8    2552219 19.5  1868211 14.3
