@@ -5,7 +5,18 @@ output: html_document
 
 
 
-Why try `replyr`?  Because it lets you take a number of commmon working patterns and apply them to remote data (such as databases or `Spark`).  Below are some examples.
+Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)?  Because it lets you take a number of commmon working patterns and apply them to remote data (such as databases or `Spark`). 
+
+`replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s:
+
+  * `summary()`
+  * `bind_rows()`
+  * split/apply/combine (`do`)
+  * `gather`/`spread`
+
+Below are some examples.
+
+***
 
 ```{r setup}
 suppressPackageStartupMessages(library("dplyr"))
@@ -19,6 +30,102 @@ packageVersion("sparklyr")
 
 sc <- sparklyr::spark_connect(version='2.0.2', 
                               master = "local")
+```
+
+## `summary`
+
+Standard `summary()`,  `glimpse()`, `glance()`, all fail on `Spark`.
+
+```{r sparksummary, error=TRUE}
+mtcars_spark <- copy_to(sc, mtcars)
+
+# gives summary of handle, not data
+summary(mtcars_spark)
+
+# errors-out
+glimpse(mtcars_spark)
+```
+
+```{r glance, error=TRUE}
+broom::glance(mtcars_spark)
+```
+
+`replyr_summary` works.
+
+```{r rsum}
+replyr_summary(mtcars_spark) %>%
+  select(-lexmin, -lexmax, -nunique, -index)
+```
+
+***
+
+## `gather`/`spread`
+
+`tidyr` pretty much only works on local data.
+
+```{r gatherspread, error=TRUE}
+mtcars2 <- mtcars %>%
+  mutate(car = row.names(mtcars)) %>%
+  copy_to(sc, ., 'mtcars2')
+
+# errors out
+mtcars2 %>% 
+  tidyr::gather('fact', 'value')
+```
+
+```{r moveValuesToCols}
+mtcars2 %>%
+  replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
+                          nameForNewValueColumn= 'value', 
+                          columnsToTakeFrom= colnames(mtcars),
+                          nameForNewClassColumn= 'class') %>%
+  arrange(car, fact)
+```
+
+
+## `replyr_bind_rows`
+
+`dplyr` `bind_rows`, `union`, and `union_all` are all unsuitable for use on `Spark`.
+`replyr::replyr_bind_rows()` supplies a working alternative.
+
+### `bind_rows()`
+
+
+```{r bindrows, error=TRUE}
+db1 <- copy_to(sc, 
+               data.frame(x=1:2, y=c('a','b'), 
+                          stringsAsFactors=FALSE),
+               name='db1')
+db2 <- copy_to(sc, 
+               data.frame(y=c('c','d'), x=3:4, 
+                          stringsAsFactors=FALSE),
+               name='db2')
+
+# Errors out as it tries to operate on the handles instead of the data.
+bind_rows(list(db1, db2))
+```
+
+### `union_all`
+
+```{r uniona, error=TRUE}
+# ignores column names and conversts all data to char
+union_all(db1, db2)
+```
+
+### `union`
+
+```{r union, error=TRUE}
+# ignores column names and conversts all data to char
+# also will probably lose duplicate rows
+union(db1, db2)
+```
+
+### `replyr_bind_rows`
+
+`replyr::replyr_bind_rows` can bind multiple `data.frame`s together.
+
+```{r replyr_bind_rows, error=TRUE}
+replyr_bind_rows(list(db1, db2))
 ```
 
 ## `dplyr::do`
@@ -37,10 +144,11 @@ by_cyl <- group_by(mtcars, cyl)
 do(by_cyl, head(., 2))
 ```
 
+***
+
 ### `dplyr::do` on `Spark`
 
 ```{r dplyrdolocalspark}
-mtcars_spark <- copy_to(sc, mtcars)
 by_cyl <- group_by(mtcars_spark, cyl)
 do(by_cyl, head(., 2))
 ```
@@ -66,8 +174,11 @@ mtcars_spark %>%
          function(di) head(di, 2))
 ```
 
+***
+
 ## Handle management
 
+***
 
 
 ```{r cleanup}
