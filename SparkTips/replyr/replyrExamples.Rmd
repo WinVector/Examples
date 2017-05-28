@@ -14,12 +14,12 @@ Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-pr
 
 For example: `replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
-  * `replyr_summary()`
-  * `replyr_bind_rows()`
-  * split/apply/combine (`do`)
-  * `replyr_moveValuesToRows`/ `replyr_moveValuesToColumns` (`gather`/`spread`)
-  * parametric programming (`wrapr::let` and `replyr::replyr_apply_f_mapped`)
-  * handle tracking
+  * Summarizing data: `replyr_summary()`.
+  * Binding tables by row: `replyr_bind_rows()`.
+  * Using the split/apply/combine pattern (`dplyr::do()`): `replyr_split()`, `replyr::gapply()`.
+  * Pivot/anti-pivot (`gather`/`spread`): `replyr_moveValuesToRows()`/ `replyr_moveValuesToColumns()`.
+  * Parametric programming (`wrapr::let()` and `replyr::replyr_apply_f_mapped()`).
+  * Handle tracking.
 
 Below are some examples.
 
