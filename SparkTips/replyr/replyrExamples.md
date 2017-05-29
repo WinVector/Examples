@@ -27,6 +27,12 @@ Examples
 ------------------------------------------------------------------------
 
 ``` r
+base::date()
+```
+
+    ## [1] "Sun May 28 21:43:18 2017"
+
+``` r
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 ```
@@ -61,7 +67,7 @@ suppressPackageStartupMessages("spaklyr")
 packageVersion("sparklyr")
 ```
 
-    ## [1] '0.5.4'
+    ## [1] '0.5.5'
 
 ``` r
 sc <- sparklyr::spark_connect(version='2.0.2', 
@@ -248,7 +254,7 @@ replyr_bind_rows(list(db1, db2))
 `dplyr::do`
 -----------
 
-Taking a few rows from each group of a grouped data set. Note: since we are not enforcing order by an arrange we can't expect the results to always match on database or `Spark` data sources.
+Our example is just taking a few rows from each group of a grouped data set. Note: since we are not enforcing order by an arrange we can't expect the results to always match on database or `Spark` data sources.
 
 ### `dplyr::do` on local data
 
@@ -468,9 +474,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_tsurjpVp5mCf3OZcJhHy_00000"
-    ## [2] "JOINTMP_tsurjpVp5mCf3OZcJhHy_00001"
-    ## [3] "JOINTMP_tsurjpVp5mCf3OZcJhHy_00002"
+    ## [1] "JOINTMP_o75JlDMniNVDQ8U8gTuo_00000"
+    ## [2] "JOINTMP_o75JlDMniNVDQ8U8gTuo_00001"
+    ## [3] "JOINTMP_o75JlDMniNVDQ8U8gTuo_00002"
 
 ``` r
 for(ti in temps) {
@@ -487,9 +493,9 @@ print(joined)
     ## # A tibble: 3 x 6
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1  0.35591735   0.1738268  0.09585686   0.6069589 0.362533869
-    ## 2     2  0.07574927   0.4151571  0.75228174   0.3278396 0.003319759
-    ## 3     3  0.78779612   0.8826985  0.50151998   0.6920921 0.892572297
+    ## 1     1   0.2645557   0.2454037   0.8649566   0.8863043   0.2010540
+    ## 2     2   0.9681561   0.1782183   0.2594593   0.2159815   0.1910757
+    ## 3     3   0.3349970   0.9732026   0.5693023   0.7851613   0.3685701
 
 Careful introduction and management of materialized intermediates can conserve resources and greatly improve outcomes.
 
@@ -507,5 +513,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  764192 40.9    1442291 77.1  1168576 62.5
-    ## Vcells 1414439 10.8    2552219 19.5  1868211 14.3
+    ## Ncells  792943 42.4    1442291 77.1  1168576 62.5
+    ## Vcells 1441012 11.0    2552219 19.5  1908271 14.6

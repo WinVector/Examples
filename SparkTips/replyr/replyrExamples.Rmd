@@ -33,6 +33,7 @@ Below are some examples.
 ***
 
 ```{r setup}
+base::date()
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 library("tidyr")
@@ -148,7 +149,7 @@ replyr_bind_rows(list(db1, db2))
 
 ## `dplyr::do`
 
-Taking a few rows from each group of a grouped data set. 
+Our example is just taking a few rows from each group of a grouped data set. 
 Note: since we are not enforcing order by an arrange we 
 can't expect the results to always match on database
 or `Spark` data sources.
