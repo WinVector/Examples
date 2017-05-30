@@ -6,6 +6,16 @@ output:
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
+Our next "R and big data tip" is: summarizing big data.
+
+We always say "if you are not looking at the data, you are not doing science"- and for big data you are very dependent on summaries (as you can't actually look at everything).
+
+Simple question: is there an easy way to summarize big data on [`R`](https://www.r-project.org)?  
+
+The answer is: yes, but we suggest you use the [`replyr`](https://CRAN.R-project.org/package=replyr) package to do so.
+
+Let's set up a trivial example.
+
 ```{r setup}
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
@@ -19,13 +29,37 @@ sc <- sparklyr::spark_connect(version='2.0.2',
 diris <- copy_to(sc, iris, 'diris')
 ```
 
+The usual `S3`-`summary()` summarizes the handle, not the data.
+
 ```{r summary}
 summary(diris)
 ```
 
-```{r replyr_summary}
-replyr_summary(diris)
+`tibble::glimpse()` throws.
+
+```{r glimpse, error=TRUE}
+packageVersion("tibble")
+# errors-out
+glimpse(diris)
 ```
+
+`broom::glance()` throws.
+
+```{r glance, error=TRUE}
+packageVersion("broom")
+broom::glance(diris)
+```
+
+`replyr_summary()` works, and returns results in a `data.frame`.
+
+```{r rsum}
+replyr_summary(diris) %>%
+  select(-nunique, -index, -nrows)
+```
+
+
+***
+
 
 ```{r cleanup}
 sparklyr::spark_disconnect(sc)
