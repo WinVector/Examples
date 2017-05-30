@@ -6,7 +6,7 @@ Why `replyr`
 
 Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)? Because it lets you take a number of common working patterns and apply them to remote data (such as databases or [`Spark`](https://spark.apache.org)).
 
-For example: `replyr` allows users to use the following functions on `Spark` data similar to how they are used on local `data.frame`s. Some key capability gaps remedied by `replyr` include:
+`replyr` allows users to work with `Spark` data similar to how they work with local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
 -   Summarizing data: `replyr_summary()`.
 -   Binding tables by row: `replyr_bind_rows()`.
@@ -30,7 +30,7 @@ Examples
 base::date()
 ```
 
-    ## [1] "Sun May 28 21:43:18 2017"
+    ## [1] "Tue May 30 08:30:01 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -99,6 +99,12 @@ glimpse(mtcars_spark)
     ## Variables: 11
 
     ## Error in if (width[i] <= max_width[i]) next: missing value where TRUE/FALSE needed
+
+``` r
+packageVersion("broom")
+```
+
+    ## [1] '0.4.2'
 
 ``` r
 broom::glance(mtcars_spark)
@@ -175,7 +181,7 @@ mtcars2 %>%
 `replyr_bind_rows`
 ------------------
 
-`dplyr` `bind_rows`, `union`, and `union_all` are all unsuitable for use on `Spark`. `replyr::replyr_bind_rows()` supplies a working alternative.
+`dplyr` `bind_rows`, `union`, and `union_all` are all currently unsuitable for use on `Spark`. `replyr::replyr_union_all()` and `replyr::replyr_bind_rows()` supply working alternatives.
 
 ### `bind_rows()`
 
@@ -198,7 +204,7 @@ bind_rows(list(db1, db2))
 ### `union_all`
 
 ``` r
-# ignores column names and conversts all data to char
+# ignores column names and converts all data to char
 union_all(db1, db2)
 ```
 
@@ -216,7 +222,7 @@ union_all(db1, db2)
 ### `union`
 
 ``` r
-# ignores column names and conversts all data to char
+# ignores column names and converts all data to char
 # also will probably lose duplicate rows
 union(db1, db2)
 ```
@@ -319,7 +325,7 @@ mtcars_spark %>%
     ## 5     4  22.8 108.0    93  3.85 2.320 18.61     1     1     4     1
     ## 6     4  24.4 146.7    62  3.69 3.190 20.00     1     0     4     2
 
-### `replyr` gapply
+### `replyr` `gapply`
 
 ``` r
 mtcars_spark %>%
@@ -390,11 +396,11 @@ d %>% ComputeRatioOfColumns('a','b','c')
 `replyr::replyr_apply_f_mapped`
 -------------------------------
 
-`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/). What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).
+`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/). What we really wanted was a stack of views so the data pretended to have column names that matched the code (i.e., re-mapping the data, not the code).
 
-With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data. So a re-mapping is active as long as a given controlling function is in control. In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
+With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data. In this design a re-mapping is active as long as a given controlling function is in control. In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
 
-Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package). The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`).
+Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package). The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`) because it has been supplied from external code or a package.
 
 ``` r
 # an external function with hard-coded column names
@@ -433,14 +439,14 @@ print(dF)
     ## 1          5.8         4.0  setosa    0
     ## 2          5.7         4.4  setosa    1
 
-`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.
+`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value. For functions that require additional arguments we suggest the usual wrapping or Currying solutions.
 
 ------------------------------------------------------------------------
 
 Handle management
 -----------------
 
-A lot of `Spark` tasks involve creation of intermediate or temporary tables. This can be explicitly (through `dplyr::copy_to()`) and implicit (through `dplyr::compute()`). These handles can represent a reference leak. To deal with this `replyr` supplies record-retaining temporary name generators (and uses the same internally).
+A lot of `Spark` tasks involve creation of intermediate or temporary tables. This can be explicit (through `dplyr::copy_to()`) and implicit (through `dplyr::compute()`). These handles can represent a reference leak and eat up resources. To deal with this `replyr` supplies record-retaining temporary name generators (and uses the same internally).
 
 For instance to join a few tables it is a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
 
@@ -474,9 +480,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_o75JlDMniNVDQ8U8gTuo_00000"
-    ## [2] "JOINTMP_o75JlDMniNVDQ8U8gTuo_00001"
-    ## [3] "JOINTMP_o75JlDMniNVDQ8U8gTuo_00002"
+    ## [1] "JOINTMP_veALtgz1mIxe8uiKo5eA_00000"
+    ## [2] "JOINTMP_veALtgz1mIxe8uiKo5eA_00001"
+    ## [3] "JOINTMP_veALtgz1mIxe8uiKo5eA_00002"
 
 ``` r
 for(ti in temps) {
@@ -493,9 +499,9 @@ print(joined)
     ## # A tibble: 3 x 6
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.2645557   0.2454037   0.8649566   0.8863043   0.2010540
-    ## 2     2   0.9681561   0.1782183   0.2594593   0.2159815   0.1910757
-    ## 3     3   0.3349970   0.9732026   0.5693023   0.7851613   0.3685701
+    ## 1     1  0.06867673   0.9122907   0.9919031   0.6748867   0.8373639
+    ## 2     2  0.50676554   0.2801610   0.7070883   0.7734393   0.9625326
+    ## 3     3  0.73922930   0.8049749   0.9540539   0.7294797   0.6902958
 
 Careful introduction and management of materialized intermediates can conserve resources and greatly improve outcomes.
 
@@ -506,6 +512,26 @@ Conclusion
 
 If you are serious about `R` controlled data processing in `Spark` you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
+Be aware of the functionality we demonstrated depends on using the development version of `replyr`. Though we will, of course, advance the CRAN version as soon as practical. `replyr` is by design a "sits on top" or "pure `R`" package, that is it doesn't directly introduce any `C++`, cross-language calling, or network interfaces itself (leaving that to `dplyr`, `dbplyr`, and `sparklyr`). This means `replyr` builds up complex functionality we want in terms of functionality already exposed by other packages.
+
+This also means if we see a *non*-`R` exception such as the following:
+
+``` r
+ *** caught segfault ***
+address 0x0, cause 'unknown'
+
+Traceback:
+ 1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
+```
+
+That while this *may* indicate an issue in `replyr` it likely indicates an issue in `R` or one of the called packages that is directly working with non-`R` resources.
+
+Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` not the (2017-05-30) [0.6.0 release candidate development version of `dplyr`](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4). The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities). We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known issues). While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.
+
+I'll probably re-run this worksheet after these packages get new CRAN releases.
+
+------------------------------------------------------------------------
+
 ``` r
 sparklyr::spark_disconnect(sc)
 rm(list=ls())
@@ -513,5 +539,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  792943 42.4    1442291 77.1  1168576 62.5
-    ## Vcells 1441012 11.0    2552219 19.5  1908271 14.6
+    ## Ncells  795353 42.5    1442291 77.1  1168576 62.5
+    ## Vcells 1452284 11.1    2552219 19.5  1916751 14.7
