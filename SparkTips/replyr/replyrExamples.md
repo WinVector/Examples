@@ -30,7 +30,7 @@ Examples
 base::date()
 ```
 
-    ## [1] "Tue May 30 08:30:01 2017"
+    ## [1] "Tue May 30 08:46:45 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -480,9 +480,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_veALtgz1mIxe8uiKo5eA_00000"
-    ## [2] "JOINTMP_veALtgz1mIxe8uiKo5eA_00001"
-    ## [3] "JOINTMP_veALtgz1mIxe8uiKo5eA_00002"
+    ## [1] "JOINTMP_0cRHqEBDtptnjZHDTDbH_00000"
+    ## [2] "JOINTMP_0cRHqEBDtptnjZHDTDbH_00001"
+    ## [3] "JOINTMP_0cRHqEBDtptnjZHDTDbH_00002"
 
 ``` r
 for(ti in temps) {
@@ -499,9 +499,9 @@ print(joined)
     ## # A tibble: 3 x 6
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1  0.06867673   0.9122907   0.9919031   0.6748867   0.8373639
-    ## 2     2  0.50676554   0.2801610   0.7070883   0.7734393   0.9625326
-    ## 3     3  0.73922930   0.8049749   0.9540539   0.7294797   0.6902958
+    ## 1     1  0.26718432  0.46322277   0.3552177   0.9987242   0.5100955
+    ## 2     2  0.04409685  0.05439603   0.6382974   0.7712039   0.9612708
+    ## 3     3  0.44783044  0.56110961   0.8710892   0.4425722   0.6751136
 
 Careful introduction and management of materialized intermediates can conserve resources and greatly improve outcomes.
 
@@ -522,11 +522,15 @@ address 0x0, cause 'unknown'
 
 Traceback:
  1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
+ 
+...
+
+An irrecoverable exception occurred. R is aborting now ...
 ```
 
-That while this *may* indicate an issue in `replyr` it likely indicates an issue in `R` or one of the called packages that is directly working with non-`R` resources.
+That while this *may* indicate an issue in `replyr` it likely indicates an issue in `R` or one of the called packages that is directly working with non-`R` resources. (The above happens every once in a while while knitting this exact document using the currnet 2017-05-30 CRAN release versions of `dplyr` and `sparklyr`, but this doesn't rise to the standard of a "`reprex`" and so is essentialy unsubmittable as an issue report.)
 
-Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` not the (2017-05-30) [0.6.0 release candidate development version of `dplyr`](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4). The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities). We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known issues). While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.
+Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` not the (2017-05-30) [0.6.0 release candidate development version of `dplyr`](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4). The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities). We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), [here](https://github.com/rstudio/sparklyr/issues/678), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known potentially upgrade blocking issues). While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.
 
 I'll probably re-run this worksheet after these packages get new CRAN releases.
 
@@ -540,4 +544,4 @@ gc()
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
     ## Ncells  795353 42.5    1442291 77.1  1168576 62.5
-    ## Vcells 1452284 11.1    2552219 19.5  1916751 14.7
+    ## Vcells 1452461 11.1    2552219 19.5  1916668 14.7
