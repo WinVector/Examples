@@ -3,7 +3,7 @@ Our next "R and big data tip" is: summarizing big data.
 
 We always say "if you are not looking at the data, you are not doing science"- and for big data you are very dependent on summaries (as you can't actually look at everything).
 
-Simple question: is there an easy way to summarize big data on [`R`](https://www.r-project.org)?
+Simple question: is there an easy way to summarize big data in [`R`](https://www.r-project.org)?
 
 The answer is: yes, but we suggest you use the [`replyr`](https://CRAN.R-project.org/package=replyr) package to do so.
 
@@ -101,5 +101,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  762733 40.8    1442291 77.1  1168576 62.5
-    ## Vcells 1394817 10.7    2552219 19.5  1819886 13.9
+    ## Ncells  762515 40.8    1442291 77.1  1168576 62.5
+    ## Vcells 1394407 10.7    2552219 19.5  1820135 13.9
