@@ -1,5 +1,5 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-Our next "R and big data tip" is: summarizing big data.
+Our next ["R and big data tip"](http://www.win-vector.com/blog/tag/r-and-big-data/) is: summarizing big data.
 
 We always say "if you are not looking at the data, you are not doing science"- and for big data you are very dependent on summaries (as you can't actually look at everything).
 
@@ -101,5 +101,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  762515 40.8    1442291 77.1  1168576 62.5
-    ## Vcells 1394407 10.7    2552219 19.5  1820135 13.9
+    ## Ncells  762743 40.8    1442291 77.1  1168576 62.5
+    ## Vcells 1394875 10.7    2552219 19.5  1819440 13.9

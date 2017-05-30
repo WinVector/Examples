@@ -6,7 +6,7 @@ output:
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-Our next "R and big data tip" is: summarizing big data.
+Our next ["R and big data tip"](http://www.win-vector.com/blog/tag/r-and-big-data/) is: summarizing big data.
 
 We always say "if you are not looking at the data, you are not doing science"- and for big data you are very dependent on summaries (as you can't actually look at everything).
 
