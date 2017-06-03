@@ -42,16 +42,65 @@ n1 <- names(frameListS)[[1]]
 nrest <- setdiff(names(frameListS),n1)
 ```
 
-```{r error, eval=FALSE}
 
+```{r fndef}
+#' Compute union_all of tables.  Cut down from \code{replyr::replyr_union_all()} for debugging.
+#'
+#' @param sc remote data source tables are on (and where to copy-to and work), NULL for local tables.
+#' @param tabA not-NULL table with at least 1 row on sc data source, and columns \code{c("car", "fact", "value")}.
+#' @param tabB not-NULL table with at least 1 row on same data source as tabA and columns \code{c("car", "fact", "value")}.
+#' @return table with all rows of tabA and tabB (union_all).
+#'
+#' @export
+example_union_all <- function(sc, tabA, tabB) {
+  cols <- intersect(colnames(tabA), colnames(tabB))
+  expectedCols <- c("car", "fact", "value")
+  if((length(cols)!=length(expectedCols)) ||
+     (!all.equal(cols, expectedCols))) {
+    stop(paste("example_union_all: column set must be exactly", 
+               paste(expectedCols, collapse = ', ')))
+  }
+  mergeColName <- 'exampleunioncol'
+  # build a 2-row table to control the union
+  controlTable <- data.frame(exampleunioncol= c('a', 'b'),
+                             stringsAsFactors = FALSE)
+  if(!is.null(sc)) {
+    controlTable <- copy_to(sc, controlTable,
+                            temporary=TRUE)
+  }
+  # decorate left and right tables for the merge
+  tabA <- tabA %>%
+    select(one_of(cols)) %>%
+    mutate(exampleunioncol = as.character('a'))
+  tabB <- tabB %>%
+    select(one_of(cols)) %>%
+    mutate(exampleunioncol = as.character('b'))
+  # do the merges
+  joined <- controlTable %>%
+    left_join(tabA, by=mergeColName) %>%
+    left_join(tabB, by=mergeColName, suffix = c('_a', '_b'))
+  # coalesce the values
+  joined <- joined %>%
+    mutate(car = ifelse(exampleunioncol=='a', car_a, car_b))
+  joined <- joined %>%
+    mutate(fact = ifelse(exampleunioncol=='a', fact_a, fact_b))
+  joined <- joined %>%
+    mutate(value = ifelse(exampleunioncol=='a', value_a, value_b))
+  joined %>%
+    select(one_of(cols)) %>%
+    dplyr::compute()
+}
+```
+
+```{r error, eval=FALSE}
 for(i in seq_len(100)) { 
   print(paste('start',i,base::date()))
+  # very crude binding of rows (actual code would always bind small bits)
   res <- frameListS[[n1]]
   for(fi in nrest) {
     print(paste(' start',i,fi,base::date()))
     oi <- frameListS[[fi]]
-    res <- replyr::replyr_union_all(res, oi) %>%
-      compute()
+    res <- example_union_all(sc, res, oi)
     print(paste(' done',i,fi,base::date()))
   }
   local <- res %>%

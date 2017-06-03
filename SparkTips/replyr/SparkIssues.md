@@ -3,13 +3,7 @@
 base::date()
 ```
 
-    ## [1] "Sat Jun  3 14:22:35 2017"
-
-``` r
-packageVersion("replyr")
-```
-
-    ## [1] '0.3.902'
+    ## [1] "Sat Jun  3 15:19:28 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -117,7 +111,7 @@ print(sc)
     ## 
     ## $backend
     ## A connection with                               
-    ## description "->localhost:50429"
+    ## description "->localhost:50577"
     ## class       "sockconn"         
     ## mode        "wb"               
     ## text        "binary"           
@@ -136,22 +130,22 @@ print(sc)
     ## can write   "yes"             
     ## 
     ## $output_file
-    ## [1] "/var/folders/7q/h_jp2vj131g5799gfnpzhdp80000gn/T//RtmpE4rDHP/file83c383ca518_spark.log"
+    ## [1] "/var/folders/7q/h_jp2vj131g5799gfnpzhdp80000gn/T//RtmpkelPvw/file47b3ec1b2e3_spark.log"
     ## 
     ## $spark_context
     ## <jobj[5]>
     ##   class org.apache.spark.SparkContext
-    ##   org.apache.spark.SparkContext@5869878f
+    ##   org.apache.spark.SparkContext@3fd6f69a
     ## 
     ## $java_context
     ## <jobj[6]>
     ##   class org.apache.spark.api.java.JavaSparkContext
-    ##   org.apache.spark.api.java.JavaSparkContext@78f8c95e
+    ##   org.apache.spark.api.java.JavaSparkContext@6633394d
     ## 
     ## $hive_context
     ## <jobj[9]>
     ##   class org.apache.spark.sql.SparkSession
-    ##   org.apache.spark.sql.SparkSession@30d7acb6
+    ##   org.apache.spark.sql.SparkSession@77ba6a1a
     ## 
     ## attr(,"class")
     ## [1] "spark_connection"       "spark_shell_connection"
@@ -161,248 +155,87 @@ print(sc)
 mtcars2 <- mtcars %>%
   mutate(car = row.names(mtcars)) 
 
+frameList <- mtcars2 %>% 
+  tidyr::gather(key='fact', value='value', -car) %>% 
+  split(., .$fact) 
 
-tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
+frameListS <- lapply(names(frameList), 
+                     function(ni) {
+                       copy_to(sc, frameList[[ni]], ni)
+                     }
+)
+names(frameListS) <- names(frameList)
+
+n1 <- names(frameListS)[[1]]
+nrest <- setdiff(names(frameListS),n1)
 ```
 
-Here is a local run showing the process working (note: this is not definative for a number of reasons including using different row-binding strategies depending on the declared back-end).
+``` r
+#' Compute union_all of tables.  Cut down from \code{replyr::replyr_union_all()} for debugging.
+#'
+#' @param sc remote data source tables are on (and where to copy-to and work), NULL for local tables.
+#' @param tabA not-NULL table with at least 1 row on sc data source, and columns \code{c("car", "fact", "value")}.
+#' @param tabB not-NULL table with at least 1 row on same data source as tabA and columns \code{c("car", "fact", "value")}.
+#' @return table with all rows of tabA and tabB (union_all).
+#'
+#' @export
+example_union_all <- function(sc, tabA, tabB) {
+  cols <- intersect(colnames(tabA), colnames(tabB))
+  expectedCols <- c("car", "fact", "value")
+  if((length(cols)!=length(expectedCols)) ||
+     (!all.equal(cols, expectedCols))) {
+    stop(paste("example_union_all: column set must be exactly", 
+               paste(expectedCols, collapse = ', ')))
+  }
+  mergeColName <- 'exampleunioncol'
+  # build a 2-row table to control the union
+  controlTable <- data.frame(exampleunioncol= c('a', 'b'),
+                             stringsAsFactors = FALSE)
+  if(!is.null(sc)) {
+    controlTable <- copy_to(sc, controlTable,
+                            temporary=TRUE)
+  }
+  # decorate left and right tables for the merge
+  tabA <- tabA %>%
+    select(one_of(cols)) %>%
+    mutate(exampleunioncol = as.character('a'))
+  tabB <- tabB %>%
+    select(one_of(cols)) %>%
+    mutate(exampleunioncol = as.character('b'))
+  # do the merges
+  joined <- controlTable %>%
+    left_join(tabA, by=mergeColName) %>%
+    left_join(tabB, by=mergeColName, suffix = c('_a', '_b'))
+  # coalesce the values
+  joined <- joined %>%
+    mutate(car = ifelse(exampleunioncol=='a', car_a, car_b))
+  joined <- joined %>%
+    mutate(fact = ifelse(exampleunioncol=='a', fact_a, fact_b))
+  joined <- joined %>%
+    mutate(value = ifelse(exampleunioncol=='a', value_a, value_b))
+  joined %>%
+    select(one_of(cols)) %>%
+    dplyr::compute()
+}
+```
 
 ``` r
-for(i in seq_len(100)) {
+for(i in seq_len(100)) { 
   print(paste('start',i,base::date()))
-  localRes <- mtcars2 %>%
-    replyr::replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
-                                    nameForNewValueColumn= 'value', 
-                                    columnsToTakeFrom= colnames(mtcars),
-                                    tempNameGenerator = tempNameGenerator) %>%
+  # very crude binding of rows (actual code would always bind small bits)
+  res <- frameListS[[n1]]
+  for(fi in nrest) {
+    print(paste(' start',i,fi,base::date()))
+    oi <- frameListS[[fi]]
+    res <- example_union_all(sc, res, oi)
+    print(paste(' done',i,fi,base::date()))
+  }
+  local <- res %>%
     collect() %>%
     as.data.frame()
   print(paste(' done',i,base::date()))
 }
 ```
-
-    ## [1] "start 1 Sat Jun  3 14:22:44 2017"
-    ## [1] " done 1 Sat Jun  3 14:22:45 2017"
-    ## [1] "start 2 Sat Jun  3 14:22:45 2017"
-    ## [1] " done 2 Sat Jun  3 14:22:45 2017"
-    ## [1] "start 3 Sat Jun  3 14:22:45 2017"
-    ## [1] " done 3 Sat Jun  3 14:22:45 2017"
-    ## [1] "start 4 Sat Jun  3 14:22:45 2017"
-    ## [1] " done 4 Sat Jun  3 14:22:45 2017"
-    ## [1] "start 5 Sat Jun  3 14:22:45 2017"
-    ## [1] " done 5 Sat Jun  3 14:22:46 2017"
-    ## [1] "start 6 Sat Jun  3 14:22:46 2017"
-    ## [1] " done 6 Sat Jun  3 14:22:46 2017"
-    ## [1] "start 7 Sat Jun  3 14:22:46 2017"
-    ## [1] " done 7 Sat Jun  3 14:22:46 2017"
-    ## [1] "start 8 Sat Jun  3 14:22:46 2017"
-    ## [1] " done 8 Sat Jun  3 14:22:46 2017"
-    ## [1] "start 9 Sat Jun  3 14:22:46 2017"
-    ## [1] " done 9 Sat Jun  3 14:22:46 2017"
-    ## [1] "start 10 Sat Jun  3 14:22:46 2017"
-    ## [1] " done 10 Sat Jun  3 14:22:46 2017"
-    ## [1] "start 11 Sat Jun  3 14:22:46 2017"
-    ## [1] " done 11 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 12 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 12 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 13 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 13 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 14 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 14 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 15 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 15 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 16 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 16 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 17 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 17 Sat Jun  3 14:22:47 2017"
-    ## [1] "start 18 Sat Jun  3 14:22:47 2017"
-    ## [1] " done 18 Sat Jun  3 14:22:48 2017"
-    ## [1] "start 19 Sat Jun  3 14:22:48 2017"
-    ## [1] " done 19 Sat Jun  3 14:22:48 2017"
-    ## [1] "start 20 Sat Jun  3 14:22:48 2017"
-    ## [1] " done 20 Sat Jun  3 14:22:48 2017"
-    ## [1] "start 21 Sat Jun  3 14:22:48 2017"
-    ## [1] " done 21 Sat Jun  3 14:22:48 2017"
-    ## [1] "start 22 Sat Jun  3 14:22:48 2017"
-    ## [1] " done 22 Sat Jun  3 14:22:48 2017"
-    ## [1] "start 23 Sat Jun  3 14:22:48 2017"
-    ## [1] " done 23 Sat Jun  3 14:22:48 2017"
-    ## [1] "start 24 Sat Jun  3 14:22:48 2017"
-    ## [1] " done 24 Sat Jun  3 14:22:49 2017"
-    ## [1] "start 25 Sat Jun  3 14:22:49 2017"
-    ## [1] " done 25 Sat Jun  3 14:22:49 2017"
-    ## [1] "start 26 Sat Jun  3 14:22:49 2017"
-    ## [1] " done 26 Sat Jun  3 14:22:49 2017"
-    ## [1] "start 27 Sat Jun  3 14:22:49 2017"
-    ## [1] " done 27 Sat Jun  3 14:22:49 2017"
-    ## [1] "start 28 Sat Jun  3 14:22:49 2017"
-    ## [1] " done 28 Sat Jun  3 14:22:49 2017"
-    ## [1] "start 29 Sat Jun  3 14:22:49 2017"
-    ## [1] " done 29 Sat Jun  3 14:22:50 2017"
-    ## [1] "start 30 Sat Jun  3 14:22:50 2017"
-    ## [1] " done 30 Sat Jun  3 14:22:50 2017"
-    ## [1] "start 31 Sat Jun  3 14:22:50 2017"
-    ## [1] " done 31 Sat Jun  3 14:22:50 2017"
-    ## [1] "start 32 Sat Jun  3 14:22:50 2017"
-    ## [1] " done 32 Sat Jun  3 14:22:50 2017"
-    ## [1] "start 33 Sat Jun  3 14:22:50 2017"
-    ## [1] " done 33 Sat Jun  3 14:22:51 2017"
-    ## [1] "start 34 Sat Jun  3 14:22:51 2017"
-    ## [1] " done 34 Sat Jun  3 14:22:51 2017"
-    ## [1] "start 35 Sat Jun  3 14:22:51 2017"
-    ## [1] " done 35 Sat Jun  3 14:22:51 2017"
-    ## [1] "start 36 Sat Jun  3 14:22:51 2017"
-    ## [1] " done 36 Sat Jun  3 14:22:51 2017"
-    ## [1] "start 37 Sat Jun  3 14:22:51 2017"
-    ## [1] " done 37 Sat Jun  3 14:22:51 2017"
-    ## [1] "start 38 Sat Jun  3 14:22:51 2017"
-    ## [1] " done 38 Sat Jun  3 14:22:51 2017"
-    ## [1] "start 39 Sat Jun  3 14:22:51 2017"
-    ## [1] " done 39 Sat Jun  3 14:22:52 2017"
-    ## [1] "start 40 Sat Jun  3 14:22:52 2017"
-    ## [1] " done 40 Sat Jun  3 14:22:52 2017"
-    ## [1] "start 41 Sat Jun  3 14:22:52 2017"
-    ## [1] " done 41 Sat Jun  3 14:22:52 2017"
-    ## [1] "start 42 Sat Jun  3 14:22:52 2017"
-    ## [1] " done 42 Sat Jun  3 14:22:52 2017"
-    ## [1] "start 43 Sat Jun  3 14:22:52 2017"
-    ## [1] " done 43 Sat Jun  3 14:22:53 2017"
-    ## [1] "start 44 Sat Jun  3 14:22:53 2017"
-    ## [1] " done 44 Sat Jun  3 14:22:53 2017"
-    ## [1] "start 45 Sat Jun  3 14:22:53 2017"
-    ## [1] " done 45 Sat Jun  3 14:22:53 2017"
-    ## [1] "start 46 Sat Jun  3 14:22:53 2017"
-    ## [1] " done 46 Sat Jun  3 14:22:54 2017"
-    ## [1] "start 47 Sat Jun  3 14:22:54 2017"
-    ## [1] " done 47 Sat Jun  3 14:22:54 2017"
-    ## [1] "start 48 Sat Jun  3 14:22:54 2017"
-    ## [1] " done 48 Sat Jun  3 14:22:54 2017"
-    ## [1] "start 49 Sat Jun  3 14:22:54 2017"
-    ## [1] " done 49 Sat Jun  3 14:22:54 2017"
-    ## [1] "start 50 Sat Jun  3 14:22:54 2017"
-    ## [1] " done 50 Sat Jun  3 14:22:54 2017"
-    ## [1] "start 51 Sat Jun  3 14:22:54 2017"
-    ## [1] " done 51 Sat Jun  3 14:22:55 2017"
-    ## [1] "start 52 Sat Jun  3 14:22:55 2017"
-    ## [1] " done 52 Sat Jun  3 14:22:55 2017"
-    ## [1] "start 53 Sat Jun  3 14:22:55 2017"
-    ## [1] " done 53 Sat Jun  3 14:22:55 2017"
-    ## [1] "start 54 Sat Jun  3 14:22:55 2017"
-    ## [1] " done 54 Sat Jun  3 14:22:55 2017"
-    ## [1] "start 55 Sat Jun  3 14:22:55 2017"
-    ## [1] " done 55 Sat Jun  3 14:22:55 2017"
-    ## [1] "start 56 Sat Jun  3 14:22:55 2017"
-    ## [1] " done 56 Sat Jun  3 14:22:55 2017"
-    ## [1] "start 57 Sat Jun  3 14:22:55 2017"
-    ## [1] " done 57 Sat Jun  3 14:22:56 2017"
-    ## [1] "start 58 Sat Jun  3 14:22:56 2017"
-    ## [1] " done 58 Sat Jun  3 14:22:56 2017"
-    ## [1] "start 59 Sat Jun  3 14:22:56 2017"
-    ## [1] " done 59 Sat Jun  3 14:22:56 2017"
-    ## [1] "start 60 Sat Jun  3 14:22:56 2017"
-    ## [1] " done 60 Sat Jun  3 14:22:56 2017"
-    ## [1] "start 61 Sat Jun  3 14:22:56 2017"
-    ## [1] " done 61 Sat Jun  3 14:22:56 2017"
-    ## [1] "start 62 Sat Jun  3 14:22:56 2017"
-    ## [1] " done 62 Sat Jun  3 14:22:57 2017"
-    ## [1] "start 63 Sat Jun  3 14:22:57 2017"
-    ## [1] " done 63 Sat Jun  3 14:22:57 2017"
-    ## [1] "start 64 Sat Jun  3 14:22:57 2017"
-    ## [1] " done 64 Sat Jun  3 14:22:57 2017"
-    ## [1] "start 65 Sat Jun  3 14:22:57 2017"
-    ## [1] " done 65 Sat Jun  3 14:22:57 2017"
-    ## [1] "start 66 Sat Jun  3 14:22:57 2017"
-    ## [1] " done 66 Sat Jun  3 14:22:58 2017"
-    ## [1] "start 67 Sat Jun  3 14:22:58 2017"
-    ## [1] " done 67 Sat Jun  3 14:22:58 2017"
-    ## [1] "start 68 Sat Jun  3 14:22:58 2017"
-    ## [1] " done 68 Sat Jun  3 14:22:58 2017"
-    ## [1] "start 69 Sat Jun  3 14:22:58 2017"
-    ## [1] " done 69 Sat Jun  3 14:22:59 2017"
-    ## [1] "start 70 Sat Jun  3 14:22:59 2017"
-    ## [1] " done 70 Sat Jun  3 14:22:59 2017"
-    ## [1] "start 71 Sat Jun  3 14:22:59 2017"
-    ## [1] " done 71 Sat Jun  3 14:22:59 2017"
-    ## [1] "start 72 Sat Jun  3 14:22:59 2017"
-    ## [1] " done 72 Sat Jun  3 14:22:59 2017"
-    ## [1] "start 73 Sat Jun  3 14:22:59 2017"
-    ## [1] " done 73 Sat Jun  3 14:23:00 2017"
-    ## [1] "start 74 Sat Jun  3 14:23:00 2017"
-    ## [1] " done 74 Sat Jun  3 14:23:00 2017"
-    ## [1] "start 75 Sat Jun  3 14:23:00 2017"
-    ## [1] " done 75 Sat Jun  3 14:23:00 2017"
-    ## [1] "start 76 Sat Jun  3 14:23:00 2017"
-    ## [1] " done 76 Sat Jun  3 14:23:00 2017"
-    ## [1] "start 77 Sat Jun  3 14:23:00 2017"
-    ## [1] " done 77 Sat Jun  3 14:23:00 2017"
-    ## [1] "start 78 Sat Jun  3 14:23:00 2017"
-    ## [1] " done 78 Sat Jun  3 14:23:00 2017"
-    ## [1] "start 79 Sat Jun  3 14:23:00 2017"
-    ## [1] " done 79 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 80 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 80 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 81 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 81 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 82 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 82 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 83 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 83 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 84 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 84 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 85 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 85 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 86 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 86 Sat Jun  3 14:23:01 2017"
-    ## [1] "start 87 Sat Jun  3 14:23:01 2017"
-    ## [1] " done 87 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 88 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 88 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 89 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 89 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 90 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 90 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 91 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 91 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 92 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 92 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 93 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 93 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 94 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 94 Sat Jun  3 14:23:02 2017"
-    ## [1] "start 95 Sat Jun  3 14:23:02 2017"
-    ## [1] " done 95 Sat Jun  3 14:23:03 2017"
-    ## [1] "start 96 Sat Jun  3 14:23:03 2017"
-    ## [1] " done 96 Sat Jun  3 14:23:03 2017"
-    ## [1] "start 97 Sat Jun  3 14:23:03 2017"
-    ## [1] " done 97 Sat Jun  3 14:23:03 2017"
-    ## [1] "start 98 Sat Jun  3 14:23:03 2017"
-    ## [1] " done 98 Sat Jun  3 14:23:03 2017"
-    ## [1] "start 99 Sat Jun  3 14:23:03 2017"
-    ## [1] " done 99 Sat Jun  3 14:23:03 2017"
-    ## [1] "start 100 Sat Jun  3 14:23:03 2017"
-    ## [1] " done 100 Sat Jun  3 14:23:03 2017"
-
-Seems to reliably hang `Spark` (in about 5 passes through the loop on average), sometimes crashing `R`.
-
-Try to run on `Spark`.
-
-``` r
-mtcars2 <- copy_to(sc, mtcars2, 'mtcars2')
-
-for(i in seq_len(100)) {
-  print(paste('start',i,base::date()))
-  localRes <- mtcars2 %>%
-    replyr::replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
-                                    nameForNewValueColumn= 'value', 
-                                    columnsToTakeFrom= colnames(mtcars),
-                                    tempNameGenerator = tempNameGenerator) %>%
-    collect() %>%
-    as.data.frame()
-  print(paste(' done',i,base::date()))
-}
-```
-
-![](crash.png)
 
 ``` r
 if(!is.null(sc)) {
@@ -413,5 +246,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  705898 37.7    1168576 62.5  1168576 62.5
-    ## Vcells 1216022  9.3    2060183 15.8  1479358 11.3
+    ## Ncells  706832 37.8    1168576 62.5   940480 50.3
+    ## Vcells 1197220  9.2    2060183 15.8  1499000 11.5
