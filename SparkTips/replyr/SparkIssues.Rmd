@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r init}
 base::date()
-packageVersion("replyr")
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 packageVersion("sparklyr")
@@ -37,15 +36,29 @@ frameListS <- lapply(names(frameList),
                        copy_to(sc, frameList[[ni]], ni)
                      }
 )
+names(frameListS) <- names(frameList)
 
-tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
+n1 <- names(frameListS)[[1]]
+nrest <- setdiff(names(frameListS),n1)
 ```
 
 ```{r error, eval=FALSE}
-local <- replyr::replyr_bind_rows(frameListS, 
-                                 tempNameGenerator = tempNameGenerator()) %>%
-  collect() %>%
-  as.data.frame()
+
+for(i in seq_len(100)) { 
+  print(paste('start',i,base::date()))
+  res <- frameListS[[n1]]
+  for(fi in nrest) {
+    print(paste(' start',i,fi,base::date()))
+    oi <- frameListS[[fi]]
+    res <- replyr::replyr_union_all(res, oi) %>%
+      compute()
+    print(paste(' done',i,fi,base::date()))
+  }
+  local <- res %>%
+    collect() %>%
+    as.data.frame()
+  print(paste(' done',i,base::date()))
+}
 ```
 
 
