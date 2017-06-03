@@ -15,7 +15,6 @@ base::date()
 packageVersion("replyr")
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
-suppressPackageStartupMessages("spaklyr")
 packageVersion("sparklyr")
 devtools::session_info()
 
@@ -24,7 +23,7 @@ sc <- sparklyr::spark_connect(version='2.0.2',
 print(sc)
 
 mtcars2 <- mtcars %>%
-  mutate(car = row.names(mtcars))  %>%
+  mutate(car = row.names(mtcars)) %>%
   copy_to(sc, ., 'mtcars2')
 
 tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
@@ -39,8 +38,7 @@ for(i in seq_len(100)) {
     replyr::replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
                                     nameForNewValueColumn= 'value', 
                                     columnsToTakeFrom= colnames(mtcars),
-                                    tempNameGenerator = tempNameGenerator,
-                                    debugPrint = TRUE) %>%
+                                    tempNameGenerator = tempNameGenerator) %>%
     collect() %>%
     as.data.frame()
   print(paste(' done',i,base::date()))
