@@ -1,9 +1,10 @@
 ---
-title: "SparkIssue"
-author: "Win-Vector LLC"
-date: "6/3/2017"
-output: html_document
+output:
+  md_document:
+    variant: markdown_github
 ---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -49,6 +50,8 @@ for(i in seq_len(100)) {
   print(paste(' done',i,base::date()))
 }
 ```
+
+![](crash.png)
 
 ```{r cleanup}
 sparklyr::spark_disconnect(sc)
