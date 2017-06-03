@@ -30,7 +30,7 @@ Examples
 base::date()
 ```
 
-    ## [1] "Tue May 30 08:46:45 2017"
+    ## [1] "Sat Jun  3 09:21:45 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -393,14 +393,16 @@ d %>% ComputeRatioOfColumns('a','b','c')
 
 `wrapr::let` is based on `gtools::strmacro` by Gregory R. Warnes.
 
+------------------------------------------------------------------------
+
 `replyr::replyr_apply_f_mapped`
 -------------------------------
 
-`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/). What we really wanted was a stack of views so the data pretended to have column names that matched the code (i.e., re-mapping the data, not the code).
+`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/). What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).
 
-With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data. In this design a re-mapping is active as long as a given controlling function is in control. In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
+With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data. So a re-mapping is active as long as a given controlling function is in control. In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
 
-Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package). The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`) because it has been supplied from external code or a package.
+Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package). The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`).
 
 ``` r
 # an external function with hard-coded column names
@@ -410,28 +412,26 @@ DecreaseRankColumnByOne <- function(d) {
 }
 ```
 
-To apply this function to `d` (which doesn't have the expected column names!) we use `replyr::replyr_apply_f_mapped()` as follows:
+To apply this function to `d` (which doesn't have the expected column names!) we use `replyr::replyr_apply_f_mapped()` to create a new parametrized adapter as follows:
 
 ``` r
+# our data
 d <- data.frame(Sepal_Length = c(5.8,5.7),
                 Sepal_Width = c(4.0,4.4),
                 Species = 'setosa',
                 rank = c(1,2))
 
-# map our data to expected column names so we can use function
-nmap <- c(GroupColumn='Species',
-          ValueColumn='Sepal_Length',
-          RankColumn='rank')
-print(nmap)
-```
+# a wrapper to introduce parameters
+DecreaseRankColumnByOneNamed <- function(d, ColName) {
+  replyr::replyr_apply_f_mapped(d, 
+                                f = DecreaseRankColumnByOne, 
+                                nmap = c(RankColumn = ColName),
+                                restrictMapIn = FALSE, 
+                                restrictMapOut = FALSE)
+}
 
-    ##    GroupColumn    ValueColumn     RankColumn 
-    ##      "Species" "Sepal_Length"         "rank"
-
-``` r
-dF <- replyr::replyr_apply_f_mapped(d, DecreaseRankColumnByOne, nmap,
-                                    restrictMapIn = FALSE, 
-                                    restrictMapOut = FALSE)
+# use
+dF <- DecreaseRankColumnByOneNamed(d, 'rank')
 print(dF)
 ```
 
@@ -439,7 +439,7 @@ print(dF)
     ## 1          5.8         4.0  setosa    0
     ## 2          5.7         4.4  setosa    1
 
-`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value. For functions that require additional arguments we suggest the usual wrapping or Currying solutions.
+`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.
 
 ------------------------------------------------------------------------
 
@@ -480,9 +480,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_0cRHqEBDtptnjZHDTDbH_00000"
-    ## [2] "JOINTMP_0cRHqEBDtptnjZHDTDbH_00001"
-    ## [3] "JOINTMP_0cRHqEBDtptnjZHDTDbH_00002"
+    ## [1] "JOINTMP_kvncPUx1wsoT17dVh1Hw_00000"
+    ## [2] "JOINTMP_kvncPUx1wsoT17dVh1Hw_00001"
+    ## [3] "JOINTMP_kvncPUx1wsoT17dVh1Hw_00002"
 
 ``` r
 for(ti in temps) {
@@ -499,9 +499,9 @@ print(joined)
     ## # A tibble: 3 x 6
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1  0.26718432  0.46322277   0.3552177   0.9987242   0.5100955
-    ## 2     2  0.04409685  0.05439603   0.6382974   0.7712039   0.9612708
-    ## 3     3  0.44783044  0.56110961   0.8710892   0.4425722   0.6751136
+    ## 1     1   0.7414475   0.7143440   0.1328381   0.0119057   0.4197905
+    ## 2     2   0.3321921   0.4994741   0.9064534   0.2467197   0.8818058
+    ## 3     3   0.9010457   0.1415909   0.8438978   0.5893711   0.4573468
 
 Careful introduction and management of materialized intermediates can conserve resources and greatly improve outcomes.
 
@@ -543,5 +543,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  795353 42.5    1442291 77.1  1168576 62.5
-    ## Vcells 1452461 11.1    2552219 19.5  1916668 14.7
+    ## Ncells  795329 42.5    1442291 77.1  1168576 62.5
+    ## Vcells 1452278 11.1    2552219 19.5  1909514 14.6

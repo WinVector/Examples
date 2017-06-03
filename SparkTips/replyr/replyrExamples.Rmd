@@ -231,13 +231,15 @@ d %>% ComputeRatioOfColumns('a','b','c')
 
 `wrapr::let` is based on `gtools::strmacro` by Gregory R. Warnes.
 
+***
+
 ## `replyr::replyr_apply_f_mapped`
 
-`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/).  What we really wanted was a stack of views so the data pretended to have column names that matched the code (i.e., re-mapping the data, not the code).  
+`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/).  What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).  
 
-With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data.  In this design a re-mapping is active as long as a given controlling function is in control.  In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
+With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data.  So a re-mapping is active as long as a given controlling function is in control.  In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
 
-Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package).  The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`) because it has been supplied from external code or a package.
+Suppose the operation we wish to use is a rank-reducing function that has been supplied as function from somewhere else that we do not have control of (such as a package).  The function could be simple such as the following, but we are going to assume we want to use it without alteration (including the without the small alteration of introducing `wrapr::let()`).
 
 ```{r rankfn}
 # an external function with hard-coded column names
@@ -247,27 +249,30 @@ DecreaseRankColumnByOne <- function(d) {
 }
 ```
 
-To apply this function to `d` (which doesn't have the expected column names!) we use  `replyr::replyr_apply_f_mapped()` as follows:
+To apply this function to `d` (which doesn't have the expected column names!) we use  `replyr::replyr_apply_f_mapped()` to create a new parametrized adapter as follows:
 
 ```{r replyrmapf}
+# our data
 d <- data.frame(Sepal_Length = c(5.8,5.7),
                 Sepal_Width = c(4.0,4.4),
                 Species = 'setosa',
                 rank = c(1,2))
 
-# map our data to expected column names so we can use function
-nmap <- c(GroupColumn='Species',
-          ValueColumn='Sepal_Length',
-          RankColumn='rank')
-print(nmap)
+# a wrapper to introduce parameters
+DecreaseRankColumnByOneNamed <- function(d, ColName) {
+  replyr::replyr_apply_f_mapped(d, 
+                                f = DecreaseRankColumnByOne, 
+                                nmap = c(RankColumn = ColName),
+                                restrictMapIn = FALSE, 
+                                restrictMapOut = FALSE)
+}
 
-dF <- replyr::replyr_apply_f_mapped(d, DecreaseRankColumnByOne, nmap,
-                                    restrictMapIn = FALSE, 
-                                    restrictMapOut = FALSE)
+# use
+dF <- DecreaseRankColumnByOneNamed(d, 'rank')
 print(dF)
 ```
 
-`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.  For functions that require additional arguments we suggest the usual wrapping or Currying solutions.
+`replyr::replyr_apply_f_mapped()` renames the columns to the names expected by `DecreaseRankColumnByOne` (the mapping specified in `nmap`), applies `DecreaseRankColumnByOne`, and then inverts the mapping before returning the value.
 
 ***
 
