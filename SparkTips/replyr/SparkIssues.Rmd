@@ -1,0 +1,57 @@
+---
+title: "SparkIssue"
+author: "Win-Vector LLC"
+date: "6/3/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r init}
+base::date()
+packageVersion("replyr")
+suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+suppressPackageStartupMessages("spaklyr")
+packageVersion("sparklyr")
+devtools::session_info()
+
+sc <- sparklyr::spark_connect(version='2.0.2', 
+                              master = "local")
+print(sc)
+
+mtcars2 <- mtcars %>%
+  mutate(car = row.names(mtcars)) %>%
+  copy_to(sc, ., 'mtcars2')
+
+tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
+```
+
+Seems to reliably hang `Spark` (in about 5 passes through the loop on average), sometimes crashing `R`.
+
+```{r issue, eval=FALSE}
+for(i in seq_len(100)) {
+  print(paste('start',i,base::date()))
+  localRes <- mtcars2 %>%
+    replyr::replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
+                                    nameForNewValueColumn= 'value', 
+                                    columnsToTakeFrom= colnames(mtcars),
+                                    nameForNewClassColumn= 'class',
+                                    tempNameGenerator = tempNameGenerator) %>%
+    collect() %>%
+    as.data.frame()
+  tmps <- tempNameGenerator(dumpList = TRUE)
+  for(ti in tmps) {
+    db_drop_table(sc, ti)
+  }
+  print(paste(' done',i,base::date()))
+}
+```
+
+```{r cleanup}
+sparklyr::spark_disconnect(sc)
+rm(list=ls())
+gc()
+```
