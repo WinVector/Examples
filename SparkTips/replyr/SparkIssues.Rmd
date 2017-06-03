@@ -24,7 +24,7 @@ sc <- sparklyr::spark_connect(version='2.0.2',
 print(sc)
 
 mtcars2 <- mtcars %>%
-  mutate(car = row.names(mtcars)) %>%
+  mutate(car = row.names(mtcars))  %>%
   copy_to(sc, ., 'mtcars2')
 
 tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
@@ -39,14 +39,10 @@ for(i in seq_len(100)) {
     replyr::replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
                                     nameForNewValueColumn= 'value', 
                                     columnsToTakeFrom= colnames(mtcars),
-                                    nameForNewClassColumn= 'class',
-                                    tempNameGenerator = tempNameGenerator) %>%
+                                    tempNameGenerator = tempNameGenerator,
+                                    debugPrint = TRUE) %>%
     collect() %>%
     as.data.frame()
-  tmps <- tempNameGenerator(dumpList = TRUE)
-  for(ti in tmps) {
-    db_drop_table(sc, ti)
-  }
   print(paste(' done',i,base::date()))
 }
 ```
