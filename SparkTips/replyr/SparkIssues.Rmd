@@ -18,18 +18,25 @@ packageVersion("dplyr")
 packageVersion("sparklyr")
 devtools::session_info()
 
+sc <- NULL
+
 sc <- sparklyr::spark_connect(version='2.0.2', 
                               master = "local")
+
 print(sc)
 
 mtcars2 <- mtcars %>%
-  mutate(car = row.names(mtcars)) %>%
-  copy_to(sc, ., 'mtcars2')
+  mutate(car = row.names(mtcars)) 
+
+if(!is.null(sc)) {
+  mtcars2 <- copy_to(sc, mtcars2, 'mtcars2')
+}
 
 tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
 ```
 
 Seems to reliably hang `Spark` (in about 5 passes through the loop on average), sometimes crashing `R`.
+
 
 ```{r issue, eval=FALSE}
 for(i in seq_len(100)) {
@@ -47,8 +54,11 @@ for(i in seq_len(100)) {
 
 ![](crash.png)
 
+
 ```{r cleanup}
-sparklyr::spark_disconnect(sc)
+if(!is.null(sc)) {
+  sparklyr::spark_disconnect(sc)
+}
 rm(list=ls())
 gc()
 ```
