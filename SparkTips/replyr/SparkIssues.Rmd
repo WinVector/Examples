@@ -28,17 +28,34 @@ print(sc)
 mtcars2 <- mtcars %>%
   mutate(car = row.names(mtcars)) 
 
-if(!is.null(sc)) {
-  mtcars2 <- copy_to(sc, mtcars2, 'mtcars2')
-}
 
 tempNameGenerator <- replyr::makeTempNameGenerator("TESTTABS")
 ```
 
+Here is a local run showing the process working (note: this is not definative for a number of reasons including using different row-binding strategies depending on the declared back-end).
+
+```{r runlocally}
+for(i in seq_len(100)) {
+  print(paste('start',i,base::date()))
+  localRes <- mtcars2 %>%
+    replyr::replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
+                                    nameForNewValueColumn= 'value', 
+                                    columnsToTakeFrom= colnames(mtcars),
+                                    tempNameGenerator = tempNameGenerator) %>%
+    collect() %>%
+    as.data.frame()
+  print(paste(' done',i,base::date()))
+}
+```
+
+
 Seems to reliably hang `Spark` (in about 5 passes through the loop on average), sometimes crashing `R`.
 
+Try to run on `Spark`.
 
 ```{r issue, eval=FALSE}
+mtcars2 <- copy_to(sc, mtcars2, 'mtcars2')
+
 for(i in seq_len(100)) {
   print(paste('start',i,base::date()))
   localRes <- mtcars2 %>%
