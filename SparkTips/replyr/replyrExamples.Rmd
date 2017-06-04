@@ -332,23 +332,7 @@ and greatly improve outcomes.
 
 If you are serious about `R` controlled data processing in `Spark` you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
-Be aware of the functionality we demonstrated depends on using the development version of `replyr`.  Though we will, of course, advance the CRAN version as soon as practical.  `replyr` is by design a "sits on top" or "pure `R`" package, that is it doesn't directly introduce any `C++`, cross-language calling, or network interfaces itself (leaving that to `dplyr`, `dbplyr`, and `sparklyr`).  This means `replyr` builds up complex functionality we want in terms of functionality already exposed by other packages.
-
-This also means if we see a *non*-`R` exception such as the following:
-
-```r
- *** caught segfault ***
-address 0x0, cause 'unknown'
-
-Traceback:
- 1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
- 
-...
-
-An irrecoverable exception occurred. R is aborting now ...
-```
-
-That while this *may* indicate an issue in `replyr` it likely indicates an issue in `R` or one of the called packages that is directly working with non-`R` resources.  (The above happens every once in a while while knitting this exact document using the currnet 2017-05-30 CRAN release versions of `dplyr` and `sparklyr`, but this doesn't rise to the standard of a "`reprex`" and so is essentialy unsubmittable as an issue report.)
+Be aware of the functionality we demonstrated depends on using the development version of `replyr`.  Though we will, of course, advance the CRAN version as soon as practical. 
 
 Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` not the (2017-05-30) [0.6.0 release candidate development version of `dplyr`](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4).  The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities).  We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), [here](https://github.com/rstudio/sparklyr/issues/678), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known potentially upgrade blocking issues).  While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.  
 
