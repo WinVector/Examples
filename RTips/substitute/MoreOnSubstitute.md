@@ -135,6 +135,8 @@ wrapr::let(
 
     ## [1] "f() call is:  language f(B = 7, Y = B)"
 
+Re-mapping left hand sides is an important capability when trying to program over `dplyr`:
+
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
 
@@ -161,6 +163,6 @@ wrapr::let(
 
 And that is why `wrapr::let()` takes a [*large* number of precautions](http://www.win-vector.com/blog/2017/06/in-defense-of-wraprlet/#comment-66548) and vets user input before performing any substitution.
 
-The idea is: `wrapr::let()` is more specialized than `base::summarize()` so in addition to attempting extra effects (re-mapping left hand sides) in can introduce a lot of checks to ensure safe invariants.
+The idea is: `wrapr::let()` is more specialized than `substitute()` so in addition to attempting extra effects (re-mapping left hand sides) it can introduce a lot of checks to ensure safe invariants.
 
-And that is a bit of my point: when moving to a package look for specificity and safety in addition to "extra power." That is how `wrapr::let()` is designed and whey `wrapr::let()` is a safe an effective package to add to your production work-flows.
+And that is a bit of my point: when moving to a package look for specificity and safety in addition to "extra power." That is how `wrapr::let()` is designed and whey `wrapr::let()` is a safe and effective package to add to your production work-flows.
