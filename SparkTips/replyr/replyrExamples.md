@@ -30,7 +30,7 @@ Examples
 base::date()
 ```
 
-    ## [1] "Sat Jun  3 22:02:24 2017"
+    ## [1] "Fri Jun  9 08:10:32 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -177,6 +177,23 @@ mtcars2 %>%
     ##  9  qsec AMC Javelin  17.30 numeric
     ## 10    vs AMC Javelin   0.00 numeric
     ## # ... with 342 more rows
+
+(Note: we have been intermittently seeing a segfault at this block of code when knitting this file. I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
+
+     *** caught segfault ***
+    address 0x0, cause 'unknown'
+
+    Traceback:
+     *** caught segfault ***
+    address 0x0, cause 'unknown'
+
+    Traceback:
+     1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
+     2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
+     3: replyr_moveValuesToRows(., nameForNewKeyColumn = "fact", nameForNewValueColumn = "value",     columnsToTakeFrom = colnames(mtcars), nameForNewClassColumn = "class")
+     ...
+
+)
 
 `replyr_bind_rows`
 ------------------
@@ -412,7 +429,7 @@ DecreaseRankColumnByOne <- function(d) {
 }
 ```
 
-To apply this function to `d` (which doesn't have the expected column names!) we use `replyr::replyr_apply_f_mapped()` to create a new parametrized adapter as follows:
+To apply this function to `d` (which doesn't have the expected column names!) we use `replyr::replyr_apply_f_mapped()` to create a new parameterized adapter as follows:
 
 ``` r
 # our data
@@ -446,7 +463,43 @@ print(dF)
 Handle management
 -----------------
 
-A lot of `Spark` tasks involve creation of intermediate or temporary tables. This can be explicit (through `dplyr::copy_to()`) and implicit (through `dplyr::compute()`). These handles can represent a reference leak and eat up resources. To deal with this `replyr` supplies record-retaining temporary name generators (and uses the same internally).
+Many [`Sparklyr`](https://CRAN.R-project.org/package=sparklyr) tasks involve creation of intermediate or temporary tables. This can be through `dplyr::copy_to()` and through `dplyr::compute()`. These handles can represent a reference leak and eat up resources.
+
+To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies record-retaining temporary name generators (and uses the same internally).
+
+The actual function is pretty simple:
+
+``` r
+print(replyr::makeTempNameGenerator)
+```
+
+    ## function(prefix,
+    ##                                   suffix= NULL) {
+    ##   force(prefix)
+    ##   if((length(prefix)!=1)||(!is.character(prefix))) {
+    ##     stop("repyr::makeTempNameGenerator prefix must be a string")
+    ##   }
+    ##   if(is.null(suffix)) {
+    ##     alphabet <- c(letters, toupper(letters), as.character(0:9))
+    ##     suffix <- paste(base::sample(alphabet, size=20, replace= TRUE),
+    ##                     collapse = '')
+    ##   }
+    ##   count <- 0
+    ##   nameList <- c()
+    ##   function(dumpList=FALSE) {
+    ##     if(dumpList) {
+    ##       v <- nameList
+    ##       nameList <<- c()
+    ##       return(v)
+    ##     }
+    ##     nm <- paste(prefix, suffix, sprintf('%010d',count), sep='_')
+    ##     nameList <<- c(nameList, nm)
+    ##     count <<- count + 1
+    ##     nm
+    ##   }
+    ## }
+    ## <bytecode: 0x7f8659110708>
+    ## <environment: namespace:replyr>
 
 For instance to join a few tables it is a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
 
@@ -462,6 +515,7 @@ tables <- lapply(names,
 
 # build our temp name generator
 tmpNamGen <- replyr::makeTempNameGenerator('JOINTMP')
+
 # left join the tables in sequence
 joined <- tables[[1]]
 for(i in seq(2,length(tables))) {
@@ -470,6 +524,7 @@ for(i in seq(2,length(tables))) {
     joined <- compute(left_join(joined, ti, by='key'),
                     name= tmpNamGen())
   } else {
+    # use non-temp name.
     joined <- compute(left_join(joined, ti, by='key'),
                     name= 'joinres')
   }
@@ -480,9 +535,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_nPQUxKPneL0NqG29oviO_0000000000"
-    ## [2] "JOINTMP_nPQUxKPneL0NqG29oviO_0000000001"
-    ## [3] "JOINTMP_nPQUxKPneL0NqG29oviO_0000000002"
+    ## [1] "JOINTMP_9lWXvfnkhI2NPRsA1tEh_0000000000"
+    ## [2] "JOINTMP_9lWXvfnkhI2NPRsA1tEh_0000000001"
+    ## [3] "JOINTMP_9lWXvfnkhI2NPRsA1tEh_0000000002"
 
 ``` r
 for(ti in temps) {
@@ -499,11 +554,11 @@ print(joined)
     ## # A tibble: 3 x 6
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.8352580   0.7403636   0.1194912   0.7114188   0.7817879
-    ## 2     2   0.5152173   0.4026660   0.8343111   0.7241153   0.1634630
-    ## 3     3   0.5009312   0.2635130   0.1713092   0.2971677   0.2489840
+    ## 1     1   0.7594355   0.8082776 0.696254059   0.3777300  0.30015615
+    ## 2     2   0.4082232   0.8101691 0.005687125   0.9382002  0.04502867
+    ## 3     3   0.5941884   0.7990701 0.874374779   0.7936563  0.19940400
 
-Careful introduction and management of materialized intermediates can conserve resources and greatly improve outcomes.
+Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend no the intermediates.
 
 ------------------------------------------------------------------------
 
@@ -514,7 +569,7 @@ If you are serious about `R` controlled data processing in `Spark` you should se
 
 Be aware of the functionality we demonstrated depends on using the development version of `replyr`. Though we will, of course, advance the CRAN version as soon as practical.
 
-Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` not the (2017-05-30) [0.6.0 release candidate development version of `dplyr`](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4). The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities). We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), [here](https://github.com/rstudio/sparklyr/issues/678), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known potentially upgrade blocking issues). While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.
+Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` (not the [2017-05-30 `0.6.0` release candidate](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4), or the [2017-06-05 `0.7.0` release candidate](https://github.com/tidyverse/dplyr/commit/43dc94e88a4ab5938618b612bc9ec874de571598)) . The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities). We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), [here](https://github.com/rstudio/sparklyr/issues/678), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known potentially upgrade blocking issues). While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.
 
 I'll probably re-run this worksheet after these packages get new CRAN releases.
 
@@ -527,5 +582,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  795391 42.5    1442291 77.1  1168576 62.5
-    ## Vcells 1452104 11.1    2552219 19.5  1909875 14.6
+    ## Ncells  797593 42.6    1442291 77.1  1168576 62.5
+    ## Vcells 1456600 11.2    2552219 19.5  1850082 14.2
