@@ -306,7 +306,7 @@ The actual function is pretty simple:
 print(replyr::makeTempNameGenerator)
 ```
 
-For instance to join a few tables it is a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable).  This sort of code looks like the following:
+For instance to join a few tables it can be a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable).  This sort of code looks like the following:
 
 ```{r joinlist}
 # create example data

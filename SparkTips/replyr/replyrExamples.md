@@ -30,7 +30,7 @@ Examples
 base::date()
 ```
 
-    ## [1] "Fri Jun  9 08:10:32 2017"
+    ## [1] "Fri Jun  9 08:22:08 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -498,10 +498,10 @@ print(replyr::makeTempNameGenerator)
     ##     nm
     ##   }
     ## }
-    ## <bytecode: 0x7f8659110708>
+    ## <bytecode: 0x7fa5a9b45270>
     ## <environment: namespace:replyr>
 
-For instance to join a few tables it is a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
+For instance to join a few tables it can be a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
 
 ``` r
 # create example data
@@ -535,9 +535,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_9lWXvfnkhI2NPRsA1tEh_0000000000"
-    ## [2] "JOINTMP_9lWXvfnkhI2NPRsA1tEh_0000000001"
-    ## [3] "JOINTMP_9lWXvfnkhI2NPRsA1tEh_0000000002"
+    ## [1] "JOINTMP_DmxE0BzPqhBIp5K0Hi85_0000000000"
+    ## [2] "JOINTMP_DmxE0BzPqhBIp5K0Hi85_0000000001"
+    ## [3] "JOINTMP_DmxE0BzPqhBIp5K0Hi85_0000000002"
 
 ``` r
 for(ti in temps) {
@@ -554,9 +554,9 @@ print(joined)
     ## # A tibble: 3 x 6
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.7594355   0.8082776 0.696254059   0.3777300  0.30015615
-    ## 2     2   0.4082232   0.8101691 0.005687125   0.9382002  0.04502867
-    ## 3     3   0.5941884   0.7990701 0.874374779   0.7936563  0.19940400
+    ## 1     1   0.6758343  0.12237138   0.5348686  0.07127742  0.04562225
+    ## 2     2   0.2309496  0.07204621   0.7325870  0.51233489  0.64506791
+    ## 3     3   0.2391138  0.87639008   0.6465961  0.46778990  0.37783603
 
 Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend no the intermediates.
 
@@ -582,5 +582,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  797593 42.6    1442291 77.1  1168576 62.5
-    ## Vcells 1456600 11.2    2552219 19.5  1850082 14.2
+    ## Ncells  797028 42.6    1442291 77.1  1168576 62.5
+    ## Vcells 1454212 11.1    2552219 19.5  1881095 14.4
