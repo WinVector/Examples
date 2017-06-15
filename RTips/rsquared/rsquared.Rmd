@@ -1,0 +1,100 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+<!-- *.md is generated from *.Rmd. Please edit that file -->
+
+
+Here is an absolutely *horrible* way to confuse yourself and get an inflated reported `R-squared` on a simple linear regression model in [`R`](https://www.r-project.org).
+
+First let's set up our problem with a data set where the quantity to be predicted (`y`) has no real relation to the independent variable (`x`).  We will first build our example data:
+
+```{r setup}
+library("sigr")
+library("broom")
+set.seed(23255)
+
+d <- data.frame(y= runif(100),
+                x= ifelse(runif(100)>=0.5, 'a', 'b'),
+                stringsAsFactors = FALSE)
+```
+
+Now let's build a model and look at the summary statistics returned as part of the model fitting process:
+
+
+```{r model1}
+m1 <- lm(y~x, data=d)
+t(broom::glance(m1))
+d$pred1 <- predict(m1, newdata = d)
+```
+
+I *strongly* prefer to directly calculate the the model performance statistics off the predictions (it lets us easily compare different modeling methods), so let's also do that also:
+
+```{r sigr1, results='asis'}
+cat(render(sigr::wrapFTest(d, 'pred1', 'y'),
+           format='markdown'))
+```
+
+So far so good.  Let's now remove the "intercept term" by adding the "`0+`" from the fitting command.
+
+```{r model2}
+m2 <- lm(y~0+x, data=d)
+t(broom::glance(m2))
+d$pred2 <- predict(m2, newdata = d)
+```
+
+Uh oh.  That *appeared* to vastly improve the reported `R-squared` and the significance ("`p.value`")! 
+
+That does not make sense, anything `m2` can do `m1` can also do.  In fact the two models make essentially identical predictions, which we confirm below:
+
+```{r look}
+sum((d$pred1 - d$y)^2)
+
+sum((d$pred2 - d$y)^2)
+
+max(abs(d$pred1 - d$pred2))
+
+head(d)
+```
+
+Let's double check the fit quality of the predictions.
+
+```{r sigr2, results='asis'}
+cat(render(sigr::wrapFTest(d, 'pred2', 'y'),
+           format='markdown'))
+```
+
+Ah.  The prediction fit quality is identical to the first time (as one would expect).  This is yet another reason to directly calculate model fit quality from the predictions: it isolates you from any foibles of how the modeling software does it.
+
+The answer to our puzzles of "what went wrong" is something we have written about before [here](http://www.win-vector.com/blog/2016/12/be-careful-evaluating-model-predictions/).  
+
+Roughly what is going on is:
+
+If the fit formula sent `lm()` has no intercept (triggered by the "`0+`") notation then `summary.lm()` changes how it computes `r.squared` as follows (from `help(summary.lm)`):
+
+<pre>
+r.squared   R^2, the ‘fraction of variance explained by the model’,
+              R^2 = 1 - Sum(R[i]^2) / Sum((y[i]- y*)^2),
+            where y* is the mean of y[i] if there is an intercept and zero otherwise.
+</pre>
+
+This is pretty bad.
+
+Then to add insult to injury the "`0+`" notation also changes how `R` encodes the categorical variable `x`. 
+
+Compare:
+
+```{r summary}
+summary(m1)
+
+summary(m2)
+```
+
+Notice the second model directly encodes both levels of `x`.  This means that if `m1` has `pred1 = a + b * (x=='b')` we can reproduce this model (intercept and all) as `m2`: `pred2 = a * (x=='a') + (a+b) * (x=='b')`. I.e., the invariant `(x=='a') + (x=='b') == 1` means `m2` can imitate the model with the intercept term.  
+
+The presumed (and I think weak) justification of `summary.lm()` switching the model quality assessment method is something along the lines that `mean(y)` may not be in the model's concept space and this might lead to reporting negative `R-squared`.  I don't have any problem with negative `R-squared`, it can be taken to mean you did worse than the unconditional average.  However, even if you accept the (no-warning) scoring method switch: that argument doesn't apply here. `m2` can imitate having an intercept, so it isn't unfair to check if it is better than using only the intercept.
+
+
+
