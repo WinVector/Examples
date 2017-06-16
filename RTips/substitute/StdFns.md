@@ -1,3 +1,6 @@
+Non-Standard Evaluation and Function Composition in R
+=====================================================
+
 In this article we will discuss composing standard-evaluation interfaces (SE) and composing non-standard-evaluation interfaces (NSE) in [`R`](https://www.r-project.org).
 
 In [`R`](https://www.r-project.org) the package [`tidyeval`/`rlang`](https://CRAN.R-project.org/package=rlang) is a tool for building domain specific languages intended to allow easier composition of NSE interfaces.
@@ -5,7 +8,7 @@ In [`R`](https://www.r-project.org) the package [`tidyeval`/`rlang`](https://CRA
 To use it you must know some of its structure and notation. Here are some details paraphrased from the major `tidyeval`/`rlang` client, the package dplyr: [`vignette('programming', package = 'dplyr')`](https://cran.r-project.org/web/packages/dplyr/vignettes/programming.html)).
 
 -   "`:=`" is needed to make left-hand-side re-mapping possible (adding yet another "more than one assignment type operator running around" notation issue).
--   "`!!`" substitution requires parenthesis to safely bind (so the notation is actually "`(!! )`, not "`!!`").
+-   "`!!`" substitution requires parenthesis to safely bind (so the notation is actually "`(!! )`", not "`!!`").
 -   Left-hand-sides of expressions are names or strings, while right-hand-sides are `quosures`/expressions.
 
 Example
@@ -108,6 +111,8 @@ tidy_increment_nse(d, a)
 
     ##   a
     ## 1 2
+
+(The above `enquo()` then "`!!`" pattern is pretty much necissary, as the simpler idea of just passing `var` through doesn't work.)
 
 #### An Issue
 
@@ -223,6 +228,8 @@ wrapr_increment_nse(d, a)
 
 Or, if you are uncomfortable with macros being implemented through string-substitution one can use `wrapr::let()` in "language mode" (where it works directly on abstract syntax trees).
 
+#### SE re-do
+
 ``` r
 wrapr_add_one_se <- function(df, res_var_name, input_var_name) {
   wrapr::let(
@@ -250,6 +257,8 @@ wrapr_increment_se(d, 'a')
 
     ##   a
     ## 1 2
+
+### NSE re-do
 
 ``` r
 wrapr_add_one_nse <- function(df, res_var, input_var) {
@@ -290,7 +299,7 @@ Conclusion
 
 A lot of the `tidyeval`/`rlang` design is centered on treating variable names as lexical closures that capture an environment they should be evaluated in. This does make them more like general `R` functions (which also have this behavior).
 
-However, creating so many long-term bindings is a actually counter to some common data analyst practice.
+However, creating so many long-term bindings is actually counter to some common data analyst practice.
 
 The `my_mutate(df, expr)` example itself from `vignette('programming', package = 'dplyr')` even shows the pattern I am referring to: the analyst transiently pairs a chosen concrete data set to abstract variable names. One argument is the data and the other is the expression to be applied to that data (and only that data, with clean code not capturing values from environments).
 
