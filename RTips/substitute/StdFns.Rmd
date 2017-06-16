@@ -265,4 +265,4 @@ The `my_mutate(df, expr)` example itself from `vignette('programming', package =
 
 Many methods are written expecting to be re-run on different data (for example `predict()`).  This has the huge advantage that it documents your intent to change out what data is being applied (such as running a procedure twice, once on training data and once on future application data).
 
-This is a principle we also strongly apply in our [join controller](http://www.win-vector.com/blog/2017/06/use-a-join-controller-to-document-your-work/) which has no issue sharing variables out as an external spreadsheet, because it thinks of variable names as fundamentally being strings (not as `quosures` temporally working "under cover" in string representations).
+This is a principle we also strongly apply in our [join controller](http://www.win-vector.com/blog/2017/06/use-a-join-controller-to-document-your-work/) which has no issue sharing variables out as an external spreadsheet, because it thinks of variable names (here meaning columns names)  as fundamentally being strings (not as `quosures` temporally working "under cover" in string representations).
