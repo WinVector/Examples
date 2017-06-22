@@ -30,14 +30,14 @@ Examples
 base::date()
 ```
 
-    ## [1] "Fri Jun  9 08:22:08 2017"
+    ## [1] "Thu Jun 22 08:47:48 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.5.0'
+    ## [1] '0.7.0'
 
 ``` r
 library("tidyr")
@@ -55,7 +55,7 @@ library("replyr")
 packageVersion("replyr")
 ```
 
-    ## [1] '0.3.902'
+    ## [1] '0.4.1'
 
 ``` r
 suppressPackageStartupMessages("spaklyr")
@@ -67,7 +67,7 @@ suppressPackageStartupMessages("spaklyr")
 packageVersion("sparklyr")
 ```
 
-    ## [1] '0.5.5'
+    ## [1] '0.5.6.9003'
 
 ``` r
 sc <- sparklyr::spark_connect(version='2.0.2', 
@@ -88,17 +88,26 @@ summary(mtcars_spark)
 
     ##     Length Class          Mode
     ## src 1      src_spark      list
-    ## ops 3      op_base_remote list
+    ## ops 2      op_base_remote list
 
 ``` r
 # errors-out
 glimpse(mtcars_spark)
 ```
 
-    ## Observations: 32
+    ## Observations: 25
     ## Variables: 11
-
-    ## Error in if (width[i] <= max_width[i]) next: missing value where TRUE/FALSE needed
+    ## $ mpg  <dbl> 21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19....
+    ## $ cyl  <dbl> 6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, ...
+    ## $ disp <dbl> 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 1...
+    ## $ hp   <dbl> 110, 110, 93, 110, 175, 105, 245, 62, 95, 123, 123, 180, ...
+    ## $ drat <dbl> 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, 3.92, 3.9...
+    ## $ wt   <dbl> 2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3...
+    ## $ qsec <dbl> 16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 2...
+    ## $ vs   <dbl> 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, ...
+    ## $ am   <dbl> 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, ...
+    ## $ gear <dbl> 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, ...
+    ## $ carb <dbl> 4, 4, 1, 1, 2, 1, 4, 2, 2, 4, 4, 3, 3, 3, 4, 4, 4, 1, 2, ...
 
 ``` r
 packageVersion("broom")
@@ -151,6 +160,17 @@ mtcars2 %>%
 
     ## Error in UseMethod("gather_"): no applicable method for 'gather_' applied to an object of class "c('tbl_spark', 'tbl_sql', 'tbl_lazy', 'tbl')"
 
+(Note: we have been regularly seeing a segfault at the block below. I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
+
+    *** caught segfault ***
+    address 0x0, cause 'unknown'
+
+    Traceback:
+     1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
+     2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
+
+This pretty much can *not* be `replyr`'s fault as `replyr` is a pure `R` package that mereley issues commands to `dplyr`/`sparklyr`/`Spark`. So at worst `replyr` is generate a complicated sequence that is exposing a bug in one of these or between once of all of these. At this point I am pretty much decided on suggesting this markdown as a cluster acceptance test. If you can't do this, you can't expect to later do complicated work. )
+
 ``` r
 mtcars2 %>%
   replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
@@ -159,41 +179,6 @@ mtcars2 %>%
                           nameForNewClassColumn= 'class') %>%
   arrange(car, fact)
 ```
-
-    ## Source:   query [352 x 4]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 352 x 4
-    ##     fact         car  value   class
-    ##    <chr>       <chr>  <dbl>   <chr>
-    ##  1    am AMC Javelin   0.00 numeric
-    ##  2  carb AMC Javelin   2.00 numeric
-    ##  3   cyl AMC Javelin   8.00 numeric
-    ##  4  disp AMC Javelin 304.00 numeric
-    ##  5  drat AMC Javelin   3.15 numeric
-    ##  6  gear AMC Javelin   3.00 numeric
-    ##  7    hp AMC Javelin 150.00 numeric
-    ##  8   mpg AMC Javelin  15.20 numeric
-    ##  9  qsec AMC Javelin  17.30 numeric
-    ## 10    vs AMC Javelin   0.00 numeric
-    ## # ... with 342 more rows
-
-(Note: we have been intermittently seeing a segfault at this block of code when knitting this file. I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
-
-     *** caught segfault ***
-    address 0x0, cause 'unknown'
-
-    Traceback:
-     *** caught segfault ***
-    address 0x0, cause 'unknown'
-
-    Traceback:
-     1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
-     2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
-     3: replyr_moveValuesToRows(., nameForNewKeyColumn = "fact", nameForNewValueColumn = "value",     columnsToTakeFrom = colnames(mtcars), nameForNewClassColumn = "class")
-     ...
-
-)
 
 `replyr_bind_rows`
 ------------------
@@ -216,7 +201,7 @@ db2 <- copy_to(sc,
 bind_rows(list(db1, db2))
 ```
 
-    ## Error in bind_rows_(x, .id): incompatible sizes (1 != 3)
+    ## Error in bind_rows_(x, .id): Argument 1 must be a data frame or a named atomic vector, not a tbl_spark/tbl_sql/tbl_lazy/tbl
 
 ### `union_all`
 
@@ -225,16 +210,14 @@ bind_rows(list(db1, db2))
 union_all(db1, db2)
 ```
 
-    ## Source:   query [4 x 2]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 4 x 2
+    ## # Source:   lazy query [?? x 2]
+    ## # Database: spark_connection
     ##       x     y
-    ##   <chr> <chr>
+    ##   <int> <chr>
     ## 1     1     a
     ## 2     2     b
-    ## 3     c     3
-    ## 4     d     4
+    ## 3     3     c
+    ## 4     4     d
 
 ### `union`
 
@@ -244,16 +227,14 @@ union_all(db1, db2)
 union(db1, db2)
 ```
 
-    ## Source:   query [4 x 2]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 4 x 2
+    ## # Source:   lazy query [?? x 2]
+    ## # Database: spark_connection
     ##       x     y
-    ##   <chr> <chr>
-    ## 1     2     b
-    ## 2     c     3
-    ## 3     1     a
-    ## 4     d     4
+    ##   <int> <chr>
+    ## 1     4     d
+    ## 2     1     a
+    ## 3     3     c
+    ## 4     2     b
 
 ### `replyr_bind_rows`
 
@@ -263,10 +244,9 @@ union(db1, db2)
 replyr_bind_rows(list(db1, db2))
 ```
 
-    ## Source:   query [4 x 2]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 4 x 2
+    ## # Source:   table<replyr_bind_rows_Wv9mz92LCRbmIwKC1TwV_0000000005> [?? x
+    ## #   2]
+    ## # Database: spark_connection
     ##       x     y
     ##   <int> <chr>
     ## 1     2     b
@@ -288,10 +268,8 @@ by_cyl <- group_by(mtcars, cyl)
 do(by_cyl, head(., 2))
 ```
 
-    ## Source: local data frame [6 x 11]
-    ## Groups: cyl [3]
-    ## 
     ## # A tibble: 6 x 11
+    ## # Groups:   cyl [3]
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
     ## 1  22.8     4 108.0    93  3.85 2.320 18.61     1     1     4     1
@@ -329,18 +307,17 @@ mtcars_spark %>%
   replyr_bind_rows()
 ```
 
-    ## Source:   query [6 x 11]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 6 x 11
-    ##     cyl   mpg  disp    hp  drat    wt  qsec    vs    am  gear  carb
+    ## # Source:   table<replyr_bind_rows_d9d5Ix9HyxLsx0vAEgBN_0000000010> [?? x
+    ## #   11]
+    ## # Database: spark_connection
+    ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-    ## 1     6  21.0 160.0   110  3.90 2.875 17.02     0     1     4     4
-    ## 2     6  21.0 160.0   110  3.90 2.620 16.46     0     1     4     4
-    ## 3     8  18.7 360.0   175  3.15 3.440 17.02     0     0     3     2
-    ## 4     8  14.3 360.0   245  3.21 3.570 15.84     0     0     3     4
-    ## 5     4  22.8 108.0    93  3.85 2.320 18.61     1     1     4     1
-    ## 6     4  24.4 146.7    62  3.69 3.190 20.00     1     0     4     2
+    ## 1  21.0     6 160.0   110  3.90 2.875 17.02     0     1     4     4
+    ## 2  21.0     6 160.0   110  3.90 2.620 16.46     0     1     4     4
+    ## 3  18.7     8 360.0   175  3.15 3.440 17.02     0     0     3     2
+    ## 4  14.3     8 360.0   245  3.21 3.570 15.84     0     0     3     4
+    ## 5  22.8     4 108.0    93  3.85 2.320 18.61     1     1     4     1
+    ## 6  24.4     4 146.7    62  3.69 3.190 20.00     1     0     4     2
 
 ### `replyr` `gapply`
 
@@ -351,18 +328,16 @@ mtcars_spark %>%
          function(di) head(di, 2))
 ```
 
-    ## Source:   query [6 x 11]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 6 x 11
-    ##     cyl   mpg  disp    hp  drat    wt  qsec    vs    am  gear  carb
+    ## # Source:   table<replyr_gapply_ib6t55lzMfWbq3u7Rx4S_0000000016> [?? x 11]
+    ## # Database: spark_connection
+    ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-    ## 1     6  21.0 160.0   110  3.90 2.875 17.02     0     1     4     4
-    ## 2     6  21.0 160.0   110  3.90 2.620 16.46     0     1     4     4
-    ## 3     8  18.7 360.0   175  3.15 3.440 17.02     0     0     3     2
-    ## 4     8  14.3 360.0   245  3.21 3.570 15.84     0     0     3     4
-    ## 5     4  22.8 108.0    93  3.85 2.320 18.61     1     1     4     1
-    ## 6     4  24.4 146.7    62  3.69 3.190 20.00     1     0     4     2
+    ## 1  21.0     6 160.0   110  3.90 2.875 17.02     0     1     4     4
+    ## 2  21.0     6 160.0   110  3.90 2.620 16.46     0     1     4     4
+    ## 3  18.7     8 360.0   175  3.15 3.440 17.02     0     0     3     2
+    ## 4  14.3     8 360.0   245  3.21 3.570 15.84     0     0     3     4
+    ## 5  22.8     4 108.0    93  3.85 2.320 18.61     1     1     4     1
+    ## 6  24.4     4 146.7    62  3.69 3.190 20.00     1     0     4     2
 
 ------------------------------------------------------------------------
 
@@ -465,6 +440,8 @@ Handle management
 
 Many [`Sparklyr`](https://CRAN.R-project.org/package=sparklyr) tasks involve creation of intermediate or temporary tables. This can be through `dplyr::copy_to()` and through `dplyr::compute()`. These handles can represent a reference leak and eat up resources.
 
+Note: right now `sparklyr` `compute()` is buggy and [doesn't do anything useful](http://www.win-vector.com/blog/2017/06/managing-intermediate-results-when-using-rsparklyr/).
+
 To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies record-retaining temporary name generators (and uses the same internally).
 
 The actual function is pretty simple:
@@ -498,10 +475,10 @@ print(replyr::makeTempNameGenerator)
     ##     nm
     ##   }
     ## }
-    ## <bytecode: 0x7fa5a9b45270>
+    ## <bytecode: 0x7fa625e0a978>
     ## <environment: namespace:replyr>
 
-For instance to join a few tables it can be a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
+For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following (now hanging with `sparklyr`0.5.6.9003\` June 22, 2017):
 
 ``` r
 # create example data
@@ -533,13 +510,6 @@ for(i in seq(2,length(tables))) {
 # clean up temps
 temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
-```
-
-    ## [1] "JOINTMP_DmxE0BzPqhBIp5K0Hi85_0000000000"
-    ## [2] "JOINTMP_DmxE0BzPqhBIp5K0Hi85_0000000001"
-    ## [3] "JOINTMP_DmxE0BzPqhBIp5K0Hi85_0000000002"
-
-``` r
 for(ti in temps) {
   db_drop_table(sc, ti)
 }
@@ -548,17 +518,7 @@ for(ti in temps) {
 print(joined)
 ```
 
-    ## Source:   query [3 x 6]
-    ## Database: spark connection master=local[4] app=sparklyr local=TRUE
-    ## 
-    ## # A tibble: 3 x 6
-    ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
-    ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.6758343  0.12237138   0.5348686  0.07127742  0.04562225
-    ## 2     2   0.2309496  0.07204621   0.7325870  0.51233489  0.64506791
-    ## 3     3   0.2391138  0.87639008   0.6465961  0.46778990  0.37783603
-
-Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend no the intermediates.
+Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend on the intermediates.
 
 ------------------------------------------------------------------------
 
@@ -582,5 +542,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  797028 42.6    1442291 77.1  1168576 62.5
-    ## Vcells 1454212 11.1    2552219 19.5  1881095 14.4
+    ## Ncells  821774 43.9    1442291 77.1  1442291 77.1
+    ## Vcells 1525671 11.7    2552219 19.5  2018193 15.4

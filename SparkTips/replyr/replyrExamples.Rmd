@@ -93,7 +93,22 @@ mtcars2 %>%
   tidyr::gather('fact', 'value')
 ```
 
-```{r movevaluestorows}
+(Note: we have been regularly seeing a segfault at the block below.  I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
+
+```
+*** caught segfault ***
+address 0x0, cause 'unknown'
+
+Traceback:
+ 1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
+ 2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
+```
+
+This pretty much can *not* be `replyr`'s fault as `replyr` is a pure `R` package that mereley issues commands to `dplyr`/`sparklyr`/`Spark`.  So at worst `replyr` is generate a complicated sequence that is exposing a bug in one of these or between once of all of these.  At this point I am pretty much decided on suggesting this markdown as a cluster acceptance test.  If you can't do this, you can't expect to later do complicated work.
+)
+
+
+```{r movevaluestorows, eval=FALSE}
 mtcars2 %>%
   replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
                           nameForNewValueColumn= 'value', 
@@ -102,23 +117,6 @@ mtcars2 %>%
   arrange(car, fact)
 ```
 
-(Note: we have been intermittently seeing a segfault at this block of code when knitting this file.  I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
-
-```
- *** caught segfault ***
-address 0x0, cause 'unknown'
-
-Traceback:
- *** caught segfault ***
-address 0x0, cause 'unknown'
-
-Traceback:
- 1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
- 2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
- 3: replyr_moveValuesToRows(., nameForNewKeyColumn = "fact", nameForNewValueColumn = "value",     columnsToTakeFrom = colnames(mtcars), nameForNewClassColumn = "class")
- ...
-```
-)
 
 
 ## `replyr_bind_rows`
@@ -296,7 +294,9 @@ print(dF)
 
 ## Handle management
 
-Many [`Sparklyr`](https://CRAN.R-project.org/package=sparklyr) tasks involve creation of intermediate or temporary tables.  This can be through `dplyr::copy_to()` and through `dplyr::compute()`. These handles can represent a reference leak and eat up resources. 
+Many [`Sparklyr`](https://CRAN.R-project.org/package=sparklyr) tasks involve creation of intermediate or temporary tables.  This can be through `dplyr::copy_to()` and through `dplyr::compute()`. These handles can represent a reference leak and eat up resources.   
+
+Note: right now `sparklyr` `compute()` is buggy and [doesn't do anything useful](http://www.win-vector.com/blog/2017/06/managing-intermediate-results-when-using-rsparklyr/).
 
 To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies record-retaining temporary name generators (and uses the same internally).
 
@@ -306,9 +306,9 @@ The actual function is pretty simple:
 print(replyr::makeTempNameGenerator)
 ```
 
-For instance to join a few tables it can be a good idea to call compute after each join (else the generated `SQL` can become large and unmanageable).  This sort of code looks like the following:
+For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable).  This sort of code looks like the following (now hanging with `sparklyr `0.5.6.9003` June 22, 2017):
 
-```{r joinlist}
+```{r joinlist, eval=FALSE}
 # create example data
 names <- paste('table', 1:5, sep='_')
 tables <- lapply(names, 
@@ -346,7 +346,7 @@ for(ti in temps) {
 print(joined)
 ```
 
-Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes.  We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend no the intermediates.
+Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes.  We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend on the intermediates.
 
 ***
 
