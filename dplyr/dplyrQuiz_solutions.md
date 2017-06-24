@@ -1,11 +1,11 @@
-Advanced dplyr Quiz
-===================
+Advanced dplyr Quiz (author: John Mount)
+========================================
 
 Being able to effectively perform meaningful work *using* [`R`](https://www.r-project.org) programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations. Any mismatch there (be it a knowledge gap in the programmer, an implementation gap in a package, or a difference between programmer opinion and package doctrine) can lead to confusion, bugs and incorrect results.
 
 Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz. Can you anticipate the result of each of the example operations? Can you anticipate which commands are in error and which are valid `dplyr`?
 
-Or another phrasing: here are our notes on `dplyr` corner-cases. You may not need to know how any of these work (it is often good to avoid corner-cases), but you should at least be confident you are avoiding the malformed ones.
+Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*). You may not need to know how any of these work (it is often good to avoid corner-cases), but you should at least be confident you are avoiding the malformed ones.
 
 Start
 =====
@@ -52,7 +52,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jun 24 10:48:17 2017"
+    ## [1] "Sat Jun 24 10:55:47 2017"
 
 Now for the examples/quiz.
 
