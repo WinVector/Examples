@@ -1,16 +1,16 @@
 Advanced dplyr Quiz
 ===================
 
-Being able to effectively perform meaningful work *using* [`R`](https://www.r-project.org) programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations. Any mismatch there (be it a knowledge gap in the programmer, or an implementation gap in a package) can lead to confusion, bugs and incorrect results.
+Being able to effectively perform meaningful work *using* [`R`](https://www.r-project.org) programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations. Any mismatch there (be it a knowledge gap in the programmer, an implementation gap in a package, or a difference between programmer opinion and package doctrine) can lead to confusion, bugs and incorrect results.
 
-Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz: can you anticipate the result of each of the example operations? Can you anticipate which commands are in error and which are valid `dplyr`?
+Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz. Can you anticipate the result of each of the example operations? Can you anticipate which commands are in error and which are valid `dplyr`?
 
-Or another phrasing: here are our notes on `dplyr` corner-cases. You may not need to know how any of these work, but you should at least be confident you are avoiding the malformed ones.
+Or another phrasing: here are our notes on `dplyr` corner-cases. You may not need to know how any of these work (it is often good to avoid corner-cases), but you should at least be confident you are avoiding the malformed ones.
 
 Start
 =====
 
-With the current version of `dplyr` please figure out the result of each example command. Note: we don't claim all of the examples below are correct `dplyr` code. However, effective programming requires knowledge of what happens in some incorrect cases (at least knowing which throw usable errors, and which perform quiet mal-calculations).
+With the current version of `dplyr` in mind, please anticipate the result of each example command. Note: we don't claim all of the examples below are correct `dplyr` code. However, effective programming requires knowledge of what happens in some incorrect cases (at least knowing which throw usable errors, and which perform quiet mal-calculations).
 
 ``` r
 # Show versions we are using.
@@ -52,7 +52,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jun 24 10:21:57 2017"
+    ## [1] "Sat Jun 24 10:37:24 2017"
 
 Now for the examples/quiz.
 
@@ -74,7 +74,7 @@ data.frame(x = 1) %>% select('x')
     ## 1 1
 
 ``` r
-y <- 'x'
+y <- 'x' # value used in later examples
 
 data.frame(x = 1) %>% select(y)
 ```
@@ -172,6 +172,7 @@ Databases
 Setup:
 
 ``` r
+# values used in later examples
 db <- DBI::dbConnect(RSQLite::SQLite(), 
                      ":memory:")
 dL <- data.frame(x = 3.077, 
