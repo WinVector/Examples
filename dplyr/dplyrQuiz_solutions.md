@@ -1,21 +1,23 @@
 Advanced dplyr Quiz
 ===================
 
-Being able to effectively perform meaningful work *using* [`R`](https://www.r-project.org) programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations. Any mis-match here (be it a knowledge gap in the programmer, or an implementation gap in a package) can lead to bugs and confusion.
+Being able to effectively perform meaningful work *using* [`R`](https://www.r-project.org) programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations. Any mismatch there (be it a knowledge gap in the programmer, or an implementation gap in a package) can lead to confusion, bugs and incorrect results.
 
-Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz: can you anticipate the result of each of the example operations (many of which are in fact corner cases, so if that does not interest you please do feel free to skip without guilt)? If you can't anticipate them, can you at least be sure you are avoiding these corner cases (both in old and new code)?
+Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz: can you anticipate the result of each of the example operations? Can you anticipate which commands are in error and which are valid `dplyr`?
+
+Or another phrasing: here are our notes on `dplyr` corner-cases. You may not need to know how any of these work, but you should at least be confident you are avoiding the malformed ones.
 
 Start
 =====
 
 With the current version of `dplyr` please figure out the result of each example command. Note: we don't claim all of the examples below are correct `dplyr` code. However, effective programming requires knowledge of what happens in some incorrect cases (at least knowing which throw usable errors, and which perform quiet mal-calculations).
 
-First let's start up the latest version of all the packages we are using.
-
 ``` r
+# Show versions we are using.
 # devtools::install_github('tidyverse/dplyr')
 # devtools::install_github('tidyverse/dbplyr')
 # devtools::install_github('rstats-db/RSQLite')
+# devtools::install_github('tidyverse/rlang')
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 ```
@@ -35,6 +37,12 @@ packageVersion("RSQlite")
     ## [1] '2.0'
 
 ``` r
+packageVersion("rlang")
+```
+
+    ## [1] '0.1.1.9000'
+
+``` r
 packageVersion("magrittr")
 ```
 
@@ -44,13 +52,13 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jun 24 10:04:24 2017"
+    ## [1] "Sat Jun 24 10:21:57 2017"
 
-``` r
-DORUN <- TRUE
-```
+Now for the examples/quiz.
 
-Now the examples/quiz. Please take a moment and write down your answer before moving on to the [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md) (you can also run the quiz yourself by downloading and knitting the [source document](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.Rmd)).
+Please take a moment and write down your answers before moving on to the [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md). This should give you a much more open mind as to what constitutes "surprising behavior." You can also run the quiz yourself by downloading and knitting the [source document](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.Rmd).
+
+Please keep in mind while "you never want errors" you do sometimes want exceptions (which are unfortunately called "`Error:`" in `R`). Exceptions are an important way of stopping off-track computation and preventing later incorrect results. Exceptions can often be the desired outcome of a malformed calculation.
 
 Local data.frames
 =================
