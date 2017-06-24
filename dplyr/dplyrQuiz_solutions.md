@@ -18,7 +18,6 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 # devtools::install_github('tidyverse/dbplyr')
 # devtools::install_github('rstats-db/RSQLite')
 # devtools::install_github('tidyverse/rlang')
-suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 ```
 
@@ -52,7 +51,11 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jun 24 11:05:08 2017"
+    ## [1] "Sat Jun 24 11:14:57 2017"
+
+``` r
+suppressPackageStartupMessages(library("dplyr"))
+```
 
 Now for the examples/quiz.
 

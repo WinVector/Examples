@@ -30,7 +30,6 @@ DORUN <- FALSE
 # devtools::install_github('tidyverse/dbplyr')
 # devtools::install_github('rstats-db/RSQLite')
 # devtools::install_github('tidyverse/rlang')
-suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 packageVersion("dbplyr")
 packageVersion("RSQlite")
@@ -38,6 +37,11 @@ packageVersion("rlang")
 packageVersion("magrittr")
 base::date()
 ```
+
+```{r load}
+suppressPackageStartupMessages(library("dplyr"))
+```
+
 
 Now for the examples/quiz.
 
