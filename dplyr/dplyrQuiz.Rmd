@@ -143,6 +143,8 @@ dR %>% rename(x2 = x, k2 = k)
 
 # Conclusion
 
-The above quiz is really my working notes on corner-cases to avoid.  Not all of these are worth fixing. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above cases.  But to do that, you have to know what to avoid (hence the notes).  I may or may not keep these up to date depending on the utility of such a list going forward.
+The above quiz is really my working notes on corner-cases to avoid.  Not all of these are worth fixing. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above cases.  But to do that, you have to know what to avoid (hence the notes).  
 
+Also: please understand, some of these may *not* represent problems with the above packages.  They may instead represent mistakes and misunderstandings on my part. Or opinions of mine that may differ from the considered opinions and experience of the people who have authored and who have to maintain these packages. Some things that might seem "easy to fix" to an outsider may already be set at a "best possible compromise" among many other considerations.
 
+I may or may not keep these up to date depending on the utility of such a list going forward.
