@@ -33,7 +33,7 @@ packageVersion("dbplyr")
 packageVersion("RSQlite")
 ```
 
-    ## [1] '2.0'
+    ## [1] '1.1.2'
 
 ``` r
 packageVersion("rlang")
@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jun 24 11:14:57 2017"
+    ## [1] "Sat Jun 24 12:14:16 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -79,6 +79,9 @@ data.frame(x = 1) %>% select(x)
     ## 1 1
 
 ``` r
+# Two questions: 
+#  1) Should this next one work?
+#  2) Does this next one work?
 data.frame(x = 1) %>% select('x')
 ```
 
@@ -212,7 +215,7 @@ union_all(dR, dR)
 ```
 
     ## # Source:   lazy query [?? x 2]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##       x     k
     ##   <dbl> <chr>
     ## 1 3.077     a
@@ -234,7 +237,7 @@ dR %>% mutate_all(funs(round(., 2)))
 ```
 
     ## # Source:   lazy query [?? x 2]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##       x     k
     ##   <dbl> <dbl>
     ## 1  3.08     0
@@ -259,7 +262,7 @@ dR %>% rename(x2 = x) %>% rename(k2 = k)
 ```
 
     ## # Source:   lazy query [?? x 2]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##      x2    k2
     ##   <dbl> <chr>
     ## 1 3.077     a

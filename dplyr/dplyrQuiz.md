@@ -32,6 +32,10 @@ Column selection
 
 ``` r
 data.frame(x = 1) %>% select(x)
+
+# Two questions: 
+#  1) Should this next one work?
+#  2) Does this next one work?
 data.frame(x = 1) %>% select('x')
 
 y <- 'x' # value used in later examples
