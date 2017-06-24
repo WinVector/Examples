@@ -10,13 +10,13 @@ output:
 
 # Advanced dplyr Quiz
 
-Being able to effectively do work through programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations.  Any mis-match here (be it a knowledge gap in the programmer, or an implementation gap in the package) can lead to bugs and confusion.
+Being able to effectively perform meaningful work *using* [`R`](https://www.r-project.org) programming involves being able to both know how various packages work and anticipate package method outcomes in basic situations.  Any mis-match here (be it a knowledge gap in the programmer, or an implementation gap in a package) can lead to bugs and confusion.
 
-Below is our advanced `dplyr` quiz: can you anticipate the result of each of the example operations?
+Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz: can you anticipate the result of each of the example operations (many of which are in fact corner cases, so if that does not interest you please do feel free to skip without guilt)?  If you can't anticipate them, can you at least be sure you are avoiding these corner cases (both in old and new code)?
 
 # Start 
 
-With the following version of `dplyr` please figure out the result of each example command. Note: we don't claim all of the below is correct `dplyr` code, however programming requires knowledge of what happens in incorrect cases (for examples which throw usable errors, and which perform subtle mal-calculations).
+With the current version of `dplyr` please figure out the result of each example command. Note: we don't claim all of the examples below are correct `dplyr` code. However, effective programming requires knowledge of what happens in some incorrect cases (at least knowing which throw usable errors, and which perform quiet mal-calculations).
 
 First let's start up the latest version of all the packages we are using.
 
@@ -33,7 +33,7 @@ base::date()
 DORUN <- FALSE
 ```
 
-Now the examples/quiz.  Please take a moment and write down your answer before moving on to the solutions.
+Now the examples/quiz.  Please take a moment and write down your answer before moving on to the [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md) (you can also run the quiz yourself by downloading and knitting the [source document](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.Rmd)).
 
 # Local data.frames
 
@@ -89,11 +89,10 @@ Setup:
 ```{r dsetup, eval=DORUN}
 db <- DBI::dbConnect(RSQLite::SQLite(), 
                      ":memory:")
-dR <- dplyr::copy_to(db,
-                     data.frame(x = 3.077, 
-                                k = 'a', 
-                                stringsAsFactors = FALSE), 
-                     'dR')
+dL <- data.frame(x = 3.077, 
+                k = 'a', 
+                stringsAsFactors = FALSE)
+dR <- dplyr::copy_to(db, dL, 'dR')
 ```
 
 ## nrow()
@@ -121,7 +120,7 @@ dR %>% mutate_all(funs(round(., 2)))
 dR %>% mutate_all(funs(round(., digits = 2)))
 ```
 
-(From [dplyr 2890](https://github.com/tidyverse/dplyr/issues/2890).)
+(From [dplyr 2890](https://github.com/tidyverse/dplyr/issues/2890) and [dplyr 2908](https://github.com/tidyverse/dplyr/issues/2908).)
 
 ## rename
 
