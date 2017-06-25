@@ -69,11 +69,18 @@ enquo rules
 -----------
 
 ``` r
-(function(x) select(data.frame(x = 1), !!enquo(x)))(x)
-(function(x) data.frame(x = 1) %>% select(!!enquo(x)))(x)
+(function(z) select(data.frame(x = 1), !!enquo(z)))(x)
+(function(z) data.frame(x = 1) %>% select(!!enquo(z)))(x)
 ```
 
 (From [dplyr 2726](https://github.com/tidyverse/dplyr/issues/2726).)
+
+``` r
+y <- NULL # value used in later examples
+
+(function(z) mutate(data.frame(x = 1), !!quo_name(enquo(z)) := 2))(y)
+(function(z) select(data.frame(x = 1), !!enquo(z)))(y)
+```
 
 Databases
 =========
@@ -94,6 +101,7 @@ nrow()
 ------
 
 ``` r
+nrow(dL)
 nrow(dR)
 ```
 
@@ -104,6 +112,7 @@ union\_all()
 
 ``` r
 union_all(dR, dR)
+union_all(dL, head(dL))
 union_all(dR, head(dR))
 ```
 
@@ -114,7 +123,8 @@ mutate\_all funs()
 
 ``` r
 dR %>% mutate_all(funs(round(., 2)))
-dR %>% mutate_all(funs(round(., digits = 2)))
+dL %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
+dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 ```
 
 (From [dplyr 2890](https://github.com/tidyverse/dplyr/issues/2890) and [dplyr 2908](https://github.com/tidyverse/dplyr/issues/2908).)
@@ -124,6 +134,7 @@ rename
 
 ``` r
 dR %>% rename(x2 = x) %>% rename(k2 = k)
+dL %>% rename(x2 = x, k2 = k)
 dR %>% rename(x2 = x, k2 = k)
 ```
 

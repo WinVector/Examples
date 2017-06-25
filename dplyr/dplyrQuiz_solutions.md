@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jun 24 12:14:16 2017"
+    ## [1] "Sun Jun 25 07:05:06 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -164,14 +164,14 @@ enquo rules
 -----------
 
 ``` r
-(function(x) select(data.frame(x = 1), !!enquo(x)))(x)
+(function(z) select(data.frame(x = 1), !!enquo(z)))(x)
 ```
 
     ##   x
     ## 1 1
 
 ``` r
-(function(x) data.frame(x = 1) %>% select(!!enquo(x)))(x)
+(function(z) data.frame(x = 1) %>% select(!!enquo(z)))(x)
 ```
 
     ## Error: `function (expr) 
@@ -180,6 +180,21 @@ enquo rules
     ## }` must resolve to integer column positions, not a function
 
 (From [dplyr 2726](https://github.com/tidyverse/dplyr/issues/2726).)
+
+``` r
+y <- NULL # value used in later examples
+
+(function(z) mutate(data.frame(x = 1), !!quo_name(enquo(z)) := 2))(y)
+```
+
+    ##   x y
+    ## 1 1 2
+
+``` r
+(function(z) select(data.frame(x = 1), !!enquo(z)))(y)
+```
+
+    ## Error: `y` must resolve to integer column positions, not NULL
 
 Databases
 =========
@@ -198,6 +213,12 @@ dR <- dplyr::copy_to(db, dL, 'dR')
 
 nrow()
 ------
+
+``` r
+nrow(dL)
+```
+
+    ## [1] 1
 
 ``` r
 nrow(dR)
@@ -222,6 +243,14 @@ union_all(dR, dR)
     ## 2 3.077     a
 
 ``` r
+union_all(dL, head(dL))
+```
+
+    ##       x k
+    ## 1 3.077 a
+    ## 2 3.077 a
+
+``` r
 union_all(dR, head(dR))
 ```
 
@@ -243,10 +272,15 @@ dR %>% mutate_all(funs(round(., 2)))
     ## 1  3.08     0
 
 ``` r
-dR %>% mutate_all(funs(round(., digits = 2)))
+dL %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 ```
 
-    ## Warning: Named arguments ignored for SQL ROUND
+    ##      x
+    ## 1 3.08
+
+``` r
+dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
+```
 
     ## Warning: Named arguments ignored for SQL ROUND
 
@@ -266,6 +300,13 @@ dR %>% rename(x2 = x) %>% rename(k2 = k)
     ##      x2    k2
     ##   <dbl> <chr>
     ## 1 3.077     a
+
+``` r
+dL %>% rename(x2 = x, k2 = k)
+```
+
+    ##      x2 k2
+    ## 1 3.077  a
 
 ``` r
 dR %>% rename(x2 = x, k2 = k)
