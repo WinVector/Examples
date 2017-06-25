@@ -30,7 +30,7 @@ Examples
 base::date()
 ```
 
-    ## [1] "Thu Jun 22 17:45:23 2017"
+    ## [1] "Sun Jun 25 12:42:44 2017"
 
 ``` r
 # devtools::install_github('rstudio/sparklyr')
@@ -501,7 +501,7 @@ replyr_bind_rows(list(db1, db2))
     ## Warning: Translator is missing window functions:
     ## cor, count, cov, n_distinct, sd
 
-    ## # Source:   table<replyr_bind_rows_eYI8UGqKqYqdSxXV6nur_0000000005> [?? x
+    ## # Source:   table<replyr_bind_rows_mK13nIOyZC1MmgtG5ZA2_0000000003> [?? x
     ## #   2]
     ## # Database: spark_connection
     ##       x     y
@@ -648,7 +648,7 @@ mtcars_spark %>%
     ## Warning: Translator is missing window functions:
     ## cor, count, cov, n_distinct, sd
 
-    ## # Source:   table<replyr_bind_rows_8Gb7ZQ8DfXhDZj2VRiQF_0000000010> [?? x
+    ## # Source:   table<replyr_bind_rows_xU0oGY3UZfUY8hLw92bz_0000000007> [?? x
     ## #   11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
@@ -753,7 +753,7 @@ mtcars_spark %>%
     ## Warning: Translator is missing window functions:
     ## cor, count, cov, n_distinct, sd
 
-    ## # Source:   table<replyr_gapply_OX1rAuYD83JiWUhAMqSX_0000000016> [?? x 11]
+    ## # Source:   table<replyr_gapply_MgAyt5LGPFyigze6O9mZ_0000000013> [?? x 11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
@@ -875,33 +875,44 @@ The actual function is pretty simple:
 print(replyr::makeTempNameGenerator)
 ```
 
-    ## function (prefix, suffix = NULL) 
-    ## {
-    ##     force(prefix)
-    ##     if ((length(prefix) != 1) || (!is.character(prefix))) {
-    ##         stop("repyr::makeTempNameGenerator prefix must be a string")
+    ## function(prefix,
+    ##                                   suffix= NULL) {
+    ##   force(prefix)
+    ##   if((length(prefix)!=1)||(!is.character(prefix))) {
+    ##     stop("repyr::makeTempNameGenerator prefix must be a string")
+    ##   }
+    ##   if(is.null(suffix)) {
+    ##     alphabet <- c(letters, toupper(letters), as.character(0:9))
+    ##     suffix <- paste(base::sample(alphabet, size=20, replace= TRUE),
+    ##                     collapse = '')
+    ##   }
+    ##   count <- 0
+    ##   nameList <- list()
+    ##   function(..., peek=FALSE, dumpList=FALSE, remove=NULL) {
+    ##     if(length(list(...))>0) {
+    ##       stop("replyr::makeTempNameGenerator tempname generate unexpected argument")
     ##     }
-    ##     if (is.null(suffix)) {
-    ##         alphabet <- c(letters, toupper(letters), as.character(0:9))
-    ##         suffix <- paste(base::sample(alphabet, size = 20, replace = TRUE), 
-    ##             collapse = "")
+    ##     if(peek) {
+    ##       return(names(nameList))
     ##     }
-    ##     count <- 0
-    ##     nameList <- c()
-    ##     function(dumpList = FALSE) {
-    ##         if (dumpList) {
-    ##             v <- nameList
-    ##             nameList <<- c()
-    ##             return(v)
-    ##         }
-    ##         nm <- paste(prefix, suffix, sprintf("%010d", count), 
-    ##             sep = "_")
-    ##         nameList <<- c(nameList, nm)
-    ##         count <<- count + 1
-    ##         nm
+    ##     if(dumpList) {
+    ##       v <- names(nameList)
+    ##       nameList <<- list()
+    ##       return(v)
     ##     }
+    ##     if(!is.null(remove)) {
+    ##       victims <- intersect(remove, names(nameList))
+    ##       # this removes from lists
+    ##       nameList[victims] <<- NULL
+    ##       return(victims)
+    ##     }
+    ##     nm <- paste(prefix, suffix, sprintf('%010d',count), sep='_')
+    ##     nameList[[nm]] <<- 1
+    ##     count <<- count + 1
+    ##     nm
+    ##   }
     ## }
-    ## <bytecode: 0x7fdd86ff2b88>
+    ## <bytecode: 0x7fe3534bd308>
     ## <environment: namespace:replyr>
 
 For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following (now hanging with `sparklyr`0.5.6.9003\` June 22, 2017):
@@ -938,9 +949,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_kErxC8TS329CtLWsdGmr_0000000000"
-    ## [2] "JOINTMP_kErxC8TS329CtLWsdGmr_0000000001"
-    ## [3] "JOINTMP_kErxC8TS329CtLWsdGmr_0000000002"
+    ## [1] "JOINTMP_SysgldOCE0AkErIpWdIg_0000000000"
+    ## [2] "JOINTMP_SysgldOCE0AkErIpWdIg_0000000001"
+    ## [3] "JOINTMP_SysgldOCE0AkErIpWdIg_0000000002"
 
 ``` r
 for(ti in temps) {
@@ -955,9 +966,9 @@ print(joined)
     ## # Database: spark_connection
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1  0.02475583   0.7629927   0.8707342   0.9650309   0.6924736
-    ## 2     2  0.80283222   0.3874895   0.1051844   0.2297160   0.2365170
-    ## 3     3  0.26368111   0.3353186   0.7249157   0.1437525   0.1521428
+    ## 1     1   0.6702914   0.9581712   0.3337919  0.47922187   0.7334644
+    ## 2     2   0.6950118   0.5928501   0.6125515  0.05504514   0.5432771
+    ## 3     3   0.6258814   0.2078046   0.4039911  0.36651236   0.8097854
 
 Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend on the intermediates.
 
@@ -983,5 +994,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  827856 44.3    1442291 77.1  1442291 77.1
-    ## Vcells 1363846 10.5    2552219 19.5  1869116 14.3
+    ## Ncells  836095 44.7    1442291 77.1  1442291 77.1
+    ## Vcells 1555156 11.9    2552219 19.5  2030074 15.5
