@@ -1,0 +1,61 @@
+---
+title: "Please Consider Using `wrapr::let()` for Replacement Tasks"
+author: "John Mount"
+date: "6/26/2017"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+(author: John Mount)
+
+# Please Consider Using `wrapr::let()` for Replacement Tasks
+
+From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916).
+
+The following *appears* to work.
+
+```{r ex1}
+suppressPackageStartupMessages(library("dplyr"))
+
+COL <- "homeworld"
+starwars %>%
+  group_by(.data[[COL]]) %>%
+  head(n=1)
+```
+
+Though notice it reports the grouping is by "`COL`", not by "`homeworld`".  Also the data set now has `14` columns, not the original `13` from the `starwars` data set.
+
+And this seemingly similar variation (currently) throws an exception:
+
+```{r ex1b, error=TRUE}
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(.data[[homeworld]]) %>% 
+  head(n=1) 
+```
+
+I know this will cost me what little community good-will I might have left (after already having raised this, unsolicited, many times), but *please* consider using our package `wrapr::let()` for tasks such as the above.
+
+```{r ex2}
+library("wrapr")
+
+let(
+  c(COL = "homeworld"),
+  
+  starwars %>%
+    group_by(COL) %>%
+    head(n=1)
+)
+
+let(
+  c(homeworld = "homeworld"),
+  
+  starwars %>%
+    group_by(homeworld) %>% 
+    head(n=1)
+)
+```
+
+Some explanation can be found [here](http://www.win-vector.com/blog/2017/06/wrapr-implementation-update/).
