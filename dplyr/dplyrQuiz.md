@@ -44,7 +44,7 @@ data.frame(x = 1) %>% select(y)
 data.frame(x = 1, y = 2) %>% select(y)
 ```
 
-(From [dplyr 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+(From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
 Piping into different targets (functions, blocks expressions):
 --------------------------------------------------------------
@@ -73,7 +73,7 @@ enquo rules
 (function(z) data.frame(x = 1) %>% select(!!enquo(z)))(x)
 ```
 
-(From [dplyr 2726](https://github.com/tidyverse/dplyr/issues/2726).)
+(From [`dplyr` issue 2726](https://github.com/tidyverse/dplyr/issues/2726).)
 
 ``` r
 y <- NULL # value used in later examples
@@ -81,6 +81,15 @@ y <- NULL # value used in later examples
 (function(z) mutate(data.frame(x = 1), !!quo_name(enquo(z)) := 2))(y)
 (function(z) select(data.frame(x = 1), !!enquo(z)))(y)
 ```
+
+summary
+-------
+
+``` r
+data.frame(x = c(1, 2), y = c(3, 3)) %>% group_by(x) %>% summarize(y)
+```
+
+(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
 
 Databases
 =========
@@ -105,7 +114,7 @@ nrow(dL)
 nrow(dR)
 ```
 
-(From [dplyr 2871](https://github.com/tidyverse/dplyr/issues/2871).)
+(From [`dplyr` issue 2871](https://github.com/tidyverse/dplyr/issues/2871).)
 
 union\_all()
 ------------
@@ -116,7 +125,7 @@ union_all(dL, head(dL))
 union_all(dR, head(dR))
 ```
 
-(From [dplyr 2858](https://github.com/tidyverse/dplyr/issues/2858).)
+(From [`dplyr` issue 2858](https://github.com/tidyverse/dplyr/issues/2858).)
 
 mutate\_all funs()
 ------------------
@@ -127,7 +136,7 @@ dL %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 ```
 
-(From [dplyr 2890](https://github.com/tidyverse/dplyr/issues/2890) and [dplyr 2908](https://github.com/tidyverse/dplyr/issues/2908).)
+(From [`dplyr` issue 2890](https://github.com/tidyverse/dplyr/issues/2890) and [`dplyr` issue 2908](https://github.com/tidyverse/dplyr/issues/2908).)
 
 rename
 ------
@@ -138,7 +147,7 @@ dL %>% rename(x2 = x, k2 = k)
 dR %>% rename(x2 = x, k2 = k)
 ```
 
-(From [dplyr 2860](https://github.com/tidyverse/dplyr/issues/2860).)
+(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
 
 Conclusion
 ==========

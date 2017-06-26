@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sun Jun 25 07:05:06 2017"
+    ## [1] "Mon Jun 26 07:29:57 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -104,7 +104,7 @@ data.frame(x = 1, y = 2) %>% select(y)
     ##   y
     ## 1 2
 
-(From [dplyr 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+(From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
 Piping into different targets (functions, blocks expressions):
 --------------------------------------------------------------
@@ -179,7 +179,7 @@ enquo rules
     ##     enexpr(expr)
     ## }` must resolve to integer column positions, not a function
 
-(From [dplyr 2726](https://github.com/tidyverse/dplyr/issues/2726).)
+(From [`dplyr` issue 2726](https://github.com/tidyverse/dplyr/issues/2726).)
 
 ``` r
 y <- NULL # value used in later examples
@@ -195,6 +195,21 @@ y <- NULL # value used in later examples
 ```
 
     ## Error: `y` must resolve to integer column positions, not NULL
+
+summary
+-------
+
+``` r
+data.frame(x = c(1, 2), y = c(3, 3)) %>% group_by(x) %>% summarize(y)
+```
+
+    ## # A tibble: 2 x 2
+    ##       x     y
+    ##   <dbl> <dbl>
+    ## 1     1     3
+    ## 2     2    NA
+
+(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
 
 Databases
 =========
@@ -226,7 +241,7 @@ nrow(dR)
 
     ## [1] NA
 
-(From [dplyr 2871](https://github.com/tidyverse/dplyr/issues/2871).)
+(From [`dplyr` issue 2871](https://github.com/tidyverse/dplyr/issues/2871).)
 
 union\_all()
 ------------
@@ -256,7 +271,7 @@ union_all(dR, head(dR))
 
     ## Error: SQLite does not support set operations on LIMITs
 
-(From [dplyr 2858](https://github.com/tidyverse/dplyr/issues/2858).)
+(From [`dplyr` issue 2858](https://github.com/tidyverse/dplyr/issues/2858).)
 
 mutate\_all funs()
 ------------------
@@ -286,7 +301,7 @@ dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 
     ## Error in rsqlite_send_query(conn@ptr, statement): near "AS": syntax error
 
-(From [dplyr 2890](https://github.com/tidyverse/dplyr/issues/2890) and [dplyr 2908](https://github.com/tidyverse/dplyr/issues/2908).)
+(From [`dplyr` issue 2890](https://github.com/tidyverse/dplyr/issues/2890) and [`dplyr` issue 2908](https://github.com/tidyverse/dplyr/issues/2908).)
 
 rename
 ------
@@ -314,7 +329,7 @@ dR %>% rename(x2 = x, k2 = k)
 
     ## Error in names(select)[match(old_vars, vars)] <- new_vars: NAs are not allowed in subscripted assignments
 
-(From [dplyr 2860](https://github.com/tidyverse/dplyr/issues/2860).)
+(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
 
 Conclusion
 ==========
