@@ -12,17 +12,20 @@ output:
 
 Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)?  Because it lets you take a number of common working patterns and apply them to remote data (such as databases or [`Spark`](https://spark.apache.org)). 
 
-`replyr` allows users to work with `Spark` data similar to how they work with local `data.frame`s. Some key capability gaps remedied by `replyr` include:
+`replyr` allows users to work with `Spark` or database data similar to how they work with local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
   * Summarizing data: `replyr_summary()`.
+  * Combining tables: `replyr_union_all()`.
   * Binding tables by row: `replyr_bind_rows()`.
   * Using the split/apply/combine pattern (`dplyr::do()`): `replyr_split()`, `replyr::gapply()`.
   * Pivot/anti-pivot (`gather`/`spread`): `replyr_moveValuesToRows()`/ `replyr_moveValuesToColumns()`.
-  * Parametric programming (`wrapr::let()` and `replyr::replyr_apply_f_mapped()`).
-  * Handle tracking.
+  * [Handle tracking](http://www.win-vector.com/blog/2017/06/managing-intermediate-results-when-using-rsparklyr/).
+  * A [join controller](http://www.win-vector.com/blog/2017/06/use-a-join-controller-to-document-your-work/).
 
 You may have already learned to decompose your local data processing into steps including the above,
 so retaining such capabilities makes working with `Spark` and [`sparklyr`](http://spark.rstudio.com) *much* easier.
+
+[`replyr`](https://github.com/WinVector/replyr) is the product of collecting experience applying `R` at production scale with many clients, collecting issues and filling-in gaps.
 
 Below are some examples.
 
@@ -31,6 +34,8 @@ Below are some examples.
 # Examples
 
 ***
+
+Things are changing fast right now, so let's use the development versions of the packages for our examples.
 
 ```{r setup}
 base::date()
@@ -48,22 +53,20 @@ packageVersion("replyr")
 suppressPackageStartupMessages("spaklyr")
 packageVersion("sparklyr")
 
-sc <- sparklyr::spark_connect(version='2.0.2', 
+sc <- sparklyr::spark_connect(version='2.1.0', 
+                              hadoop_version = '2.7',
                               master = "local")
 ```
 
 ## `summary`
 
-Standard `summary()`,  `glimpse()`, `glance()`, all fail on `Spark`.
+Standard `summary()` and `glance()`, all fail on `Spark`.
 
 ```{r sparksummary, error=TRUE}
 mtcars_spark <- copy_to(sc, mtcars)
 
 # gives summary of handle, not data
 summary(mtcars_spark)
-
-# errors-out
-glimpse(mtcars_spark)
 ```
 
 ```{r glance, error=TRUE}
@@ -94,19 +97,6 @@ mtcars2 %>%
   tidyr::gather('fact', 'value')
 ```
 
-(Note: we have been regularly seeing a segfault at the block below.  I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
-
-```
-*** caught segfault ***
-address 0x0, cause 'unknown'
-
-Traceback:
- 1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
- 2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
-```
-
-This pretty much can *not* be `replyr`'s fault as `replyr` is a pure `R` package that mereley issues commands to `dplyr`/`sparklyr`/`Spark`.  So at worst `replyr` is generate a complicated sequence that is exposing a bug in one of these or between once of all of these.  At this point I am pretty much decided on suggesting this markdown as a cluster acceptance test.  If you can't do this, you can't expect to later do complicated work.
-)
 
 
 ```{r movevaluestorows, eval=TRUE}
@@ -120,7 +110,7 @@ mtcars2 %>%
 
 
 
-## `replyr_bind_rows`
+## Binding rows
 
 `dplyr` `bind_rows`, `union`, and `union_all` are all currently unsuitable for use on `Spark`.
 `replyr::replyr_union_all()` and `replyr::replyr_bind_rows()` supply working alternatives.
@@ -211,48 +201,10 @@ mtcars_spark %>%
          function(di) head(di, 2))
 ```
 
-***
-
-## `wrapr::let`
-
-`wrapr::let` allows execution of arbitrary code with substituted variable names (note this is subtly different than binding values for names as with `base::substitute` or `base::with`).  This allows the user to write arbitrary `dplyr` code in the case of ["parametric variable names"](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/) (that is when variable names are not known at coding time, but will become available later at run time as values in other variables) without directly using the `dplyr` "underbar forms"  (and the direct use of `lazyeval::interp` and `.dots=stats::setNames` to use the `dplyr` "underbar forms").
-
-Example:
-
-```{r  message=FALSE,results='hide',warning=FALSE}
-library('dplyr')
-```
-```{r letexample}
-# nice parametric function we write
-ComputeRatioOfColumns <- function(d,NumeratorColumnName,DenominatorColumnName,ResultColumnName) {
-  wrapr::let(
-    alias=list(NumeratorColumn=NumeratorColumnName,
-               DenominatorColumn=DenominatorColumnName,
-               ResultColumn=ResultColumnName),
-    expr={
-      # (pretend) large block of code written with concrete column names.
-      # due to the let wrapper in this function it will behave as if it was
-      # using the specified paremetric column names.
-      d %>% mutate(ResultColumn = NumeratorColumn/DenominatorColumn)
-    })
-}
-
-# example data
-d <- data.frame(a=1:5, b=3:7)
-
-# example application
-d %>% ComputeRatioOfColumns('a','b','c')
-```
-
-`wrapr::let` makes construction of abstract functions over `dplyr` controlled data much easier.  It is designed for the case where the "`expr`" block is large sequence of statements and pipelines.
-
-`wrapr::let` is based on `gtools::strmacro` by Gregory R. Warnes.
-
-***
 
 ## `replyr::replyr_apply_f_mapped`
 
-`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/).  What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).  
+[`wrapr::let`](http://www.win-vector.com/blog/2017/06/please-consider-using-wraprlet-for-replacement-tasks/) was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/).  What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).  
 
 With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data.  So a re-mapping is active as long as a given controlling function is in control.  In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
 
@@ -297,9 +249,7 @@ print(dF)
 
 Many [`Sparklyr`](https://CRAN.R-project.org/package=sparklyr) tasks involve creation of intermediate or temporary tables.  This can be through `dplyr::copy_to()` and through `dplyr::compute()`. These handles can represent a reference leak and eat up resources.   
 
-Note: right now `sparklyr` `compute()` is buggy and [doesn't do anything useful](http://www.win-vector.com/blog/2017/06/managing-intermediate-results-when-using-rsparklyr/).
-
-To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies record-retaining temporary name generators (and uses the same internally).
+To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies handle trackers: record-retaining temporary name generators (and uses the same internally).
 
 The actual function is pretty simple:
 
@@ -353,13 +303,9 @@ Careful introduction and management of materialized intermediates can conserve r
 
 # Conclusion
 
-If you are serious about `R` controlled data processing in `Spark` you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
+If you are serious about `R` controlled data processing in `Spark` or databases you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
 Be aware of the functionality we demonstrated depends on using the development version of `replyr`.  Though we will, of course, advance the CRAN version as soon as practical. 
-
-Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` (not the [2017-05-30 `0.6.0` release candidate](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4), or the [2017-06-05 `0.7.0` release candidate](https://github.com/tidyverse/dplyr/commit/43dc94e88a4ab5938618b612bc9ec874de571598)) .  The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities).  We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), [here](https://github.com/rstudio/sparklyr/issues/678), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known potentially upgrade blocking issues).  While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.  
-
-I'll probably re-run this worksheet after these packages get new CRAN releases.
 
 ***
 

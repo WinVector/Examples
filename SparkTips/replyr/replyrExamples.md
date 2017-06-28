@@ -6,16 +6,19 @@ Why `replyr`
 
 Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-project.org/package=replyr)? Because it lets you take a number of common working patterns and apply them to remote data (such as databases or [`Spark`](https://spark.apache.org)).
 
-`replyr` allows users to work with `Spark` data similar to how they work with local `data.frame`s. Some key capability gaps remedied by `replyr` include:
+`replyr` allows users to work with `Spark` or database data similar to how they work with local `data.frame`s. Some key capability gaps remedied by `replyr` include:
 
 -   Summarizing data: `replyr_summary()`.
+-   Combining tables: `replyr_union_all()`.
 -   Binding tables by row: `replyr_bind_rows()`.
 -   Using the split/apply/combine pattern (`dplyr::do()`): `replyr_split()`, `replyr::gapply()`.
 -   Pivot/anti-pivot (`gather`/`spread`): `replyr_moveValuesToRows()`/ `replyr_moveValuesToColumns()`.
--   Parametric programming (`wrapr::let()` and `replyr::replyr_apply_f_mapped()`).
--   Handle tracking.
+-   [Handle tracking](http://www.win-vector.com/blog/2017/06/managing-intermediate-results-when-using-rsparklyr/).
+-   A [join controller](http://www.win-vector.com/blog/2017/06/use-a-join-controller-to-document-your-work/).
 
 You may have already learned to decompose your local data processing into steps including the above, so retaining such capabilities makes working with `Spark` and [`sparklyr`](http://spark.rstudio.com) *much* easier.
+
+[`replyr`](https://github.com/WinVector/replyr) is the product of collecting experience applying `R` at production scale with many clients, collecting issues and filling-in gaps.
 
 Below are some examples.
 
@@ -26,11 +29,13 @@ Examples
 
 ------------------------------------------------------------------------
 
+Things are changing fast right now, so let's use the development versions of the packages for our examples.
+
 ``` r
 base::date()
 ```
 
-    ## [1] "Sun Jun 25 12:42:44 2017"
+    ## [1] "Wed Jun 28 07:58:49 2017"
 
 ``` r
 # devtools::install_github('rstudio/sparklyr')
@@ -47,7 +52,7 @@ packageVersion("dplyr")
 packageVersion("dbplyr")
 ```
 
-    ## [1] '1.0.0.9000'
+    ## [1] '1.1.0.9000'
 
 ``` r
 library("tidyr")
@@ -73,17 +78,18 @@ suppressPackageStartupMessages("spaklyr")
 packageVersion("sparklyr")
 ```
 
-    ## [1] '0.5.6.9003'
+    ## [1] '0.5.6.9008'
 
 ``` r
-sc <- sparklyr::spark_connect(version='2.0.2', 
+sc <- sparklyr::spark_connect(version='2.1.0', 
+                              hadoop_version = '2.7',
                               master = "local")
 ```
 
 `summary`
 ---------
 
-Standard `summary()`, `glimpse()`, `glance()`, all fail on `Spark`.
+Standard `summary()` and `glance()`, all fail on `Spark`.
 
 ``` r
 mtcars_spark <- copy_to(sc, mtcars)
@@ -95,25 +101,6 @@ summary(mtcars_spark)
     ##     Length Class          Mode
     ## src 1      src_spark      list
     ## ops 2      op_base_remote list
-
-``` r
-# errors-out
-glimpse(mtcars_spark)
-```
-
-    ## Observations: 25
-    ## Variables: 11
-    ## $ mpg  <dbl> 21.0, 21.0, 22.8, 21.4, 18.7, 18.1, 14.3, 24.4, 22.8, 19....
-    ## $ cyl  <dbl> 6, 6, 4, 6, 8, 6, 8, 4, 4, 6, 6, 8, 8, 8, 8, 8, 8, 4, 4, ...
-    ## $ disp <dbl> 160.0, 160.0, 108.0, 258.0, 360.0, 225.0, 360.0, 146.7, 1...
-    ## $ hp   <dbl> 110, 110, 93, 110, 175, 105, 245, 62, 95, 123, 123, 180, ...
-    ## $ drat <dbl> 3.90, 3.90, 3.85, 3.08, 3.15, 2.76, 3.21, 3.69, 3.92, 3.9...
-    ## $ wt   <dbl> 2.620, 2.875, 2.320, 3.215, 3.440, 3.460, 3.570, 3.190, 3...
-    ## $ qsec <dbl> 16.46, 17.02, 18.61, 19.44, 17.02, 20.22, 15.84, 20.00, 2...
-    ## $ vs   <dbl> 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, ...
-    ## $ am   <dbl> 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, ...
-    ## $ gear <dbl> 4, 4, 4, 3, 3, 3, 3, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 4, 4, ...
-    ## $ carb <dbl> 4, 4, 1, 1, 2, 1, 4, 2, 2, 4, 4, 3, 3, 3, 4, 4, 4, 1, 2, ...
 
 ``` r
 packageVersion("broom")
@@ -166,17 +153,6 @@ mtcars2 %>%
 
     ## Error in UseMethod("gather_"): no applicable method for 'gather_' applied to an object of class "c('tbl_spark', 'tbl_sql', 'tbl_lazy', 'tbl')"
 
-(Note: we have been regularly seeing a segfault at the block below. I think this is an issues I have filed against both [`replyr`](https://github.com/WinVector/replyr/issues/4) and [`sparklyr`](https://github.com/rstudio/sparklyr/issues/721).
-
-    *** caught segfault ***
-    address 0x0, cause 'unknown'
-
-    Traceback:
-     1: r_replyr_bind_rows(lst, colnames, tempNameGenerator)
-     2: replyr_bind_rows(rlist, tempNameGenerator = tempNameGenerator)
-
-This pretty much can *not* be `replyr`'s fault as `replyr` is a pure `R` package that mereley issues commands to `dplyr`/`sparklyr`/`Spark`. So at worst `replyr` is generate a complicated sequence that is exposing a bug in one of these or between once of all of these. At this point I am pretty much decided on suggesting this markdown as a cluster acceptance test. If you can't do this, you can't expect to later do complicated work. )
-
 ``` r
 mtcars2 %>%
   replyr_moveValuesToRows(nameForNewKeyColumn= 'fact', 
@@ -187,226 +163,226 @@ mtcars2 %>%
 ```
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## # Source:     lazy query [?? x 4]
     ## # Database:   spark_connection
@@ -425,8 +401,8 @@ mtcars2 %>%
     ## 10 AMC Javelin    vs   0.00 numeric
     ## # ... with 342 more rows
 
-`replyr_bind_rows`
-------------------
+Binding rows
+------------
 
 `dplyr` `bind_rows`, `union`, and `union_all` are all currently unsuitable for use on `Spark`. `replyr::replyr_union_all()` and `replyr::replyr_bind_rows()` supply working alternatives.
 
@@ -490,18 +466,18 @@ replyr_bind_rows(list(db1, db2))
 ```
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
-    ## # Source:   table<replyr_bind_rows_mK13nIOyZC1MmgtG5ZA2_0000000003> [?? x
+    ## # Source:   table<replyr_bind_rows_2XljLVGruYAKb7a5Xrju_0000000003> [?? x
     ## #   2]
     ## # Database: spark_connection
     ##       x     y
@@ -565,90 +541,90 @@ mtcars_spark %>%
 ```
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
-    ## # Source:   table<replyr_bind_rows_xU0oGY3UZfUY8hLw92bz_0000000007> [?? x
+    ## # Source:   table<replyr_bind_rows_AGYgiyb3wU9EmYjcY9TH_0000000007> [?? x
     ## #   11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
@@ -670,90 +646,90 @@ mtcars_spark %>%
 ```
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
     ## Warning: Translator is missing window functions:
-    ## cor, count, cov, n_distinct, sd
+    ## count, n_distinct
 
-    ## # Source:   table<replyr_gapply_MgAyt5LGPFyigze6O9mZ_0000000013> [?? x 11]
+    ## # Source:   table<replyr_gapply_1aoLWUmJCK2x5H1GfTx2_0000000013> [?? x 11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
@@ -764,58 +740,10 @@ mtcars_spark %>%
     ## 5  22.8     4 108.0    93  3.85 2.320 18.61     1     1     4     1
     ## 6  24.4     4 146.7    62  3.69 3.190 20.00     1     0     4     2
 
-------------------------------------------------------------------------
-
-`wrapr::let`
-------------
-
-`wrapr::let` allows execution of arbitrary code with substituted variable names (note this is subtly different than binding values for names as with `base::substitute` or `base::with`). This allows the user to write arbitrary `dplyr` code in the case of ["parametric variable names"](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/) (that is when variable names are not known at coding time, but will become available later at run time as values in other variables) without directly using the `dplyr` "underbar forms" (and the direct use of `lazyeval::interp` and `.dots=stats::setNames` to use the `dplyr` "underbar forms").
-
-Example:
-
-``` r
-library('dplyr')
-```
-
-``` r
-# nice parametric function we write
-ComputeRatioOfColumns <- function(d,NumeratorColumnName,DenominatorColumnName,ResultColumnName) {
-  wrapr::let(
-    alias=list(NumeratorColumn=NumeratorColumnName,
-               DenominatorColumn=DenominatorColumnName,
-               ResultColumn=ResultColumnName),
-    expr={
-      # (pretend) large block of code written with concrete column names.
-      # due to the let wrapper in this function it will behave as if it was
-      # using the specified paremetric column names.
-      d %>% mutate(ResultColumn = NumeratorColumn/DenominatorColumn)
-    })
-}
-
-# example data
-d <- data.frame(a=1:5, b=3:7)
-
-# example application
-d %>% ComputeRatioOfColumns('a','b','c')
-```
-
-    ##   a b         c
-    ## 1 1 3 0.3333333
-    ## 2 2 4 0.5000000
-    ## 3 3 5 0.6000000
-    ## 4 4 6 0.6666667
-    ## 5 5 7 0.7142857
-
-`wrapr::let` makes construction of abstract functions over `dplyr` controlled data much easier. It is designed for the case where the "`expr`" block is large sequence of statements and pipelines.
-
-`wrapr::let` is based on `gtools::strmacro` by Gregory R. Warnes.
-
-------------------------------------------------------------------------
-
 `replyr::replyr_apply_f_mapped`
 -------------------------------
 
-`wrapr::let` was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/). What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).
+[`wrapr::let`](http://www.win-vector.com/blog/2017/06/please-consider-using-wraprlet-for-replacement-tasks/) was only the secondary proposal in the original [2016 "Parametric variable names" article](http://www.win-vector.com/blog/2016/12/parametric-variable-names-and-dplyr/). What we really wanted was a stack of view so the data pretended to have names that matched the code (i.e., re-mapping the data, not the code).
 
 With a bit of thought we can achieve this if we associate the data re-mapping with a function environment instead of with the data. So a re-mapping is active as long as a given controlling function is in control. In our case that function is `replyr::replyr_apply_f_mapped()` and works as follows:
 
@@ -865,9 +793,7 @@ Handle management
 
 Many [`Sparklyr`](https://CRAN.R-project.org/package=sparklyr) tasks involve creation of intermediate or temporary tables. This can be through `dplyr::copy_to()` and through `dplyr::compute()`. These handles can represent a reference leak and eat up resources.
 
-Note: right now `sparklyr` `compute()` is buggy and [doesn't do anything useful](http://www.win-vector.com/blog/2017/06/managing-intermediate-results-when-using-rsparklyr/).
-
-To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies record-retaining temporary name generators (and uses the same internally).
+To help control handle lifetime the [`replyr`](https://CRAN.R-project.org/package=replyr) supplies handle trackers: record-retaining temporary name generators (and uses the same internally).
 
 The actual function is pretty simple:
 
@@ -912,7 +838,7 @@ print(replyr::makeTempNameGenerator)
     ##     nm
     ##   }
     ## }
-    ## <bytecode: 0x7fe3534bd308>
+    ## <bytecode: 0x7fd76236f9c8>
     ## <environment: namespace:replyr>
 
 For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following (now hanging with `sparklyr`0.5.6.9003\` June 22, 2017):
@@ -949,9 +875,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_SysgldOCE0AkErIpWdIg_0000000000"
-    ## [2] "JOINTMP_SysgldOCE0AkErIpWdIg_0000000001"
-    ## [3] "JOINTMP_SysgldOCE0AkErIpWdIg_0000000002"
+    ## [1] "JOINTMP_U8n2v5G5sKVXCPatmvFL_0000000000"
+    ## [2] "JOINTMP_U8n2v5G5sKVXCPatmvFL_0000000001"
+    ## [3] "JOINTMP_U8n2v5G5sKVXCPatmvFL_0000000002"
 
 ``` r
 for(ti in temps) {
@@ -966,9 +892,9 @@ print(joined)
     ## # Database: spark_connection
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.6702914   0.9581712   0.3337919  0.47922187   0.7334644
-    ## 2     2   0.6950118   0.5928501   0.6125515  0.05504514   0.5432771
-    ## 3     3   0.6258814   0.2078046   0.4039911  0.36651236   0.8097854
+    ## 1     1   0.7505041  0.67530600   0.9092470  0.93685692  0.56861102
+    ## 2     2   0.5288615  0.05495727   0.9174889  0.56305068  0.20785769
+    ## 3     3   0.5661626  0.18344048   0.7310566  0.08389172  0.08437218
 
 Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend on the intermediates.
 
@@ -977,13 +903,9 @@ Careful introduction and management of materialized intermediates can conserve r
 Conclusion
 ==========
 
-If you are serious about `R` controlled data processing in `Spark` you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
+If you are serious about `R` controlled data processing in `Spark` or databases you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
 Be aware of the functionality we demonstrated depends on using the development version of `replyr`. Though we will, of course, advance the CRAN version as soon as practical.
-
-Note: all of the above was demonstrated using the released CRAN 0.5.0 version of `dplyr` (not the [2017-05-30 `0.6.0` release candidate](https://github.com/tidyverse/dplyr/commit/c7ca37436c140173a3bf0e7f15d55b604b52c0b4), or the [2017-06-05 `0.7.0` release candidate](https://github.com/tidyverse/dplyr/commit/43dc94e88a4ab5938618b612bc9ec874de571598)) . The assumption is that *some* of the work-arounds may become less necessary as we go forward (`glimpse()` and `glance()` in particular are likely to pick up `Spark` capabilities). We kept with the 0.5.0 production `dplyr` as our experience is: the 0.6.0 version does not currently fully inter-operate with the [CRAN released version of `sparklyr` (0.5.5 2017-05-26)](https://CRAN.R-project.org/package=sparklyr) and other database sources (please see [here](https://github.com/tidyverse/dplyr/issues/2825), [here](https://github.com/tidyverse/dplyr/issues/2823), [here](https://github.com/rstudio/sparklyr/issues/678), and [here](https://github.com/tidyverse/dplyr/issues/2776) for some of the known potentially upgrade blocking issues). While the [current development version of `sparklyr`](https://github.com/rstudio/sparklyr/commit/d981cd54326b5663b7311d5f30adeec68dacd1fe) does incorporate some improvements, it does not appear to be specially marked or tagged as release candidate.
-
-I'll probably re-run this worksheet after these packages get new CRAN releases.
 
 ------------------------------------------------------------------------
 
@@ -994,5 +916,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  836095 44.7    1442291 77.1  1442291 77.1
-    ## Vcells 1555156 11.9    2552219 19.5  2030074 15.5
+    ## Ncells  836042 44.7    1442291 77.1  1442291 77.1
+    ## Vcells 1557910 11.9    2552219 19.5  2017430 15.4
