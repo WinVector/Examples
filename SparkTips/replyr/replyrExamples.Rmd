@@ -24,6 +24,8 @@ Why should [R](https://www.r-project.org) users try [`replyr`](https://CRAN.R-pr
 
 You may have already learned to decompose your local data processing into steps including the above,
 so retaining such capabilities makes working with `Spark` and [`sparklyr`](http://spark.rstudio.com) *much* easier.
+Some of the above capabilities will [likely come to the `tidyverse`](https://github.com/tidyverse/dplyr/issues/2923), but the above implementations are build purely on
+top of `dplyr` and are the ones [already being vetted and debugged](https://github.com/rstudio/sparklyr/issues/783) at production scale (I think these will be ironed out and reliable sooner).
 
 [`replyr`](https://github.com/WinVector/replyr) is the product of collecting experience applying `R` at production scale with many clients, collecting issues and filling-in gaps.
 
@@ -50,12 +52,16 @@ library("tidyr")
 packageVersion("tidyr")
 library("replyr")
 packageVersion("replyr")
-suppressPackageStartupMessages("spaklyr")
+suppressPackageStartupMessages(library("sparklyr"))
 packageVersion("sparklyr")
 
+# more memory as suggested in https://github.com/rstudio/sparklyr/issues/783
+config <- spark_config()
+config[["sparklyr.shell.driver-memory"]] <- "8G"
 sc <- sparklyr::spark_connect(version='2.1.0', 
                               hadoop_version = '2.7',
-                              master = "local")
+                              master = "local",
+                              config = config)
 ```
 
 ## `summary`
