@@ -41,10 +41,25 @@ data.frame(x = 1) %>% select('x')
 y <- 'x' # value used in later examples
 
 data.frame(x = 1) %>% select(y)
+
 data.frame(x = 1, y = 2) %>% select(y)
 ```
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+
+Column grouping
+---------------
+
+``` r
+y <- 'x' # value used in later examples
+
+data.frame(x = 1) %>% 
+  group_by(.data[[y]]) %>% 
+  summarize(count = n()) %>% 
+  colnames()
+```
+
+(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
 
 Piping into different targets (functions, blocks expressions):
 --------------------------------------------------------------
@@ -53,7 +68,9 @@ Piping into different targets (functions, blocks expressions):
 
 ``` r
 data.frame(x = 1)  %>%  { bind_rows(list(., .)) }
+
 data.frame(x = 1)  %>%    bind_rows(list(., .))
+
 data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
 ```
 
@@ -61,7 +78,9 @@ Same with [Bizarro Pipe](https://cran.r-project.org/web/packages/replyr/vignette
 
 ``` r
 data.frame(x = 1)  ->.;  { bind_rows(list(., .)) }
+
 data.frame(x = 1)  ->.;    bind_rows(list(., .))
+
 data.frame(x = 1)  ->.;  ( bind_rows(list(., .)) )
 ```
 
@@ -70,6 +89,7 @@ enquo rules
 
 ``` r
 (function(z) select(data.frame(x = 1), !!enquo(z)))(x)
+
 (function(z) data.frame(x = 1) %>% select(!!enquo(z)))(x)
 ```
 
@@ -79,6 +99,7 @@ enquo rules
 y <- NULL # value used in later examples
 
 (function(z) mutate(data.frame(x = 1), !!quo_name(enquo(z)) := 2))(y)
+
 (function(z) select(data.frame(x = 1), !!enquo(z)))(y)
 ```
 
@@ -111,6 +132,7 @@ nrow()
 
 ``` r
 nrow(dL)
+
 nrow(dR)
 ```
 
@@ -121,7 +143,9 @@ union\_all()
 
 ``` r
 union_all(dR, dR)
+
 union_all(dL, head(dL))
+
 union_all(dR, head(dR))
 ```
 
@@ -132,7 +156,9 @@ mutate\_all funs()
 
 ``` r
 dR %>% mutate_all(funs(round(., 2)))
+
 dL %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
+
 dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 ```
 
@@ -143,7 +169,9 @@ rename
 
 ``` r
 dR %>% rename(x2 = x) %>% rename(k2 = k)
+
 dL %>% rename(x2 = x, k2 = k)
+
 dR %>% rename(x2 = x, k2 = k)
 ```
 
@@ -152,7 +180,7 @@ dR %>% rename(x2 = x, k2 = k)
 Conclusion
 ==========
 
-The above quiz is really my working notes on corner-cases to avoid. Not all of these are worth fixing. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above cases. But to do that, you have to know what to avoid (hence the notes).
+The above quiz is really my working notes on corner-cases to avoid. Not all of these are worth fixing. Some, however, are deep design flaws. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above cases. But to do that, you have to know what to avoid (hence the notes).
 
 Also: please understand, some of these may *not* represent problems with the above packages. They may instead represent mistakes and misunderstandings on my part. Or opinions of mine that may differ from the considered opinions and experience of the people who have authored and who have to maintain these packages. Some things that might seem "easy to fix" to an outsider may already be set at a "best possible compromise" among many other considerations.
 
