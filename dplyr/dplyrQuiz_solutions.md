@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 10:07:40 2017"
+    ## [1] "Thu Jun 29 10:10:39 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -95,7 +95,7 @@ data.frame(x = 1) %>%
 ``` r
 y <- 'x' # value used in later examples
 
-# Hint: this is new for dplyr 0.7.1 
+# Hint: this is new for dplyr 0.7.* 
 # (dplyr 0.5.0 only did this for integers).
 # This is going to be a massive source
 # of unexpected results, bugs, and
