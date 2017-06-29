@@ -24,6 +24,8 @@ DORUN <- FALSE
 if(DORUN) {
 cat("
 <img src=\"Samuel_Johnson_by_Joshua_Reynolds_2.png\" width=\"400\">
+
+Please read on for the answers!
 ")
 } else {
 cat("
@@ -268,10 +270,14 @@ I may or may not keep these up to date depending on the utility of such a list g
 if(DORUN) {
 cat("
 <img src=\"TheUsualSuspects.gif\" >
+
+\"Wait a minute now.\"
 ")
 } else {
 cat("
 <img src=\"3a0.jpg\" >
+
+\"Wait, that is the notation?\"
 ")
 }
 ```

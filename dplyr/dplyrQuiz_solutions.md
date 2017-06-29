@@ -9,6 +9,8 @@ Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*
 
 <img src="Samuel_Johnson_by_Joshua_Reynolds_2.png" width="400">
 
+Please read on for the answers!
+
 Start
 =====
 
@@ -53,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 15:37:09 2017"
+    ## [1] "Thu Jun 29 15:43:16 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -411,3 +413,5 @@ Also: please understand, some of these may *not* represent problems with the abo
 I may or may not keep these up to date depending on the utility of such a list going forward.
 
 <img src="TheUsualSuspects.gif" >
+
+"Wait a minute now."
