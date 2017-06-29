@@ -44,6 +44,11 @@ data.frame(x = 1) %>%
 
 y <- 'x' # value used in later examples
 
+# Hint: this is new for dplyr 0.7.1 
+# (dplyr 0.5.0 only did this for integers).
+# This is going to be a massive source
+# of unexpected results, bugs, and
+# incorrect analyses.
 data.frame(x = 1) %>% 
   select(y)
 
