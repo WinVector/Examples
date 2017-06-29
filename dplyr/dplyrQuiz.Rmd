@@ -271,13 +271,13 @@ if(DORUN) {
 cat("
 <img src=\"TheUsualSuspects.gif\" >
 
-\"Re-thinking some of the answers.\"
+\"Remebering we came to <code>R</code> to do statistics.\"
 ")
 } else {
 cat("
 <img src=\"3a0.jpg\" >
 
-\"Contemplating quosures.\"
+\"Realizing names are just strings.\"
 ")
 }
 ```
