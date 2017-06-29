@@ -25,13 +25,13 @@ if(DORUN) {
 cat("
 <img src=\"Samuel_Johnson_by_Joshua_Reynolds_2.png\" width=\"400\">
 
-Please read on for the answers!
+\"Please read on for the answers!\"
 ")
 } else {
 cat("
 ![](Pop_Quiz_Hot_Shot.jpg)
 
-Pop dplyr quiz, hot-shot! There is data in a pipe.  What does each verb do?
+\"Pop dplyr quiz, hot-shot! There is data in a pipe.  What does each verb do?\"
 ")
 }
 ```
@@ -271,13 +271,13 @@ if(DORUN) {
 cat("
 <img src=\"TheUsualSuspects.gif\" >
 
-Re-thinking some of the answers.
+\"Re-thinking some of the answers.\"
 ")
 } else {
 cat("
 <img src=\"3a0.jpg\" >
 
-Contemplating \"quosures\".
+\"Contemplating quosures.\"
 ")
 }
 ```

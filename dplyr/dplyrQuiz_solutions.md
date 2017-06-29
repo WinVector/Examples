@@ -9,7 +9,7 @@ Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*
 
 <img src="Samuel_Johnson_by_Joshua_Reynolds_2.png" width="400">
 
-Please read on for the answers!
+"Please read on for the answers!"
 
 Start
 =====
@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 15:45:22 2017"
+    ## [1] "Thu Jun 29 15:48:36 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -414,4 +414,4 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 <img src="TheUsualSuspects.gif" >
 
-Re-thinking some of the answers.
+"Re-thinking some of the answers."

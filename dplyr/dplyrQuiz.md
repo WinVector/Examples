@@ -9,7 +9,7 @@ Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*
 
 ![](Pop_Quiz_Hot_Shot.jpg)
 
-Pop dplyr quiz, hot-shot! There is data in a pipe. What does each verb do?
+"Pop dplyr quiz, hot-shot! There is data in a pipe. What does each verb do?"
 
 Start
 =====
@@ -229,4 +229,4 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 <img src="3a0.jpg" >
 
-Contemplating "quosures".
+"Contemplating quosures."
