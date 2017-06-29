@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 08:17:58 2017"
+    ## [1] "Thu Jun 29 08:48:24 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -180,8 +180,27 @@ data.frame(x = 1)  ->.;  ( bind_rows(list(., .)) )
     ## 1 1
     ## 2 1
 
+summary
+-------
+
+``` r
+data.frame(x = c(1, 2), y = c(3, 3)) %>% 
+  group_by(x) %>% 
+  summarize(y)
+```
+
+    ## # A tibble: 2 x 2
+    ##       x     y
+    ##   <dbl> <dbl>
+    ## 1     1     3
+    ## 2     2    NA
+
+(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
+
 enquo rules
 -----------
+
+This section is about `enquo()`, or passing unquoted variable names to functions that use `dplyr` methods. Please skip it if you don't write such code, or if you use something like [`wrapr::let()`](https://github.com/WinVector/wrapr/blob/master/README.md) for such replacements.
 
 ``` r
 (function(z) select(data.frame(x = 1), !!enquo(z)))(x)
@@ -211,25 +230,29 @@ y <- NULL # value used in later examples
     ## 1 1 2
 
 ``` r
-(function(z) select(data.frame(x = 1), !!enquo(z)))(y)
+(function() mutate(data.frame(x = 1), !!quo_name(enquo(y)) := 2))()
 ```
 
-    ## Error: `y` must resolve to integer column positions, not NULL
-
-summary
--------
+    ##   x function (expr) ...
+    ## 1 1                   2
 
 ``` r
-data.frame(x = c(1, 2), y = c(3, 3)) %>% group_by(x) %>% summarize(y)
+(function(z) select(data.frame(y = 1), !!enquo(z)))(y)
 ```
 
-    ## # A tibble: 2 x 2
-    ##       x     y
-    ##   <dbl> <dbl>
-    ## 1     1     3
-    ## 2     2    NA
+    ##   y
+    ## 1 1
 
-(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
+``` r
+(function() select(data.frame(y = 1), !!enquo(y)))()
+```
+
+    ## Error: `function (expr) 
+    ## {
+    ##     enexpr(expr)
+    ## }` must resolve to integer column positions, not a function
+
+(From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
 Databases
 =========
@@ -360,7 +383,7 @@ dR %>%
 Conclusion
 ==========
 
-The above quiz is really my working notes on corner-cases to avoid. Some of the odd cases are simple bugs (which will likely be fixed), and some are legacy behaviors from earlier versions of `dplyr`. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above issues. But to do that, you have to know what to avoid (hence the notes).
+The above quiz is really my working notes on both how things work (so many examples are correct), and corner-cases to avoid. Some of the odd cases are simple bugs (which will likely be fixed), and some are legacy behaviors from earlier versions of `dplyr`. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above issues. But to do that, you have to know what to avoid (hence the notes).
 
 My quiz-grading priniciple comes from *Software for Data Analysis: Programming with R* by John Chambers (Springer 2008):
 

@@ -88,8 +88,21 @@ data.frame(x = 1)  ->.;    bind_rows(list(., .))
 data.frame(x = 1)  ->.;  ( bind_rows(list(., .)) )
 ```
 
+summary
+-------
+
+``` r
+data.frame(x = c(1, 2), y = c(3, 3)) %>% 
+  group_by(x) %>% 
+  summarize(y)
+```
+
+(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
+
 enquo rules
 -----------
+
+This section is about `enquo()`, or passing unquoted variable names to functions that use `dplyr` methods. Please skip it if you don't write such code, or if you use something like [`wrapr::let()`](https://github.com/WinVector/wrapr/blob/master/README.md) for such replacements.
 
 ``` r
 (function(z) select(data.frame(x = 1), !!enquo(z)))(x)
@@ -104,17 +117,14 @@ y <- NULL # value used in later examples
 
 (function(z) mutate(data.frame(x = 1), !!quo_name(enquo(z)) := 2))(y)
 
-(function(z) select(data.frame(x = 1), !!enquo(z)))(y)
+(function() mutate(data.frame(x = 1), !!quo_name(enquo(y)) := 2))()
+
+(function(z) select(data.frame(y = 1), !!enquo(z)))(y)
+
+(function() select(data.frame(y = 1), !!enquo(y)))()
 ```
 
-summary
--------
-
-``` r
-data.frame(x = c(1, 2), y = c(3, 3)) %>% group_by(x) %>% summarize(y)
-```
-
-(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
+(From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
 Databases
 =========
@@ -190,7 +200,7 @@ dR %>%
 Conclusion
 ==========
 
-The above quiz is really my working notes on corner-cases to avoid. Some of the odd cases are simple bugs (which will likely be fixed), and some are legacy behaviors from earlier versions of `dplyr`. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above issues. But to do that, you have to know what to avoid (hence the notes).
+The above quiz is really my working notes on both how things work (so many examples are correct), and corner-cases to avoid. Some of the odd cases are simple bugs (which will likely be fixed), and some are legacy behaviors from earlier versions of `dplyr`. In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above issues. But to do that, you have to know what to avoid (hence the notes).
 
 My quiz-grading priniciple comes from *Software for Data Analysis: Programming with R* by John Chambers (Springer 2008):
 
