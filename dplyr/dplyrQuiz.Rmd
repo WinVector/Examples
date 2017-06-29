@@ -56,18 +56,22 @@ Please keep in mind while "you never want errors" you do sometimes want exceptio
 ## Column selection
 
 ```{r cselect, eval=DORUN}
-data.frame(x = 1) %>% select(x)
+data.frame(x = 1) %>% 
+  select(x)
 
 # Two questions: 
 #  1) Should this next one work?
 #  2) Does this next one work?
-data.frame(x = 1) %>% select('x')
+data.frame(x = 1) %>% 
+  select('x')
 
 y <- 'x' # value used in later examples
 
-data.frame(x = 1) %>% select(y)
+data.frame(x = 1) %>% 
+  select(y)
 
-data.frame(x = 1, y = 2) %>% select(y)
+data.frame(x = 1, y = 2) %>% 
+  select(y)
 ```
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
@@ -176,11 +180,14 @@ union_all(dR, head(dR))
 ## mutate_all funs()
 
 ```{r mutate_funs_db, error=TRUE, eval=DORUN}
-dR %>% mutate_all(funs(round(., 2)))
+dR %>% 
+  mutate_all(funs(round(., 2)))
 
-dL %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
+dL %>% select(x) %>% 
+  mutate_all(funs(round(., digits = 2)))
 
-dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
+dR %>% select(x) %>% 
+  mutate_all(funs(round(., digits = 2)))
 ```
 
 (From [`dplyr` issue 2890](https://github.com/tidyverse/dplyr/issues/2890) and [`dplyr` issue 2908](https://github.com/tidyverse/dplyr/issues/2908).)
@@ -188,18 +195,33 @@ dR %>% select(x) %>% mutate_all(funs(round(., digits = 2)))
 ## rename
 
 ```{r rename_db, error=TRUE, eval=DORUN}
-dR %>% rename(x2 = x) %>% rename(k2 = k)
+dR %>% 
+  rename(x2 = x) %>% rename(k2 = k)
 
-dL %>% rename(x2 = x, k2 = k)
+dL %>% 
+  rename(x2 = x, k2 = k)
 
-dR %>% rename(x2 = x, k2 = k)
+dR %>% 
+  rename(x2 = x, k2 = k)
 ```
 
 (From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
 
 # Conclusion
 
-The above quiz is really my working notes on corner-cases to avoid.  Not all of these are worth fixing. Some, however, are deep design flaws.  In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above cases.  But to do that, you have to know what to avoid (hence the notes).  
+The above quiz is really my working notes on corner-cases to avoid.   Some of the odd cases are simple bugs (which will likely be fixed), and some are legacy behaviors from earlier versions of `dplyr`.  In many cases you can and should re-arrange your `dplyr` pipelines to avoid triggering the above issues.  But to do that, you have to know what to avoid (hence the notes).
+
+My quiz-grading priniciple comes from *Software for Data Analysis: Programming with R* by John Chambers (Springer 2008):
+
+> ... the computations and the software for data analysis should be trustworthy: they should do what the claim, and be seen to do so.
+> Neither those how view the results of data analysis nor, in many cases, the statisticians performing the
+> analysis can directly validate extensive computations on large and complicated data processes.  Ironically, the
+> steadily increasing computer power applied to data analysis often distances the result further from direct checking
+> by the recipient.  The many computational steps between original data source and displayed results must all be
+> truthful, or the effect of the analysis may be worthless, if not pernicious.  This places an obligation on all
+> creators of software to program in such a a way that the computations can be understood and trusted.
+
+The point is: to know a long calculation is correct, we must at least know all the small steps did what we (the analyst) intended (and not something else).  To go back to one of our examples: the analyst must know the column selected in their analysis was *always* the one they intended.
 
 Also: please understand, some of these may *not* represent problems with the above packages.  They may instead represent mistakes and misunderstandings on my part. Or opinions of mine that may differ from the considered opinions and experience of the people who have authored and who have to maintain these packages. Some things that might seem "easy to fix" to an outsider may already be set at a "best possible compromise" among many other considerations.
 
