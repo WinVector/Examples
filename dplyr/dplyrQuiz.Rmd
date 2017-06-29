@@ -271,7 +271,7 @@ if(DORUN) {
 cat("
 <img src=\"TheUsualSuspects.gif\" >
 
-\"Remebering we came to <code>R</code> to do statistics.\"
+\"Remebering we came to <code>R</code> to do statistics and machine learning.\"
 ")
 } else {
 cat("
@@ -281,3 +281,5 @@ cat("
 ")
 }
 ```
+
+[quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md)

@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 15:56:35 2017"
+    ## [1] "Thu Jun 29 16:01:41 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -414,4 +414,6 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 <img src="TheUsualSuspects.gif" >
 
-"Remebering we came to <code>R</code> to do statistics."
+"Remebering we came to <code>R</code> to do statistics and machine learning."
+
+[quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md)

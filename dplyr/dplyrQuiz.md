@@ -230,3 +230,5 @@ I may or may not keep these up to date depending on the utility of such a list g
 <img src="3a0.jpg" >
 
 "Realizing names are just strings."
+
+[quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md)
