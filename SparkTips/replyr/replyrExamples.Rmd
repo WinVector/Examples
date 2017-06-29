@@ -313,7 +313,6 @@ If you are serious about `R` controlled data processing in `Spark` or databases 
 
 Be aware of the functionality we demonstrated depends on using the development version of `replyr`.  Though we will, of course, advance the CRAN version as soon as practical. 
 
-***
 
 ```{r cleanup}
 sparklyr::spark_disconnect(sc)
