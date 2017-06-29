@@ -231,7 +231,7 @@ My quiz-grading priniciple comes from *Software for Data Analysis: Programming w
 > steadily increasing computer power applied to data analysis often distances the result further from direct checking
 > by the recipient.  The many computational steps between original data source and displayed results must all be
 > truthful, or the effect of the analysis may be worthless, if not pernicious.  This places an obligation on all
-> creators of software to program in such a a way that the computations can be understood and trusted.
+> creators of software to program in such a way that the computations can be understood and trusted.
 
 The point is: to know a long calculation is correct, we must at least know all the small steps did what we (the analyst) intended (and not something else).  To go back to one of our examples: the analyst must know the column selected in their analysis was *always* the one they intended.
 
