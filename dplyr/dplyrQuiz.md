@@ -131,6 +131,10 @@ y <- NULL # value used in later examples
 (function() select(data.frame(y = 1), !!enquo(y)))()
 ```
 
+``` r
+(function() mutate(data.frame(x = 1), !!ensym(y) := 2))()
+```
+
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
 Databases

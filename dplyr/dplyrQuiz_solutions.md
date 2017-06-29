@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 10:10:39 2017"
+    ## [1] "Thu Jun 29 11:41:45 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -258,6 +258,12 @@ y <- NULL # value used in later examples
     ## {
     ##     enexpr(expr)
     ## }` must resolve to integer column positions, not a function
+
+``` r
+(function() mutate(data.frame(x = 1), !!ensym(y) := 2))()
+```
+
+    ## Error in ensym(y): could not find function "ensym"
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
