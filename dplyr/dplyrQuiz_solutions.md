@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 15:43:16 2017"
+    ## [1] "Thu Jun 29 15:45:22 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -414,4 +414,4 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 <img src="TheUsualSuspects.gif" >
 
-"Wait a minute now."
+Re-thinking some of the answers.

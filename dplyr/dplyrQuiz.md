@@ -229,4 +229,4 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 <img src="3a0.jpg" >
 
-"Wait, that is the notation?"
+Contemplating "quosures".
