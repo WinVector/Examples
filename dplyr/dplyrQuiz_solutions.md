@@ -7,6 +7,10 @@ Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz. 
 
 Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*). You may not need to know how any of these work (it is often good to avoid corner-cases), but you should at least be confident you are avoiding the malformed ones.
 
+![](Pop_Quiz_Hot_Shot.jpg)
+
+Pop dplyr quiz, hot-shot! There is data in a pipe. What does each verb do?
+
 Start
 =====
 
@@ -51,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 11:41:45 2017"
+    ## [1] "Thu Jun 29 14:01:46 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
