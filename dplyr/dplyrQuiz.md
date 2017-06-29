@@ -24,6 +24,8 @@ You can also run the quiz yourself by downloading and knitting the [source docum
 
 Please keep in mind while "you never want errors" you do sometimes want exceptions (which are unfortunately called "`Error:`" in `R`). Exceptions are an important way of stopping off-track computation and preventing later incorrect results. Exceptions can often be the desired outcome of a malformed calculation.
 
+Not all of the questions are "trick", some of them are just convenient ways to remember different `dplyr` conventions.
+
 Local data.frames
 =================
 

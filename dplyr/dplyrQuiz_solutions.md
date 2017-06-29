@@ -51,7 +51,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 08:48:24 2017"
+    ## [1] "Thu Jun 29 08:51:30 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -64,6 +64,8 @@ Please take a moment and write down your answers before moving on to the [soluti
 You can also run the quiz yourself by downloading and knitting the [source document](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.Rmd).
 
 Please keep in mind while "you never want errors" you do sometimes want exceptions (which are unfortunately called "`Error:`" in `R`). Exceptions are an important way of stopping off-track computation and preventing later incorrect results. Exceptions can often be the desired outcome of a malformed calculation.
+
+Not all of the questions are "trick", some of them are just convenient ways to remember different `dplyr` conventions.
 
 Local data.frames
 =================
