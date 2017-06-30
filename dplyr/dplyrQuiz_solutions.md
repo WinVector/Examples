@@ -31,7 +31,7 @@ packageVersion("dplyr")
 packageVersion("dbplyr")
 ```
 
-    ## [1] '1.0.0.9000'
+    ## [1] '1.1.0.9000'
 
 ``` r
 packageVersion("RSQlite")
@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jun 29 16:01:41 2017"
+    ## [1] "Fri Jun 30 07:54:51 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -416,4 +416,4 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 "Remebering we came to <code>R</code> to do statistics and machine learning."
 
-[quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md)
+\[ [quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) \] \[ [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md) \]

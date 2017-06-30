@@ -282,4 +282,4 @@ cat("
 }
 ```
 
-[quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md)
+[ [quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) ] [ [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md) ]
