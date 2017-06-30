@@ -37,7 +37,7 @@ packageVersion("dbplyr")
 packageVersion("RSQlite")
 ```
 
-    ## [1] '1.1.2'
+    ## [1] '2.0'
 
 ``` r
 packageVersion("rlang")
@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Fri Jun 30 07:54:51 2017"
+    ## [1] "Fri Jun 30 09:33:59 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -311,7 +311,7 @@ union_all(dR, dR)
 ```
 
     ## # Source:   lazy query [?? x 2]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##       x     k
     ##   <dbl> <chr>
     ## 1 3.077     a
@@ -342,7 +342,7 @@ dR %>%
 ```
 
     ## # Source:   lazy query [?? x 2]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##       x     k
     ##   <dbl> <dbl>
     ## 1  3.08     0
@@ -375,7 +375,7 @@ dR %>%
 ```
 
     ## # Source:   lazy query [?? x 2]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##      x2    k2
     ##   <dbl> <chr>
     ## 1 3.077     a
