@@ -9,7 +9,7 @@ Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*
 
 ![](Pop_Quiz_Hot_Shot.jpg)
 
-Pop dplyr quiz, hot-shot! There is data in a pipe. What does each verb do?
+"Pop dplyr quiz, hot-shot! There is data in a pipe. What does each verb do?"
 
 Start
 =====
@@ -22,7 +22,7 @@ suppressPackageStartupMessages(library("dplyr"))
 
 Now for the examples/quiz.
 
-Please take a moment and write down your answers before moving on to the [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md). This should give you a much more open mind as to what constitutes "[surprising behavior](https://en.wikipedia.org/wiki/Principle_of_least_astonishment)."
+Please take a moment to [try the quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md), and write down your answers before moving on to the [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md). This should give you a much more open mind as to what constitutes "[surprising behavior](https://en.wikipedia.org/wiki/Principle_of_least_astonishment)."
 
 You can also run the quiz yourself by downloading and knitting the [source document](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.Rmd).
 
@@ -226,3 +226,9 @@ The point is: to know a long calculation is correct, we must at least know all t
 Also: please understand, some of these may *not* represent problems with the above packages. They may instead represent mistakes and misunderstandings on my part. Or opinions of mine that may differ from the considered opinions and experience of the people who have authored and who have to maintain these packages. Some things that might seem "easy to fix" to an outsider may already be set at a "best possible compromise" among many other considerations.
 
 I may or may not keep these up to date depending on the utility of such a list going forward.
+
+<img src="3a0.jpg" >
+
+"Realizing names are just strings."
+
+[quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md)
