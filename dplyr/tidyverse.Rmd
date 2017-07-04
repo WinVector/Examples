@@ -1,0 +1,25 @@
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+# tidyverse plot
+
+
+```{r graph}
+# https://cran.r-project.org/web/packages/miniCRAN/vignettes/miniCRAN-dependency-graph.html
+library("miniCRAN")
+library("igraph")
+library("DiagrammeR")
+
+tags <- pkgDep("tidyverse")
+dg <- makeDepGraph(tags, enhances=FALSE, suggests=FALSE)
+plot(dg, legendPosition = c(-1, 1), vertex.size=20)
+
+igraph::write_graph(dg, 'tidyverse.dot', format='dot')
+txt <- readLines('tidyverse.dot')
+txt <- gsub('name=','label=', txt, fixed = TRUE)
+writeLines(txt, 'tidyverse.dot')
+DiagrammeR::grViz('tidyverse.dot')
+```
