@@ -15,11 +15,11 @@ library("DiagrammeR")
 
 tags <- pkgDep("tidyverse")
 dg <- makeDepGraph(tags, enhances=FALSE, suggests=FALSE)
-plot(dg, legendPosition = c(-1, 1), vertex.size=20)
+plot(dg, legendPosition = c(-1, 1), vertex.size=20, width=10000, height=10000)
 
 igraph::write_graph(dg, 'tidyverse.dot', format='dot')
 txt <- readLines('tidyverse.dot')
 txt <- gsub('name=','label=', txt, fixed = TRUE)
 writeLines(txt, 'tidyverse.dot')
-DiagrammeR::grViz('tidyverse.dot')
+DiagrammeR::grViz('tidyverse.dot', width=10000, height=10000)
 ```
