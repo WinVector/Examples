@@ -62,6 +62,15 @@ data.frame(x = 1, y = 2) %>%
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
+rename and mutate
+-----------------
+
+``` r
+data.frame(x=1, y=2) %>% rename(x=y , y=x)
+
+data.frame(x=1, y=2) %>% mutate(x=y , y=x)
+```
+
 Column grouping
 ---------------
 

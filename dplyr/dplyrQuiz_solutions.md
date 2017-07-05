@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Fri Jun 30 09:33:59 2017"
+    ## [1] "Wed Jul  5 15:08:18 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -120,6 +120,23 @@ data.frame(x = 1, y = 2) %>%
     ## 1 2
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+
+rename and mutate
+-----------------
+
+``` r
+data.frame(x=1, y=2) %>% rename(x=y , y=x)
+```
+
+    ##   y x
+    ## 1 1 2
+
+``` r
+data.frame(x=1, y=2) %>% mutate(x=y , y=x)
+```
+
+    ##   x y
+    ## 1 2 2
 
 Column grouping
 ---------------
