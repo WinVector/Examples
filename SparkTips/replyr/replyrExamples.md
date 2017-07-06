@@ -35,13 +35,13 @@ Things are changing fast right now, so let's use the development versions of the
 base::date()
 ```
 
-    ## [1] "Thu Jul  6 15:48:14 2017"
+    ## [1] "Thu Jul  6 15:56:28 2017"
 
 ``` r
 # devtools::install_github('rstudio/sparklyr')
 # devtools::install_github('tidyverse/dplyr')
 # devtools::install_github('tidyverse/dbplyr')
-# devtools::install_github('WinVector/replyr')
+# install.packages("replyr")
 suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 ```
@@ -73,7 +73,7 @@ suppressPackageStartupMessages(library("sparklyr"))
 packageVersion("sparklyr")
 ```
 
-    ## [1] '0.5.6.9010'
+    ## [1] '0.5.6.9012'
 
 ``` r
 # more memory as suggested in https://github.com/rstudio/sparklyr/issues/783
@@ -242,7 +242,7 @@ union(db1, db2)
 replyr_bind_rows(list(db1, db2))
 ```
 
-    ## # Source:   table<sparklyr_tmp_2b792efdb85e> [?? x 2]
+    ## # Source:   table<sparklyr_tmp_3db057f187f1> [?? x 2]
     ## # Database: spark_connection
     ##       x     y
     ##   <int> <chr>
@@ -304,7 +304,7 @@ mtcars_spark %>%
   replyr_bind_rows()
 ```
 
-    ## # Source:   table<sparklyr_tmp_2b7956481634> [?? x 11]
+    ## # Source:   table<sparklyr_tmp_3db01fba6f09> [?? x 11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
@@ -324,7 +324,7 @@ mtcars_spark %>%
          function(di) head(di, 2))
 ```
 
-    ## # Source:   table<sparklyr_tmp_2b7969b619fa> [?? x 11]
+    ## # Source:   table<sparklyr_tmp_3db015cf9a8> [?? x 11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
@@ -396,44 +396,44 @@ The actual function is pretty simple:
 print(replyr::makeTempNameGenerator)
 ```
 
-    ## function(prefix,
-    ##                                   suffix= NULL) {
-    ##   force(prefix)
-    ##   if((length(prefix)!=1)||(!is.character(prefix))) {
-    ##     stop("repyr::makeTempNameGenerator prefix must be a string")
-    ##   }
-    ##   if(is.null(suffix)) {
-    ##     alphabet <- c(letters, toupper(letters), as.character(0:9))
-    ##     suffix <- paste(base::sample(alphabet, size=20, replace= TRUE),
-    ##                     collapse = '')
-    ##   }
-    ##   count <- 0
-    ##   nameList <- list()
-    ##   function(..., peek=FALSE, dumpList=FALSE, remove=NULL) {
-    ##     if(length(list(...))>0) {
-    ##       stop("replyr::makeTempNameGenerator tempname generate unexpected argument")
+    ## function (prefix, suffix = NULL) 
+    ## {
+    ##     force(prefix)
+    ##     if ((length(prefix) != 1) || (!is.character(prefix))) {
+    ##         stop("repyr::makeTempNameGenerator prefix must be a string")
     ##     }
-    ##     if(peek) {
-    ##       return(names(nameList))
+    ##     if (is.null(suffix)) {
+    ##         alphabet <- c(letters, toupper(letters), as.character(0:9))
+    ##         suffix <- paste(base::sample(alphabet, size = 20, replace = TRUE), 
+    ##             collapse = "")
     ##     }
-    ##     if(dumpList) {
-    ##       v <- names(nameList)
-    ##       nameList <<- list()
-    ##       return(v)
+    ##     count <- 0
+    ##     nameList <- list()
+    ##     function(..., peek = FALSE, dumpList = FALSE, remove = NULL) {
+    ##         if (length(list(...)) > 0) {
+    ##             stop("replyr::makeTempNameGenerator tempname generate unexpected argument")
+    ##         }
+    ##         if (peek) {
+    ##             return(names(nameList))
+    ##         }
+    ##         if (dumpList) {
+    ##             v <- names(nameList)
+    ##             nameList <<- list()
+    ##             return(v)
+    ##         }
+    ##         if (!is.null(remove)) {
+    ##             victims <- intersect(remove, names(nameList))
+    ##             nameList[victims] <<- NULL
+    ##             return(victims)
+    ##         }
+    ##         nm <- paste(prefix, suffix, sprintf("%010d", count), 
+    ##             sep = "_")
+    ##         nameList[[nm]] <<- 1
+    ##         count <<- count + 1
+    ##         nm
     ##     }
-    ##     if(!is.null(remove)) {
-    ##       victims <- intersect(remove, names(nameList))
-    ##       # this removes from lists
-    ##       nameList[victims] <<- NULL
-    ##       return(victims)
-    ##     }
-    ##     nm <- paste(prefix, suffix, sprintf('%010d',count), sep='_')
-    ##     nameList[[nm]] <<- 1
-    ##     count <<- count + 1
-    ##     nm
-    ##   }
     ## }
-    ## <bytecode: 0x7fe3c88e7c30>
+    ## <bytecode: 0x7f809a30d320>
     ## <environment: namespace:replyr>
 
 For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following:
@@ -470,9 +470,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_4xglKPvPg2RJ1JA2ThLf_0000000000"
-    ## [2] "JOINTMP_4xglKPvPg2RJ1JA2ThLf_0000000001"
-    ## [3] "JOINTMP_4xglKPvPg2RJ1JA2ThLf_0000000002"
+    ## [1] "JOINTMP_1dr7xHI9CkSZJwXfKA1B_0000000000"
+    ## [2] "JOINTMP_1dr7xHI9CkSZJwXfKA1B_0000000001"
+    ## [3] "JOINTMP_1dr7xHI9CkSZJwXfKA1B_0000000002"
 
 ``` r
 for(ti in temps) {
@@ -487,9 +487,9 @@ print(joined)
     ## # Database: spark_connection
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.5586028   0.4997214  0.04852155   0.3198434   0.2351943
-    ## 2     2   0.9288834   0.1207228  0.35252830   0.3176549   0.3150845
-    ## 3     3   0.7160899   0.4654108  0.12161589   0.4482528   0.1583011
+    ## 1     1   0.8045418   0.5006293   0.8656174   0.5248073   0.8611796
+    ## 2     2   0.1593121   0.5802938   0.9722113   0.4532369   0.7429018
+    ## 3     3   0.4853835   0.5313043   0.6224256   0.1843134   0.1125551
 
 Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend on the intermediates.
 
@@ -507,5 +507,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  835835 44.7    1442291 77.1  1442291 77.1
-    ## Vcells 1571628 12.0    2552219 19.5  1978666 15.1
+    ## Ncells  821292 43.9    1442291 77.1  1168576 62.5
+    ## Vcells 1364897 10.5    2552219 19.5  1694265 13.0
