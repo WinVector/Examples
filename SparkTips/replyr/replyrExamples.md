@@ -35,7 +35,7 @@ Things are changing fast right now, so let's use the development versions of the
 base::date()
 ```
 
-    ## [1] "Wed Jul  5 16:36:16 2017"
+    ## [1] "Thu Jul  6 09:35:17 2017"
 
 ``` r
 # devtools::install_github('rstudio/sparklyr')
@@ -242,7 +242,7 @@ union(db1, db2)
 replyr_bind_rows(list(db1, db2))
 ```
 
-    ## # Source:   table<sparklyr_tmp_11b0f1e9b4108> [?? x 2]
+    ## # Source:   table<sparklyr_tmp_35702d16c48d> [?? x 2]
     ## # Database: spark_connection
     ##       x     y
     ##   <int> <chr>
@@ -304,7 +304,7 @@ mtcars_spark %>%
   replyr_bind_rows()
 ```
 
-    ## # Source:   table<sparklyr_tmp_11b0f2536af3a> [?? x 11]
+    ## # Source:   table<sparklyr_tmp_35707551f2ac> [?? x 11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
@@ -324,7 +324,7 @@ mtcars_spark %>%
          function(di) head(di, 2))
 ```
 
-    ## # Source:   table<sparklyr_tmp_11b0fb8f3811> [?? x 11]
+    ## # Source:   table<sparklyr_tmp_35702e570549> [?? x 11]
     ## # Database: spark_connection
     ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
     ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
@@ -433,7 +433,7 @@ print(replyr::makeTempNameGenerator)
     ##     nm
     ##   }
     ## }
-    ## <bytecode: 0x7fd9aaa08118>
+    ## <bytecode: 0x7fc556b52720>
     ## <environment: namespace:replyr>
 
 For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable). This sort of code looks like the following (now hanging with `sparklyr`0.5.6.9003\` June 22, 2017):
@@ -470,9 +470,9 @@ temps <- tmpNamGen(dumpList = TRUE)
 print(temps)
 ```
 
-    ## [1] "JOINTMP_cVki7m3YcNQfIvF004dl_0000000000"
-    ## [2] "JOINTMP_cVki7m3YcNQfIvF004dl_0000000001"
-    ## [3] "JOINTMP_cVki7m3YcNQfIvF004dl_0000000002"
+    ## [1] "JOINTMP_3KYwY2DsIprxrkWG4q5m_0000000000"
+    ## [2] "JOINTMP_3KYwY2DsIprxrkWG4q5m_0000000001"
+    ## [3] "JOINTMP_3KYwY2DsIprxrkWG4q5m_0000000002"
 
 ``` r
 for(ti in temps) {
@@ -487,9 +487,9 @@ print(joined)
     ## # Database: spark_connection
     ##     key val_table_1 val_table_2 val_table_3 val_table_4 val_table_5
     ##   <int>       <dbl>       <dbl>       <dbl>       <dbl>       <dbl>
-    ## 1     1   0.7479938   0.1409089   0.7507112  0.37516775   0.2575951
-    ## 2     2   0.7485784   0.6747401   0.5248102  0.12065982   0.5784616
-    ## 3     3   0.9602268   0.1938055   0.9660746  0.04096694   0.9526056
+    ## 1     1   0.6564687   0.8451010  0.16552397   0.6649760   0.5713383
+    ## 2     2   0.1371700   0.9886524  0.76211088   0.7243529   0.2460259
+    ## 3     3   0.7925148   0.1247088  0.04552977   0.7248546   0.3430105
 
 Careful introduction and management of materialized intermediates can conserve resources (both time and space) and greatly improve outcomes. We feel it is a good practice to set up an explicit temp name manager, pass it through all your `Sparklyr` transforms, and then clear temps in batches after the results no longer depend on the intermediates.
 
@@ -500,8 +500,6 @@ Conclusion
 
 If you are serious about `R` controlled data processing in `Spark` or databases you should seriously consider using `replyr` in addition to [`dplyr`](https://CRAN.R-project.org/package=dplyr) and `sparklyr`.
 
-Be aware of the functionality we demonstrated depends on using the development version of `replyr`. Though we will, of course, advance the CRAN version as soon as practical.
-
 ``` r
 sparklyr::spark_disconnect(sc)
 rm(list=ls())
@@ -509,5 +507,5 @@ gc()
 ```
 
     ##           used (Mb) gc trigger (Mb) max used (Mb)
-    ## Ncells  835824 44.7    1442291 77.1  1442291 77.1
-    ## Vcells 1571657 12.0    2552219 19.5  1990829 15.2
+    ## Ncells  835307 44.7    1442291 77.1  1442291 77.1
+    ## Vcells 1569882 12.0    2552219 19.5  1985930 15.2
