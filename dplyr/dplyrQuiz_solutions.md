@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Wed Jul  5 15:08:18 2017"
+    ## [1] "Thu Jul  6 15:58:02 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
