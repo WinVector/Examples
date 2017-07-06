@@ -263,7 +263,7 @@ The actual function is pretty simple:
 print(replyr::makeTempNameGenerator)
 ```
 
-For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable).  This sort of code looks like the following (now hanging with `sparklyr `0.5.6.9003` June 22, 2017):
+For instance to join a few tables it can be a good idea to call `compute` after each join for some data sources (else the generated `SQL` can become large and unmanageable).  This sort of code looks like the following:
 
 ```{r joinlist, eval=TRUE}
 # create example data
