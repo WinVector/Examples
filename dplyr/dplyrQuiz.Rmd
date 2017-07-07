@@ -120,6 +120,12 @@ z <- NULL # value used in later examples
 data.frame(x=1, y=2) %>% mutate(x = z)
 ```
 
+```{r nullv2, eval=DORUN}
+data.frame(x=1, y=2) %>% mutate(x = !!z)
+
+rm(list='z') # clean up
+```
+
 (From [`dplyr` issue 2945](https://github.com/tidyverse/dplyr/issues/2945).)
 
 ## Column grouping
@@ -131,6 +137,8 @@ data.frame(x = 1) %>%
   group_by(.data[[y]]) %>% 
   summarize(count = n()) %>% 
   colnames()
+
+rm(list='y') # clean up
 ```
 
 (From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
