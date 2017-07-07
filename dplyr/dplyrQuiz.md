@@ -167,7 +167,7 @@ y <- NULL # value used in later examples
 ```
 
 ``` r
-(function() mutate(data.frame(x = 1), !!ensym(y) := 2))()
+(function() mutate(data.frame(x = 1), !!rlang::ensym(y) := 2))()
 ```
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)

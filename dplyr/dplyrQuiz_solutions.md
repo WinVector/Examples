@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jul  6 18:14:04 2017"
+    ## [1] "Thu Jul  6 18:16:46 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -319,10 +319,10 @@ y <- NULL # value used in later examples
     ## }` must resolve to integer column positions, not a function
 
 ``` r
-(function() mutate(data.frame(x = 1), !!ensym(y) := 2))()
+(function() mutate(data.frame(x = 1), !!rlang::ensym(y) := 2))()
 ```
 
-    ## Error in ensym(y): could not find function "ensym"
+    ## Error: Must supply a symbol as argument
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
