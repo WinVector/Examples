@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jul  6 15:58:02 2017"
+    ## [1] "Thu Jul  6 18:04:34 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -119,6 +119,10 @@ data.frame(x = 1, y = 2) %>%
     ##   y
     ## 1 2
 
+``` r
+rm(list='y') # clean up
+```
+
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
 rename and mutate
@@ -137,6 +141,25 @@ data.frame(x=1, y=2) %>% mutate(x=y , y=x)
 
     ##   x y
     ## 1 2 2
+
+NULL (constant versus in a variable)
+------------------------------------
+
+``` r
+data.frame(x=1, y=2) %>% mutate(x = NULL)
+```
+
+    ##   y
+    ## 1 2
+
+``` r
+z <- NULL # value used in later examples
+data.frame(x=1, y=2) %>% mutate(x = z)
+```
+
+    ## Error in mutate_impl(.data, dots): Column `x` is of unsupported type NULL
+
+(From [`dplyr` issue 2945](https://github.com/tidyverse/dplyr/issues/2945).)
 
 Column grouping
 ---------------

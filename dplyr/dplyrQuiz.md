@@ -58,6 +58,8 @@ data.frame(x = 1) %>%
 
 data.frame(x = 1, y = 2) %>% 
   select(y)
+
+rm(list='y') # clean up
 ```
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
@@ -70,6 +72,18 @@ data.frame(x=1, y=2) %>% rename(x=y , y=x)
 
 data.frame(x=1, y=2) %>% mutate(x=y , y=x)
 ```
+
+NULL (constant versus in a variable)
+------------------------------------
+
+``` r
+data.frame(x=1, y=2) %>% mutate(x = NULL)
+
+z <- NULL # value used in later examples
+data.frame(x=1, y=2) %>% mutate(x = z)
+```
+
+(From [`dplyr` issue 2945](https://github.com/tidyverse/dplyr/issues/2945).)
 
 Column grouping
 ---------------
