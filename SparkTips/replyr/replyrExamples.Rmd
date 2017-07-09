@@ -118,7 +118,7 @@ mtcars2 %>%
 
 ## Binding rows
 
-`dplyr` `bind_rows`, `union`, and `union_all` are all currently unsuitable for use on `Spark`.
+`dplyr` `bind_rows` is currently unsuitable for use on `Spark`.
 `replyr::replyr_union_all()` and `replyr::replyr_bind_rows()` supply working alternatives.
 
 ### `bind_rows()`
@@ -138,20 +138,6 @@ db2 <- copy_to(sc,
 bind_rows(list(db1, db2))
 ```
 
-### `union_all`
-
-```{r uniona, error=TRUE}
-# ignores column names and converts all data to char
-union_all(db1, db2)
-```
-
-### `union`
-
-```{r union, error=TRUE}
-# ignores column names and converts all data to char
-# also will probably lose duplicate rows
-union(db1, db2)
-```
 
 ### `replyr_bind_rows`
 
