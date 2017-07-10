@@ -114,12 +114,13 @@ data.frame(x = c(1, 1)) %>%
 
 (From [`dplyr` issue 2954](https://github.com/tidyverse/dplyr/issues/2954).)
 
+
 ## rename and mutate
 
 ```{r renameandmutate, eval=DORUN}
-data.frame(x=1, y=2) %>% rename(x=y , y=x)
+data.frame(x=1, y=2) %>% rename(x=y, y=x)
 
-data.frame(x=1, y=2) %>% mutate(x=y , y=x)
+data.frame(x=1, y=2) %>% mutate(x=y, y=x)
 ```
 
 ## NULL (constant versus in a variable)

@@ -80,9 +80,9 @@ rename and mutate
 -----------------
 
 ``` r
-data.frame(x=1, y=2) %>% rename(x=y , y=x)
+data.frame(x=1, y=2) %>% rename(x=y, y=x)
 
-data.frame(x=1, y=2) %>% mutate(x=y , y=x)
+data.frame(x=1, y=2) %>% mutate(x=y, y=x)
 ```
 
 NULL (constant versus in a variable)

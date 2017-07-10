@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sun Jul  9 18:43:25 2017"
+    ## [1] "Sun Jul  9 19:24:20 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -143,14 +143,14 @@ rename and mutate
 -----------------
 
 ``` r
-data.frame(x=1, y=2) %>% rename(x=y , y=x)
+data.frame(x=1, y=2) %>% rename(x=y, y=x)
 ```
 
     ##   y x
     ## 1 1 2
 
 ``` r
-data.frame(x=1, y=2) %>% mutate(x=y , y=x)
+data.frame(x=1, y=2) %>% mutate(x=y, y=x)
 ```
 
     ##   x y
