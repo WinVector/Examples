@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Jul  6 18:16:46 2017"
+    ## [1] "Sun Jul  9 18:43:25 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -124,6 +124,20 @@ rm(list='y') # clean up
 ```
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+
+distinct
+--------
+
+``` r
+data.frame(x = c(1, 1)) %>% 
+  select(one_of(character(0))) %>%
+  distinct() %>%
+  nrow()
+```
+
+    ## [1] 2
+
+(From [`dplyr` issue 2954](https://github.com/tidyverse/dplyr/issues/2954).)
 
 rename and mutate
 -----------------

@@ -64,6 +64,18 @@ rm(list='y') # clean up
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
+distinct
+--------
+
+``` r
+data.frame(x = c(1, 1)) %>% 
+  select(one_of(character(0))) %>%
+  distinct() %>%
+  nrow()
+```
+
+(From [`dplyr` issue 2954](https://github.com/tidyverse/dplyr/issues/2954).)
+
 rename and mutate
 -----------------
 
