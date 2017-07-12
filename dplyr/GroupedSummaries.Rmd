@@ -18,7 +18,7 @@ suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 ```
 
-A `dplyr` pattern that I have seen use often is the "`group_by() %>% mutate()`" pattern.  This historically has been shorthand for a "`group_by() %>% summarize()`" followed by a `join()`.  It is easiest to show by example.
+A `dplyr` pattern that I have seen used often is the "`group_by() %>% mutate()`" pattern.  This historically has been shorthand for a "`group_by() %>% summarize()`" followed by a `join()`.  It is easiest to show by example.
 
 The following code:
 
