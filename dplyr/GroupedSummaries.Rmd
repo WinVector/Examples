@@ -1,0 +1,73 @@
+---
+title: "Grouped Summaries"
+author: "John Mount"
+date: "7/12/2017"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r start}
+suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+```
+
+```{r fn}
+#' Simulate the group_by/mutate pattern with an explicit summarize and join.
+#' 
+#' Group a data frame by the groupingVars and compute user summaries on 
+#' this data frame (user summaries specified in ...), then join these new
+#' columns back into the original data and return to the user.
+#' This works around https://github.com/tidyverse/dplyr/issues/2960 .
+#' And it is a demonstration of a higher-order dplyr verb.
+#' Author: John Mount, Win-Vector LLC.
+#' 
+#' @param d data.frame
+#' @param groupingVars character vector of column names to group by.
+#' @param ... list of dplyr::mutate() expressions.
+#' @value d with grouped summaries added as extra columns
+#' 
+#' @examples
+#' 
+#' add_group_summaries(mtcars, 
+#'                     c("cyl", "gear"), 
+#'                     group_mean_mpg = mean(mpg), 
+#'                     group_mean_disp = mean(disp)) %>%
+#'   head()
+#' 
+#' @export
+#' 
+add_group_summaries <- function(d, groupingVars, ...) {
+  # convert char vector into quosure vector
+  # worked out after reading http://dplyr.tidyverse.org/articles/programming.html
+  # no idea if this will be stable across rlang/tidyeval versions
+  groupingQuos <- lapply(groupingVars, 
+                         function(si) { quo(!!as.name(si)) })
+  # print(groupingQuos)
+  dg <- group_by(d, !!!groupingQuos)
+  ds <- summarize(dg, ...)
+  # Work around: https://github.com/tidyverse/dplyr/issues/2963
+  ds <- ungroup(ds)
+  left_join(d, ds, by= groupingVars)
+}
+```
+
+```{r exlocal}
+mtcars %>% 
+  add_group_summaries(c("cyl", "gear"), 
+                      group_mean_mpg = mean(mpg), 
+                      group_mean_disp = mean(disp)) %>%
+  head()
+```
+
+```{r exdb}
+con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+copy_to(con, mtcars)
+mtcars2 <- tbl(con, "mtcars")
+
+mtcars2 %>% 
+  add_group_summaries(c("cyl", "gear"), 
+                      group_mean_mpg = mean(mpg), 
+                      group_mean_disp = mean(disp)) %>%
+  head()
+```
