@@ -55,7 +55,7 @@ I very much like the idea of wrapping this important common use case into a sing
 verb.  Adjoining "windowed" or group-calculated columns is a common and important
 step in analysis, and well worth having its own verb.
 
-Below is our attempt at defining such a verb:
+Below is our attempt at elevating this pattern into a packaged verb.
 
 
 ```{r fn}

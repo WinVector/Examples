@@ -63,7 +63,7 @@ The advantages of the shorthand are:
 
 Frankly I've never liked the shorthand. I feel it is a "magic extra" that a new user would have no way of anticipating from common use of `group_by()` and `summarize()`. I very much like the idea of wrapping this important common use case into a single verb. Adjoining "windowed" or group-calculated columns is a common and important step in analysis, and well worth having its own verb.
 
-Below is our attempt at defining such a verb:
+Below is our attempt at elevating this pattern into a packaged verb.
 
 ``` r
 #' Simulate the group_by/mutate pattern with an explicit summarize and join.
