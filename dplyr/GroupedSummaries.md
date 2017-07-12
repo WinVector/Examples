@@ -100,6 +100,7 @@ add_group_summaries <- function(d, groupingVars, ...) {
   dg <- ungroup(d) # just in case
   dg <- group_by(dg, !!!groupingQuos)
   ds <- summarize(dg, ...)
+  # work around https://github.com/tidyverse/dplyr/issues/2963
   ds <- ungroup(ds)
   left_join(d, ds, by= groupingVars)
 }
@@ -195,6 +196,7 @@ group_summarize <- function(d, groupingVars, ...) {
   dg <- ungroup(d) # just in case
   dg <- group_by(dg, !!!groupingQuos)
   ds <- summarize(dg, ...)
+  # work around https://github.com/tidyverse/dplyr/issues/2963
   ungroup(ds)
 }
 ```
