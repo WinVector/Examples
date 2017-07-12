@@ -20,7 +20,8 @@ mtcars %>%
   group_by(cyl, gear) %>%
   mutate(group_mean_mpg = mean(mpg), 
             group_mean_disp = mean(disp)) %>% 
-  select(cyl, gear, mpg, disp, group_mean_mpg, group_mean_disp) %>%
+  select(cyl, gear, mpg, disp, 
+         group_mean_mpg, group_mean_disp) %>%
   head()
 ```
 
@@ -43,7 +44,8 @@ mtcars %>%
   summarize(group_mean_mpg = mean(mpg), 
             group_mean_disp = mean(disp)) %>% 
   left_join(mtcars, ., by = c('cyl', 'gear')) %>%
-  select(cyl, gear, mpg, disp, group_mean_mpg, group_mean_disp) %>%
+  select(cyl, gear, mpg, disp, 
+         group_mean_mpg, group_mean_disp) %>%
   head()
 ```
 
@@ -95,7 +97,8 @@ add_group_summaries <- function(d, groupingVars, ...) {
   # These interfaces are still changing, so take care.
   groupingQuos <- lapply(groupingVars, 
                          function(si) { quo(!!as.name(si)) })
-  dg <- group_by(d, !!!groupingQuos)
+  dg <- ungroup(d) # just in case
+  dg <- group_by(dg, !!!groupingQuos)
   ds <- summarize(dg, ...)
   ds <- ungroup(ds)
   left_join(d, ds, by= groupingVars)
@@ -109,7 +112,8 @@ mtcars %>%
   add_group_summaries(c("cyl", "gear"), 
                       group_mean_mpg = mean(mpg), 
                       group_mean_disp = mean(disp)) %>%
-  select(cyl, gear, mpg, disp, group_mean_mpg, group_mean_disp) %>%
+  select(cyl, gear, mpg, disp, 
+         group_mean_mpg, group_mean_disp) %>%
   head()
 ```
 
@@ -141,7 +145,8 @@ mtcars2 %>%
   add_group_summaries(c("cyl", "gear"), 
                       group_mean_mpg = mean(mpg), 
                       group_mean_disp = mean(disp)) %>%
-  select(cyl, gear, mpg, disp, group_mean_mpg, group_mean_disp) %>%
+  select(cyl, gear, mpg, disp, 
+         group_mean_mpg, group_mean_disp) %>%
   head()
 ```
 
@@ -155,3 +160,63 @@ mtcars2 %>%
     ## 4     6     3  21.4   258         19.750        241.5000
     ## 5     8     3  18.7   360         15.050        357.6167
     ## 6     6     3  18.1   225         19.750        241.5000
+
+Another great verb in this style is `group_summarize`:
+
+``` r
+#' group_by and summarize as an atomic action.
+#' 
+#' Group a data frame by the groupingVars and compute user summaries on 
+#' this data frame (user summaries specified in ...).  Enforces the 
+#' good dplyr pipeline design principle of keeping group_by and
+#' summarize close together.
+#' Author: John Mount, Win-Vector LLC.
+#' 
+#' @param d data.frame
+#' @param groupingVars character vector of column names to group by.
+#' @param ... list of dplyr::mutate() expressions.
+#' @value d with grouped summaries added as extra columns
+#' 
+#' @examples
+#' 
+#' group_summarize(mtcars, 
+#'                     c("cyl", "gear"), 
+#'                     group_mean_mpg = mean(mpg), 
+#'                     group_mean_disp = mean(disp)) %>%
+#'   head()
+#' 
+#' @export
+#' 
+group_summarize <- function(d, groupingVars, ...) {
+  # convert char vector into quosure vector
+  # These interfaces are still changing, so take care.
+  groupingQuos <- lapply(groupingVars, 
+                         function(si) { quo(!!as.name(si)) })
+  dg <- ungroup(d) # just in case
+  dg <- group_by(dg, !!!groupingQuos)
+  ds <- summarize(dg, ...)
+  ungroup(ds)
+}
+```
+
+``` r
+mtcars2 %>% 
+  group_summarize(c("cyl", "gear"), 
+                  group_mean_mpg = mean(mpg), 
+                  group_mean_disp = mean(disp)) %>%
+  select(cyl, gear,
+         group_mean_mpg, group_mean_disp)
+```
+
+    ## # Source:   lazy query [?? x 4]
+    ## # Database: sqlite 3.19.3 [:memory:]
+    ##     cyl  gear group_mean_mpg group_mean_disp
+    ##   <dbl> <dbl>          <dbl>           <dbl>
+    ## 1     4     3         21.500        120.1000
+    ## 2     4     4         26.925        102.6250
+    ## 3     4     5         28.200        107.7000
+    ## 4     6     3         19.750        241.5000
+    ## 5     6     4         19.750        163.8000
+    ## 6     6     5         19.700        145.0000
+    ## 7     8     3         15.050        357.6167
+    ## 8     8     5         15.400        326.0000
