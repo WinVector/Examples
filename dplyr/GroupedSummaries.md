@@ -175,7 +175,7 @@ Another great verb in this style is `group_summarize`:
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
 #' @param ... list of dplyr::mutate() expressions.
-#' @value d with grouped summaries added as extra columns
+#' @value d summarized by groups
 #' 
 #' @examples
 #' 
