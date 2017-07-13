@@ -93,12 +93,10 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' @export
 #' 
 add_group_summaries <- function(d, groupingVars, ...) {
-  # convert char vector into quosure vector
-  # These interfaces are still changing, so take care.
-  groupingQuos <- lapply(groupingVars, 
-                         function(si) { quo(!!as.name(si)) })
+  # convert char vector into spliceable vector
+  groupingSyms <- rlang::syms(groupingVars)
   dg <- ungroup(d) # just in case
-  dg <- group_by(dg, !!!groupingQuos)
+  dg <- group_by(dg, !!!groupingSyms)
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
   ds <- ungroup(ds)
@@ -189,12 +187,10 @@ Another great verb in this style is `group_summarize`:
 #' @export
 #' 
 group_summarize <- function(d, groupingVars, ...) {
-  # convert char vector into quosure vector
-  # These interfaces are still changing, so take care.
-  groupingQuos <- lapply(groupingVars, 
-                         function(si) { quo(!!as.name(si)) })
+  # convert char vector into spliceable vector
+  groupingSyms <- rlang::syms(groupingVars)
   dg <- ungroup(d) # just in case
-  dg <- group_by(dg, !!!groupingQuos)
+  dg <- group_by(dg, !!!groupingSyms)
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
   ungroup(ds)
