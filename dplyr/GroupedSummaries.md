@@ -293,7 +293,7 @@ group_by_se(mtcars, c("cyl", "gear")) %>%
 #' 
 #' @export
 #' 
-arrange_se <- function(.data, arrangeVars, add) {
+arrange_se <- function(.data, arrangeVars) {
   # convert char vector into spliceable vector
   arrangeSyms <- rlang::syms(arrangeVars)
   arrange(.data = .data, !!!arrangeSyms)
