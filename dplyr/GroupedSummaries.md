@@ -79,6 +79,7 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' 
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
+#' @param arrangeVars chacater, optional vector of column anes to arrange by prior to summarizing.
 #' @param ... list of dplyr::mutate() expressions.
 #' @value d with grouped summaries added as extra columns
 #' 
@@ -92,11 +93,16 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' 
 #' @export
 #' 
-add_group_summaries <- function(d, groupingVars, ...) {
+add_group_summaries <- function(d, groupingVars, ...,
+                                arrangeVars = NULL) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
   dg <- ungroup(d) # just in case
   dg <- group_by(dg, !!!groupingSyms)
+  if(!is.null(arrangeVars)) {
+    arrangeSyms <- rlang::syms(arrangeVars)
+    dg <- arrange(dg, !!!arrangeSyms)
+  }
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
   ds <- ungroup(ds)
@@ -150,7 +156,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 6]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##     cyl  gear   mpg  disp group_mean_mpg group_mean_disp
     ##   <dbl> <dbl> <dbl> <dbl>          <dbl>           <dbl>
     ## 1     6     4  21.0   160         19.750        163.8000
@@ -174,6 +180,7 @@ Another great verb in this style is `group_summarize`:
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
 #' @param ... list of dplyr::mutate() expressions.
+#' @param arrangeVars chacater, optional vector of column anes to arrange by prior to summarizing.
 #' @value d summarized by groups
 #' 
 #' @examples
@@ -186,11 +193,16 @@ Another great verb in this style is `group_summarize`:
 #' 
 #' @export
 #' 
-group_summarize <- function(d, groupingVars, ...) {
+group_summarize <- function(d, groupingVars, ...,
+                            arrangeVars = NULL) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
   dg <- ungroup(d) # just in case
   dg <- group_by(dg, !!!groupingSyms)
+  if(!is.null(arrangeVars)) {
+    arrangeSyms <- rlang::syms(arrangeVars)
+    dg <- arrange(dg, !!!arrangeSyms)
+  }
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
   ungroup(ds)
@@ -207,7 +219,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 4]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##     cyl  gear group_mean_mpg group_mean_disp
     ##   <dbl> <dbl>          <dbl>           <dbl>
     ## 1     4     3         21.500        120.1000
@@ -261,3 +273,40 @@ group_by_se(mtcars, c("cyl", "gear")) %>%
     ## 4  21.4     6   258   110  3.08 3.215 19.44     1     0     3     1
     ## 5  18.7     8   360   175  3.15 3.440 17.02     0     0     3     2
     ## 6  18.1     6   225   105  2.76 3.460 20.22     1     0     3     1
+
+``` r
+#' arrange standard interface.
+#' 
+#' Arange a data frame by the arrangeVars.
+#' Author: John Mount, Win-Vector LLC.
+#' 
+#' @param .data data.frame
+#' @param arrangeVars. character vector of column names to group by.
+#' @value .data grouped by columns named in groupingVars
+#' 
+#' @examples
+#' 
+#' arrange_se(mtcars, c("cyl", "gear")) %>%
+#'   head()
+#' # roughly equivalent to:
+#' # do.call(arrange_, c(list(mtcars), c('cyl', 'gear')))
+#' 
+#' @export
+#' 
+arrange_se <- function(.data, arrangeVars., add) {
+  # convert char vector into spliceable vector
+  arrangeSyms <- rlang::syms(arrangeVars.)
+  arrange(.data = .data, !!!arrangeSyms)
+}
+
+arrange_se(mtcars, c("cyl", "gear")) %>%
+  head()
+```
+
+    ##    mpg cyl  disp hp drat    wt  qsec vs am gear carb
+    ## 1 21.5   4 120.1 97 3.70 2.465 20.01  1  0    3    1
+    ## 2 22.8   4 108.0 93 3.85 2.320 18.61  1  1    4    1
+    ## 3 24.4   4 146.7 62 3.69 3.190 20.00  1  0    4    2
+    ## 4 22.8   4 140.8 95 3.92 3.150 22.90  1  0    4    2
+    ## 5 32.4   4  78.7 66 4.08 2.200 19.47  1  1    4    1
+    ## 6 30.4   4  75.7 52 4.93 1.615 18.52  1  1    4    2
