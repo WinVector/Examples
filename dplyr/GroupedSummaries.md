@@ -97,8 +97,8 @@ add_group_summaries <- function(d, groupingVars, ...,
                                 arrangeVars = NULL) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
-  dg <- ungroup(d) # just in case
-  dg <- group_by(dg, !!!groupingSyms)
+  d <- ungroup(d) # just in case
+  dg <- group_by(d, !!!groupingSyms)
   if(!is.null(arrangeVars)) {
     arrangeSyms <- rlang::syms(arrangeVars)
     dg <- arrange(dg, !!!arrangeSyms)
@@ -197,8 +197,8 @@ group_summarize <- function(d, groupingVars, ...,
                             arrangeVars = NULL) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
-  dg <- ungroup(d) # just in case
-  dg <- group_by(dg, !!!groupingSyms)
+  d <- ungroup(d) # just in case
+  dg <- group_by(d, !!!groupingSyms)
   if(!is.null(arrangeVars)) {
     arrangeSyms <- rlang::syms(arrangeVars)
     dg <- arrange(dg, !!!arrangeSyms)
