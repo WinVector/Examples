@@ -196,6 +196,8 @@ And also a "standard evaluation interface" version of `group_by`.
 #' 
 #' group_by_se(mtcars, c("cyl", "gear")) %>%
 #'   head()
+#' # roughly equivalent to:
+#' # do.call(group_by_, c(list(mtcars), c('cyl', 'gear')))
 #' 
 #' @export
 #' 
