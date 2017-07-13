@@ -230,7 +230,7 @@ group_by_se(mtcars, c("cyl", "gear")) %>%
 #' Author: John Mount, Win-Vector LLC.
 #' 
 #' @param .data data.frame
-#' @param arrangeVars. character vector of column names to group by.
+#' @param arrangeVars character vector of column names to group by.
 #' @value .data grouped by columns named in groupingVars
 #' 
 #' @examples
@@ -242,9 +242,9 @@ group_by_se(mtcars, c("cyl", "gear")) %>%
 #' 
 #' @export
 #' 
-arrange_se <- function(.data, arrangeVars., add) {
+arrange_se <- function(.data, arrangeVars, add) {
   # convert char vector into spliceable vector
-  arrangeSyms <- rlang::syms(arrangeVars.)
+  arrangeSyms <- rlang::syms(arrangeVars)
   arrange(.data = .data, !!!arrangeSyms)
 }
 
