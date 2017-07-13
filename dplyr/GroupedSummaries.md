@@ -11,7 +11,7 @@ packageVersion("dplyr")
 
     ## [1] '0.7.1.9000'
 
-A `dplyr` pattern that I have seen use often is the "`group_by() %>% mutate()`" pattern. This historically has been shorthand for a "`group_by() %>% summarize()`" followed by a `join()`. It is easiest to show by example.
+A `dplyr` pattern that I have seen used often is the "`group_by() %>% mutate()`" pattern. This historically has been shorthand for a "`group_by() %>% summarize()`" followed by a `join()`. It is easiest to show by example.
 
 The following code:
 
@@ -150,7 +150,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 6]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##     cyl  gear   mpg  disp group_mean_mpg group_mean_disp
     ##   <dbl> <dbl> <dbl> <dbl>          <dbl>           <dbl>
     ## 1     6     4  21.0   160         19.750        163.8000
@@ -207,7 +207,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 4]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##     cyl  gear group_mean_mpg group_mean_disp
     ##   <dbl> <dbl>          <dbl>           <dbl>
     ## 1     4     3         21.500        120.1000
