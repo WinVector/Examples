@@ -79,7 +79,7 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' 
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
-#' @param arrangeVars chacater, optional vector of column anes to arrange by prior to summarizing.
+#' @param arrangeTerms character vector of column expressions to group by.
 #' @param ... list of dplyr::mutate() expressions.
 #' @value d with grouped summaries added as extra columns
 #' 
@@ -94,14 +94,16 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' @export
 #' 
 add_group_summaries <- function(d, groupingVars, ...,
-                                arrangeVars = NULL) {
+                                arrangeTerms = NULL) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
   d <- ungroup(d) # just in case
   dg <- group_by(d, !!!groupingSyms)
-  if(!is.null(arrangeVars)) {
-    arrangeSyms <- rlang::syms(arrangeVars)
-    dg <- arrange(dg, !!!arrangeSyms)
+  if(!is.null(arrangeTerms)) {
+    # from: https://github.com/tidyverse/rlang/issues/116
+    arrangeTerms <- lapply(arrangeTerms, 
+                           function(si) { rlang::parse_expr(si) })
+    dg <- arrange(dg, !!!arrangeTerms)
   }
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
@@ -180,7 +182,7 @@ Another great verb in this style is `group_summarize`:
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
 #' @param ... list of dplyr::mutate() expressions.
-#' @param arrangeVars chacater, optional vector of column anes to arrange by prior to summarizing.
+#' @param arrangeTerms character vector of column expressions to group by.
 #' @value d summarized by groups
 #' 
 #' @examples
@@ -194,14 +196,16 @@ Another great verb in this style is `group_summarize`:
 #' @export
 #' 
 group_summarize <- function(d, groupingVars, ...,
-                            arrangeVars = NULL) {
+                            arrangeTerms = NULL) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
   d <- ungroup(d) # just in case
   dg <- group_by(d, !!!groupingSyms)
-  if(!is.null(arrangeVars)) {
-    arrangeSyms <- rlang::syms(arrangeVars)
-    dg <- arrange(dg, !!!arrangeSyms)
+  if(!is.null(arrangeTerms)) {
+    # from: https://github.com/tidyverse/rlang/issues/116
+    arrangeTerms <- lapply(arrangeTerms, 
+                          function(si) { rlang::parse_expr(si) })
+    dg <- arrange(dg, !!!arrangeTerms)
   }
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
@@ -277,36 +281,39 @@ group_by_se(mtcars, c("cyl", "gear")) %>%
 ``` r
 #' arrange standard interface.
 #' 
-#' Arange a data frame by the arrangeVars.
+#' Arange a data frame by the arrangeTerms.  Accepts arbitrary text as
+#' arrangeTerms to allow forms such as "desc(gear)".
 #' Author: John Mount, Win-Vector LLC.
 #' 
 #' @param .data data.frame
-#' @param arrangeVars character vector of column names to group by.
+#' @param arrangeTerms character vector of column expressions to group by.
 #' @value .data grouped by columns named in groupingVars
 #' 
 #' @examples
 #' 
-#' arrange_se(mtcars, c("cyl", "gear")) %>%
+#' arrange_se(mtcars, c("cyl", "desc(gear)")) %>%
 #'   head()
-#' # roughly equivalent to:
-#' # do.call(arrange_, c(list(mtcars), c('cyl', 'gear')))
+#' # roughly equivilent to:
+#' # arrange(mtcars, cyl, desc(gear)) %>% head()
 #' 
 #' @export
 #' 
-arrange_se <- function(.data, arrangeVars) {
+arrange_se <- function(.data, arrangeTerms) {
   # convert char vector into spliceable vector
-  arrangeSyms <- rlang::syms(arrangeVars)
-  arrange(.data = .data, !!!arrangeSyms)
+  # from: https://github.com/tidyverse/rlang/issues/116
+  arrangeTerms <- lapply(arrangeTerms, 
+                          function(si) { rlang::parse_expr(si) })
+  arrange(.data = .data, !!!arrangeTerms)
 }
 
-arrange_se(mtcars, c("cyl", "gear")) %>%
+arrange_se(mtcars, c("cyl", "desc(gear)")) %>%
   head()
 ```
 
-    ##    mpg cyl  disp hp drat    wt  qsec vs am gear carb
-    ## 1 21.5   4 120.1 97 3.70 2.465 20.01  1  0    3    1
-    ## 2 22.8   4 108.0 93 3.85 2.320 18.61  1  1    4    1
-    ## 3 24.4   4 146.7 62 3.69 3.190 20.00  1  0    4    2
-    ## 4 22.8   4 140.8 95 3.92 3.150 22.90  1  0    4    2
-    ## 5 32.4   4  78.7 66 4.08 2.200 19.47  1  1    4    1
-    ## 6 30.4   4  75.7 52 4.93 1.615 18.52  1  1    4    2
+    ##    mpg cyl  disp  hp drat    wt  qsec vs am gear carb
+    ## 1 26.0   4 120.3  91 4.43 2.140 16.70  0  1    5    2
+    ## 2 30.4   4  95.1 113 3.77 1.513 16.90  1  1    5    2
+    ## 3 22.8   4 108.0  93 3.85 2.320 18.61  1  1    4    1
+    ## 4 24.4   4 146.7  62 3.69 3.190 20.00  1  0    4    2
+    ## 5 22.8   4 140.8  95 3.92 3.150 22.90  1  0    4    2
+    ## 6 32.4   4  78.7  66 4.08 2.200 19.47  1  1    4    1
