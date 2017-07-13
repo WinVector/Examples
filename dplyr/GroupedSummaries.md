@@ -150,7 +150,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 6]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##     cyl  gear   mpg  disp group_mean_mpg group_mean_disp
     ##   <dbl> <dbl> <dbl> <dbl>          <dbl>           <dbl>
     ## 1     6     4  21.0   160         19.750        163.8000
@@ -207,7 +207,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 4]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##     cyl  gear group_mean_mpg group_mean_disp
     ##   <dbl> <dbl>          <dbl>           <dbl>
     ## 1     4     3         21.500        120.1000
@@ -218,3 +218,44 @@ mtcars2 %>%
     ## 6     6     5         19.700        145.0000
     ## 7     8     3         15.050        357.6167
     ## 8     8     5         15.400        326.0000
+
+And also a "standard evaluation interface" version of `group_by`.
+
+``` r
+#' group_by standard interface.
+#' 
+#' Group a data frame by the groupingVars.
+#' Author: John Mount, Win-Vector LLC.
+#' 
+#' @param .data data.frame
+#' @param groupingVars character vector of column names to group by.
+#' @param add logical, passed to group_by
+#' @value .data grouped by columns named in groupingVars
+#' 
+#' @examples
+#' 
+#' group_by_se(mtcars, c("cyl", "gear")) %>%
+#'   head()
+#' 
+#' @export
+#' 
+group_by_se <- function(.data, groupingVars, add = FALSE) {
+  # convert char vector into spliceable vector
+  groupingSyms <- rlang::syms(groupingVars)
+  group_by(.data = .data, !!!groupingSyms, add = add)
+}
+
+group_by_se(mtcars, c("cyl", "gear")) %>%
+  head()
+```
+
+    ## # A tibble: 6 x 11
+    ## # Groups:   cyl, gear [4]
+    ##     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb
+    ##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+    ## 1  21.0     6   160   110  3.90 2.620 16.46     0     1     4     4
+    ## 2  21.0     6   160   110  3.90 2.875 17.02     0     1     4     4
+    ## 3  22.8     4   108    93  3.85 2.320 18.61     1     1     4     1
+    ## 4  21.4     6   258   110  3.08 3.215 19.44     1     0     3     1
+    ## 5  18.7     8   360   175  3.15 3.440 17.02     0     0     3     2
+    ## 6  18.1     6   225   105  2.76 3.460 20.22     1     0     3     1

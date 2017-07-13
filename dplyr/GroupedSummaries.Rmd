@@ -178,4 +178,35 @@ mtcars2 %>%
          group_mean_mpg, group_mean_disp)
 ```
 
+And also a "standard evaluation interface" version of `group_by`.
+
+
+```{r fng}
+#' group_by standard interface.
+#' 
+#' Group a data frame by the groupingVars.
+#' Author: John Mount, Win-Vector LLC.
+#' 
+#' @param .data data.frame
+#' @param groupingVars character vector of column names to group by.
+#' @param add logical, passed to group_by
+#' @value .data grouped by columns named in groupingVars
+#' 
+#' @examples
+#' 
+#' group_by_se(mtcars, c("cyl", "gear")) %>%
+#'   head()
+#' 
+#' @export
+#' 
+group_by_se <- function(.data, groupingVars, add = FALSE) {
+  # convert char vector into spliceable vector
+  groupingSyms <- rlang::syms(groupingVars)
+  group_by(.data = .data, !!!groupingSyms, add = add)
+}
+
+group_by_se(mtcars, c("cyl", "gear")) %>%
+  head()
+```
+
 
