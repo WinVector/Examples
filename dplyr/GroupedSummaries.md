@@ -73,18 +73,22 @@ Frankly I've never liked the shorthand. I feel it is a "magic extra" that a new 
 Below is our attempt at elevating this pattern into a packaged verb.
 
 ``` r
-#' Simulate the group_by/mutate pattern with an explicit summarize and join.
+#' Simulate the group_by/mutate pattern 
+#' with an explicit summarize and join.
 #' 
-#' Group a data frame by the groupingVars and compute user summaries on 
-#' this data frame (user summaries specified in ...), then join these new
-#' columns back into the original data and return to the user.
-#' It is a demonstration of a higher-order dplyr verb.
+#' Group a data frame by the groupingVars
+#' and compute user summaries on this data
+#' frame (user summaries specified in ...),
+#' then join these new columns back into
+#' the original data and return to the
+#' user.  It is a demonstration of a
+#' higher-order dplyr verb.
+#' 
 #' Author: John Mount, Win-Vector LLC.
 #' 
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
-#' @param arrangeTerms character vector of column expressions to group by.
-#' @param ... list of dplyr::mutate() expressions.
+#' @param ... dplyr::summarize commands.
 #' @return d with grouped summaries added as extra columns
 #' 
 #' @examples
@@ -97,18 +101,13 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' 
 #' @export
 #' 
-add_group_summaries <- function(d, groupingVars, ...,
-                                arrangeTerms = NULL) {
+add_group_summaries <- function(d, 
+                                groupingVars, 
+                                ...) {
   # convert char vector into spliceable vector
   groupingSyms <- rlang::syms(groupingVars)
   d <- ungroup(d) # just in case
   dg <- group_by(d, !!!groupingSyms)
-  if(!is.null(arrangeTerms)) {
-    # from: https://github.com/tidyverse/rlang/issues/116
-    arrangeTerms <- lapply(arrangeTerms, 
-                           function(si) { rlang::parse_expr(si) })
-    dg <- arrange(dg, !!!arrangeTerms)
-  }
   ds <- summarize(dg, ...)
   # work around https://github.com/tidyverse/dplyr/issues/2963
   ds <- ungroup(ds)
@@ -136,7 +135,7 @@ mtcars %>%
     ## 5   8    3 18.7  360         15.050        357.6167
     ## 6   6    3 18.1  225         19.750        241.5000
 
-And this also works on database-backed `dplyr` data (which the shorthand currently does not, please see [`dplyr` 2887 issue](https://github.com/tidyverse/dplyr/issues/2887) and [`dplyr` issue 2960](https://github.com/tidyverse/dplyr/issues/2960)).
+And this also works on `SQLite`-backed `dplyr` data (which the shorthand currently does not, please see [`dplyr` 2887 issue](https://github.com/tidyverse/dplyr/issues/2887) and [`dplyr` issue 2960](https://github.com/tidyverse/dplyr/issues/2960)).
 
 ``` r
 con <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
