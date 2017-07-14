@@ -78,15 +78,14 @@ Below is our attempt at elevating this pattern into a packaged verb.
 #' Group a data frame by the groupingVars and compute user summaries on 
 #' this data frame (user summaries specified in ...), then join these new
 #' columns back into the original data and return to the user.
-#' This works around https://github.com/tidyverse/dplyr/issues/2960 .
-#' And it is a demonstration of a higher-order dplyr verb.
+#' It is a demonstration of a higher-order dplyr verb.
 #' Author: John Mount, Win-Vector LLC.
 #' 
 #' @param d data.frame
 #' @param groupingVars character vector of column names to group by.
 #' @param arrangeTerms character vector of column expressions to group by.
 #' @param ... list of dplyr::mutate() expressions.
-#' @value d with grouped summaries added as extra columns
+#' @return d with grouped summaries added as extra columns
 #' 
 #' @examples
 #' 
@@ -188,7 +187,7 @@ Another great verb in this style is `group_summarize`:
 #' @param groupingVars character vector of column names to group by.
 #' @param ... list of dplyr::mutate() expressions.
 #' @param arrangeTerms character vector of column expressions to group by.
-#' @value d summarized by groups
+#' @return d summarized by groups
 #' 
 #' @examples
 #' 
@@ -251,7 +250,7 @@ And also a "standard evaluation interface" version of `group_by`.
 #' @param .data data.frame
 #' @param groupingVars character vector of column names to group by.
 #' @param add logical, passed to group_by
-#' @value .data grouped by columns named in groupingVars
+#' @return .data grouped by columns named in groupingVars
 #' 
 #' @examples
 #' 
@@ -292,7 +291,7 @@ group_by_se(mtcars, c("cyl", "gear")) %>%
 #' 
 #' @param .data data.frame
 #' @param arrangeTerms character vector of column expressions to group by.
-#' @value .data grouped by columns named in groupingVars
+#' @return .data grouped by columns named in groupingVars
 #' 
 #' @examples
 #' 
