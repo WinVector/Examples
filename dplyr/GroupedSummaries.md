@@ -1,3 +1,8 @@
+Better Grouped Summaries in dplyr
+=================================
+
+[This article](https://github.com/WinVector/Examples/blob/master/dplyr/GroupedSummaries.md) is an expanded version of [the one from the Win-Vector blog](http://www.win-vector.com/blog/2017/07/better-grouped-summaries-in-dplyr/).
+
 For [`R`](https://cran.r-project.org) [`dplyr`](https://CRAN.R-project.org/package=dplyr) users one of the promises of the new [`rlang`/`tidyeval`](https://CRAN.R-project.org/package=rlang) system is an improved ability to [program over `dplyr`](http://dplyr.tidyverse.org/articles/programming.html) itself. In particular to add new verbs that encapsulate previously compound steps into better self-documenting atomic steps.
 
 Let's take a look at this capability.
@@ -158,7 +163,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 6]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##     cyl  gear   mpg  disp group_mean_mpg group_mean_disp
     ##   <dbl> <dbl> <dbl> <dbl>          <dbl>           <dbl>
     ## 1     6     4  21.0   160         19.750        163.8000
@@ -223,7 +228,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 4]
-    ## # Database: sqlite 3.11.1 [:memory:]
+    ## # Database: sqlite 3.19.3 [:memory:]
     ##     cyl  gear group_mean_mpg group_mean_disp
     ##   <dbl> <dbl>          <dbl>           <dbl>
     ## 1     4     3         21.500        120.1000

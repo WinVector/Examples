@@ -7,6 +7,10 @@ output:
     variant: markdown_github
 ---
 
+# Better Grouped Summaries in dplyr
+
+[This article](https://github.com/WinVector/Examples/blob/master/dplyr/GroupedSummaries.md) is an expanded version of [the one from the Win-Vector blog](http://www.win-vector.com/blog/2017/07/better-grouped-summaries-in-dplyr/).
+
 For [`R`](https://cran.r-project.org) [`dplyr`](https://CRAN.R-project.org/package=dplyr) users one of the promises of the new [`rlang`/`tidyeval`](https://CRAN.R-project.org/package=rlang) system is an improved ability to [program over `dplyr`](http://dplyr.tidyverse.org/articles/programming.html) itself. In particular to add new verbs that encapsulate previously compound steps into better self-documenting atomic steps.
 
 Let's take a look at this capability.
