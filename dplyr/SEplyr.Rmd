@@ -67,7 +67,7 @@ starwars %>%
   summarise_at(vars(height:mass), mean, na.rm = TRUE)
 ```
 
-And translated it into standard evaluation verbs:
+And translate it into standard evaluation verbs:
 
 ```{r selyr1}
 # install.packages("seplyr")

@@ -114,7 +114,7 @@ starwars %>%
     ## 10       Corellia 175.0000  78.5
     ## # ... with 39 more rows
 
-And translated it into standard evaluation verbs:
+And translate it into standard evaluation verbs:
 
 ``` r
 # install.packages("seplyr")
