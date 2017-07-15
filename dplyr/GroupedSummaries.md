@@ -161,7 +161,7 @@ mtcars2 %>%
 ```
 
     ## # Source:   lazy query [?? x 6]
-    ## # Database: sqlite 3.19.3 [:memory:]
+    ## # Database: sqlite 3.11.1 [:memory:]
     ##     cyl  gear   mpg  disp group_mean_mpg group_mean_disp
     ##   <dbl> <dbl> <dbl> <dbl>          <dbl>           <dbl>
     ## 1     6     4  21.0   160         19.750        163.8000
@@ -171,4 +171,4 @@ mtcars2 %>%
     ## 5     8     3  18.7   360         15.050        357.6167
     ## 6     6     3  18.1   225         19.750        241.5000
 
-The above, and many more useful `dplyr` standard evaluation adapters are now all part of the new package [`seplyr`](https://github.com/WinVector/seplyr).
+The above, and many more useful `dplyr` standard evaluation adapters are now all part of the new package `seplyr` (on [CRAN](https://CRAN.R-project.org/package=seplyr) and [GitHub](https://github.com/WinVector/seplyr)).
