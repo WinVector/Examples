@@ -1,4 +1,4 @@
-I have been writing *a lot* ([too much](http://www.win-vector.com/blog/2017/07/better-grouped-summaries-in-dplyr/)) on the [`R`](https://www.r-project.org) topics `dplyr`/`rlang`/`tidyeval` lately. The reason is: [major changes were recently announced](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/) and I am trying to work out (publicly) how to best incorporate the new methods into:
+I have been writing *a lot* ([too much](http://www.win-vector.com/blog/2017/07/better-grouped-summaries-in-dplyr/)) on the [`R`](https://www.r-project.org) topics `dplyr`/`rlang`/`tidyeval` lately. The reason is: [major changes were recently announced](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/). If you are going to use `dplyr` well and correctly going forward you may need to understand some of the new issues (if you don't use `dplyr` you can safely skip all of this). I am trying to work out (publicly) how to best incorporate the new methods into:
 
 -   real world analyses,
 -   reusable packages,
