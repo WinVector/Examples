@@ -20,8 +20,6 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 suppressPackageStartupMessages(library("dplyr"))
 ```
 
-    ## Warning: package 'dplyr' was built under R version 3.4.1
-
 Now for the examples/quiz.
 
 Please take a moment to [try the quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md), and write down your answers before moving on to the [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md). This should give you a much more open mind as to what constitutes "[surprising behavior](https://en.wikipedia.org/wiki/Principle_of_least_astonishment)."
