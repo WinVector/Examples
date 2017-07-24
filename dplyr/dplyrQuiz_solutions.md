@@ -55,11 +55,13 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Mon Jul 24 07:54:53 2017"
+    ## [1] "Mon Jul 24 08:07:33 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
 ```
+
+    ## Warning: package 'dplyr' was built under R version 3.4.1
 
 Now for the examples/quiz.
 
