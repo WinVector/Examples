@@ -153,7 +153,23 @@ data.frame(x = 1) %>%
 rm(list='y') # clean up
 ```
 
-(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
+```{r group2, eval=DORUN, error=TRUE}
+world <- "homeworld"
+
+starwars %>%
+  group_by(.data[[world]]) %>%
+  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
+  head()
+
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(.data[[homeworld]]) %>%
+  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
+  head()
+```
+
+(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916) and [`dplyr` issue 2991](https://github.com/tidyverse/dplyr/issues/2991), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
 
 ## Piping into different targets (functions, blocks expressions):
 
@@ -167,15 +183,6 @@ data.frame(x = 1)  %>%    bind_rows(list(., .))
 data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
 ```
 
-Same with [Bizarro Pipe](https://cran.r-project.org/web/packages/replyr/vignettes/BizarroPipe.html):
-
-```{r pipesdotsb, eval=DORUN}
-data.frame(x = 1)  ->.;  { bind_rows(list(., .)) }
-
-data.frame(x = 1)  ->.;    bind_rows(list(., .))
-
-data.frame(x = 1)  ->.;  ( bind_rows(list(., .)) )
-```
 
 ## summary
 
@@ -317,7 +324,7 @@ cat("
 cat("
 <img src=\"3a0.jpg\" >
 
-\"Realizing names are just strings.\"
+\"Realizing column names are just strings.\"
 ")
 }
 ```
