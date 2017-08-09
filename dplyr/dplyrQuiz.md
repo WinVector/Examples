@@ -64,6 +64,19 @@ rm(list='y') # clean up
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
+rename
+------
+
+``` r
+data.frame(x = 1) %>%
+  rename(!!rlang::sym('y') := x)
+```
+
+``` r
+data.frame(x = 1) %>%
+  rename((!!rlang::sym('y')) := x)
+```
+
 distinct
 --------
 

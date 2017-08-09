@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Mon Jul 24 08:12:05 2017"
+    ## [1] "Wed Aug  9 16:36:54 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -124,6 +124,24 @@ rm(list='y') # clean up
 ```
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+
+rename
+------
+
+``` r
+data.frame(x = 1) %>%
+  rename(!!rlang::sym('y') := x)
+```
+
+    ##   y
+    ## 1 1
+
+``` r
+data.frame(x = 1) %>%
+  rename((!!rlang::sym('y')) := x)
+```
+
+    ## Error: LHS must be a name or string
 
 distinct
 --------

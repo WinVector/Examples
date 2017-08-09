@@ -103,6 +103,18 @@ rm(list='y') # clean up
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
+## rename
+
+```{r rn0, eval=DORUN}
+data.frame(x = 1) %>%
+  rename(!!rlang::sym('y') := x)
+```
+
+```{r rn1, eval=DORUN, error=TRUE}
+data.frame(x = 1) %>%
+  rename((!!rlang::sym('y')) := x)
+```
+
 ## distinct
 
 ```{r rdistinct, eval=DORUN}
