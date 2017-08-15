@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Tue Aug 15 06:54:23 2017"
+    ## [1] "Tue Aug 15 06:56:21 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -125,6 +125,24 @@ rm(list='y') # clean up
 ```
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+
+rename
+------
+
+``` r
+data.frame(x = 1) %>%
+  rename(!!rlang::sym('y') := x)
+```
+
+    ##   y
+    ## 1 1
+
+``` r
+data.frame(x = 1) %>%
+  rename((!!rlang::sym('y')) := x)
+```
+
+    ## Error: LHS must be a name or string
 
 distinct
 --------
@@ -205,7 +223,37 @@ data.frame(x = 1) %>%
 rm(list='y') # clean up
 ```
 
-(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
+``` r
+world <- "homeworld"
+
+starwars %>%
+  group_by(.data[[world]]) %>%
+  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
+  head()
+```
+
+    ## # A tibble: 6 x 3
+    ##            world   height  mass
+    ##            <chr>    <dbl> <dbl>
+    ## 1       Alderaan 176.3333    64
+    ## 2    Aleen Minor  79.0000    15
+    ## 3         Bespin 175.0000    79
+    ## 4     Bestine IV 180.0000   110
+    ## 5 Cato Neimoidia 191.0000    90
+    ## 6          Cerea 198.0000    82
+
+``` r
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(.data[[homeworld]]) %>%
+  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
+  head()
+```
+
+    ## Error in mutate_impl(.data, dots): Evaluation error: Must subset with a string.
+
+(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916) and [`dplyr` issue 2991](https://github.com/tidyverse/dplyr/issues/2991), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
 
 Piping into different targets (functions, blocks expressions):
 --------------------------------------------------------------
@@ -234,32 +282,6 @@ data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
 ```
 
     ## Error in eval_bare(dot$expr, dot$env): object '.' not found
-
-Same with [Bizarro Pipe](https://cran.r-project.org/web/packages/replyr/vignettes/BizarroPipe.html):
-
-``` r
-data.frame(x = 1)  ->.;  { bind_rows(list(., .)) }
-```
-
-    ##   x
-    ## 1 1
-    ## 2 1
-
-``` r
-data.frame(x = 1)  ->.;    bind_rows(list(., .))
-```
-
-    ##   x
-    ## 1 1
-    ## 2 1
-
-``` r
-data.frame(x = 1)  ->.;  ( bind_rows(list(., .)) )
-```
-
-    ##   x
-    ## 1 1
-    ## 2 1
 
 summary
 -------

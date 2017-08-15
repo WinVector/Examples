@@ -64,6 +64,19 @@ rm(list='y') # clean up
 
 (From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
 
+rename
+------
+
+``` r
+data.frame(x = 1) %>%
+  rename(!!rlang::sym('y') := x)
+```
+
+``` r
+data.frame(x = 1) %>%
+  rename((!!rlang::sym('y')) := x)
+```
+
 distinct
 --------
 
@@ -117,7 +130,23 @@ data.frame(x = 1) %>%
 rm(list='y') # clean up
 ```
 
-(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
+``` r
+world <- "homeworld"
+
+starwars %>%
+  group_by(.data[[world]]) %>%
+  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
+  head()
+
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(.data[[homeworld]]) %>%
+  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
+  head()
+```
+
+(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916) and [`dplyr` issue 2991](https://github.com/tidyverse/dplyr/issues/2991), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
 
 Piping into different targets (functions, blocks expressions):
 --------------------------------------------------------------
@@ -130,16 +159,6 @@ data.frame(x = 1)  %>%  { bind_rows(list(., .)) }
 data.frame(x = 1)  %>%    bind_rows(list(., .))
 
 data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
-```
-
-Same with [Bizarro Pipe](https://cran.r-project.org/web/packages/replyr/vignettes/BizarroPipe.html):
-
-``` r
-data.frame(x = 1)  ->.;  { bind_rows(list(., .)) }
-
-data.frame(x = 1)  ->.;    bind_rows(list(., .))
-
-data.frame(x = 1)  ->.;  ( bind_rows(list(., .)) )
 ```
 
 summary
@@ -272,6 +291,6 @@ I may or may not keep these up to date depending on the utility of such a list g
 
 <img src="3a0.jpg" >
 
-"Realizing names are just strings."
+"Realizing column names are just strings."
 
 \[ [quiz](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) \] \[ [solutions](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md) \]
