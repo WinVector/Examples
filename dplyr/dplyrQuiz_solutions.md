@@ -18,6 +18,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 
 ``` r
 # Show versions we are using.
+# optional
 # devtools::install_github('tidyverse/dplyr')
 # devtools::install_github('tidyverse/dbplyr')
 # devtools::install_github('rstats-db/RSQLite')
@@ -25,7 +26,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.7.1.9000'
+    ## [1] '0.7.2'
 
 ``` r
 packageVersion("dbplyr")
@@ -43,7 +44,7 @@ packageVersion("RSQlite")
 packageVersion("rlang")
 ```
 
-    ## [1] '0.1.1.9000'
+    ## [1] '0.1.2'
 
 ``` r
 packageVersion("magrittr")
@@ -55,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Jul 15 09:16:32 2017"
+    ## [1] "Tue Aug 15 06:54:23 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -336,7 +337,7 @@ y <- NULL # value used in later examples
 (function() mutate(data.frame(x = 1), !!rlang::ensym(y) := 2))()
 ```
 
-    ## Error: Must supply a symbol as argument
+    ## Error: 'ensym' is not an exported object from 'namespace:rlang'
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 

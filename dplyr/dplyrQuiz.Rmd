@@ -43,6 +43,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 
 ```{r setup, eval=DORUN, echo=DORUN}
 # Show versions we are using.
+# optional
 # devtools::install_github('tidyverse/dplyr')
 # devtools::install_github('tidyverse/dbplyr')
 # devtools::install_github('rstats-db/RSQLite')
