@@ -25,7 +25,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.7.2'
+    ## [1] '0.7.2.9000'
 
 ``` r
 packageVersion("dbplyr")
@@ -43,7 +43,7 @@ packageVersion("RSQlite")
 packageVersion("rlang")
 ```
 
-    ## [1] '0.1.1.9000'
+    ## [1] '0.1.2.9000'
 
 ``` r
 packageVersion("magrittr")
@@ -55,7 +55,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Wed Aug  9 16:36:54 2017"
+    ## [1] "Sat Aug 19 06:26:19 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -141,7 +141,7 @@ data.frame(x = 1) %>%
   rename((!!rlang::sym('y')) := x)
 ```
 
-    ## Error: LHS must be a name or string
+    ## Error: LHS must be a symbol or string
 
 distinct
 --------
