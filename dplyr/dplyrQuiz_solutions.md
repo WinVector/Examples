@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Aug 19 06:28:22 2017"
+    ## [1] "Sat Aug 19 06:41:01 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -339,28 +339,6 @@ y <- NULL # value used in later examples
     ##   x function (expr) ...
     ## 1 1                   2
 
-``` r
-(function(z) select(data.frame(y = 1), !!enquo(z)))(y)
-```
-
-    ##   y
-    ## 1 1
-
-``` r
-(function() select(data.frame(y = 1), !!enquo(y)))()
-```
-
-    ## Error: `function (expr) 
-    ## {
-    ##     enexpr(expr)
-    ## }` must resolve to integer column positions, not a function
-
-``` r
-(function() mutate(data.frame(x = 1), !!rlang::ensym(y) := 2))()
-```
-
-    ## Error: Must supply a symbol as argument
-
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
 Databases
@@ -458,8 +436,8 @@ dR %>% select(x) %>%
 
 (From [`dplyr` issue 2890](https://github.com/tidyverse/dplyr/issues/2890) and [`dplyr` issue 2908](https://github.com/tidyverse/dplyr/issues/2908).)
 
-rename
-------
+rename again
+------------
 
 ``` r
 dR %>% 

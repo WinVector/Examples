@@ -191,14 +191,6 @@ y <- NULL # value used in later examples
 (function(z) mutate(data.frame(x = 1), !!quo_name(enquo(z)) := 2))(y)
 
 (function() mutate(data.frame(x = 1), !!quo_name(enquo(y)) := 2))()
-
-(function(z) select(data.frame(y = 1), !!enquo(z)))(y)
-
-(function() select(data.frame(y = 1), !!enquo(y)))()
-```
-
-``` r
-(function() mutate(data.frame(x = 1), !!rlang::ensym(y) := 2))()
 ```
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
@@ -258,8 +250,8 @@ dR %>% select(x) %>%
 
 (From [`dplyr` issue 2890](https://github.com/tidyverse/dplyr/issues/2890) and [`dplyr` issue 2908](https://github.com/tidyverse/dplyr/issues/2908).)
 
-rename
-------
+rename again
+------------
 
 ``` r
 dR %>% 
