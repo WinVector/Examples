@@ -18,6 +18,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 
 ``` r
 # Show versions we are using.
+# optional
 # devtools::install_github('tidyverse/dplyr')
 # devtools::install_github('tidyverse/dbplyr')
 # devtools::install_github('rstats-db/RSQLite')
@@ -55,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Aug 19 06:26:19 2017"
+    ## [1] "Sat Aug 19 06:28:22 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
