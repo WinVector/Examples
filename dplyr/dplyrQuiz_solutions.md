@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Aug 19 06:41:01 2017"
+    ## [1] "Thu Aug 24 07:10:40 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -282,23 +282,6 @@ data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
 ```
 
     ## Error in eval_bare(dot$expr, dot$env): object '.' not found
-
-summary
--------
-
-``` r
-data.frame(x = c(1, 2), y = c(3, 3)) %>% 
-  group_by(x) %>% 
-  summarize(y)
-```
-
-    ## # A tibble: 2 x 2
-    ##       x     y
-    ##   <dbl> <dbl>
-    ## 1     1     3
-    ## 2     2    NA
-
-(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
 
 enquo rules
 -----------

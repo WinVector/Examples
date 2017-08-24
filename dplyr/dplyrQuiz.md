@@ -161,17 +161,6 @@ data.frame(x = 1)  %>%    bind_rows(list(., .))
 data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
 ```
 
-summary
--------
-
-``` r
-data.frame(x = c(1, 2), y = c(3, 3)) %>% 
-  group_by(x) %>% 
-  summarize(y)
-```
-
-(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
-
 enquo rules
 -----------
 

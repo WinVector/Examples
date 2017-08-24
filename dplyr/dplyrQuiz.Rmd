@@ -196,17 +196,6 @@ data.frame(x = 1)  %>%    bind_rows(list(., .))
 data.frame(x = 1)  %>%  ( bind_rows(list(., .)) )
 ```
 
-
-## summary
-
-```{r summg, eval=DORUN}
-data.frame(x = c(1, 2), y = c(3, 3)) %>% 
-  group_by(x) %>% 
-  summarize(y)
-```
-
-(From [`dplyr` issue 2915](https://github.com/tidyverse/dplyr/issues/2915).)
-
 ## enquo rules
 
 This section is about `enquo()`, or passing unquoted variable names to functions that use `dplyr` methods.  Please skip it if you don't write such code, or if you use something like [`wrapr::let()`](https://github.com/WinVector/wrapr/blob/master/README.md) for such replacements.
