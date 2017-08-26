@@ -26,7 +26,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.7.2.9000'
+    ## [1] '0.7.2'
 
 ``` r
 packageVersion("dbplyr")
@@ -44,7 +44,7 @@ packageVersion("RSQlite")
 packageVersion("rlang")
 ```
 
-    ## [1] '0.1.2.9000'
+    ## [1] '0.1.2'
 
 ``` r
 packageVersion("magrittr")
@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Thu Aug 24 07:10:40 2017"
+    ## [1] "Fri Aug 25 17:38:01 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -142,7 +142,7 @@ data.frame(x = 1) %>%
   rename((!!rlang::sym('y')) := x)
 ```
 
-    ## Error: LHS must be a symbol or string
+    ## Error: LHS must be a name or string
 
 distinct
 --------
@@ -253,7 +253,18 @@ starwars %>%
 
     ## Error in mutate_impl(.data, dots): Evaluation error: Must subset with a string.
 
-(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916) and [`dplyr` issue 2991](https://github.com/tidyverse/dplyr/issues/2991), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)).
+``` r
+grouping_column <- "homeworld"
+
+starwars %>%
+  select(.data[[grouping_column]]) %>%
+  group_by(.data[[grouping_column]]) %>%
+  select(.data[[grouping_column]])
+```
+
+    ## Error: Must subset with a string
+
+(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916) and [`dplyr` issue 2991](https://github.com/tidyverse/dplyr/issues/2991), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/)). A note on how the behavior of the "prounous" has not matched their description since the announcement of `dplyr` `0.7.0` can be found [here](http://www.win-vector.com/blog/2017/08/is-dplyr-easily-comprehensible/#comment-66674).
 
 Piping into different targets (functions, blocks expressions):
 --------------------------------------------------------------
