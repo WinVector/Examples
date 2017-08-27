@@ -157,6 +157,8 @@ starwars %>%
   setdiff(colnames(starwars))
 ```
 
+Re-filed as [`dplyr` issue `3056`](https://github.com/tidyverse/dplyr/issues/3056).
+
 ``` r
 grouping_column <- "homeworld"
 

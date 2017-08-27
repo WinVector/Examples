@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Aug 26 18:21:25 2017"
+    ## [1] "Sat Aug 26 18:37:28 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -263,6 +263,8 @@ starwars %>%
 ```
 
     ## [1] "\"homeworld\""
+
+Re-filed as [`dplyr` issue `3056`](https://github.com/tidyverse/dplyr/issues/3056).
 
 ``` r
 grouping_column <- "homeworld"
