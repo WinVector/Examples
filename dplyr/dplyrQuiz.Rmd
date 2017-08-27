@@ -166,20 +166,31 @@ data.frame(x = 1) %>%
 rm(list='y') # clean up
 ```
 
-```{r group2, eval=DORUN, error=TRUE}
+```{r group2, eval=DORUN}
 world <- "homeworld"
 
 starwars %>%
   group_by(.data[[world]]) %>%
   summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
   head()
+```
 
+```{r group2b, eval=DORUN, error=TRUE}
 homeworld <- "homeworld"
 
 starwars %>%
   group_by(.data[[homeworld]]) %>%
   summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
   head()
+```
+
+```{r group2c, eval=DORUN}
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(!!homeworld) %>%
+  colnames() %>%
+  setdiff(colnames(starwars))
 ```
 
 ```{r group3, eval=DORUN, error=TRUE}

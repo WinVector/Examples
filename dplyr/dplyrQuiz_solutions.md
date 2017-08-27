@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Aug 26 06:38:30 2017"
+    ## [1] "Sat Aug 26 18:15:28 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -252,6 +252,17 @@ starwars %>%
 ```
 
     ## Error in mutate_impl(.data, dots): Evaluation error: Must subset with a string.
+
+``` r
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(!!homeworld) %>%
+  colnames() %>%
+  setdiff(colnames(starwars))
+```
+
+    ## [1] "\"homeworld\""
 
 ``` r
 grouping_column <- "homeworld"

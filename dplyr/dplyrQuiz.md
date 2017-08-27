@@ -137,13 +137,24 @@ starwars %>%
   group_by(.data[[world]]) %>%
   summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
   head()
+```
 
+``` r
 homeworld <- "homeworld"
 
 starwars %>%
   group_by(.data[[homeworld]]) %>%
   summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
   head()
+```
+
+``` r
+homeworld <- "homeworld"
+
+starwars %>%
+  group_by(!!homeworld) %>%
+  colnames() %>%
+  setdiff(colnames(starwars))
 ```
 
 ``` r
