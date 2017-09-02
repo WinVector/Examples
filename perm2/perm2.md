@@ -1,0 +1,60 @@
+
+While working on a large client project using [`Sparklyr`](https://spark.rstudio.com) and multinomial regression we recently ran into a problem: [`Apache Spark`](https://spark.apache.org) chooses the order of multinomial regression outcome targets, whereas [`R`](https://www.r-project.org) users are used to choosing the order of the targets (please see [here](https://github.com/rstudio/sparklyr/issues/907) for some details). So to make things more like `R` users expect, we need a way to translate one order to another.
+
+Providing good solutions to gaps like this is one of the thing [Win-Vector LLC](http://www.win-vector.com/) does both in our [consulting](http://www.win-vector.com/site/service-offerings/consulting/) and [training](http://www.win-vector.com/site/service-offerings/training-overview/) practices.
+
+Let's take a look at an example. Suppose our two orderings are `o1` (the ordering `Spark ML` chooses) and `o2` (the order the `R` user chooses).
+
+``` r
+set.seed(326346)
+symbols <- letters[1:7]
+
+o1 <- sample(symbols, length(symbols), replace = FALSE)
+o1
+```
+
+    ## [1] "e" "a" "b" "f" "d" "c" "g"
+
+``` r
+o2 <- sample(symbols, length(symbols), replace = FALSE)
+o2
+```
+
+    ## [1] "d" "g" "f" "e" "b" "c" "a"
+
+To translate `Spark` results into `R` results we need a [permutation](https://en.wikipedia.org/wiki/Permutation) that takes `o1` to `o2`. The idea is: if we had a permeation that takes `o1` to `o2` we could use it to re-map predictions that are in `o1` order to be predictions in `o2` order.
+
+To solve this we crack open [our article on the algebra of permutations](http://www.win-vector.com/blog/2017/05/on-indexing-operators-and-composition/).
+
+We are going to use the fact that the `R` command `base::order(x)` builds a permutation `p` such that `x[p]` is in order.
+
+Given this the solution is: we find permutations `p1` and `p2` such that `o1[p1]` is ordered and `o2[p2]` is ordered. Then build a permutation `perm` such that `o1[perm] = (o1[p1])[inverse_permutation(p2)]`. I.e., to get from `o1` to `o2` move `o1` to sorted order and then move from the sorted order to `o2`'s order (by using the reverse of the process that sorts `o2`). Again, the tools to solve this are in [our article on the relation between permutations and indexing](http://www.win-vector.com/blog/2017/05/on-indexing-operators-and-composition/).
+
+Below is the complete solution (including combining the two steps into a single permutation):
+
+``` r
+p1 <- order(o1)
+p2 <- order(o2)
+
+# invert p2
+# see: http://www.win-vector.com/blog/2017/05/on-indexing-operators-and-composition/
+p2inv <- seq_len(length(p2))
+p2inv[p2] <- seq_len(length(p2))
+
+(o1[p1])[p2inv]
+```
+
+    ## [1] "d" "g" "f" "e" "b" "c" "a"
+
+``` r
+# composition rule: (o1[p1])[p2inv] == o1[p1[p2inv]]
+# see: http://www.win-vector.com/blog/2017/05/on-indexing-operators-and-composition/
+perm <- p1[p2inv]
+o1[perm]
+```
+
+    ## [1] "d" "g" "f" "e" "b" "c" "a"
+
+The equivilence "`(o1[p1])[p2inv] == o1[p1[p2inv]]`" is frankly magic (though also quickly follows "by definition"), and studying it is the topic of [our original article on permutations](http://www.win-vector.com/blog/2017/05/on-indexing-operators-and-composition/).
+
+The above application is a good example of why it is nice to have a little theory worked out, even before you think you need it.

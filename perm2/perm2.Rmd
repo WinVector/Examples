@@ -2,7 +2,7 @@
 output: github_document
 ---
 
-While deep in a large client project using [`Sparklyr`](https://spark.rstudio.com) and multinomial regression we recently ran into a problem:
+While working on a large client project using [`Sparklyr`](https://spark.rstudio.com) and multinomial regression we recently ran into a problem:
 [`Apache Spark`](https://spark.apache.org) chooses the order of multinomial regression outcome targets, whereas [`R`](https://www.r-project.org) users are 
 used to choosing the order of the targets (please see [here](https://github.com/rstudio/sparklyr/issues/907) for some details).  So to make things more like `R` users expect, we need a way to translate one order to another.
 
