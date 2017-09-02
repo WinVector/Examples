@@ -1,8 +1,5 @@
 ---
-title: "perm2"
-author: "Win-Vector LLC"
-date: "9/2/2017"
-output: html_document
+output: github_document
 ---
 
 While deep in a large client project using [`Sparklyr`](https://spark.rstudio.com) and multinomial regression we recently ran into a problem:
