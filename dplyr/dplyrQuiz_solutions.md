@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sun Sep  3 08:57:30 2017"
+    ## [1] "Sun Sep  3 09:51:41 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -157,6 +157,31 @@ data.frame(x = c(1, 1)) %>%
     ## [1] 2
 
 (From [`dplyr` issue 2954](https://github.com/tidyverse/dplyr/issues/2954).)
+
+tally
+-----
+
+``` r
+data.frame(n = 1:3) %>% 
+  tally
+```
+
+    ## Using `n` as weighting variable
+
+    ##   nn
+    ## 1  6
+
+[`dplyr` issue 3070](https://github.com/tidyverse/dplyr/issues/3070).
+
+``` r
+data.frame(n = as.raw(1:3)) %>% 
+  select(-n) %>% 
+  tally
+```
+
+    ## data frame with 0 columns and 3 rows
+
+[`dplyr` issue 3071](https://github.com/tidyverse/dplyr/issues/3071).
 
 rename and mutate
 -----------------

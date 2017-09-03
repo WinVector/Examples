@@ -89,6 +89,24 @@ data.frame(x = c(1, 1)) %>%
 
 (From [`dplyr` issue 2954](https://github.com/tidyverse/dplyr/issues/2954).)
 
+tally
+-----
+
+``` r
+data.frame(n = 1:3) %>% 
+  tally
+```
+
+[`dplyr` issue 3070](https://github.com/tidyverse/dplyr/issues/3070).
+
+``` r
+data.frame(n = as.raw(1:3)) %>% 
+  select(-n) %>% 
+  tally
+```
+
+[`dplyr` issue 3071](https://github.com/tidyverse/dplyr/issues/3071).
+
 rename and mutate
 -----------------
 
