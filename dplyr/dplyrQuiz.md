@@ -98,6 +98,14 @@ data.frame(x=1, y=2) %>% rename(x=y, y=x)
 data.frame(x=1, y=2) %>% mutate(x=y, y=x)
 ```
 
+``` r
+data.frame(q = 1:3, 
+           z = as.raw(1:3)) %>% 
+  mutate(constant=1.0)
+```
+
+[`dplyr` issue 3069](https://github.com/tidyverse/dplyr/issues/3069).
+
 NULL (constant versus in a variable)
 ------------------------------------
 
