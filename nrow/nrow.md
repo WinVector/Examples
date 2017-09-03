@@ -43,8 +43,9 @@ db_drop_table(sc, 'extab', force = TRUE)
 DBI::dbGetQuery(sc, "DROP TABLE IF EXISTS extab")
 DBI::dbGetQuery(sc, "CREATE TABLE extab (n TINYINT)")
 DBI::dbGetQuery(sc, "INSERT INTO extab VALUES (1), (2), (3)")
-d <- tbl(sc, "extab")
-print(d)
+
+dRemote <- tbl(sc, "extab")
+print(dRemote)
 ```
 
     ## # Source:   table<extab> [?? x 1]
@@ -55,17 +56,27 @@ print(d)
     ## 2    02
     ## 3    03
 
-Many `Apache Spark` big data projects use the `TINYINT` type to save space. `TINYINT` behaves as a numeric type on the `Spark` side (you can run it through `SparkML` machine learning models correctly), and the translation of this type to `R`'s `raw` type (which is not an arithmetic or numerical type) is something that is likely to be fixed very soon. However, there are other reasons table might have `R` `raw` columns in them, so we should expect our tools to work properly with such columns present.
+``` r
+dLocal <- data.frame(n = as.raw(1:3))
+print(dLocal)
+```
+
+    ##    n
+    ## 1 01
+    ## 2 02
+    ## 3 03
+
+Many `Apache Spark` big data projects use the `TINYINT` type to save space. `TINYINT` behaves as a numeric type on the `Spark` side (you can run it through `SparkML` machine learning models correctly), and the translation of this type to `R`'s `raw` type (which is not an arithmetic or numerical type) is something that is likely to be fixed very soon. However, there are other reasons a table might have `R` `raw` columns in them, so we should expect our tools to work properly with such columns present.
 
 Now let's try to count the rows of this table:
 
 ``` r
-nrow(d)
+nrow(dRemote)
 ```
 
     ## [1] NA
 
-That doesn't work ([apparently by choice!](http://www.win-vector.com/blog/2017/08/why-to-use-the-replyr-r-package/)). And I find myself in the odd position of having to defend expecting `nrow(d)` to return the number of rows.
+That doesn't work ([apparently by choice!](http://www.win-vector.com/blog/2017/08/why-to-use-the-replyr-r-package/)). And I find myself in the odd position of having to defend expecting `nrow()` to return the number of rows.
 
 There are a number of common legitimate uses of `nrow()` in user code and package code including:
 
@@ -77,7 +88,7 @@ There are a number of common legitimate uses of `nrow()` in user code and packag
 The obvious generic `dplyr` idiom would then be `dplyr::tally()` (our code won't know to call the new `sparklyr::sdf_nrow()` function, without writing code to check we are in fact looking at a `Sparklyr` reference structure):
 
 ``` r
-tally(d)
+tally(dRemote)
 ```
 
     ## # Source:   lazy query [?? x 1]
@@ -89,8 +100,7 @@ tally(d)
 That works for `Spark`, but not for local tables:
 
 ``` r
-d %>% 
-  collect() %>% 
+dLocal %>% 
   tally
 ```
 
@@ -100,11 +110,20 @@ d %>%
 
 The above issue is filed as [`dplyr` issue 3070](https://github.com/tidyverse/dplyr/issues/3070). The above code usually either errors-out (if the column is `raw`) or creates a new total column called `nn` with the sum of the `n` column instead of the count.
 
+``` r
+data.frame(n=100) %>% 
+  tally
+```
+
+    ## Using `n` as weighting variable
+
+    ##    nn
+    ## 1 100
+
 We could try adding a column and summing that:
 
 ``` r
-d %>% 
-  collect() %>% 
+dLocal %>% 
   transmute(constant = 1.0) %>%
   summarize(n = sum(constant))
 ```
@@ -116,27 +135,26 @@ That fails due to [`dplyr` issue 3069](https://github.com/tidyverse/dplyr/issues
 We can try removing the dangerous column prior to other steps:
 
 ``` r
-d %>% 
-  collect() %>% 
+dLocal %>% 
   select(-n) %>%
   tally
 ```
 
-    ## # A tibble: 3 x 0
+    ## data frame with 0 columns and 3 rows
 
-That does not work on local tables, as `tally` fails to count 0-column objects ([`dplyr` issue 3071](https://github.com/tidyverse/dplyr/issues/3071), probably the same issue exists for may `dplyr` verbs as we saw a related issue for [`dplyr::distinct`](https://github.com/tidyverse/dplyr/issues/2954)).
+That does not work on local tables, as `tally` fails to count 0-column objects ([`dplyr` issue 3071](https://github.com/tidyverse/dplyr/issues/3071); probably the same issue exists for may `dplyr` verbs as we saw a related issue for [`dplyr::distinct`](https://github.com/tidyverse/dplyr/issues/2954)).
 
 And the method does not work on remote tables either (`Spark`, or database tables) as many of them do not appear to support 0-column results:
 
 ``` r
-d %>% 
+dRemote %>% 
   select(-n) %>%
   tally
 ```
 
     ## Error: Query contains no columns
 
-In fact we start to feel trapped here. For a data-object who's only column is of type `raw` we can't remove all the `raw` columns as we would then form a zero-column result (which does not seem to always be legal), but we can not add columns as that is a current bug for local frames. We could try some other transforms (such as joins, but we don't have safe columns to join on).
+In fact we start to feel trapped here. For a data-object whose only column is of type `raw` we can't remove all the `raw` columns as we would then form a zero-column result (which does not seem to always be legal), but we can not add columns as that is a current bug for local frames. We could try some other transforms (such as joins, but we don't have safe columns to join on).
 
 At best we can try something like this:
 
@@ -153,15 +171,14 @@ nrow2 <- function(d) {
     pull()
 }
 
-d %>% 
+dRemote %>% 
   nrow2()
 ```
 
     ## [1] 3
 
 ``` r
-d %>% 
-  collect() %>% 
+dLocal %>% 
   nrow2()
 ```
 
