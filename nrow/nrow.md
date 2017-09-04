@@ -11,6 +11,7 @@ When trying to count rows using `dplyr` or `dplyr` controlled data-structures (r
 <center>
 <a href="https://en.wikipedia.org/wiki/Between_Scylla_and_Charybdis"> <img src="Johann_Heinrich_Fusili.jpg" width="300"> </a>
 </center>
+<p/>
 Let's take an example from [`sparklyr` issue 973](https://github.com/rstudio/sparklyr/issues/973):
 
 ``` r
