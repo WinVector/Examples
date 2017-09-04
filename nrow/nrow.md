@@ -97,7 +97,7 @@ tally(dRemote)
     ##   <dbl>
     ## 1     3
 
-That works for `Spark`, but not for local tables:
+That returns the count for `Spark` (which according to `help(tally)` is *not* whath should happen, the stated return should be the sum of the values in the `n` column), but not for local tables:
 
 ``` r
 dLocal %>% 
@@ -108,7 +108,7 @@ dLocal %>%
 
     ## Error in summarise_impl(.data, dots): Evaluation error: invalid 'type' (raw) of argument.
 
-The above issue is filed as [`dplyr` issue 3070](https://github.com/tidyverse/dplyr/issues/3070). The above code usually either errors-out (if the column is `raw`) or creates a new total column called `nn` with the sum of the `n` column instead of the count.
+The above code usually either errors-out (if the column is `raw`) or creates a new total column called `nn` with the sum of the `n` column instead of the count.
 
 ``` r
 data.frame(n=100) %>% 

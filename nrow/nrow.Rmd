@@ -67,14 +67,14 @@ The obvious generic `dplyr` idiom would then be `dplyr::tally()` (our code won't
 tally(dRemote)
 ```
 
-That works for `Spark`, but not for local tables:
+That returns the count for `Spark` (which according to `help(tally)` is *not* whath should happen, the stated return should be the sum of the values in the `n` column), but not for local tables:
 
 ```{r tally2, error=TRUE}
 dLocal %>% 
   tally
 ```
 
-The above issue is filed as [`dplyr` issue 3070](https://github.com/tidyverse/dplyr/issues/3070). The above code usually either errors-out (if the column is `raw`) or creates a new total column called `nn` with the sum of the `n` column instead of the count.
+The above code usually either errors-out (if the column is `raw`) or creates a new total column called `nn` with the sum of the `n` column instead of the count.
 
 ```{r tally2n, error=TRUE}
 data.frame(n=100) %>% 
