@@ -98,7 +98,7 @@ tally(dRemote)
     ##   <dbl>
     ## 1     3
 
-That returns the count for `Spark` (which according to `help(tally)` is *not* what should happen, the stated return should be the sum of the values in the `n` column). This is filled as [`sparklyr` issue 982](https://github.com/rstudio/sparklyr/issues/982) (no idea if it affects other `dbplyr` clients such as `PostgreSQL`).
+That returns the count for `Spark` (which according to `help(tally)` is *not* what should happen, the stated return should be the sum of the values in the `n` column). This is filled as [`sparklyr` issue 982](https://github.com/rstudio/sparklyr/issues/982) and [`dplyr` issue 3075](https://github.com/tidyverse/dplyr/issues/3075).
 
 ``` r
 dLocal %>% 
