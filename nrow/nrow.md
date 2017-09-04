@@ -9,7 +9,7 @@ It is Needlessly Difficult to Count Rows Using `dplyr`
 When trying to count rows using `dplyr` or `dplyr` controlled data-structures (remote `tbl`s such as `Sparklyr` or `dbplyr` structures) one is [sailing between Scylla and Charybdis](https://en.wikipedia.org/wiki/Between_Scylla_and_Charybdis). The task being to avoid `dplyr` corner-cases and irregularities (a few of which I attempt to document in this ["`dplyr` inferno"](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md)).
 
 <center>
-<a href="https://en.wikipedia.org/wiki/Between_Scylla_and_Charybdis"> <img src="800px-Johann_Heinrich_Füssli_054.jpg" width="300"> </a>
+<a href="https://en.wikipedia.org/wiki/Between_Scylla_and_Charybdis"> <img src="Johann_Heinrich_Fusili.jpg" width="300"> </a>
 </center>
 Let's take an example from [`sparklyr` issue 973](https://github.com/rstudio/sparklyr/issues/973):
 

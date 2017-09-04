@@ -13,7 +13,7 @@ When trying to count rows using `dplyr` or `dplyr` controlled data-structures (r
 
 <center>
 <a href="https://en.wikipedia.org/wiki/Between_Scylla_and_Charybdis">
-<img src="800px-Johann_Heinrich_Füssli_054.jpg" width="300">
+<img src="Johann_Heinrich_Fusili.jpg" width="300">
 </a>
 </center>
 
