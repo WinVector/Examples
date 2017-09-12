@@ -26,7 +26,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.7.2.9000'
+    ## [1] '0.7.3'
 
 ``` r
 packageVersion("dbplyr")
@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sun Sep  3 09:51:41 2017"
+    ## [1] "Mon Sep 11 19:00:34 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -382,6 +382,31 @@ y <- NULL # value used in later examples
     ## 1 1                   2
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
+
+functions
+---------
+
+``` r
+f <- function(col) sum(!is.na(col))
+dplyr::summarise_all(data.frame(wat = letters), 
+                     dplyr::funs(f))
+```
+
+    ##   wat
+    ## 1  26
+
+``` r
+#>   wat
+#> 1  26
+
+f <- function(col) sum(!is.na(col))
+dplyr::summarise_all(data.frame(wat = letters), 
+                     dplyr::funs(function(col) sum(!is.na(col))))
+```
+
+    ## Error in summarise_impl(.data, dots): Column `wat` is of unsupported type function
+
+(From [`dplyr` issue 3094](https://github.com/tidyverse/dplyr/issues/3094).)
 
 Databases
 =========

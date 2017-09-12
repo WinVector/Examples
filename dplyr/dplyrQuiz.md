@@ -232,6 +232,23 @@ y <- NULL # value used in later examples
 
 (From [`rlang` issue 203](https://github.com/tidyverse/rlang/issues/203).)
 
+functions
+---------
+
+``` r
+f <- function(col) sum(!is.na(col))
+dplyr::summarise_all(data.frame(wat = letters), 
+                     dplyr::funs(f))
+#>   wat
+#> 1  26
+
+f <- function(col) sum(!is.na(col))
+dplyr::summarise_all(data.frame(wat = letters), 
+                     dplyr::funs(function(col) sum(!is.na(col))))
+```
+
+(From [`dplyr` issue 3094](https://github.com/tidyverse/dplyr/issues/3094).)
+
 Databases
 =========
 
