@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Mon Sep 11 19:00:34 2017"
+    ## [1] "Tue Sep 12 08:17:41 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -387,7 +387,7 @@ functions
 ---------
 
 ``` r
-f <- function(col) sum(!is.na(col))
+f <- . %>% { sum(!is.na(.)) }
 dplyr::summarise_all(data.frame(wat = letters), 
                      dplyr::funs(f))
 ```
@@ -396,12 +396,25 @@ dplyr::summarise_all(data.frame(wat = letters),
     ## 1  26
 
 ``` r
-#>   wat
-#> 1  26
-
-f <- function(col) sum(!is.na(col))
 dplyr::summarise_all(data.frame(wat = letters), 
-                     dplyr::funs(function(col) sum(!is.na(col))))
+                     dplyr::funs(. %>% { sum(!is.na(.)) }))
+```
+
+    ##   wat
+    ## 1  26
+
+``` r
+f <- function(col) { sum(!is.na(col)) }
+dplyr::summarise_all(data.frame(wat = letters), 
+                     dplyr::funs(f))
+```
+
+    ##   wat
+    ## 1  26
+
+``` r
+dplyr::summarise_all(data.frame(wat = letters), 
+                     dplyr::funs(function(col) { sum(!is.na(col)) }))
 ```
 
     ## Error in summarise_impl(.data, dots): Column `wat` is of unsupported type function
