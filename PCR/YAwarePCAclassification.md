@@ -1,4 +1,9 @@
 Principal Components Regression, Pt. 4: Y-Aware Methods for Classification
+================
+Nina Zumel, John Mount; Win-Vector LLC
+June 19, 2016
+
+Principal Components Regression, Pt. 4: Y-Aware Methods for Classification
 ==========================================================================
 
 This article is by [Dr. Nina Zumel](http://www.win-vector.com/site/staff/nina-zumel/) and [Dr. John Mount](http://www.win-vector.com/site/staff/john-mount/) of [Win-Vector LLC](http://www.win-vector.com/) and is hosted at: <https://github.com/WinVector/Examples/blob/master/PCR/YAwarePCAclassification.md>.
@@ -16,11 +21,11 @@ Classification *y*-aware PCA is similar to [regression *y*-aware PCA](http://www
 
 We determine a classification units scaling for a variable *x* by fitting a logistic regression model between *x* and *y*:
 
-\[ P[y==TRUE] ~ sigmoid(m * x + b) \]
+*P*\[*y* = =*T**R**U**E*\] *s**i**g**m**o**i**d*(*m* \* *x* + *b*)
 
 If we then rescale (and recenter) *x* as
 
-\[ x' := m * x - mean(m * x) \]
+*x*′:=*m* \* *x* − *m**e**a**n*(*m* \* *x*)
 
 then *x'* is in *y* logistic link units. This *y*-aware scaling is both complementary to variable pruning and powerful enough to perform well on its own. This may seem like an odd transform, but the whole point of "link space" for generalized linear models is: link space is hoped to be a place where effects are somewhat linear/additive.
 
@@ -48,7 +53,7 @@ summary(dTrain[, c("y", "x.01", "x.02", "noise1.01", "noise1.02")])
     ##  Mode :logical   Min.   :-4.94531   Min.   :-9.9796   Min.   :-30.5661  
     ##  FALSE:483       1st Qu.:-0.97409   1st Qu.:-1.8235   1st Qu.: -5.6814  
     ##  TRUE :517       Median : 0.04962   Median : 0.2025   Median :  0.5278  
-    ##  NA's :0         Mean   : 0.02968   Mean   : 0.1406   Mean   :  0.1754  
+    ##                  Mean   : 0.02968   Mean   : 0.1406   Mean   :  0.1754  
     ##                  3rd Qu.: 0.93307   3rd Qu.: 1.9949   3rd Qu.:  5.9238  
     ##                  Max.   : 4.25777   Max.   :10.0261   Max.   : 26.4111  
     ##    noise1.02       
@@ -78,10 +83,13 @@ projectedTestU <- as.data.frame(dmTestU %*% projU,
                       stringsAsFactors = FALSE)
 projectedTestU$y <- dTest$y
 projectedTestU$estimateU <- predict(modelU,type='response',newdata=projectedTestU)
-ROCPlot(projectedTestU,'estimateU','y','Recovered model versus truth on test\n(x scaled)')
+ROCPlot(projectedTestU, 
+        'estimateU',
+        'y', TRUE,
+        'Recovered model versus truth on test\n(x scaled)')
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/noscale-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/noscale-1.png)
 
 Preparing data using link based *y*-aware scaling
 -------------------------------------------------
@@ -102,7 +110,7 @@ dotplot_identity(scoreFrame, "varName", "sig", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77")) 
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/design1prep-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/design1prep-1.png)
 
 Once again single variable significances are very telling. When this is the case we strongly advise pruning such using these significances. For this example we will not prune and intentionally leave any problems/issues for the downstream principal components analysis.
 
@@ -148,7 +156,7 @@ summary(dTrainCTreatedYScaled[, c("y", "x.01_clean", "x.02_clean", "noise1.02_cl
     ##  Mode :logical   Min.   :-2.78433   Min.   :-2.73052  
     ##  FALSE:483       1st Qu.:-0.56178   1st Qu.:-0.52995  
     ##  TRUE :517       Median : 0.01116   Median : 0.01668  
-    ##  NA's :0         Mean   : 0.00000   Mean   : 0.00000  
+    ##                  Mean   : 0.00000   Mean   : 0.00000  
     ##                  3rd Qu.: 0.50559   3rd Qu.: 0.50029  
     ##                  Max.   : 2.36631   Max.   : 2.66716  
     ##  noise1.02_clean      noise1.02_clean.1   
@@ -165,7 +173,7 @@ barbell_plot(rframe, "varName", "vmin", "vmax", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/workscaled1-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/workscaled1-1.png)
 
 ``` r
 rframe$range <- rframe$vmax-rframe$vmin
@@ -195,7 +203,7 @@ dotplot_identity(frame = data.frame(pc=1:length(princ$sdev),
   ggtitle("Y-Scaled variables: Magnitudes of singular values")
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/scaledpca-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/scaledpca-1.png)
 
 When we look at the variable loadings of the first five principal components, we see that we recover the even/odd loadings of the original signal variables. `PC1` has the odd variables, and `PC2` has the even variables. These two principal components carry most of the signal. The next three principal components complete the basis for the five original signal variables. The noise variables have very small loadings, compared to the signal variables.
 
@@ -213,7 +221,7 @@ dotplot_identity(rotflong, "varName", "loading", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/scaledvarload-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/scaledvarload-1.png)
 
 Let's look at the projection of the data onto its first two principal components, using color to code the *y* value. Notice that y increases both as we move up and as we move right. We have recovered two features that correlate with an increase in y. In fact, `PC1` corresponds to the odd signal variables, which correspond to process *yB*, and `PC2` corresponds to the even signal variables, which correspond to process *yA*.
 
@@ -239,7 +247,7 @@ ScatterHistC(projectedTrain,'PC1','PC2','y',
                "Y-Scaled Training Data projected to first two principal components")
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/scaledplottrain-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/scaledplottrain-1.png)
 
 Now let's fit a logistic regression model to the first two principal components.
 
@@ -274,10 +282,13 @@ summary(model)
 
 ``` r
 projectedTrain$estimate <- predict(model,type='response',newdata=projectedTrain)
-ROCPlot(projectedTrain,'estimate','y','Recovered model versus truth (y aware PCA train)')
+ROCPlot(projectedTrain,
+        'estimate',
+        'y', TRUE,
+        'Recovered model versus truth (y aware PCA train)')
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/quant1-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/quant1-1.png)
 
 Let's see how the model does on hold-out data.
 
@@ -291,14 +302,17 @@ ScatterHistC(projectedTest,'PC1','PC2','y',
                "Y-Scaled Test Data projected to first two principal components")
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/scaledplotest-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/scaledplotest-1.png)
 
 ``` r
 projectedTest$estimate <- predict(model,type='response',newdata=projectedTest)
-ROCPlot(projectedTest,'estimate','y','Recovered model versus truth (y aware PCA test)')
+ROCPlot(projectedTest,
+        'estimate',
+        'y', TRUE,
+        'Recovered model versus truth (y aware PCA test)')
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/quant1test-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/quant1test-1.png)
 
 ### Is this significantly different than encoding *y* as a 0/1 indicator and using regression methods?
 
@@ -344,7 +358,7 @@ barbell_plot(rframeN, "varName", "vmin", "vmax", "vartype") +
   scale_color_manual(values = c("noise" = "#d95f02", "signal" = "#1b9e77"))
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/zerooneindicator-1.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/zerooneindicator-1.png)
 
 ``` r
 rframeN$range <- rframeN$vmax-rframeN$vmin
@@ -381,20 +395,26 @@ head(projectedTrainN)
 ``` r
 modelN <- glm(y~PC1+PC2,family=binomial,data=projectedTrainN)
 projectedTrainN$estimateN <- predict(modelN,type='response',newdata=projectedTrainN)
-ROCPlot(projectedTrainN,'estimateN','y','Recovered model versus truth on train\n(numeric y aware PCA train)')
+ROCPlot(projectedTrainN,
+        'estimateN',
+        'y', TRUE,
+        'Recovered model versus truth on train\n(numeric y aware PCA train)')
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/zerooneindicator-2.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/zerooneindicator-2.png)
 
 ``` r
 projectedTestN <- as.data.frame(dmTestN %*% projN,
                       stringsAsFactors = FALSE)
 projectedTestN$y <- dTestNTreatedYScaled$y
 projectedTestN$estimateN <- predict(modelN,type='response',newdata=projectedTestN)
-ROCPlot(projectedTestN,'estimateN','y','Recovered model versus truth on test\n(numeric y aware PCA train)')
+ROCPlot(projectedTestN,
+        'estimateN',
+        'y',TRUE,
+        'Recovered model versus truth on test\n(numeric y aware PCA train)')
 ```
 
-![](YAwarePCAclassification_files/figure-markdown_github/zerooneindicator-3.png)
+![](YAwarePCAclassification_files/figure-markdown_github-ascii_identifiers/zerooneindicator-3.png)
 
 ``` r
 projectedTestN$estimateC <- projectedTest$estimate

@@ -1,10 +1,8 @@
 ---
-title: "Principal Components Regression, Pt. 4: Y-Aware Methods for Classification"
+title: 'Principal Components Regression, Pt. 4: Y-Aware Methods for Classification'
 author: "Nina Zumel, John Mount; Win-Vector LLC"
 date: "June 19, 2016"
-output:
-  md_document:
-    variant: markdown_github
+output: github_document
 ---
 
 # Principal Components Regression, Pt. 4: Y-Aware Methods for Classification
@@ -42,6 +40,7 @@ knitr::opts_chunk$set(fig.width=7, fig.height=7,
 
 library('vtreat')
 library('ggplot2')
+library("dplyr")
 library('tidyr')
 library('WVPlots') # devtools::install_github('WinVector/WVPlots',build_vignettes=TRUE)
 
@@ -151,7 +150,10 @@ projectedTestU <- as.data.frame(dmTestU %*% projU,
                       stringsAsFactors = FALSE)
 projectedTestU$y <- dTest$y
 projectedTestU$estimateU <- predict(modelU,type='response',newdata=projectedTestU)
-ROCPlot(projectedTestU,'estimateU','y','Recovered model versus truth on test\n(x scaled)')
+ROCPlot(projectedTestU, 
+        'estimateU',
+        'y', TRUE,
+        'Recovered model versus truth on test\n(x scaled)')
 ```
 
 ## Preparing data using link based *y*-aware scaling
@@ -276,7 +278,10 @@ Now let's fit a logistic regression model to the first two principal components.
 model <- glm(y~PC1+PC2,family=binomial,data=projectedTrain)
 summary(model)
 projectedTrain$estimate <- predict(model,type='response',newdata=projectedTrain)
-ROCPlot(projectedTrain,'estimate','y','Recovered model versus truth (y aware PCA train)')
+ROCPlot(projectedTrain,
+        'estimate',
+        'y', TRUE,
+        'Recovered model versus truth (y aware PCA train)')
 ```
 
 
@@ -296,7 +301,10 @@ ScatterHistC(projectedTest,'PC1','PC2','y',
 
 ```{r quant1test}
 projectedTest$estimate <- predict(model,type='response',newdata=projectedTest)
-ROCPlot(projectedTest,'estimate','y','Recovered model versus truth (y aware PCA test)')
+ROCPlot(projectedTest,
+        'estimate',
+        'y', TRUE,
+        'Recovered model versus truth (y aware PCA test)')
 ```
 
 ### Is this significantly different than encoding *y* as a 0/1 indicator and using regression methods?
@@ -354,13 +362,19 @@ projectedTrainN$y <- dTrainNTreatedYScaled$y
 head(projectedTrainN)
 modelN <- glm(y~PC1+PC2,family=binomial,data=projectedTrainN)
 projectedTrainN$estimateN <- predict(modelN,type='response',newdata=projectedTrainN)
-ROCPlot(projectedTrainN,'estimateN','y','Recovered model versus truth on train\n(numeric y aware PCA train)')
+ROCPlot(projectedTrainN,
+        'estimateN',
+        'y', TRUE,
+        'Recovered model versus truth on train\n(numeric y aware PCA train)')
 
 projectedTestN <- as.data.frame(dmTestN %*% projN,
                       stringsAsFactors = FALSE)
 projectedTestN$y <- dTestNTreatedYScaled$y
 projectedTestN$estimateN <- predict(modelN,type='response',newdata=projectedTestN)
-ROCPlot(projectedTestN,'estimateN','y','Recovered model versus truth on test\n(numeric y aware PCA train)')
+ROCPlot(projectedTestN,
+        'estimateN',
+        'y',TRUE,
+        'Recovered model versus truth on test\n(numeric y aware PCA train)')
 
 projectedTestN$estimateC <- projectedTest$estimate
 head(projectedTestN[,c('y','estimateC','estimateN')])
