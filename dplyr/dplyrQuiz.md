@@ -337,6 +337,17 @@ dR %>%
 
 (From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
 
+if\_else
+--------
+
+``` r
+v <- glue::glue('a')
+print(v)
+if_else(TRUE, v, v)
+```
+
+[`dplyr` issue 3109](https://github.com/tidyverse/dplyr/issues/3109).
+
 Conclusion
 ==========
 

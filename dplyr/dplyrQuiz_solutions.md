@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Wed Sep 20 01:04:36 2017"
+    ## [1] "Wed Sep 20 05:45:52 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -561,6 +561,24 @@ dR %>%
     ## Error in names(select)[match(old_vars, vars)] <- new_vars: NAs are not allowed in subscripted assignments
 
 (From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
+
+if\_else
+--------
+
+``` r
+v <- glue::glue('a')
+print(v)
+```
+
+    ## a
+
+``` r
+if_else(TRUE, v, v)
+```
+
+    ## Error: `true` must be character, not glue/character
+
+[`dplyr` issue 3109](https://github.com/tidyverse/dplyr/issues/3109).
 
 Conclusion
 ==========
