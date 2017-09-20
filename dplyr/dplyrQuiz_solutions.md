@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Tue Sep 12 08:17:41 2017"
+    ## [1] "Wed Sep 20 01:04:36 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -209,6 +209,21 @@ data.frame(q = 1:3,
     ## Error in mutate_impl(.data, dots): Column `z` is of unsupported type raw vector
 
 [`dplyr` issue 3069](https://github.com/tidyverse/dplyr/issues/3069).
+
+Column re-use and column chaining
+---------------------------------
+
+``` r
+db <- DBI::dbConnect(RSQLite::SQLite(), ":memory:")
+d <- copy_to(db, data.frame(a = 1))
+
+d %>% 
+    mutate(a2 = a, a3 = a2, a4 = a3)
+```
+
+    ## Error in rsqlite_send_query(conn@ptr, statement): no such column: a3
+
+[`dplyr` issue 3095](https://github.com/tidyverse/dplyr/issues/3095).
 
 NULL (constant versus in a variable)
 ------------------------------------
