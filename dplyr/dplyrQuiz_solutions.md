@@ -1,3 +1,8 @@
+Advanced dplyr Quiz
+================
+John Mount
+9/29/2017
+
 Advanced dplyr Quiz (author: John Mount)
 ========================================
 
@@ -56,7 +61,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Fri Sep 29 05:54:33 2017"
+    ## [1] "Fri Sep 29 06:04:03 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -560,7 +565,7 @@ dR %>%
 
     ## Error in names(select)[match(old_vars, vars)] <- new_vars: NAs are not allowed in subscripted assignments
 
-(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
+(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860) and [`dplyr` issue 3129](https://github.com/tidyverse/dplyr/issues/3129).)
 
 if\_else
 --------

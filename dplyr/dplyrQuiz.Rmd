@@ -1,10 +1,10 @@
 ---
 title: "Advanced dplyr Quiz"
 author: "John Mount"
-date: "9/20/2017"
-output:
-  md_document:
-    variant: markdown_github
+date: "9/29/2017"
+output: github_document
+params:
+  dorun: true
 ---
 
 
@@ -17,7 +17,7 @@ Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz. 
 Or another phrasing: here are our notes on `dplyr` corner-cases (in my *opinion*).  You may not need to know how any of these work (it is often good to avoid corner-cases), but you should at least be confident you are avoiding the malformed ones.
 
 ```{r config, echo=FALSE}
-DORUN <- FALSE
+DORUN <- params$dorun
 ```
 
 ```{r fig, results='asis', echo=FALSE}
@@ -365,7 +365,7 @@ dR %>%
   rename(x2 = x, k2 = k)
 ```
 
-(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
+(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860) and [`dplyr` issue 3129](https://github.com/tidyverse/dplyr/issues/3129).)
 
 
 ## if_else

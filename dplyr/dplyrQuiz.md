@@ -1,3 +1,8 @@
+Advanced dplyr Quiz
+================
+John Mount
+9/29/2017
+
 Advanced dplyr Quiz (author: John Mount)
 ========================================
 
@@ -335,7 +340,7 @@ dR %>%
   rename(x2 = x, k2 = k)
 ```
 
-(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860).)
+(From [`dplyr` issue 2860](https://github.com/tidyverse/dplyr/issues/2860) and [`dplyr` issue 3129](https://github.com/tidyverse/dplyr/issues/3129).)
 
 if\_else
 --------
