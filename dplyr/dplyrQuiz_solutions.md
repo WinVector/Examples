@@ -26,7 +26,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.7.3'
+    ## [1] '0.7.4'
 
 ``` r
 packageVersion("dbplyr")
@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Wed Sep 20 05:45:52 2017"
+    ## [1] "Fri Sep 29 05:54:33 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
