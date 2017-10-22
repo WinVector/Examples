@@ -14,7 +14,19 @@ packageVersion("dplyr")
 packageVersion("dbplyr")
 ```
 
-    ## [1] '1.1.0.9000'
+    ## [1] '1.1.0'
+
+``` r
+packageVersion("RSQLite")
+```
+
+    ## [1] '2.0'
+
+``` r
+packageVersion("DBI")
+```
+
+    ## [1] '0.7'
 
 Trying `dplyr` on "local" or in-memory `data.frame` or `tbl`.
 
@@ -80,6 +92,57 @@ starwars_db %>%
     ## na.rm not needed in SQL: NULL are always droppedFALSE
 
     ## Error in rsqlite_send_query(conn@ptr, statement): no such column: genderTarget
+
+The above worked in `dplyr 0.5.0` (modulo the a `na.rm` issue), so you may already have such code in your own projects.
+
+``` r
+# reprex run in another session
+suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+#> [1] '0.5.0'
+
+my_db <- dplyr::src_sqlite(":memory:", create = TRUE)
+starwars_db <- copy_to(my_db,
+                       data.frame(gender = c('male', 'female', NA),
+                                  stringsAsFactors = FALSE),
+                       'starwars_db')
+#> Warning in rsqlite_fetch(res@ptr, n = n): Don't need to call dbFetch() for
+#> statements, only for queries
+
+#> Warning in rsqlite_fetch(res@ptr, n = n): Don't need to call dbFetch() for
+#> statements, only for queries
+print(starwars_db)
+#> Source:   query [?? x 1]
+#> Database: sqlite 3.19.3 [:memory:]
+#> 
+#> # A tibble: ?? x 1
+#>   gender
+#>    <chr>
+#> 1   male
+#> 2 female
+#> 3   <NA>
+
+genderTarget = 'male'
+
+starwars_db %>%
+  summarize(fracMatch = mean(ifelse(gender == genderTarget, 1, 0),
+                             na.rm = TRUE))
+#> Source:   query [?? x 1]
+#> Database: sqlite 3.19.3 [:memory:]
+#> na.rm not needed in SQL: NULL are always droppedFALSE
+#> # A tibble: ?? x 1
+#>   fracMatch
+#>       <dbl>
+#> 1 0.3333333
+```
+
+Back in the `dplyr 0.7.4` world we can make more tries:
+
+``` r
+packageVersion("dplyr")
+```
+
+    ## [1] '0.7.4'
 
 ``` r
 # fails
