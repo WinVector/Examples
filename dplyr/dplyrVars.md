@@ -45,6 +45,9 @@ starwars %>%
     ## 1 0.7380952
 
 ``` r
+# having trouble getting solid opinions as to if the above is
+# valid dplyr code.  that itself is a problem.
+
 # matches simple calculation 0.7380952
 mean(starwars$gender==genderTarget, na.rm = TRUE)
 ```

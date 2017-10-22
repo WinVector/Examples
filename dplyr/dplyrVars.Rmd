@@ -24,6 +24,8 @@ genderTarget = 'male'
 starwars %>%
   summarize(fracMatch = mean(ifelse(gender == genderTarget, 1, 0),
                             na.rm = TRUE))
+# having trouble getting solid opinions as to if the above is
+# valid dplyr code.  that itself is a problem.
 
 # matches simple calculation 0.7380952
 mean(starwars$gender==genderTarget, na.rm = TRUE)
