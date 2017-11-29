@@ -5,40 +5,48 @@ date: "11/29/2017"
 output: github_document
 ---
 
+Set up our example.
+
 ```{r setup}
-suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 
 my_db <- DBI::dbConnect(RSQLite::SQLite(),
                         ":memory:")
-d <- copy_to(my_db, 
-             data.frame(val = c(0, 5),
-                        a_1 = "UNINITIALIZED",
-                        a_2 = "UNINITIALIZED"), 
-             'd')
+d <- dplyr::copy_to(my_db, 
+                    data.frame(val = c(0, 5),
+                               a_1 = "UNINITIALIZED",
+                               a_2 = "UNINITIALIZED"), 
+                    'd')
 ```
 
+Run, and find a non-signalling data-mangle issue.  For our example we
+are assigning paired columns `a_1` and `a_2` to complementary treatment and 
+control groups. In this case we do this by simulating an if/else conditional
+assignment using `ifelse(,,)` value operators (we could have done this different
+ways, but this is one possible solution that could occur in practice).
 
 ```{r badresult}
 # all values in a_1 and a_2 should
 # be "treatment" or "control" after
 # the following statement.  
 # That is not the case.
-mutate(d,
-       cond = val>2,
-       a_1 = ifelse( cond, 
-                     'treatment', 
-                     a_1),
-       a_2 = ifelse( cond, 
-                     'control', 
-                     a_2),
-       a_1 = ifelse( !( cond ), 
-                     'control', 
-                     a_1),
-       a_2 = ifelse( !( cond ), 
-                     'treatment', 
-                     a_2))
+dplyr::mutate(d,
+              cond = val>2,
+              a_1 = ifelse( cond, 
+                            'treatment', 
+                            a_1),
+              a_2 = ifelse( cond, 
+                            'control', 
+                            a_2),
+              a_1 = ifelse( !( cond ), 
+                            'control', 
+                            a_1),
+              a_2 = ifelse( !( cond ), 
+                            'treatment', 
+                            a_2))
 ```
+
+[`seplyr`](https://winvector.github.io/seplyr/) work-around: break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/)).
 
 ```{r goodresult}
 library("seplyr")
