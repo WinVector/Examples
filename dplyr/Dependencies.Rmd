@@ -1,0 +1,60 @@
+---
+title: "Dependencies"
+author: "Win-Vector LLC"
+date: "11/29/2017"
+output: github_document
+---
+
+```{r setup}
+suppressPackageStartupMessages(library("dplyr"))
+packageVersion("dplyr")
+
+my_db <- DBI::dbConnect(RSQLite::SQLite(),
+                        ":memory:")
+d <- copy_to(my_db, 
+             data.frame(val = c(0, 5),
+                        a_1 = "UNINITIALIZED",
+                        a_2 = "UNINITIALIZED"), 
+             'd')
+```
+
+
+```{r badresult}
+# all values in a_1 and a_2 should
+# be "treatment" or "control" after
+# the following statement.  
+# That is not the case.
+mutate(d,
+       cond = val>2,
+       a_1 = ifelse( cond, 
+                     'treatment', 
+                     a_1),
+       a_2 = ifelse( cond, 
+                     'control', 
+                     a_2),
+       a_1 = ifelse( !( cond ), 
+                     'control', 
+                     a_1),
+       a_2 = ifelse( !( cond ), 
+                     'treatment', 
+                     a_2))
+```
+
+```{r goodresult}
+library("seplyr")
+
+plan <- if_else_device(
+              testexpr = "val>2",
+              thenexprs = c("a_1" := "'treatment'",
+                            "a_2" := "'control'"),
+              elseexprs = c("a_1" := "'control'",
+                            "a_2" := "'treatment'")) %.>% 
+  partition_mutate_se(.)
+
+print(plan)
+
+d %.>% 
+  mutate_seb(., plan) %.>% 
+  select_se(., grepdf("^ifebtest_", ., invert = TRUE))
+```
+
