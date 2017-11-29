@@ -51,6 +51,26 @@ dplyr::mutate(d,
     ## 1     0       control     0 treatment
     ## 2     5 UNINITIALIZED     1   control
 
+Obviously *this* example could have been written as below, but the issue is code similar to the above could part of a larger more complicated analysis. And one still wants correct results from correct code (even if it is not the shortest or most optimal code).
+
+``` r
+dplyr::mutate(d,
+              cond = val>2,
+              a_1 = ifelse( cond, 
+                            'treatment', 
+                            'control'),
+              a_2 = ifelse( cond, 
+                            'control', 
+                            'treatment'))
+```
+
+    ## # Source:   lazy query [?? x 4]
+    ## # Database: sqlite 3.19.3 [:memory:]
+    ##     val  cond       a_1       a_2
+    ##   <dbl> <int>     <chr>     <chr>
+    ## 1     0     0   control treatment
+    ## 2     5     1 treatment   control
+
 [`seplyr`](https://winvector.github.io/seplyr/) work-around: break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/)).
 
 ``` r
@@ -72,20 +92,20 @@ print(plan)
 ```
 
     ## $group00001
-    ## ifebtest_yqzh5dmazi7c 
+    ## ifebtest_q1lfxhfq5js7 
     ##               "val>2" 
     ## 
     ## $group00002
     ##                                                a_1 
-    ## "ifelse( ifebtest_yqzh5dmazi7c, 'treatment', a_1)" 
+    ## "ifelse( ifebtest_q1lfxhfq5js7, 'treatment', a_1)" 
     ##                                                a_2 
-    ##   "ifelse( ifebtest_yqzh5dmazi7c, 'control', a_2)" 
+    ##   "ifelse( ifebtest_q1lfxhfq5js7, 'control', a_2)" 
     ## 
     ## $group00003
     ##                                                     a_1 
-    ##   "ifelse( !( ifebtest_yqzh5dmazi7c ), 'control', a_1)" 
+    ##   "ifelse( !( ifebtest_q1lfxhfq5js7 ), 'control', a_1)" 
     ##                                                     a_2 
-    ## "ifelse( !( ifebtest_yqzh5dmazi7c ), 'treatment', a_2)"
+    ## "ifelse( !( ifebtest_q1lfxhfq5js7 ), 'treatment', a_2)"
 
 ``` r
 d %.>% 

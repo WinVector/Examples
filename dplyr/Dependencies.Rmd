@@ -46,6 +46,22 @@ dplyr::mutate(d,
                             a_2))
 ```
 
+Obviously *this* example could have been written as below, but the issue is code
+similar to the above could part of a larger more complicated analysis. And one still
+wants correct results from correct code (even if it is not the shortest or most
+optimal code).
+
+```{r meth2}
+dplyr::mutate(d,
+              cond = val>2,
+              a_1 = ifelse( cond, 
+                            'treatment', 
+                            'control'),
+              a_2 = ifelse( cond, 
+                            'control', 
+                            'treatment'))
+```
+
 [`seplyr`](https://winvector.github.io/seplyr/) work-around: break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/)).
 
 ```{r goodresult}
