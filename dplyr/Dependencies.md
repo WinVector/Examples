@@ -66,6 +66,28 @@ Notice this *silently* failed! It gave a wrong answer, with no indicated error.
 
 The third `valuesA` value remains at `NA` even though it should have been repaired by the fix 2 rule. This is not due to order of statements as the fix rules were deliberately chosen to apply to disjoint rows.
 
-This has been filed as a [`dplyr` issue](https://github.com/tidyverse/dplyr/issues/3223), and the issue might be avoided by an [upcoming code change](https://github.com/tidyverse/dbplyr/commit/36a44cd4b5f70bc06fb004e7787157165766d091) (though we have not confirmed the relation/fix, and are not sure of the efficiency of that sort of transformation).
+Looking further we see `dplyr` seem to generate incomplete `SQL` (not all the intended transforms seem to survive the translation, notice there are 3 `CASE WHEN` statements in the generate \`SQL, not 4):
+
+``` r
+d  ->.;
+  dplyr::mutate(.,
+                valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                                  fix1, valuesA),
+                valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                                  fix2, valuesA),
+                valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                                  fix1, valuesB),
+                valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                                  fix2, valuesB)) ->.;
+  dplyr::show_query(.)
+```
+
+    ## <SQL>
+    ## SELECT `valuesA`, `canUseFix1`, `fix1`, `canUseFix2`, `fix2`, CASE WHEN (((`valuesB`) IS NULL) AND `canUseFix2`) THEN (`fix2`) ELSE (`valuesB`) END AS `valuesB`
+    ## FROM (SELECT `valuesA`, `canUseFix1`, `fix1`, `canUseFix2`, `fix2`, CASE WHEN (((`valuesB`) IS NULL) AND `canUseFix1`) THEN (`fix1`) ELSE (`valuesB`) END AS `valuesB`
+    ## FROM (SELECT `valuesB`, `canUseFix1`, `fix1`, `canUseFix2`, `fix2`, CASE WHEN (((`valuesA`) IS NULL) AND `canUseFix1`) THEN (`fix1`) ELSE (`valuesA`) END AS `valuesA`
+    ## FROM `d`))
+
+This has been filed as a [`dplyr` issue](https://github.com/tidyverse/dplyr/issues/3223), and the issue might be avoided by an [upcoming code change](https://github.com/tidyverse/dbplyr/commit/36a44cd4b5f70bc06fb004e7787157165766d091) (though we have not confirmed the change will fix this particular issue, and question if the change generates efficient `SQL`).
 
 For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
