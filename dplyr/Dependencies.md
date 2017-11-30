@@ -1,9 +1,24 @@
 Dependencies
 ================
 Win-Vector LLC
-11/29/2017
+11/30/2017
 
 Set up our example.
+
+``` r
+library("dplyr")
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
 
 ``` r
 packageVersion("dplyr")
@@ -15,63 +30,55 @@ packageVersion("dplyr")
 my_db <- DBI::dbConnect(RSQLite::SQLite(),
                         ":memory:")
 d <- dplyr::copy_to(my_db, 
-                    data.frame(val = c(0, 5),
-                               a_1 = "UNINITIALIZED",
-                               a_2 = "UNINITIALIZED"), 
-                    'd')
+                    data.frame(valuesA = c("A", NA, NA),
+                               valuesB = c("B", NA, NA),
+                               canUseFix1 = c(TRUE, TRUE, FALSE),
+                               fix1 = c('Fix_1_V1', "Fix_1_V2", "Fix_1_V3"),
+                               canUseFix2 = c(FALSE, FALSE, TRUE),
+                               fix2 = c('Fix_2_V1', "Fix_2_V2", "Fix_2_V3"),
+                               stringsAsFactors = FALSE),
+                    'd', 
+                    temporary = TRUE, overwrite = TRUE)
+knitr::kable(dplyr::collect(d))
 ```
 
-Run, and find a non-signalling data-mangle issue. For our example we are assigning paired columns `a_1` and `a_2` to complementary treatment and control groups. In this case we do this by simulating an if/else conditional assignment using `ifelse(,,)` value operators (we could have done this different ways, but this is one possible solution that could occur in practice).
+| valuesA | valuesB |  canUseFix1| fix1       |  canUseFix2| fix2       |
+|:--------|:--------|-----------:|:-----------|-----------:|:-----------|
+| A       | B       |           1| Fix\_1\_V1 |           0| Fix\_2\_V1 |
+| NA      | NA      |           1| Fix\_1\_V2 |           0| Fix\_2\_V2 |
+| NA      | NA      |           0| Fix\_1\_V3 |           1| Fix\_2\_V3 |
+
+For our example we are using `canUseFix1*` columns to find which positions of our `values` column can be replaced by the corresponding fix values. This is a common situation in data processing: where you have a column you wish to populate from a ordered sequence of alternate sources.
+
+We could write this as nested `ifelse()` or coalesce. But suppose we had written the code as below.
 
 ``` r
-# all values in a_1 and a_2 should
-# be "treatment" or "control" after
-# the following statement.  
-# That is not the case.
-dplyr::mutate(d,
-              cond = val>2,
-              a_1 = ifelse( cond, 
-                            'treatment', 
-                            a_1),
-              a_2 = ifelse( cond, 
-                            'control', 
-                            a_2),
-              a_1 = ifelse( !( cond ), 
-                            'control', 
-                            a_1),
-              a_2 = ifelse( !( cond ), 
-                            'treatment', 
-                            a_2))
+fixed <- dplyr::mutate(d,
+                       valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                                         fix1, valuesA),
+                       valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                                         fix2, valuesA),
+                       valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                                         fix1, valuesB),
+                       valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                                         fix2, valuesB))
+fixed %>%
+  select(., valuesA, valuesB) %>% 
+  collect(.) %>% 
+  knitr::kable(.)
 ```
 
-    ## # Source:   lazy query [?? x 4]
-    ## # Database: sqlite 3.19.3 [:memory:]
-    ##     val           a_1  cond       a_2
-    ##   <dbl>         <chr> <int>     <chr>
-    ## 1     0       control     0 treatment
-    ## 2     5 UNINITIALIZED     1   control
+| valuesA    | valuesB    |
+|:-----------|:-----------|
+| A          | B          |
+| Fix\_1\_V2 | Fix\_1\_V2 |
+| NA         | Fix\_2\_V3 |
 
-Obviously *this* example could have been written as below, but the issue is code similar to the above could part of a larger more complicated analysis. And one still wants correct results from correct code (even if it is not the shortest or most optimal code).
+Notice this *silently* failed! It gave a wrong answer, with no indicated error.
 
-``` r
-dplyr::mutate(d,
-              cond = val>2,
-              a_1 = ifelse( cond, 
-                            'treatment', 
-                            'control'),
-              a_2 = ifelse( cond, 
-                            'control', 
-                            'treatment'))
-```
+The third `valuesA` value remains at `NA` even though it should have been repaired by the fix 2 rule. This is not due to order of statements as the fix rules were deliberately chosen to apply to disjoint rows.
 
-    ## # Source:   lazy query [?? x 4]
-    ## # Database: sqlite 3.19.3 [:memory:]
-    ##     val  cond       a_1       a_2
-    ##   <dbl> <int>     <chr>     <chr>
-    ## 1     0     0   control treatment
-    ## 2     5     1 treatment   control
-
-[`seplyr`](https://winvector.github.io/seplyr/) work-around: break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/)).
+[`seplyr`](https://winvector.github.io/seplyr/) has fix/work-around: automatically break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/); here we are using the development [`seplyr`](https://winvector.github.io/seplyr/) `0.5.1` version of [`mutate_se()`](https://winvector.github.io/seplyr/reference/mutate_se.html)).
 
 ``` r
 library("seplyr")
@@ -80,42 +87,107 @@ library("seplyr")
     ## Loading required package: wrapr
 
 ``` r
-plan <- if_else_device(
-              testexpr = "val>2",
-              thenexprs = c("a_1" := "'treatment'",
-                            "a_2" := "'control'"),
-              elseexprs = c("a_1" := "'control'",
-                            "a_2" := "'treatment'")) %.>% 
-  partition_mutate_se(.)
+packageVersion("seplyr")
+```
 
+    ## [1] '0.5.1'
+
+``` r
+d %.>% 
+  mutate_nse(., 
+             valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                               fix1, valuesA),
+             valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                               fix2, valuesA),
+             valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                               fix1, valuesB),
+             valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                               fix2, valuesB),
+             mutate_nse_printPlan = TRUE) %.>% 
+  select_se(., c("valuesA", "valuesB")) %.>% 
+  collect(.) %.>% 
+  knitr::kable(.)
+```
+
+    ## $group00001
+    ##                                              valuesA 
+    ## "ifelse(is.na(valuesA) & canUseFix1, fix1, valuesA)" 
+    ##                                              valuesB 
+    ## "ifelse(is.na(valuesB) & canUseFix1, fix1, valuesB)" 
+    ## 
+    ## $group00002
+    ##                                              valuesA 
+    ## "ifelse(is.na(valuesA) & canUseFix2, fix2, valuesA)" 
+    ##                                              valuesB 
+    ## "ifelse(is.na(valuesB) & canUseFix2, fix2, valuesB)"
+
+| valuesA    | valuesB    |
+|:-----------|:-----------|
+| A          | B          |
+| Fix\_1\_V2 | Fix\_1\_V2 |
+| Fix\_2\_V3 | Fix\_2\_V3 |
+
+We can slow that down and see how the underlying planning functions break the assignments down into a small number of safe blocks (here we are using the development [`wrapr`](https://winvector.github.io/wrapr/) `1.0.2` function [`qae()`](https://winvector.github.io/wrapr/reference/qae.html)).
+
+``` r
+packageVersion("wrapr")
+```
+
+    ## [1] '1.0.2'
+
+``` r
+steps <- qae(valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                               fix1, valuesA),
+             valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                               fix2, valuesA),
+             valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                               fix1, valuesB),
+             valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                               fix2, valuesB))
+print(steps)
+```
+
+    ## $valuesA
+    ## [1] "ifelse(is.na(valuesA) & canUseFix1, fix1, valuesA)"
+    ## 
+    ## $valuesA
+    ## [1] "ifelse(is.na(valuesA) & canUseFix2, fix2, valuesA)"
+    ## 
+    ## $valuesB
+    ## [1] "ifelse(is.na(valuesB) & canUseFix1, fix1, valuesB)"
+    ## 
+    ## $valuesB
+    ## [1] "ifelse(is.na(valuesB) & canUseFix2, fix2, valuesB)"
+
+``` r
+plan <- partition_mutate_se(steps)
 print(plan)
 ```
 
     ## $group00001
-    ## ifebtest_q1lfxhfq5js7 
-    ##               "val>2" 
+    ##                                              valuesA 
+    ## "ifelse(is.na(valuesA) & canUseFix1, fix1, valuesA)" 
+    ##                                              valuesB 
+    ## "ifelse(is.na(valuesB) & canUseFix1, fix1, valuesB)" 
     ## 
     ## $group00002
-    ##                                                a_1 
-    ## "ifelse( ifebtest_q1lfxhfq5js7, 'treatment', a_1)" 
-    ##                                                a_2 
-    ##   "ifelse( ifebtest_q1lfxhfq5js7, 'control', a_2)" 
-    ## 
-    ## $group00003
-    ##                                                     a_1 
-    ##   "ifelse( !( ifebtest_q1lfxhfq5js7 ), 'control', a_1)" 
-    ##                                                     a_2 
-    ## "ifelse( !( ifebtest_q1lfxhfq5js7 ), 'treatment', a_2)"
+    ##                                              valuesA 
+    ## "ifelse(is.na(valuesA) & canUseFix2, fix2, valuesA)" 
+    ##                                              valuesB 
+    ## "ifelse(is.na(valuesB) & canUseFix2, fix2, valuesB)"
 
 ``` r
 d %.>% 
   mutate_seb(., plan) %.>% 
-  select_se(., grepdf("^ifebtest_", ., invert = TRUE))
+  select_se(., c("valuesA", "valuesB")) %.>% 
+  collect(.) %.>% 
+  knitr::kable(.)
 ```
 
-    ## # Source:   lazy query [?? x 3]
-    ## # Database: sqlite 3.19.3 [:memory:]
-    ##     val       a_1       a_2
-    ##   <dbl>     <chr>     <chr>
-    ## 1     0   control treatment
-    ## 2     5 treatment   control
+| valuesA    | valuesB    |
+|:-----------|:-----------|
+| A          | B          |
+| Fix\_1\_V2 | Fix\_1\_V2 |
+| Fix\_2\_V3 | Fix\_2\_V3 |
+
+For more on [`seplyr`](https://winvector.github.io/seplyr/) [please start here](http://winvector.github.io/FluidData/IntroductionToSeplyr.html).
