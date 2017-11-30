@@ -66,6 +66,6 @@ Notice this *silently* failed! It gave a wrong answer, with no indicated error.
 
 The third `valuesA` value remains at `NA` even though it should have been repaired by the fix 2 rule. This is not due to order of statements as the fix rules were deliberately chosen to apply to disjoint rows.
 
-This has been filed as a [`dplyr` issue](https://github.com/tidyverse/dplyr/issues/3223), and the issue might be avoided by an [upcoming code change](https://github.com/tidyverse/dbplyr/commit/36a44cd4b5f70bc06fb004e7787157165766d091) ( though we are not sure of that, and not sure of the efficiency of this sort of transformation ).
+This has been filed as a [`dplyr` issue](https://github.com/tidyverse/dplyr/issues/3223), and the issue might be avoided by an [upcoming code change](https://github.com/tidyverse/dbplyr/commit/36a44cd4b5f70bc06fb004e7787157165766d091) (though we have not confirmed the relation/fix, and are not sure of the efficiency of that sort of transformation).
 
 For our current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
