@@ -6,21 +6,6 @@ Win-Vector LLC
 Set up our example.
 
 ``` r
-library("dplyr")
-```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 packageVersion("dplyr")
 ```
 
@@ -48,7 +33,7 @@ knitr::kable(dplyr::collect(d))
 | NA      | NA      |           1| Fix\_1\_V2 |           0| Fix\_2\_V2 |
 | NA      | NA      |           0| Fix\_1\_V3 |           1| Fix\_2\_V3 |
 
-For our example we are using `canUseFix1*` columns to find which positions of our `values` column can be replaced by the corresponding fix values. This is a common situation in data processing: where you have a column you wish to populate from a ordered sequence of alternate sources.
+For our example we are using `canUseFix1*` columns to find which positions of our `values*` columns can be replaced by the corresponding fix values. This is a common situation in data processing: where you have a column you wish to populate from a ordered sequence of alternate sources.
 
 We could write this as nested `ifelse()` or coalesce. But suppose we had written the code as below.
 
@@ -62,9 +47,10 @@ fixed <- dplyr::mutate(d,
                                          fix1, valuesB),
                        valuesB := ifelse(is.na(valuesB) & canUseFix2, 
                                          fix2, valuesB))
-fixed %>%
-  select(., valuesA, valuesB) %>% 
-  collect(.) %>% 
+
+fixed ->.;
+  dplyr::select(., valuesA, valuesB) ->.;
+  dplyr::collect(.) ->.;
   knitr::kable(.)
 ```
 
@@ -78,7 +64,7 @@ Notice this *silently* failed! It gave a wrong answer, with no indicated error.
 
 The third `valuesA` value remains at `NA` even though it should have been repaired by the fix 2 rule. This is not due to order of statements as the fix rules were deliberately chosen to apply to disjoint rows.
 
-[`seplyr`](https://winvector.github.io/seplyr/) has fix/work-around: automatically break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/); here we are using the development [`seplyr`](https://winvector.github.io/seplyr/) `0.5.1` version of [`mutate_se()`](https://winvector.github.io/seplyr/reference/mutate_se.html)).
+[`seplyr`](https://winvector.github.io/seplyr/) has a fix/work-around: automatically break up the steps into safe blocks ([announcement](http://www.win-vector.com/blog/2017/11/win-vector-llc-announces-new-big-data-in-r-tools/); here we are using the development [`seplyr`](https://winvector.github.io/seplyr/) `0.5.1` version of [`mutate_se()`](https://winvector.github.io/seplyr/reference/mutate_se.html)).
 
 ``` r
 library("seplyr")
@@ -105,7 +91,7 @@ d %.>%
                                fix2, valuesB),
              mutate_nse_printPlan = TRUE) %.>% 
   select_se(., c("valuesA", "valuesB")) %.>% 
-  collect(.) %.>% 
+  dplyr::collect(.) %.>% 
   knitr::kable(.)
 ```
 
@@ -126,6 +112,8 @@ d %.>%
 | A          | B          |
 | Fix\_1\_V2 | Fix\_1\_V2 |
 | Fix\_2\_V3 | Fix\_2\_V3 |
+
+`seplyr` used safe statement re-ordering to break the calculation into the minimum number of blocks/groups that have no in-block dependencies between statements (note this is more efficient that merely introducing a new mutate each first time a new value is used).
 
 We can slow that down and see how the underlying planning functions break the assignments down into a small number of safe blocks (here we are using the development [`wrapr`](https://winvector.github.io/wrapr/) `1.0.2` function [`qae()`](https://winvector.github.io/wrapr/reference/qae.html)).
 
@@ -180,7 +168,7 @@ print(plan)
 d %.>% 
   mutate_seb(., plan) %.>% 
   select_se(., c("valuesA", "valuesB")) %.>% 
-  collect(.) %.>% 
+  dplyr::collect(.) %.>% 
   knitr::kable(.)
 ```
 
