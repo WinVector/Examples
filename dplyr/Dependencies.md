@@ -92,6 +92,44 @@ d  %>%
     ## FROM (SELECT `valuesB`, `canUseFix1`, `fix1`, `canUseFix2`, `fix2`, CASE WHEN (((`valuesA`) IS NULL) AND `canUseFix1`) THEN (`fix1`) ELSE (`valuesA`) END AS `valuesA`
     ## FROM `d`))
 
+For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
+
+------------------------------------------------------------------------
+
+``` r
+sessionInfo()
+```
+
+    ## R version 3.4.2 (2017-09-28)
+    ## Platform: x86_64-apple-darwin15.6.0 (64-bit)
+    ## Running under: macOS Sierra 10.12.6
+    ## 
+    ## Matrix products: default
+    ## BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
+    ## LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
+    ## 
+    ## locale:
+    ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+    ## 
+    ## attached base packages:
+    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
+    ## 
+    ## other attached packages:
+    ## [1] dplyr_0.7.4
+    ## 
+    ## loaded via a namespace (and not attached):
+    ##  [1] Rcpp_0.12.14.2    knitr_1.17        bindr_0.1        
+    ##  [4] magrittr_1.5      bit_1.1-12        R6_2.2.2         
+    ##  [7] rlang_0.1.4       highr_0.6         stringr_1.2.0    
+    ## [10] blob_1.1.0        tools_3.4.2       DBI_0.7          
+    ## [13] dbplyr_1.1.0      htmltools_0.3.6   yaml_2.1.14      
+    ## [16] bit64_0.9-7       assertthat_0.2.0  rprojroot_1.2    
+    ## [19] digest_0.6.12     tibble_1.3.4.9003 bindrcpp_0.2     
+    ## [22] memoise_1.1.0     glue_1.2.0        evaluate_0.10.1  
+    ## [25] RSQLite_2.0       rmarkdown_1.8     stringi_1.1.6    
+    ## [28] compiler_3.4.2    pillar_1.0.1      backports_1.1.1  
+    ## [31] pkgconfig_2.0.1
+
 Also note: as of `December 1, 2017` upgrading the development versions of `dbplyr` and `dplyr` is *not* sufficient to fix the issue:
 
 ``` r
@@ -136,39 +174,3 @@ dplyr::mutate(
 #> 2 Fix_1_V2          1 Fix_1_V2          0 Fix_2_V2 Fix_1_V2
 #> 3 <NA>              0 Fix_1_V3          1 Fix_2_V3 Fix_2_V3
 ```
-
-For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
-
-``` r
-sessionInfo()
-```
-
-    ## R version 3.4.2 (2017-09-28)
-    ## Platform: x86_64-apple-darwin15.6.0 (64-bit)
-    ## Running under: macOS Sierra 10.12.6
-    ## 
-    ## Matrix products: default
-    ## BLAS: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRblas.0.dylib
-    ## LAPACK: /Library/Frameworks/R.framework/Versions/3.4/Resources/lib/libRlapack.dylib
-    ## 
-    ## locale:
-    ## [1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
-    ## 
-    ## attached base packages:
-    ## [1] stats     graphics  grDevices utils     datasets  methods   base     
-    ## 
-    ## other attached packages:
-    ## [1] dplyr_0.7.4
-    ## 
-    ## loaded via a namespace (and not attached):
-    ##  [1] Rcpp_0.12.14.2    knitr_1.17        bindr_0.1        
-    ##  [4] magrittr_1.5      bit_1.1-12        R6_2.2.2         
-    ##  [7] rlang_0.1.4       highr_0.6         stringr_1.2.0    
-    ## [10] blob_1.1.0        tools_3.4.2       DBI_0.7          
-    ## [13] dbplyr_1.1.0      htmltools_0.3.6   yaml_2.1.14      
-    ## [16] bit64_0.9-7       assertthat_0.2.0  rprojroot_1.2    
-    ## [19] digest_0.6.12     tibble_1.3.4.9003 bindrcpp_0.2     
-    ## [22] memoise_1.1.0     glue_1.2.0        evaluate_0.10.1  
-    ## [25] RSQLite_2.0       rmarkdown_1.8     stringi_1.1.6    
-    ## [28] compiler_3.4.2    pillar_1.0.1      backports_1.1.1  
-    ## [31] pkgconfig_2.0.1

@@ -82,6 +82,15 @@ d  %>%
   dplyr::show_query(.)
 ```
 
+For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
+
+---------------
+
+
+```{r seif}
+sessionInfo()
+```
+
 Also note: as of `December 1, 2017` upgrading the development versions
 of `dbplyr` and `dplyr` is *not* sufficient to fix the issue:
 
@@ -129,9 +138,5 @@ dplyr::mutate(
 ```
 
 
-For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
 
-```{r seif}
-sessionInfo()
-```
 
