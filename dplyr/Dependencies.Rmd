@@ -1,7 +1,7 @@
 ---
 title: "Dependencies"
 author: "Win-Vector LLC"
-date: "11/30/2017"
+date: "12/1/2017"
 output: github_document
 ---
 
@@ -12,20 +12,22 @@ before](http://www.win-vector.com/blog/2017/09/my-advice-on-dplyrmutate/)).
 First we set up our example.
 
 ```{r setup}
+suppressPackageStartupMessages(library("dplyr"))
 packageVersion("dplyr")
 
 my_db <- DBI::dbConnect(RSQLite::SQLite(),
                         ":memory:")
-d <- dplyr::copy_to(my_db, 
-                    data.frame(valuesA = c("A", NA, NA),
-                               valuesB = c("B", NA, NA),
-                               canUseFix1 = c(TRUE, TRUE, FALSE),
-                               fix1 = c('Fix_1_V1', "Fix_1_V2", "Fix_1_V3"),
-                               canUseFix2 = c(FALSE, FALSE, TRUE),
-                               fix2 = c('Fix_2_V1', "Fix_2_V2", "Fix_2_V3"),
-                               stringsAsFactors = FALSE),
-                    'd', 
-                    temporary = TRUE, overwrite = TRUE)
+d <- dplyr::copy_to(
+  my_db, 
+  data.frame(valuesA = c("A", NA, NA),
+             valuesB = c("B", NA, NA),
+             canUseFix1 = c(TRUE, TRUE, FALSE),
+             fix1 = c('Fix_1_V1', "Fix_1_V2", "Fix_1_V3"),
+             canUseFix2 = c(FALSE, FALSE, TRUE),
+             fix2 = c('Fix_2_V1', "Fix_2_V2", "Fix_2_V3"),
+             stringsAsFactors = FALSE),
+  'd', 
+  temporary = TRUE, overwrite = TRUE)
 knitr::kable(dplyr::collect(d))
 ```
 
@@ -38,19 +40,20 @@ We could write this as nested `ifelse()` or coalesce. But suppose
 we had written the code as below.
 
 ```{r badresult}
-fixed <- dplyr::mutate(d,
-                       valuesA := ifelse(is.na(valuesA) & canUseFix1, 
-                                         fix1, valuesA),
-                       valuesA := ifelse(is.na(valuesA) & canUseFix2, 
-                                         fix2, valuesA),
-                       valuesB := ifelse(is.na(valuesB) & canUseFix1, 
-                                         fix1, valuesB),
-                       valuesB := ifelse(is.na(valuesB) & canUseFix2, 
-                                         fix2, valuesB))
+fixed <- dplyr::mutate(
+  d,
+  valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                    fix1, valuesA),
+  valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                    fix2, valuesA),
+  valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                    fix1, valuesB),
+  valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                    fix2, valuesB))
 
-fixed ->.;
-  dplyr::select(., valuesA, valuesB) ->.;
-  dplyr::collect(.) ->.;
+fixed %>%
+  dplyr::select(., valuesA, valuesB) %>%
+  dplyr::collect(.) %>%
   knitr::kable(.)
 ```
 
@@ -65,19 +68,70 @@ intended transforms seem to survive the translation, notice there are 3 `CASE WH
 statements in the generate `SQL, not 4):
 
 ```{r badsql}
-d  ->.;
-  dplyr::mutate(.,
-                valuesA := ifelse(is.na(valuesA) & canUseFix1, 
-                                  fix1, valuesA),
-                valuesA := ifelse(is.na(valuesA) & canUseFix2, 
-                                  fix2, valuesA),
-                valuesB := ifelse(is.na(valuesB) & canUseFix1, 
-                                  fix1, valuesB),
-                valuesB := ifelse(is.na(valuesB) & canUseFix2, 
-                                  fix2, valuesB)) ->.;
+d  %>%
+  dplyr::mutate(
+    .,
+    valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                      fix1, valuesA),
+    valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                      fix2, valuesA),
+    valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                      fix1, valuesB),
+    valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                      fix2, valuesB)) %>%
   dplyr::show_query(.)
+```
+
+Also note: as of `December 1, 2017` upgrading the development versions
+of `dbplyr` and `dplyr` is *not* sufficient to fix the issue:
+
+```r
+devtools::install_github("tidyverse/dbplyr")
+devtools::install_github("tidyverse/dplyr")
+
+base::date()
+#> [1] "Fri Dec  1 09:32:56 2017"
+packageVersion("dbplyr")
+#> [1] '1.1.0.9000'
+packageVersion("dplyr")
+#> [1] '0.7.4.9000'
+
+my_db <- DBI::dbConnect(RSQLite::SQLite(),
+                        ":memory:")
+d <- dplyr::copy_to(
+  my_db, 
+  data.frame(valuesA = c("A", NA, NA),
+             valuesB = c("B", NA, NA),
+             canUseFix1 = c(TRUE, TRUE, FALSE),
+             fix1 = c('Fix_1_V1', "Fix_1_V2", "Fix_1_V3"),
+             canUseFix2 = c(FALSE, FALSE, TRUE),
+             fix2 = c('Fix_2_V1', "Fix_2_V2", "Fix_2_V3"),
+             stringsAsFactors = FALSE),
+  'd', 
+  temporary = TRUE, overwrite = TRUE)
+dplyr::mutate(
+  d,
+  valuesA := ifelse(is.na(valuesA) & canUseFix1, 
+                    fix1, valuesA),
+  valuesA := ifelse(is.na(valuesA) & canUseFix2, 
+                    fix2, valuesA),
+  valuesB := ifelse(is.na(valuesB) & canUseFix1, 
+                    fix1, valuesB),
+  valuesB := ifelse(is.na(valuesB) & canUseFix2, 
+                    fix2, valuesB))
+#> # Source: lazy query [?? x 6]
+#> # Database: sqlite 3.19.3 [:memory:]
+#>   valuesA  canUseFix1 fix1     canUseFix2 fix2     valuesB 
+#>   <chr>         <int> <chr>         <int> <chr>    <chr>   
+#> 1 A                 1 Fix_1_V1          0 Fix_2_V1 B       
+#> 2 Fix_1_V2          1 Fix_1_V2          0 Fix_2_V2 Fix_1_V2
+#> 3 <NA>              0 Fix_1_V3          1 Fix_2_V3 Fix_2_V3
 ```
 
 
 For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
+
+```{r seif}
+sessionInfo()
+```
 
