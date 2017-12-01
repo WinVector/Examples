@@ -3,7 +3,7 @@ Dependencies
 Win-Vector LLC
 11/30/2017
 
-This is an example of an erroneous calculation in `dplyr` `0.7.4`, likely arising from expression to expression dependencies (which [we have written about before](http://www.win-vector.com/blog/2017/09/my-advice-on-dplyrmutate/)).
+This is an example of an erroneous calculation in `dplyr` `0.7.4`, likely arising from mishandling of expression to expression dependencies (which [we have written about before](http://www.win-vector.com/blog/2017/09/my-advice-on-dplyrmutate/)).
 
 First we set up our example.
 
