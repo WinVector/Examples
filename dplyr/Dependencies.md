@@ -88,6 +88,4 @@ d  ->.;
     ## FROM (SELECT `valuesB`, `canUseFix1`, `fix1`, `canUseFix2`, `fix2`, CASE WHEN (((`valuesA`) IS NULL) AND `canUseFix1`) THEN (`fix1`) ELSE (`valuesA`) END AS `valuesA`
     ## FROM `d`))
 
-This has been filed as a [`dplyr` issue](https://github.com/tidyverse/dplyr/issues/3223), and the issue might be avoided by an [upcoming code change](https://github.com/tidyverse/dbplyr/commit/36a44cd4b5f70bc06fb004e7787157165766d091) (though we have not confirmed the change will fix this particular issue, and question if the change generates efficient `SQL`).
-
 For our recommended current work-around, please see [here](http://winvector.github.io/FluidData/DplyrDependencies.html).
