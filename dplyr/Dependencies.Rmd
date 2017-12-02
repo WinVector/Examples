@@ -67,7 +67,7 @@ the fix rules were deliberately chosen to apply to disjoint rows.
 
 Looking further we see `dplyr` seem to generate incomplete `SQL` (not all the 
 intended transforms seem to survive the translation, notice there are 3 `CASE WHEN`
-statements in the generate `SQL, not 4):
+statements in the generated `SQL`, not 4):
 
 ```{r badsql}
 d  %>%

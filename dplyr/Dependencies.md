@@ -69,7 +69,7 @@ Notice this *silently* failed! It gave a wrong answer, with no indicated error.
 
 The third `valuesA` value remains at `NA` even though it should have been repaired by the fix 2 rule. This is not due to order of statements as the fix rules were deliberately chosen to apply to disjoint rows.
 
-Looking further we see `dplyr` seem to generate incomplete `SQL` (not all the intended transforms seem to survive the translation, notice there are 3 `CASE WHEN` statements in the generate \`SQL, not 4):
+Looking further we see `dplyr` seem to generate incomplete `SQL` (not all the intended transforms seem to survive the translation, notice there are 3 `CASE WHEN` statements in the generated `SQL`, not 4):
 
 ``` r
 d  %>%
