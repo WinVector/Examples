@@ -8,7 +8,7 @@ output: github_document
 This is an example of an erroneous calculation in `dplyr` `0.7.4` with databases, likely
 arising from mishandling of expression to expression dependencies (which [we have written about
 before](http://www.win-vector.com/blog/2017/09/my-advice-on-dplyrmutate/)).  Since this is
-not a security, can cause non-signaled incorrect results, and as an easy fox: we have
+not a security issue, can cause non-signaled incorrect results, and as an easy fix: we have
 decided to document it here and to [distribute an announcement](http://www.win-vector.com/blog/2017/12/please-inspect-your-dplyrdatabase-code/).
 
 First we set up our example.
