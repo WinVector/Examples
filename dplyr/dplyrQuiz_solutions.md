@@ -37,7 +37,7 @@ packageVersion("dplyr")
 packageVersion("dbplyr")
 ```
 
-    ## [1] '1.1.0.9000'
+    ## [1] '1.1.0'
 
 ``` r
 packageVersion("RSQlite")
@@ -49,7 +49,7 @@ packageVersion("RSQlite")
 packageVersion("rlang")
 ```
 
-    ## [1] '0.1.2.9000'
+    ## [1] '0.1.4'
 
 ``` r
 packageVersion("magrittr")
@@ -61,7 +61,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Fri Sep 29 06:04:03 2017"
+    ## [1] "Tue Dec 12 08:27:12 2017"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -147,7 +147,7 @@ data.frame(x = 1) %>%
   rename((!!rlang::sym('y')) := x)
 ```
 
-    ## Error: LHS must be a symbol or string
+    ## Error: LHS must be a name or string
 
 distinct
 --------
@@ -288,14 +288,14 @@ starwars %>%
 ```
 
     ## # A tibble: 6 x 3
-    ##            world   height  mass
-    ##            <chr>    <dbl> <dbl>
-    ## 1       Alderaan 176.3333    64
-    ## 2    Aleen Minor  79.0000    15
-    ## 3         Bespin 175.0000    79
-    ## 4     Bestine IV 180.0000   110
-    ## 5 Cato Neimoidia 191.0000    90
-    ## 6          Cerea 198.0000    82
+    ##   world          height  mass
+    ##   <chr>           <dbl> <dbl>
+    ## 1 Alderaan        176    64.0
+    ## 2 Aleen Minor      79.0  15.0
+    ## 3 Bespin          175    79.0
+    ## 4 Bestine IV      180   110  
+    ## 5 Cato Neimoidia  191    90.0
+    ## 6 Cerea           198    82.0
 
 ``` r
 homeworld <- "homeworld"
@@ -480,12 +480,12 @@ union\_all()
 union_all(dR, dR)
 ```
 
-    ## # Source:   lazy query [?? x 2]
+    ## # Source: lazy query [?? x 2]
     ## # Database: sqlite 3.19.3 [:memory:]
-    ##       x     k
+    ##       x k    
     ##   <dbl> <chr>
-    ## 1 3.077     a
-    ## 2 3.077     a
+    ## 1  3.08 a    
+    ## 2  3.08 a
 
 ``` r
 union_all(dL, head(dL))
@@ -511,7 +511,7 @@ dR %>%
   mutate_all(funs(round(., 2)))
 ```
 
-    ## # Source:   lazy query [?? x 2]
+    ## # Source: lazy query [?? x 2]
     ## # Database: sqlite 3.19.3 [:memory:]
     ##       x     k
     ##   <dbl> <dbl>
@@ -544,11 +544,11 @@ dR %>%
   rename(x2 = x) %>% rename(k2 = k)
 ```
 
-    ## # Source:   lazy query [?? x 2]
+    ## # Source: lazy query [?? x 2]
     ## # Database: sqlite 3.19.3 [:memory:]
-    ##      x2    k2
+    ##      x2 k2   
     ##   <dbl> <chr>
-    ## 1 3.077     a
+    ## 1  3.08 a
 
 ``` r
 dL %>% 
