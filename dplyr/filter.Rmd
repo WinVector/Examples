@@ -1,0 +1,115 @@
+---
+title: "filter"
+date: "2/4/2018"
+output: github_document
+---
+
+Set up the problem (from [here](https://github.com/tidyverse/dplyr/issues/3335)).
+
+```{r setup}
+library("feather")
+df <- as.data.frame(matrix(nrow = 1, 
+                           ncol = 100000,
+                           data = 0.0))
+system.time(write_feather(df, "df.feather"))
+```
+
+
+[R](https://www.r-project.org) timing.
+
+```{r r1}
+system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
+```
+
+[dplyr](https://CRAN.R-project.org/package=dplyr) timing.
+
+```{r, d1, message=FALSE}
+library("dplyr")
+
+tb <- as_tibble(df)
+
+system.time(fetched_sample <- filter(tb, V1>1))
+```
+
+[data.table](https://CRAN.R-project.org/package=data.table) timing.
+
+```{r dt1, message=FALSE}
+library("data.table")
+
+dt <- data.table(df)
+
+system.time(dt[V1>1, ])
+```
+
+
+[Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
+
+```{python, p1, engine.path="/anaconda/bin/python"}
+import pandas
+import feather
+import timeit
+
+start_time = timeit.default_timer()
+df = feather.read_dataframe('df.feather')
+print(type(df))
+print(df.shape)
+end_time = timeit.default_timer()
+# seconds
+print(end_time - start_time)
+
+start_time = timeit.default_timer()
+df_filtered = df.query('V1>1')
+sp = df_filtered.shape
+end_time = timeit.default_timer()
+
+# seconds
+print(end_time - start_time)
+```
+
+```{r shape}
+library("ggplot2")
+library("dplyr")
+
+sizes <- pmax(1, round(exp(runif(20, 
+                                 min = 0,
+                                 max = log(100000)))))
+frames <- lapply(
+  sizes,
+  function(nc) {
+    df <- as.data.frame(matrix(nrow = 1, 
+                               ncol = nc,
+                               data = 0.0))
+    tb <- as_tibble(df)
+    ti <- system.time(fetched_sample <- filter(tb, V1>1))
+    data.frame(ncol = nc, 
+               duration_seconds = as.numeric(ti[["elapsed"]]))
+  })
+frames <- bind_rows(frames)
+
+mlinear <- lm(duration_seconds ~ 0 + ncol, data = frames)
+frames$linear_trend <- predict(mlinear, newdata = frames)
+mquad <- lm(duration_seconds ~ 0 + I(ncol*ncol), data = frames)
+frames$quadratic_trend <- predict(mquad, newdata = frames)
+
+ggplot(frames, 
+       aes(x = ncol, y = duration_seconds)) + 
+  geom_point() + 
+  geom_smooth(se=FALSE) +
+  geom_line(aes(y = linear_trend),
+            linetype = 2, color = "green") +
+  geom_line(aes(y = 0.1*linear_trend),
+            linetype = 2, color = "green") +
+  geom_line(aes(y = 10*linear_trend),
+            linetype = 2, color = "green") +
+  geom_line(aes(y = quadratic_trend),
+            linetype = 2) +
+   geom_line(aes(y = 0.1*quadratic_trend),
+            linetype = 2) +
+   geom_line(aes(y = 10*quadratic_trend),
+            linetype = 2) +
+  scale_y_log10() +
+  scale_x_log10() + 
+  ggtitle("dplyr filter task durations on log-log paper (slope estimates power law)",
+          subtitle = "linear and quadtratic fits shown as slope 1 and 2 dashed lines")
+```
+
