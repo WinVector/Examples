@@ -13,7 +13,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.292   0.230   0.543
+    ##   0.306   0.261   0.604
 
 [R](https://www.r-project.org) timing.
 
@@ -22,7 +22,7 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.695   0.011   0.712
+    ##   0.678   0.011   0.697
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
@@ -35,7 +35,7 @@ system.time(fetched_sample <- filter(tb, V1>1))
 ```
 
     ##    user  system elapsed 
-    ## 128.828   8.643 138.815
+    ## 130.345   8.316 139.760
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -48,7 +48,7 @@ system.time(dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   1.697   0.011   1.720
+    ##   1.658   0.005   1.667
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
 
@@ -75,7 +75,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 1.799780055996962
+    ## 1.749638623005012
 
 ``` python
 start_time = timeit.default_timer()
@@ -86,15 +86,15 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 4.004492551990552
+    ## 3.872192738999729
 
 ``` r
 library("ggplot2")
 library("dplyr")
 
-sizes <- pmax(1, round(exp(runif(20, 
-                                 min = 0,
-                                 max = log(100000)))))
+sizes <- round(exp(seq(from=log(10), 
+                       to=log(100000), 
+                       length.out=20)))
 frames <- lapply(
   sizes,
   function(nc) {

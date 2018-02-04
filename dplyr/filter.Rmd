@@ -70,9 +70,9 @@ print(end_time - start_time)
 library("ggplot2")
 library("dplyr")
 
-sizes <- pmax(1, round(exp(runif(20, 
-                                 min = 0,
-                                 max = log(100000)))))
+sizes <- round(exp(seq(from=log(10), 
+                       to=log(100000), 
+                       length.out=20)))
 frames <- lapply(
   sizes,
   function(nc) {
