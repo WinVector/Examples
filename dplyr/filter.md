@@ -13,7 +13,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.263   0.214   0.495
+    ##   0.292   0.230   0.543
 
 [R](https://www.r-project.org) timing.
 
@@ -22,7 +22,7 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.690   0.010   0.707
+    ##   0.695   0.011   0.712
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
@@ -35,7 +35,7 @@ system.time(fetched_sample <- filter(tb, V1>1))
 ```
 
     ##    user  system elapsed 
-    ## 131.242   8.602 142.958
+    ## 128.828   8.643 138.815
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -48,7 +48,7 @@ system.time(dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   1.858   0.032   1.942
+    ##   1.697   0.011   1.720
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
 
@@ -75,7 +75,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 1.9568177759938408
+    ## 1.799780055996962
 
 ``` python
 start_time = timeit.default_timer()
@@ -86,7 +86,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 4.3670009360066615
+    ## 4.004492551990552
 
 ``` r
 library("ggplot2")
@@ -115,20 +115,20 @@ frames$quadratic_trend <- predict(mquad, newdata = frames)
 
 ggplot(frames, 
        aes(x = ncol, y = duration_seconds)) + 
+  geom_smooth(se = FALSE) +
   geom_point() + 
-  geom_smooth(se=FALSE) +
   geom_line(aes(y = linear_trend),
-            linetype = 2, color = "green") +
+            linetype = 2, color = "green", alpha=0.5) +
   geom_line(aes(y = 0.1*linear_trend),
-            linetype = 2, color = "green") +
+            linetype = 2, color = "green", alpha=0.5) +
   geom_line(aes(y = 10*linear_trend),
-            linetype = 2, color = "green") +
+            linetype = 2, color = "green", alpha=0.5) +
   geom_line(aes(y = quadratic_trend),
-            linetype = 2) +
+            linetype = 2, color = "red", alpha=0.5) +
    geom_line(aes(y = 0.1*quadratic_trend),
-            linetype = 2) +
+            linetype = 2, color = "red", alpha=0.5) +
    geom_line(aes(y = 10*quadratic_trend),
-            linetype = 2) +
+            linetype = 2, color = "red", alpha=0.5) +
   scale_y_log10() +
   scale_x_log10() + 
   ggtitle("dplyr filter task durations on log-log paper (slope estimates power law)",

@@ -93,20 +93,20 @@ frames$quadratic_trend <- predict(mquad, newdata = frames)
 
 ggplot(frames, 
        aes(x = ncol, y = duration_seconds)) + 
+  geom_smooth(se = FALSE) +
   geom_point() + 
-  geom_smooth(se=FALSE) +
   geom_line(aes(y = linear_trend),
-            linetype = 2, color = "green") +
+            linetype = 2, color = "green", alpha=0.5) +
   geom_line(aes(y = 0.1*linear_trend),
-            linetype = 2, color = "green") +
+            linetype = 2, color = "green", alpha=0.5) +
   geom_line(aes(y = 10*linear_trend),
-            linetype = 2, color = "green") +
+            linetype = 2, color = "green", alpha=0.5) +
   geom_line(aes(y = quadratic_trend),
-            linetype = 2) +
+            linetype = 2, color = "red", alpha=0.5) +
    geom_line(aes(y = 0.1*quadratic_trend),
-            linetype = 2) +
+            linetype = 2, color = "red", alpha=0.5) +
    geom_line(aes(y = 10*quadratic_trend),
-            linetype = 2) +
+            linetype = 2, color = "red", alpha=0.5) +
   scale_y_log10() +
   scale_x_log10() + 
   ggtitle("dplyr filter task durations on log-log paper (slope estimates power law)",
