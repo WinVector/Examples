@@ -13,7 +13,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.275   0.202   0.486
+    ##   0.302   0.248   0.587
 
 [R](https://www.r-project.org) timing.
 
@@ -22,7 +22,7 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.692   0.008   0.702
+    ##   0.752   0.015   0.792
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
@@ -31,11 +31,12 @@ library("dplyr")
 
 tb <- as_tibble(df)
 
-system.time(fetched_sample <- filter(tb, V1>1))
+td <- system.time(fetched_sample <- filter(tb, V1>1))
+print(td)
 ```
 
     ##    user  system elapsed 
-    ## 140.532   9.561 157.480
+    ## 131.537   8.280 142.529
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -48,9 +49,13 @@ system.time(dfr <- dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   1.910   0.060   2.059
+    ##   1.891   0.027   1.961
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
+
+``` r
+start_pandas <- Sys.time()
+```
 
 ``` python
 import pandas
@@ -75,7 +80,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 2.20009984401986
+    ## 1.9471652990032453
 
 ``` python
 start_time = timeit.default_timer()
@@ -86,7 +91,26 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 5.1335013120260555
+    ## 4.219969778001541
+
+``` r
+end_pandas <- Sys.time()
+print(start_pandas)
+```
+
+    ## [1] "2018-02-05 07:29:41 PST"
+
+``` r
+print(end_pandas)
+```
+
+    ## [1] "2018-02-05 07:29:50 PST"
+
+``` r
+print(end_pandas - start_pandas)
+```
+
+    ## Time difference of 8.576343 secs
 
 Characterize dplyr dependence on column count.
 

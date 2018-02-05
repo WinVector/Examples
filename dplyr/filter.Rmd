@@ -28,7 +28,8 @@ library("dplyr")
 
 tb <- as_tibble(df)
 
-system.time(fetched_sample <- filter(tb, V1>1))
+td <- system.time(fetched_sample <- filter(tb, V1>1))
+print(td)
 ```
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
@@ -43,6 +44,11 @@ system.time(dfr <- dt[V1>1, ])
 
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
+
+```{r bp}
+start_pandas <- Sys.time()
+```
+
 
 ```{python, p1, engine.path="/anaconda/bin/python"}
 import pandas
@@ -66,6 +72,12 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
+```{r ep}
+end_pandas <- Sys.time()
+print(start_pandas)
+print(end_pandas)
+print(end_pandas - start_pandas)
+```
 
 
 Characterize dplyr dependence on column count.
