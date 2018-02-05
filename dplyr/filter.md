@@ -13,7 +13,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.306   0.261   0.604
+    ##   0.275   0.202   0.486
 
 [R](https://www.r-project.org) timing.
 
@@ -22,7 +22,7 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.678   0.011   0.697
+    ##   0.692   0.008   0.702
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
@@ -35,7 +35,7 @@ system.time(fetched_sample <- filter(tb, V1>1))
 ```
 
     ##    user  system elapsed 
-    ## 130.345   8.316 139.760
+    ## 140.532   9.561 157.480
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -44,11 +44,11 @@ library("data.table")
 
 dt <- data.table(df)
 
-system.time(dt[V1>1, ])
+system.time(dfr <- dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   1.658   0.005   1.667
+    ##   1.910   0.060   2.059
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
 
@@ -75,7 +75,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 1.749638623005012
+    ## 2.20009984401986
 
 ``` python
 start_time = timeit.default_timer()
@@ -86,7 +86,9 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 3.872192738999729
+    ## 5.1335013120260555
+
+Characterize dplyr dependence on column count.
 
 ``` r
 library("ggplot2")
@@ -102,6 +104,7 @@ frames <- lapply(
                                ncol = nc,
                                data = 0.0))
     tb <- as_tibble(df)
+    gc()
     ti <- system.time(fetched_sample <- filter(tb, V1>1))
     data.frame(ncol = nc, 
                duration_seconds = as.numeric(ti[["elapsed"]]))
