@@ -81,6 +81,8 @@ print(end_pandas - start_pandas)
 
 
 Characterize dplyr dependence on column count.
+In the plot the nearest pure linear and quadratic power laws are
+plotted as dashed lines.
 
 ```{r shape}
 library("ggplot2")
@@ -96,37 +98,15 @@ frames <- lapply(
                                ncol = nc,
                                data = 0.0))
     tb <- as_tibble(df)
-    gc()
+    gc() # try to kee this out of timing
     ti <- system.time(fetched_sample <- filter(tb, V1>1))
     data.frame(ncol = nc, 
                duration_seconds = as.numeric(ti[["elapsed"]]))
   })
 frames <- bind_rows(frames)
 
-mlinear <- lm(duration_seconds ~ 0 + ncol, data = frames)
-frames$linear_trend <- predict(mlinear, newdata = frames)
-mquad <- lm(duration_seconds ~ 0 + I(ncol*ncol), data = frames)
-frames$quadratic_trend <- predict(mquad, newdata = frames)
+WVPlots::LogLogPlot(frames, "ncol", "duration_seconds", 
+                    title = "dplyr filter task durations on log-log paper (slope estimates power law)")
 
-ggplot(frames, 
-       aes(x = ncol, y = duration_seconds)) + 
-  geom_smooth(se = FALSE) +
-  geom_point() + 
-  geom_line(aes(y = linear_trend),
-            linetype = 2, color = "green", alpha=0.5) +
-  geom_line(aes(y = 0.1*linear_trend),
-            linetype = 2, color = "green", alpha=0.5) +
-  geom_line(aes(y = 10*linear_trend),
-            linetype = 2, color = "green", alpha=0.5) +
-  geom_line(aes(y = quadratic_trend),
-            linetype = 2, color = "red", alpha=0.5) +
-   geom_line(aes(y = 0.1*quadratic_trend),
-            linetype = 2, color = "red", alpha=0.5) +
-   geom_line(aes(y = 10*quadratic_trend),
-            linetype = 2, color = "red", alpha=0.5) +
-  scale_y_log10() +
-  scale_x_log10() + 
-  ggtitle("dplyr filter task durations on log-log paper (slope estimates power law)",
-          subtitle = "linear and quadtratic fits shown as slope 1 and 2 dashed lines")
 ```
 

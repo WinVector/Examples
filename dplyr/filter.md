@@ -18,7 +18,7 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.603   0.003   0.607
+    ##   0.682   0.003   0.689
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
@@ -32,7 +32,7 @@ print(td)
 ```
 
     ##    user  system elapsed 
-    ## 125.055   7.720 133.680
+    ## 138.814   9.705 152.578
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -45,7 +45,7 @@ system.time(dfr <- dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   2.006   0.025   2.172
+    ##   1.759   0.021   1.812
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
 
@@ -55,7 +55,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.260   0.201   0.470
+    ##   0.315   0.255   0.613
 
 ``` python
 import pandas
@@ -80,7 +80,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 1.6644117410178296
+    ## 1.876377901993692
 
 ``` python
 start_time = timeit.default_timer()
@@ -91,28 +91,28 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 3.8060011630004738
+    ## 4.77076510200277
 
 ``` r
 end_pandas <- Sys.time()
 print(start_pandas)
 ```
 
-    ## [1] "2018-02-05 08:08:21 PST"
+    ## [1] "2018-02-06 09:11:32 PST"
 
 ``` r
 print(end_pandas)
 ```
 
-    ## [1] "2018-02-05 08:08:30 PST"
+    ## [1] "2018-02-06 09:11:42 PST"
 
 ``` r
 print(end_pandas - start_pandas)
 ```
 
-    ## Time difference of 8.999062 secs
+    ## Time difference of 10.59104 secs
 
-Characterize dplyr dependence on column count.
+Characterize dplyr dependence on column count. In the plot the nearest pure linear and quadratic power laws are plotted as dashed lines.
 
 ``` r
 library("ggplot2")
@@ -128,38 +128,15 @@ frames <- lapply(
                                ncol = nc,
                                data = 0.0))
     tb <- as_tibble(df)
-    gc()
+    gc() # try to kee this out of timing
     ti <- system.time(fetched_sample <- filter(tb, V1>1))
     data.frame(ncol = nc, 
                duration_seconds = as.numeric(ti[["elapsed"]]))
   })
 frames <- bind_rows(frames)
 
-mlinear <- lm(duration_seconds ~ 0 + ncol, data = frames)
-frames$linear_trend <- predict(mlinear, newdata = frames)
-mquad <- lm(duration_seconds ~ 0 + I(ncol*ncol), data = frames)
-frames$quadratic_trend <- predict(mquad, newdata = frames)
-
-ggplot(frames, 
-       aes(x = ncol, y = duration_seconds)) + 
-  geom_smooth(se = FALSE) +
-  geom_point() + 
-  geom_line(aes(y = linear_trend),
-            linetype = 2, color = "green", alpha=0.5) +
-  geom_line(aes(y = 0.1*linear_trend),
-            linetype = 2, color = "green", alpha=0.5) +
-  geom_line(aes(y = 10*linear_trend),
-            linetype = 2, color = "green", alpha=0.5) +
-  geom_line(aes(y = quadratic_trend),
-            linetype = 2, color = "red", alpha=0.5) +
-   geom_line(aes(y = 0.1*quadratic_trend),
-            linetype = 2, color = "red", alpha=0.5) +
-   geom_line(aes(y = 10*quadratic_trend),
-            linetype = 2, color = "red", alpha=0.5) +
-  scale_y_log10() +
-  scale_x_log10() + 
-  ggtitle("dplyr filter task durations on log-log paper (slope estimates power law)",
-          subtitle = "linear and quadtratic fits shown as slope 1 and 2 dashed lines")
+WVPlots::LogLogPlot(frames, "ncol", "duration_seconds", 
+                    title = "dplyr filter task durations on log-log paper (slope estimates power law)")
 ```
 
     ## `geom_smooth()` using method = 'loess'
