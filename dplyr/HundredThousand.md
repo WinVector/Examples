@@ -46,7 +46,7 @@ system.time(nrow(dWide[dWide$V1>0, , drop = FALSE]))
 ```
 
     ##    user  system elapsed 
-    ##   0.059   0.004   0.064
+    ##   0.067   0.004   0.079
 
 dplyr
 =====
@@ -171,7 +171,7 @@ sparklyr::spark_disconnect(spark)
 Why I care
 ==========
 
-Some clients have run into intermittent issues on `Spark` at around 700 columns. One step of working around the issue was trying a range of sizes to try and figure out where the issue was and get a repeatable failure ( always an imporant step in debugging).
+Some clients have run into intermittent issues on `Spark` at around 700 columns. One step of working around the issue was trying a range of sizes to try and figure out where the issue was and get a repeatable failure ( always an important step in debugging).
 
 Extra: dplyr again at larger scale.
 ===================================
@@ -240,13 +240,13 @@ python_duration <- difftime(end_pandas, start_pandas,
 print(python_duration)
 ```
 
-    ## Time difference of 21.05746 secs
+    ## Time difference of 21.9944 secs
 
 ``` r
 ratio <- as.numeric(dwt['elapsed'])/as.numeric(python_duration)
 print(ratio)
 ```
 
-    ## [1] 13.44227
+    ## [1] 12.86964
 
-This is slow, but still 13.4 times faster than using `dplyr`.
+This is slow, but still 12.9 times faster than using `dplyr`.

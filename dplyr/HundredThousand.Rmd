@@ -151,7 +151,7 @@ sparklyr::spark_disconnect(spark)
 Some clients have run into intermittent issues on `Spark` at around 700 columns.
 One step of working around the issue was trying a range of sizes
 to try and figure out where the issue was and get a repeatable failure (
-always an imporant step in debugging).
+always an important step in debugging).
 
 # Extra: dplyr again at larger scale.
 
