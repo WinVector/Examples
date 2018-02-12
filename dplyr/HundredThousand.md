@@ -1,21 +1,21 @@
-Is 10,000 cells large?
+Is 10,000 Cells Big?
 ================
 Win-Vector LLC
 2/12/2018
 
-Trick question: is a `10,000` cell numeric `data.frame` large or small?
+Trick question: is a `10,000` cell numeric `data.frame` big or small?
 
 In the era of "big data" `10,000` cells is minuscule. Such data could be fit on fewer than `1,000` punched cards (or less than half a box).
 
 <center>
 <img src="punch-card.png">
 </center>
-The joking answer is: it is small when they are selling you the software, but can be considered unfairly large later.
+The joking answer is: it is small when they are selling you the system, but can be considered unfairly large later.
 
 Example
 =======
 
-Let's look at a few examples in [`R`](https://cran.r-project.org). First let's set up our examples. A `10,000` row by one column `data.frame` (probably fairly close the common mental model of a `100,000` cell `data.frame`), and a `100,000` column by one row `data.frame` (frankly bit of an abuse, but large data warehouses with millions of rows and `500` to `1,000` columns are not uncommon).
+Let's look at a few examples in [`R`](https://cran.r-project.org). First let's set up our examples. A `10,000` row by one column `data.frame` (probably fairly close the common mental model of a `100,000` cell `data.frame`), and a `100,000` column by one row `data.frame` (frankly bit of an abuse, but data warehouse tables with millions of rows and `500` to `1,000` columns are not uncommon).
 
 ``` r
 dTall <- as.data.frame(matrix(data = 0.0, 
@@ -46,12 +46,12 @@ system.time(nrow(dWide[dWide$V1>0, , drop = FALSE]))
 ```
 
     ##    user  system elapsed 
-    ##   0.067   0.004   0.079
+    ##   0.060   0.004   0.064
 
-dplyr
-=====
+`dplyr`
+=======
 
-For `dplyr` the tall frame is no problem, but the wide frame can take almost 5 minutes to filter.
+For [`dplyr`](https://CRAN.R-project.org/package=dplyr) the tall frame is no problem, but the wide frame can take almost 5 minutes to filter.
 
 ``` r
 library("dplyr")
@@ -92,7 +92,7 @@ Most databases don't really like to work with a ridiculous number of columns.
 RSQLite
 -------
 
-`RSQLite` refuses to worm with the wide frame.
+[`RSQLite`](https://CRAN.R-project.org/package=RSQLite) refuses to worm with the wide frame.
 
 ``` r
 db <- DBI::dbConnect(RSQLite::SQLite(), 
@@ -115,10 +115,10 @@ DBI::dbWriteTable(db, "dWide", dWide,
 DBI::dbDisconnect(db)
 ```
 
-PostgreSQL
-----------
+RPostgres
+---------
 
-PostgreSQL refuses the wide frame, stating a hard limit of `1600` columns.
+[`RPostgres`](https://CRAN.R-project.org/package=RPostgres) refuses the wide frame, stating a hard limit of `1600` columns.
 
 ``` r
 db <- DBI::dbConnect(RPostgres::Postgres(),
@@ -144,10 +144,10 @@ DBI::dbWriteTable(db, "dWide", dWide,
 DBI::dbDisconnect(db)
 ```
 
-Spark
------
+`sparklyr`
+----------
 
-Spark fails, losing the cluster connection when attempting to write the wide frame.
+[`sparklyr`](https://CRAN.R-project.org/package=sparklyr) fails, losing the cluster connection when attempting to write the wide frame.
 
 ``` r
 spark <- sparklyr::spark_connect(version='2.2.0', 
@@ -173,10 +173,10 @@ Why I care
 
 Some clients have run into intermittent issues on `Spark` at around 700 columns. One step of working around the issue was trying a range of sizes to try and figure out where the issue was and get a repeatable failure ( always an important step in debugging).
 
-Extra: dplyr again at larger scale.
-===================================
+Extra: `dplyr` again at larger scale.
+=====================================
 
-Let's look a bit more closely at that dplyr run-time.
+Let's look a bit more closely at that `dplyr` run-time.
 We will try to get the nature of the column dependency by pushing the column count ever further up: to `100,000`.
 
 This is still less than a megabyte of data. It can fit on a 1986 era `1.44 MB` floppy disk.
@@ -240,13 +240,13 @@ python_duration <- difftime(end_pandas, start_pandas,
 print(python_duration)
 ```
 
-    ## Time difference of 21.9944 secs
+    ## Time difference of 21.47297 secs
 
 ``` r
 ratio <- as.numeric(dwt['elapsed'])/as.numeric(python_duration)
 print(ratio)
 ```
 
-    ## [1] 12.86964
+    ## [1] 13.18216
 
-This is slow, but still 12.9 times faster than using `dplyr`.
+This is slow, but still 13.2 times faster than using `dplyr`.
