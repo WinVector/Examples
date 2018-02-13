@@ -92,7 +92,7 @@ Most databases don't really like to work with a ridiculous number of columns.
 RSQLite
 -------
 
-[`RSQLite`](https://CRAN.R-project.org/package=RSQLite) refuses to worm with the wide frame.
+[`RSQLite`](https://CRAN.R-project.org/package=RSQLite) refuses to work with the wide frame.
 
 ``` r
 db <- DBI::dbConnect(RSQLite::SQLite(), 
