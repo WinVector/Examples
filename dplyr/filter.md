@@ -18,13 +18,20 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.613   0.004   0.621
+    ##   0.664   0.011   0.696
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
 ``` r
 library("dplyr")
 
+system.time(fetched_sample <- filter(df, V1>1))
+```
+
+    ##    user  system elapsed 
+    ## 148.677  10.173 168.767
+
+``` r
 tb <- as_tibble(df)
 
 td <- system.time(fetched_sample <- filter(tb, V1>1))
@@ -32,7 +39,7 @@ print(td)
 ```
 
     ##    user  system elapsed 
-    ## 133.985   9.771 147.560
+    ## 129.081  16.474 149.685
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -45,7 +52,7 @@ system.time(dfr <- dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   1.680   0.013   1.707
+    ##   1.895   0.023   1.949
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
 
@@ -55,7 +62,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.278   0.213   0.505
+    ##   0.271   0.214   0.504
 
 ``` python
 import pandas
@@ -80,7 +87,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 2.4562293919734657
+    ## 1.9789928130339831
 
 ``` python
 start_time = timeit.default_timer()
@@ -91,26 +98,26 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 4.974348712014034
+    ## 4.00986497302074
 
 ``` r
 end_pandas <- Sys.time()
 print(start_pandas)
 ```
 
-    ## [1] "2018-02-13 06:53:50 PST"
+    ## [1] "2018-02-13 07:32:19 PST"
 
 ``` r
 print(end_pandas)
 ```
 
-    ## [1] "2018-02-13 06:54:01 PST"
+    ## [1] "2018-02-13 07:32:29 PST"
 
 ``` r
 print(end_pandas - start_pandas)
 ```
 
-    ## Time difference of 11.30699 secs
+    ## Time difference of 10.10463 secs
 
 Characterize dplyr dependence on column count. In the plot the nearest pure linear and quadratic power laws are plotted as dashed lines.
 

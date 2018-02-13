@@ -25,6 +25,8 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```{r, d1, message=FALSE}
 library("dplyr")
 
+system.time(fetched_sample <- filter(df, V1>1))
+
 tb <- as_tibble(df)
 
 td <- system.time(fetched_sample <- filter(tb, V1>1))
