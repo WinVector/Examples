@@ -18,7 +18,7 @@ system.time(fetched_sample <- df[df$V1>1, , drop=FALSE])
 ```
 
     ##    user  system elapsed 
-    ##   0.812   0.034   0.898
+    ##   0.613   0.004   0.621
 
 [dplyr](https://CRAN.R-project.org/package=dplyr) timing.
 
@@ -32,7 +32,7 @@ print(td)
 ```
 
     ##    user  system elapsed 
-    ## 136.051  10.562 151.001
+    ## 133.985   9.771 147.560
 
 [data.table](https://CRAN.R-project.org/package=data.table) timing.
 
@@ -45,7 +45,7 @@ system.time(dfr <- dt[V1>1, ])
 ```
 
     ##    user  system elapsed 
-    ##   1.718   0.019   1.762
+    ##   1.680   0.013   1.707
 
 [Python](https://www.python.org) [Pandas](https://pandas.pydata.org) timing.
 
@@ -55,7 +55,7 @@ system.time(write_feather(df, "df.feather"))
 ```
 
     ##    user  system elapsed 
-    ##   0.279   0.223   0.526
+    ##   0.278   0.213   0.505
 
 ``` python
 import pandas
@@ -80,7 +80,7 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 1.8501144389156252
+    ## 2.4562293919734657
 
 ``` python
 start_time = timeit.default_timer()
@@ -91,26 +91,26 @@ end_time = timeit.default_timer()
 print(end_time - start_time)
 ```
 
-    ## 4.199794301996008
+    ## 4.974348712014034
 
 ``` r
 end_pandas <- Sys.time()
 print(start_pandas)
 ```
 
-    ## [1] "2018-02-13 06:34:27 PST"
+    ## [1] "2018-02-13 06:53:50 PST"
 
 ``` r
 print(end_pandas)
 ```
 
-    ## [1] "2018-02-13 06:34:38 PST"
+    ## [1] "2018-02-13 06:54:01 PST"
 
 ``` r
 print(end_pandas - start_pandas)
 ```
 
-    ## Time difference of 10.31453 secs
+    ## Time difference of 11.30699 secs
 
 Characterize dplyr dependence on column count. In the plot the nearest pure linear and quadratic power laws are plotted as dashed lines.
 
@@ -142,3 +142,5 @@ WVPlots::LogLogPlot(frames, "ncol", "duration_seconds",
     ## `geom_smooth()` using method = 'loess'
 
 ![](filter_files/figure-markdown_github/shape-1.png)
+
+More discussion can be found [here](http://www.win-vector.com/blog/2018/02/is-10000-cells-big/).

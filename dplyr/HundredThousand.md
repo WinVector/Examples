@@ -250,3 +250,7 @@ print(ratio)
     ## [1] 13.18216
 
 This is slow, but still 13.2 times faster than using `dplyr`.
+
+More discussion can be found [here](http://www.win-vector.com/blog/2018/02/is-10000-cells-big/).
+
+

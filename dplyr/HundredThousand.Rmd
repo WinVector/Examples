@@ -212,5 +212,5 @@ print(ratio)
 
 This is slow, but still `r sprintf("%8.3g", ratio)` times faster than using `dplyr`.
 
-
+More discussion can be found [here](http://www.win-vector.com/blog/2018/02/is-10000-cells-big/).
 

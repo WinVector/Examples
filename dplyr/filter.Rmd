@@ -110,3 +110,5 @@ WVPlots::LogLogPlot(frames, "ncol", "duration_seconds",
 
 ```
 
+More discussion can be found [here](http://www.win-vector.com/blog/2018/02/is-10000-cells-big/).
+
