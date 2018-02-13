@@ -15,7 +15,7 @@ The joking answer is: it is small when they are selling you the system, but can 
 Example
 =======
 
-Let's look at a few examples in [`R`](https://cran.r-project.org). First let's set up our examples. A `10,000` row by one column `data.frame` (probably fairly close the common mental model of a `100,000` cell `data.frame`), and a `100,000` column by one row `data.frame` (frankly bit of an abuse, but data warehouse tables with millions of rows and `500` to `1,000` columns are not uncommon).
+Let's look at a few examples in [`R`](https://cran.r-project.org). First let's set up our examples. A `10,000` row by one column `data.frame` (probably fairly close the common mental model of a `10,000` cell `data.frame`), and a `10,000` column by one row `data.frame` (frankly bit of an abuse, but data warehouse tables with millions of rows and `500` to `1,000` columns are not uncommon).
 
 ``` r
 dTall <- as.data.frame(matrix(data = 0.0, 
@@ -51,7 +51,7 @@ system.time(nrow(dWide[dWide$V1>0, , drop = FALSE]))
 `dplyr`
 =======
 
-For [`dplyr`](https://CRAN.R-project.org/package=dplyr) the tall frame is no problem, but the wide frame can take almost 5 minutes to filter.
+For [`dplyr`](https://CRAN.R-project.org/package=dplyr) the tall frame is no problem, but the wide frame can be slow.
 
 ``` r
 library("dplyr")
