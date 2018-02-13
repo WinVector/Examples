@@ -100,7 +100,7 @@ frames <- lapply(
                                ncol = nc,
                                data = 0.0))
     tb <- as_tibble(df)
-    gc() # try to kee this out of timing
+    gc() # try to keep this out of timing
     ti <- system.time(fetched_sample <- filter(tb, V1>1))
     data.frame(ncol = nc, 
                duration_seconds = as.numeric(ti[["elapsed"]]))
