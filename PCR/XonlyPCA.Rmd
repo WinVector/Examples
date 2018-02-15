@@ -167,7 +167,7 @@ rot5Ideal <- extractProjection(5,princIdeal)
 rotfIdeal = as.data.frame(rot5Ideal)
 rotfIdeal$varName = rownames(rotfIdeal)
 rotflongIdeal = gather(rotfIdeal, "PC", "loading",
-                       starts_with("PC"))
+                       dplyr::starts_with("PC"))
 rotflongIdeal$vartype = ifelse(grepl("noise", 
                                      rotflongIdeal$varName),
                                "noise", "signal")
@@ -241,7 +241,7 @@ rot5U <- extractProjection(5,prinU)
 rot5U = as.data.frame(rot5U)
 rot5U$varName = rownames(rot5U)
 rot5U = gather(rot5U, "PC", "loading",
-                       starts_with("PC"))
+                       dplyr::starts_with("PC"))
 rot5U$vartype = ifelse(grepl("noise", 
                                      rot5U$varName),
                                "noise", "signal")
@@ -335,7 +335,7 @@ Now the magnitudes of the singular values suggest that we can try to model the d
 rot5 <- extractProjection(5,princ)
 rotf = as.data.frame(rot5)
 rotf$varName = rownames(rotf)
-rotflong = gather(rotf, "PC", "loading", starts_with("PC"))
+rotflong = gather(rotf, "PC", "loading", dplyr::starts_with("PC"))
 rotflong$vartype = ifelse(grepl("noise", rotflong$varName), 
                           "noise", "signal")
 
