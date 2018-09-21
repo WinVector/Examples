@@ -1,0 +1,91 @@
+---
+title: "timings"
+output: github_document
+---
+
+```{r setup}
+library("microbenchmark")
+library("dplyr")
+library("dtplyr")
+library("data.table")
+library("ggplot2")
+library("WVPlots")
+```
+
+```{r data}
+mk_data <- function(nrow, ncol) {
+  d <- data.frame(x1 = rep(0, nrow))
+  for(i in seq_len(ncol)) {
+    vi <- paste0("x", i)
+    d[[vi]] <- rnorm(nrow)
+  }
+  d
+}
+
+df <- mk_data(100000, 100)
+nstep <- 1000
+```
+
+
+```{r definefns}
+dplyr_fn <- function(df) {
+  dt <- df
+  for(i in seq_len(nstep)) {
+    dt <- mutate(dt, x1 = x1 + 1)
+  }
+  dt
+}
+
+dtplyr_fn <- function(df) {
+  dt <- as.data.table(df)
+  for(i in seq_len(nstep)) {
+    dt <- mutate(dt, x1 = x1 + 1)
+  }
+  dt
+}
+
+data.table_fn <- function(df) {
+  dt <- as.data.table(df)
+  for(i in seq_len(nstep)) {
+    dt[, x1 := x1 + 1]
+  }
+  dt[]
+}
+```
+
+```{r time}
+timings <- microbenchmark(
+  dplyr = dplyr_fn(df),
+  dtplyr = dtplyr_fn(df),
+  data.table = data.table_fn(df),
+  unit = 's',
+  times = 10L
+)
+saveRDS(timings, file = "dtplyr_timings.RDS")
+```
+
+
+```{r present}
+tdf <- as.data.frame(timings)
+
+
+tdf$seconds <- tdf$time/1e+9
+tdf$method <- factor(as.character(tdf$expr),
+                     rev(levels(tdf$expr)))
+
+as.data.table(tdf)[
+  , .(mean_seconds = mean(seconds)), by = "method" ][
+    order(mean_seconds), ]
+
+WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
+                         title="Runtime by Method") +
+  geom_hline(yintercept = 1, color = "red", linetype = 2) + 
+  xlab(NULL)
+
+WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
+                         title="Runtime by Method, log-scale") + 
+  scale_y_log10() +
+  geom_hline(yintercept = 1, color = "red", linetype = 2) + 
+  xlab(NULL)
+```
+
