@@ -39,7 +39,7 @@ base_R_sapply <- function(df) {
   df
 }
 
-base_R_matrix_index <- function(df) {
+base_R_matrix_index_match <- function(df) {
   # https://community.rstudio.com/t/extracting-value-from-a-data-frame-where-column-name-to-extract-from-is-dynamically-determined-by-values-in-another-column/14585
   dtmp <- df[, 
              intersect(df$choice, colnames(df)), 
@@ -47,6 +47,19 @@ base_R_matrix_index <- function(df) {
   df$derived <- dtmp[
     cbind(seq_len(nrow(df)),
           match(df$choice, colnames(dtmp)))]
+  df
+}
+
+base_R_matrix_index_map <- function(df) {
+  # https://community.rstudio.com/t/extracting-value-from-a-data-frame-where-column-name-to-extract-from-is-dynamically-determined-by-values-in-another-column/14585
+  dtmp <- df[, 
+             intersect(df$choice, colnames(df)), 
+             drop = FALSE]
+  cmap <- seq_len(length(colnames(df)))
+  names(cmap) <- colnames(df)
+  df$derived <- dtmp[
+    cbind(seq_len(nrow(df)),
+          cmap[df$choice])]
   df
 }
 
@@ -135,7 +148,8 @@ rqdatatable_direct <- make_dt_lookup_by_column("choice", "derived")
 ```{r time}
 timings <- microbenchmark(
   base_R_sapply = base_R_sapply(df),
-  base_R_matrix_index = base_R_matrix_index(df),
+  base_R_matrix_index_match = base_R_matrix_index_match(df),
+  base_R_matrix_index_map = base_R_matrix_index_map(df),
   base_R_split_apply = base_R_split_apply(df),
   base_R_get0 = base_R_get0(df),
   data.table_SD_method = data.table_SD_method(df),
@@ -145,7 +159,9 @@ timings <- microbenchmark(
   dplyr_rowwise_parse = dplyr_rowwise_parse(df),
   dplyr_rowwise_index = dplyr_rowwise_index(df),
   purrr_get0 = purrr_get0(df),
-  rqdatatable_full = lookup_by_column(df, "choice", "derived"),
+  rqdatatable_base = lookup_by_column(df, "choice", "derived"),
+  rqdatatable_data.table = lookup_by_column(df, "choice", "derived",
+                                            f_dt_factory = make_dt_lookup_by_column),
   rqdatatable_direct = rqdatatable_direct(df),
   unit = 's',
   times = 10L
@@ -164,7 +180,8 @@ tdf$method <- factor(as.character(tdf$expr),
 
 method_family <- qc(
   base_R_sapply = base_R,
-  base_R_matrix_index = base_R,
+  base_R_matrix_index_match = base_R,
+  base_R_matrix_index_map = base_R,
   base_R_split_apply = base_R,
   base_R_get0 = base_R,
   purrr_get0 = tidyverse,
@@ -174,7 +191,8 @@ method_family <- qc(
   dplyr_group_assign = tidyverse,
   dplyr_rowwise_parse = tidyverse,
   dplyr_rowwise_index = tidyverse,
-  rqdatatable_full = data.table,
+  rqdatatable_base = base_R,
+  rqdatatable_data.table = data.table,
   rqdatatable_direct = data.table
 )
 

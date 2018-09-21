@@ -84,7 +84,7 @@ base_R_sapply <- function(df) {
   df
 }
 
-base_R_matrix_index <- function(df) {
+base_R_matrix_index_match <- function(df) {
   # https://community.rstudio.com/t/extracting-value-from-a-data-frame-where-column-name-to-extract-from-is-dynamically-determined-by-values-in-another-column/14585
   dtmp <- df[, 
              intersect(df$choice, colnames(df)), 
@@ -92,6 +92,19 @@ base_R_matrix_index <- function(df) {
   df$derived <- dtmp[
     cbind(seq_len(nrow(df)),
           match(df$choice, colnames(dtmp)))]
+  df
+}
+
+base_R_matrix_index_map <- function(df) {
+  # https://community.rstudio.com/t/extracting-value-from-a-data-frame-where-column-name-to-extract-from-is-dynamically-determined-by-values-in-another-column/14585
+  dtmp <- df[, 
+             intersect(df$choice, colnames(df)), 
+             drop = FALSE]
+  cmap <- seq_len(length(colnames(df)))
+  names(cmap) <- colnames(df)
+  df$derived <- dtmp[
+    cbind(seq_len(nrow(df)),
+          cmap[df$choice])]
   df
 }
 
@@ -180,7 +193,8 @@ rqdatatable_direct <- make_dt_lookup_by_column("choice", "derived")
 ``` r
 timings <- microbenchmark(
   base_R_sapply = base_R_sapply(df),
-  base_R_matrix_index = base_R_matrix_index(df),
+  base_R_matrix_index_match = base_R_matrix_index_match(df),
+  base_R_matrix_index_map = base_R_matrix_index_map(df),
   base_R_split_apply = base_R_split_apply(df),
   base_R_get0 = base_R_get0(df),
   data.table_SD_method = data.table_SD_method(df),
@@ -190,7 +204,9 @@ timings <- microbenchmark(
   dplyr_rowwise_parse = dplyr_rowwise_parse(df),
   dplyr_rowwise_index = dplyr_rowwise_index(df),
   purrr_get0 = purrr_get0(df),
-  rqdatatable_full = lookup_by_column(df, "choice", "derived"),
+  rqdatatable_base = lookup_by_column(df, "choice", "derived"),
+  rqdatatable_data.table = lookup_by_column(df, "choice", "derived",
+                                            f_dt_factory = make_dt_lookup_by_column),
   rqdatatable_direct = rqdatatable_direct(df),
   unit = 's',
   times = 10L
@@ -208,7 +224,8 @@ tdf$method <- factor(as.character(tdf$expr),
 
 method_family <- qc(
   base_R_sapply = base_R,
-  base_R_matrix_index = base_R,
+  base_R_matrix_index_match = base_R,
+  base_R_matrix_index_map = base_R,
   base_R_split_apply = base_R,
   base_R_get0 = base_R,
   purrr_get0 = tidyverse,
@@ -218,7 +235,8 @@ method_family <- qc(
   dplyr_group_assign = tidyverse,
   dplyr_rowwise_parse = tidyverse,
   dplyr_rowwise_index = tidyverse,
-  rqdatatable_full = data.table,
+  rqdatatable_base = base_R,
+  rqdatatable_data.table = data.table,
   rqdatatable_direct = data.table
 )
 
@@ -231,20 +249,22 @@ tdf %.>%
   orderby(., "mean_seconds")
 ```
 
-    ##                   method mean_seconds
-    ##  1:   rqdatatable_direct   0.05405786
-    ##  2:   dplyr_group_assign   0.06315023
-    ##  3: data.table_SD_method   0.10567279
-    ##  4:  data.table_I_method   0.10979534
-    ##  5:  base_R_matrix_index   0.13583194
-    ##  6:     rqdatatable_full   0.17208519
-    ##  7:  dplyr_choice_gather   0.67627983
-    ##  8:   base_R_split_apply   1.54704491
-    ##  9:          base_R_get0   9.03824150
-    ## 10:           purrr_get0   9.48282369
-    ## 11:        base_R_sapply  24.00578467
-    ## 12:  dplyr_rowwise_index  71.82359545
-    ## 13:  dplyr_rowwise_parse  72.22674163
+    ##                        method mean_seconds
+    ##  1:        dplyr_group_assign   0.05572662
+    ##  2:      data.table_SD_method   0.06716999
+    ##  3:       data.table_I_method   0.07647618
+    ##  4:        rqdatatable_direct   0.08096200
+    ##  5:    rqdatatable_data.table   0.10015152
+    ##  6: base_R_matrix_index_match   0.12339813
+    ##  7:   base_R_matrix_index_map   0.15831438
+    ##  8:          rqdatatable_base   0.19300777
+    ##  9:       dplyr_choice_gather   0.57444927
+    ## 10:        base_R_split_apply   1.44026938
+    ## 11:                purrr_get0   7.79135940
+    ## 12:               base_R_get0   8.08021361
+    ## 13:             base_R_sapply  23.39829664
+    ## 14:       dplyr_rowwise_parse  66.42461707
+    ## 15:       dplyr_rowwise_index  66.97595121
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
