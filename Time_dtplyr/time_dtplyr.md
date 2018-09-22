@@ -45,12 +45,17 @@ mk_data <- function(nrow, ncol) {
   }
   d
 }
-
-df <- mk_data(100000, 100)
-nstep <- 1000
 ```
 
 ``` r
+base_r_fn <- function(df) {
+  dt <- df
+  for(i in seq_len(nstep)) {
+    dt$x1 <- dt$x1 + 1
+  }
+  dt
+}
+
 dplyr_fn <- function(df) {
   dt <- df
   for(i in seq_len(nstep)) {
@@ -77,7 +82,50 @@ data.table_fn <- function(df) {
 ```
 
 ``` r
+df <- mk_data(3, 2)
+nstep <- 5
+
+base_r_fn(df)
+```
+
+    ##         x1         x2
+    ## 1 3.813766 -0.5188262
+    ## 2 6.493606 -0.8801488
+    ## 3 3.289314 -1.0606017
+
+``` r
+dplyr_fn(df)
+```
+
+    ##         x1         x2
+    ## 1 3.813766 -0.5188262
+    ## 2 6.493606 -0.8801488
+    ## 3 3.289314 -1.0606017
+
+``` r
+dtplyr_fn(df)
+```
+
+    ##          x1         x2
+    ## 1: 3.813766 -0.5188262
+    ## 2: 6.493606 -0.8801488
+    ## 3: 3.289314 -1.0606017
+
+``` r
+data.table_fn(df)
+```
+
+    ##          x1         x2
+    ## 1: 3.813766 -0.5188262
+    ## 2: 6.493606 -0.8801488
+    ## 3: 3.289314 -1.0606017
+
+``` r
+df <- mk_data(100000, 100)
+nstep <- 1000
+
 timings <- microbenchmark(
+  base_r = base_r_fn(df),
   dplyr = dplyr_fn(df),
   dtplyr = dtplyr_fn(df),
   data.table = data.table_fn(df),
@@ -101,9 +149,10 @@ as.data.table(tdf)[
 ```
 
     ##        method mean_seconds
-    ## 1: data.table     1.201450
-    ## 2:      dplyr     6.204858
-    ## 3:     dtplyr   122.440178
+    ## 1:     base_r    0.5926309
+    ## 2: data.table    1.0159766
+    ## 3:      dplyr    5.6442961
+    ## 4:     dtplyr  125.3737996
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  

@@ -22,12 +22,18 @@ mk_data <- function(nrow, ncol) {
   d
 }
 
-df <- mk_data(100000, 100)
-nstep <- 1000
 ```
 
 
 ```{r definefns}
+base_r_fn <- function(df) {
+  dt <- df
+  for(i in seq_len(nstep)) {
+    dt$x1 <- dt$x1 + 1
+  }
+  dt
+}
+
 dplyr_fn <- function(df) {
   dt <- df
   for(i in seq_len(nstep)) {
@@ -53,8 +59,26 @@ data.table_fn <- function(df) {
 }
 ```
 
+```{r check}
+df <- mk_data(3, 2)
+nstep <- 5
+
+base_r_fn(df)
+
+dplyr_fn(df)
+
+dtplyr_fn(df)
+
+data.table_fn(df)
+```
+
+
 ```{r time}
+df <- mk_data(100000, 100)
+nstep <- 1000
+
 timings <- microbenchmark(
+  base_r = base_r_fn(df),
   dplyr = dplyr_fn(df),
   dtplyr = dtplyr_fn(df),
   data.table = data.table_fn(df),
