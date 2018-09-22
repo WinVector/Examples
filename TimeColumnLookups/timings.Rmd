@@ -6,6 +6,7 @@ output: github_document
 ```{r setup}
 library("microbenchmark")
 library("dplyr")
+library("dtplyr")
 library("tidyr")
 library("purrr")
 library("wrapr")
@@ -23,7 +24,6 @@ mk_data <- function(n) {
              stringsAsFactors = FALSE)
 }
 
-df <- mk_data(1000000)
 ```
 
 
@@ -84,6 +84,7 @@ base_R_get0 <- function(df) {
     do.call(mapply,c(df,FUN = function(...)
       with(list(...),
            get0(choice,ifnotfound = NA, inherits = FALSE))))
+  df
 }
 
 purrr_get0 <- function(df) {
@@ -126,6 +127,16 @@ dplyr_group_assign <- function(df) {
     ungroup() 
 }
 
+dtplyr_group_assign <- function(df) {
+  # http://www.win-vector.com/blog/2018/09/using-a-column-as-a-column-index/
+  dt <- as.data.table(df)
+  dt %>% 
+    group_by(choice) %>%
+    mutate(derived = .data[[ choice[[1]] ]]) %>%
+    ungroup() 
+}
+
+
 dplyr_rowwise_parse <- function(df) {
   # http://www.win-vector.com/blog/2018/09/using-a-column-as-a-column-index/#comment-67006
   df %>%
@@ -145,7 +156,47 @@ dplyr_rowwise_index <- function(df) {
 rqdatatable_direct <- make_dt_lookup_by_column("choice", "derived")
 ```
 
+```{r check, error = TRUE}
+df <- mk_data(3)
+
+base_R_sapply(df)
+
+base_R_matrix_index_match(df)
+
+base_R_matrix_index_map(df)
+
+base_R_split_apply(df)
+
+base_R_get0(df)
+
+data.table_SD_method(df)
+
+data.table_I_method(df)
+
+dplyr_choice_gather(df)
+
+dplyr_group_assign(df)
+
+dplyr_rowwise_parse(df)
+
+dplyr_rowwise_index(df)
+
+purrr_get0(df)
+
+lookup_by_column(df, "choice", "derived")
+
+lookup_by_column(df, "choice", "derived",
+                 f_dt_factory = make_dt_lookup_by_column)
+
+rqdatatable_direct(df)
+
+dtplyr_group_assign(df)
+```
+
+
 ```{r time}
+df <- mk_data(1000000)
+
 timings <- microbenchmark(
   base_R_sapply = base_R_sapply(df),
   base_R_matrix_index_match = base_R_matrix_index_match(df),

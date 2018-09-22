@@ -20,6 +20,7 @@ library("dplyr")
     ##     intersect, setdiff, setequal, union
 
 ``` r
+library("dtplyr")
 library("tidyr")
 library("purrr")
 library("wrapr")
@@ -69,8 +70,6 @@ mk_data <- function(n) {
              choice = rep(c("x", "y"), ceiling(n/2))[1:n],
              stringsAsFactors = FALSE)
 }
-
-df <- mk_data(1000000)
 ```
 
 ``` r
@@ -129,6 +128,7 @@ base_R_get0 <- function(df) {
     do.call(mapply,c(df,FUN = function(...)
       with(list(...),
            get0(choice,ifnotfound = NA, inherits = FALSE))))
+  df
 }
 
 purrr_get0 <- function(df) {
@@ -171,6 +171,16 @@ dplyr_group_assign <- function(df) {
     ungroup() 
 }
 
+dtplyr_group_assign <- function(df) {
+  # http://www.win-vector.com/blog/2018/09/using-a-column-as-a-column-index/
+  dt <- as.data.table(df)
+  dt %>% 
+    group_by(choice) %>%
+    mutate(derived = .data[[ choice[[1]] ]]) %>%
+    ungroup() 
+}
+
+
 dplyr_rowwise_parse <- function(df) {
   # http://www.win-vector.com/blog/2018/09/using-a-column-as-a-column-index/#comment-67006
   df %>%
@@ -191,6 +201,158 @@ rqdatatable_direct <- make_dt_lookup_by_column("choice", "derived")
 ```
 
 ``` r
+df <- mk_data(3)
+
+base_R_sapply(df)
+```
+
+    ##   x y choice derived
+    ## 1 1 4      x       1
+    ## 2 2 5      y       5
+    ## 3 3 6      x       3
+
+``` r
+base_R_matrix_index_match(df)
+```
+
+    ##   x y choice derived
+    ## 1 1 4      x       1
+    ## 2 2 5      y       5
+    ## 3 3 6      x       3
+
+``` r
+base_R_matrix_index_map(df)
+```
+
+    ##   x y choice derived
+    ## 1 1 4      x       1
+    ## 2 2 5      y       5
+    ## 3 3 6      x       3
+
+``` r
+base_R_split_apply(df)
+```
+
+    ##     x y choice derived
+    ## x.1 1 4      x       1
+    ## y   2 5      y       5
+    ## x.3 3 6      x       3
+
+``` r
+base_R_get0(df)
+```
+
+    ##   x y choice derived
+    ## 1 1 4      x       1
+    ## 2 2 5      y       5
+    ## 3 3 6      x       3
+
+``` r
+data.table_SD_method(df)
+```
+
+    ##    x y choice derived
+    ## 1: 1 4      x       1
+    ## 2: 2 5      y       5
+    ## 3: 3 6      x       3
+
+``` r
+data.table_I_method(df)
+```
+
+    ##    x y choice derived
+    ## 1: 1 4      x       1
+    ## 2: 2 5      y       5
+    ## 3: 3 6      x       3
+
+``` r
+dplyr_choice_gather(df)
+```
+
+    ##   derived x y choice
+    ## 1       1 1 4      x
+    ## 2       5 2 5      y
+    ## 3       3 3 6      x
+
+``` r
+dplyr_group_assign(df)
+```
+
+    ## # A tibble: 3 x 4
+    ##       x     y choice derived
+    ##   <dbl> <dbl> <chr>    <dbl>
+    ## 1     1     4 x            1
+    ## 2     2     5 y            5
+    ## 3     3     6 x            3
+
+``` r
+dplyr_rowwise_parse(df)
+```
+
+    ## # A tibble: 3 x 4
+    ##       x     y choice derived
+    ##   <dbl> <dbl> <chr>    <dbl>
+    ## 1     1     4 x            1
+    ## 2     2     5 y            5
+    ## 3     3     6 x            3
+
+``` r
+dplyr_rowwise_index(df)
+```
+
+    ## # A tibble: 3 x 4
+    ##       x     y choice derived
+    ##   <dbl> <dbl> <chr>    <dbl>
+    ## 1     1     4 x            1
+    ## 2     2     5 y            5
+    ## 3     3     6 x            3
+
+``` r
+purrr_get0(df)
+```
+
+    ##   x y choice derived
+    ## 1 1 4      x       1
+    ## 2 2 5      y       5
+    ## 3 3 6      x       3
+
+``` r
+lookup_by_column(df, "choice", "derived")
+```
+
+    ##    x y choice derived
+    ## 1: 1 4      x       1
+    ## 2: 2 5      y       5
+    ## 3: 3 6      x       3
+
+``` r
+lookup_by_column(df, "choice", "derived",
+                 f_dt_factory = make_dt_lookup_by_column)
+```
+
+    ##    x y choice derived
+    ## 1: 1 4      x       1
+    ## 2: 2 5      y       5
+    ## 3: 3 6      x       3
+
+``` r
+rqdatatable_direct(df)
+```
+
+    ##    x y choice derived
+    ## 1: 1 4      x       1
+    ## 2: 2 5      y       5
+    ## 3: 3 6      x       3
+
+``` r
+dtplyr_group_assign(df)
+```
+
+    ## Error in data.table::is.data.table(data): Column `x` not found in `.data`
+
+``` r
+df <- mk_data(1000000)
+
 timings <- microbenchmark(
   base_R_sapply = base_R_sapply(df),
   base_R_matrix_index_match = base_R_matrix_index_match(df),
@@ -250,21 +412,21 @@ tdf %.>%
 ```
 
     ##                        method mean_seconds
-    ##  1:        dplyr_group_assign   0.05572662
-    ##  2:      data.table_SD_method   0.06716999
-    ##  3:       data.table_I_method   0.07647618
-    ##  4:        rqdatatable_direct   0.08096200
-    ##  5:    rqdatatable_data.table   0.10015152
-    ##  6: base_R_matrix_index_match   0.12339813
-    ##  7:   base_R_matrix_index_map   0.15831438
-    ##  8:          rqdatatable_base   0.19300777
-    ##  9:       dplyr_choice_gather   0.57444927
-    ## 10:        base_R_split_apply   1.44026938
-    ## 11:                purrr_get0   7.79135940
-    ## 12:               base_R_get0   8.08021361
-    ## 13:             base_R_sapply  23.39829664
-    ## 14:       dplyr_rowwise_parse  66.42461707
-    ## 15:       dplyr_rowwise_index  66.97595121
+    ##  1:        rqdatatable_direct   0.05749327
+    ##  2:      data.table_SD_method   0.07813813
+    ##  3:       data.table_I_method   0.08768025
+    ##  4:    rqdatatable_data.table   0.09620344
+    ##  5:        dplyr_group_assign   0.09693442
+    ##  6:   base_R_matrix_index_map   0.10515933
+    ##  7: base_R_matrix_index_match   0.11784773
+    ##  8:          rqdatatable_base   0.13066374
+    ##  9:       dplyr_choice_gather   0.62650677
+    ## 10:        base_R_split_apply   1.60048383
+    ## 11:                purrr_get0   8.40143217
+    ## 12:               base_R_get0   9.06148395
+    ## 13:             base_R_sapply  23.54550663
+    ## 14:       dplyr_rowwise_parse  68.37240328
+    ## 15:       dplyr_rowwise_index  73.53886016
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
