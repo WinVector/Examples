@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Sep 22 09:45:10 2018"
+    ## [1] "Sat Sep 22 10:07:56 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -237,7 +237,74 @@ starwars %>%
 rm(list='homeworld')
 ```
 
-(Essentially an un-run example from the [`dplyr 0.7.0` announcement](https://blog.rstudio.com/2017/06/13/dplyr-0-7-0/).)
+The above is essentially an un-run example from the [`dplyr 0.7.0` announcement](https://blog.rstudio.com/2017/06/13/dplyr-0-7-0/). One can guess that the group by was supposed to be written as `group_by(.data[[!!homeworld]])` or as `group_by(.data[[!!sym(homeworld)]])`. However, the notation in the above snippet seems to be actively promoted by the `dplyr` authors and appears to work until you get hit by a naming coincidence (a coincidence that is fairly likely as often parameter carrying variables do in fact match their typical or prototype value). In fact it is defense against such coincidences that is often sited as the payback for using the heavy `rlang` machinery.
+
+### Arrange documentation
+
+The `help(arrange, package = "dplyr")` says that the "`...`" arguments to arrange are a "Comma separated list of unquoted variable names. Use desc() to sort a variable in descending order."
+
+With that in mind what should be the result of the following code?
+
+``` r
+mtcars %>%
+  arrange(-hp/cyl) %>%
+  head()
+```
+
+    ##    mpg cyl disp  hp drat    wt  qsec vs am gear carb
+    ## 1 15.0   8  301 335 3.54 3.570 14.60  0  1    5    8
+    ## 2 15.8   8  351 264 4.22 3.170 14.50  0  1    5    4
+    ## 3 14.3   8  360 245 3.21 3.570 15.84  0  0    3    4
+    ## 4 13.3   8  350 245 3.73 3.840 15.41  0  0    3    4
+    ## 5 19.7   6  145 175 3.62 2.770 15.50  0  1    5    6
+    ## 6 14.7   8  440 230 3.23 5.345 17.42  0  0    3    4
+
+Assuming code like the above is in fact allowed (and not protected against) when should the result of the next two examples be? (Hint: should they be equal?)
+
+``` r
+iris2 <- data.frame(
+  Petal.Width = c(1.3, 0.2, 0.6, 0.3),
+  Species = c("versicolor", "setosa", "setosa", "setosa"),
+  stringsAsFactors = FALSE)
+
+iris2 %>%
+  group_by(Species) %>%
+  arrange(Species, Petal.Width) %>%
+  head()
+```
+
+    ## # A tibble: 4 x 2
+    ## # Groups:   Species [2]
+    ##   Petal.Width Species   
+    ##         <dbl> <chr>     
+    ## 1         0.2 setosa    
+    ## 2         0.3 setosa    
+    ## 3         0.6 setosa    
+    ## 4         1.3 versicolor
+
+``` r
+iris2 %>%
+  group_by(Species) %>%
+  arrange(Species, order(Petal.Width)) %>%
+  head()
+```
+
+    ## # A tibble: 4 x 2
+    ## # Groups:   Species [2]
+    ##   Petal.Width Species   
+    ##         <dbl> <chr>     
+    ## 1         0.3 setosa    
+    ## 2         0.6 setosa    
+    ## 3         0.2 setosa    
+    ## 4         1.3 versicolor
+
+``` r
+rm(list = "iris2")
+```
+
+(From [3782](https://github.com/tidyverse/dplyr/issues/3782).)
+
+### More on the .data pronoun
 
 The `.data` pronoun is supposed to give another a method to reliably refer to `data.frame` columns. However it represents a different execution path, and often has its own behavior. Guess the name of the column of this next pipeline. Bonus points: look at all of the intermediate results, you may notice the two identical selects have different meanings in this pipeline.
 
