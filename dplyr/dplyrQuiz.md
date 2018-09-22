@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Sep 22 10:08:10 2018"
+    ## [1] "Sat Sep 22 10:22:29 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -346,7 +346,7 @@ My quiz-grading principle comes from *Software for Data Analysis: Programming wi
 
 The point is: to know a long calculation is correct, we must at least know all the small steps did what we (the analyst) intended (and not something else). To go back to one of our examples: the analyst must know the column selected in their analysis was *always* the one they intended.
 
-`dplyr` has been subject to very rapid evolution, and has accumulated as least as many legacy behaviors (choices that don't currently make sense, but are hard to change) as base-`R` itself. In fact I feel when using base-`R` as long as one remembers to use `drop = FALSE` and `stringsAsFactors = FALSE` (two defaults that must forever be left in these undesirable settings for legacy reasons) one can code in a fairly safe and consistent manner. I believe base-`R` is in fact more regular than `dplyr`.
+`dplyr` has been subject to very rapid evolution, and has accumulated as least as many legacy behaviors (choices that don't currently make sense, but are hard to change) as base-`R` itself. In fact I feel when using base-`R` as long as one remembers to use `drop = FALSE` and `stringsAsFactors = FALSE` (two defaults that must forever be left in these undesirable settings for legacy reasons) one can code in a fairly safe and consistent manner. I believe base-`R` is in fact more regular than `dplyr` (despite the [`R`-inferno](https://www.burns-stat.com/pages/Tutor/R_inferno.pdf)).
 
 I may or may not keep these up to date depending on the utility of such a list going forward.
 
