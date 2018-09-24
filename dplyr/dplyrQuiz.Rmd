@@ -1,7 +1,7 @@
 ---
 title: "Advanced dplyr Quiz"
 author: "John Mount"
-date: "9/22/2018"
+date: "9/24/2018"
 output: github_document
 params:
   dorun: true
@@ -92,7 +92,7 @@ data.frame(x = 1) %>%
 rm(list='y') # clean up
 ```
 
-(From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+(From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904), see also [here](http://www.win-vector.com/blog/2018/09/a-subtle-flaw-in-some-popular-r-nse-interfaces/).)
 
 
 ## distinct

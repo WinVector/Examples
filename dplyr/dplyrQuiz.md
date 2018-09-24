@@ -1,7 +1,7 @@
 Advanced dplyr Quiz
 ================
 John Mount
-9/22/2018
+9/24/2018
 
 Advanced dplyr Quiz
 ===================
@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Sep 22 10:22:29 2018"
+    ## [1] "Mon Sep 24 11:39:03 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -99,7 +99,7 @@ data.frame(x = 1) %>%
 rm(list='y') # clean up
 ```
 
-(From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904).)
+(From [`dplyr` issue 2904](https://github.com/tidyverse/dplyr/issues/2904), see also [here](http://www.win-vector.com/blog/2018/09/a-subtle-flaw-in-some-popular-r-nse-interfaces/).)
 
 distinct
 --------
