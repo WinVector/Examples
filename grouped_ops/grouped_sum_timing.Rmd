@@ -1,0 +1,155 @@
+---
+title: "grouped_sum_timing.Rmd"
+output: github_document
+---
+
+```{r def}
+library("dplyr")
+packageVersion("dplyr")
+library("data.table")
+packageVersion("data.table")
+library("microbenchmark")
+library("WVPlots")
+
+f_base_R_split <- function(data) {
+  # first sort the data
+  order_index <- with(data, 
+                      order(x, y, decreasing = TRUE))
+  odata <- data[order_index, , drop = FALSE]
+  # now split into groups
+  data_list <- split(odata, -odata$x)
+  # apply the cumsum to each group
+  data_list <- lapply(
+    data_list,
+    function(di) {
+      di$running_y_sum <- cumsum(di$y)
+      di
+    })
+  # put the results back to together
+  odata <- do.call(rbind, data_list)
+  rownames(odata) <- NULL
+  odata
+}
+
+# does not allow NA
+f_base_R_running <- function(data) {
+  # first sort the data
+  order_index <- with(data, order(x, y, decreasing = TRUE))
+  odata <- data[order_index, , drop = FALSE]
+  # now compute a running sum across all groups
+  if(any(is.na(odata$y))) {
+    stop("saw NA")
+  }
+  odata$running_y_sum <- cumsum(odata$y)
+  # now identify where x changes value
+  group_start_index <- c(TRUE, odata$x[-1] != odata$x[-nrow(odata)])
+  # use the group start markers to get the index of the first row
+  # for each group
+  group_start_index <- ifelse(group_start_index, 
+                              seq_len(length(group_start_index)), 0)
+  group_start_index <- cummax(group_start_index)
+  # subtract off the group starts to 
+  # convert non-grouped running sum to per-group running sums
+  offset <- odata$y - odata$running_y_sum
+  odata$running_y_sum <- odata$running_y_sum  + offset[group_start_index]
+  rownames(odata) <- NULL
+  odata
+}
+# above is a general grouped cumsum
+# similar ideas can implement:
+#  zoo::na.locf() (propogate index to last good value)
+#  grouped zoo::na.locf() (more detailed version of above)
+#  grouped min/max (first row in each group under appropriate sorting)
+#  grouped sum (at worst cumsum and grouped max)
+
+
+f_data.table <- function(data) {
+  data_data.table <- as.data.table(data)
+  
+  # sort data
+  setorderv(data_data.table, c("x", "y"), order = -1L)
+  # apply operation in each x-defined group
+  data_data.table[ , running_y_sum := cumsum(y), by = "x"]
+  
+  data_data.table[]
+}
+
+f_dplyr <- function(data) {
+  data %>%
+    arrange(., desc(x), desc(y)) %>%
+    group_by(., x) %>%
+    mutate(., running_y_sum = cumsum(y)) %>%
+    ungroup(.)
+}
+
+data <- wrapr::build_frame(
+   "x", "y" |
+   1  , 1   |
+   0  , 0   |
+   1  , 0   |
+   0  , 1   |
+   0  , 0   |
+   1  , 1   )
+
+my_check <- function(values) {
+  v1 <- data.frame(values[[1]])
+  all(vapply(values[-1], 
+             function(x) {
+               isTRUE(all.equal(v1, data.frame(x)))
+             },
+             logical(1)))
+}
+
+lst <- list( 
+  base_R_split = f_base_R_split(data),
+  base_R_running = f_base_R_running(data),
+  data.table = f_data.table(data),
+  dplyr = f_dplyr(data))
+
+print(lst)
+
+my_check(lst)
+```
+
+```{r timing}
+nrow <- 1000000
+nsym <- 100000
+set.seed(235236)
+data <- data.frame(x = sample.int(nsym, nrow, replace = TRUE))
+data$y <- rnorm(nrow(data))
+
+lst <- list( 
+  base_R_split = f_base_R_split(data),
+  base_R_running = f_base_R_running(data),
+  data.table = f_data.table(data),
+  dplyr = f_dplyr(data))
+my_check(lst)
+lst <- NULL
+
+
+timing <- microbenchmark(
+  base_R_split = f_base_R_split(data),
+  base_R_running = f_base_R_running(data),
+  data.table = f_data.table(data),
+  dplyr = f_dplyr(data),
+  times = 10L
+)
+
+print(timing)
+```
+
+```{r present}
+tm <- as.data.frame(timing)
+tm$seconds <- tm$time/1e+9
+tm$method <- factor(tm$expr)
+tm$method <- reorder(tm$method, tm$seconds)
+ScatterBoxPlotH(tm, 
+                "seconds", "method", 
+                "task time by method")
+```
+
+
+
+
+
+
