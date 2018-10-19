@@ -42,6 +42,7 @@ packageVersion("data.table")
 ``` r
 library("microbenchmark")
 library("WVPlots")
+library("FastBaseR")
 
 f_base_R_split <- function(data) {
   # first sort the data
@@ -68,30 +69,15 @@ f_base_R_running <- function(data) {
   # first sort the data
   order_index <- with(data, order(x, y, decreasing = TRUE))
   odata <- data[order_index, , drop = FALSE]
-  # now compute a running sum across all groups
-  if(any(is.na(odata$y))) {
-    stop("saw NA")
-  }
-  odata$running_y_sum <- cumsum(odata$y)
-  # now identify where x changes value
-  group_start_index <- c(TRUE, odata$x[-1] != odata$x[-nrow(odata)])
-  # use the group start markers to get the index of the first row
-  # for each group
-  group_start_index <- ifelse(group_start_index, 
-                              seq_len(length(group_start_index)), 0)
-  group_start_index <- cummax(group_start_index)
-  # subtract off the group starts to 
-  # convert non-grouped running sum to per-group running sums
-  offset <- odata$y - odata$running_y_sum
-  odata$running_y_sum <- odata$running_y_sum  + offset[group_start_index]
   rownames(odata) <- NULL
+  first_indices <- mark_first_in_each_group(odata, "x")
+  odata$running_y_sum <- cumsum_g(odata$y, first_indices)
   odata
 }
 # above is a general grouped cumsum
 # similar ideas can implement:
 #  zoo::na.locf() (propogate index to last good value)
 #  grouped zoo::na.locf() (more detailed version of above)
-#  grouped min/max (first row in each group under appropriate sorting)
 #  grouped sum (at worst cumsum and grouped max)
 
 
@@ -218,16 +204,16 @@ print(timing)
 ```
 
     ## Unit: milliseconds
-    ##            expr       min         lq       mean     median        uq
-    ##    base_R_split 13421.546 13867.2538 14287.5633 14088.6780 15004.193
-    ##  base_R_running   310.213   446.1808   650.6018   525.2140   861.440
-    ##      data.table   159.415   162.6635   184.1573   163.0788   166.738
-    ##           dplyr  2154.965  2242.2044  2449.1062  2294.0786  2689.519
-    ##         max neval  cld
-    ##  15272.3679    10    d
-    ##   1211.4091    10  b  
-    ##    354.1081    10 a   
-    ##   2953.8621    10   c
+    ##            expr        min         lq       mean     median         uq
+    ##    base_R_split 13164.7168 13924.5205 14487.9381 14342.0757 15293.0643
+    ##  base_R_running   397.6931   430.5098   654.0105   505.1694   882.4682
+    ##      data.table   161.1109   162.0652   192.3184   164.4757   177.6825
+    ##           dplyr  2160.4281  2257.6933  2591.6680  2319.4578  2954.5711
+    ##         max neval cld
+    ##  16158.4283    10   c
+    ##   1192.3313    10 a  
+    ##    412.6025    10 a  
+    ##   3561.2299    10  b
 
 ``` r
 tm <- as.data.frame(timing)

@@ -10,6 +10,7 @@ library("data.table")
 packageVersion("data.table")
 library("microbenchmark")
 library("WVPlots")
+library("FastBaseR")
 
 f_base_R_split <- function(data) {
   # first sort the data
@@ -36,30 +37,15 @@ f_base_R_running <- function(data) {
   # first sort the data
   order_index <- with(data, order(x, y, decreasing = TRUE))
   odata <- data[order_index, , drop = FALSE]
-  # now compute a running sum across all groups
-  if(any(is.na(odata$y))) {
-    stop("saw NA")
-  }
-  odata$running_y_sum <- cumsum(odata$y)
-  # now identify where x changes value
-  group_start_index <- c(TRUE, odata$x[-1] != odata$x[-nrow(odata)])
-  # use the group start markers to get the index of the first row
-  # for each group
-  group_start_index <- ifelse(group_start_index, 
-                              seq_len(length(group_start_index)), 0)
-  group_start_index <- cummax(group_start_index)
-  # subtract off the group starts to 
-  # convert non-grouped running sum to per-group running sums
-  offset <- odata$y - odata$running_y_sum
-  odata$running_y_sum <- odata$running_y_sum  + offset[group_start_index]
   rownames(odata) <- NULL
+  first_indices <- mark_first_in_each_group(odata, "x")
+  odata$running_y_sum <- cumsum_g(odata$y, first_indices)
   odata
 }
 # above is a general grouped cumsum
 # similar ideas can implement:
 #  zoo::na.locf() (propogate index to last good value)
 #  grouped zoo::na.locf() (more detailed version of above)
-#  grouped min/max (first row in each group under appropriate sorting)
 #  grouped sum (at worst cumsum and grouped max)
 
 
