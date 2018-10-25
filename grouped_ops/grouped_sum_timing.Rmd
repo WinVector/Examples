@@ -3,6 +3,8 @@ title: "grouped_sum_timing.Rmd"
 output: github_document
 ---
 
+Example using [`FastBaseR`](https://github.com/WinVector/FastBaseR).
+
 ```{r def}
 library("dplyr")
 packageVersion("dplyr")
@@ -32,7 +34,6 @@ f_base_R_split <- function(data) {
   odata
 }
 
-# does not allow NA
 f_base_R_running <- function(data) {
   # first sort the data
   order_index <- with(data, order(x, y, decreasing = TRUE))
@@ -42,11 +43,6 @@ f_base_R_running <- function(data) {
   odata$running_y_sum <- cumsum_g(odata$y, first_indices)
   odata
 }
-# above is a general grouped cumsum
-# similar ideas can implement:
-#  zoo::na.locf() (propogate index to last good value)
-#  grouped zoo::na.locf() (more detailed version of above)
-#  grouped sum (at worst cumsum and grouped max)
 
 
 f_data.table <- function(data) {

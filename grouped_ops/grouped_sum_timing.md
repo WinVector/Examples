@@ -1,6 +1,8 @@
 grouped\_sum\_timing.Rmd
 ================
 
+Example using [`FastBaseR`](https://github.com/WinVector/FastBaseR).
+
 ``` r
 library("dplyr")
 ```
@@ -64,7 +66,6 @@ f_base_R_split <- function(data) {
   odata
 }
 
-# does not allow NA
 f_base_R_running <- function(data) {
   # first sort the data
   order_index <- with(data, order(x, y, decreasing = TRUE))
@@ -74,11 +75,6 @@ f_base_R_running <- function(data) {
   odata$running_y_sum <- cumsum_g(odata$y, first_indices)
   odata
 }
-# above is a general grouped cumsum
-# similar ideas can implement:
-#  zoo::na.locf() (propogate index to last good value)
-#  grouped zoo::na.locf() (more detailed version of above)
-#  grouped sum (at worst cumsum and grouped max)
 
 
 f_data.table <- function(data) {
@@ -205,15 +201,15 @@ print(timing)
 
     ## Unit: milliseconds
     ##            expr        min         lq       mean     median         uq
-    ##    base_R_split 13164.7168 13924.5205 14487.9381 14342.0757 15293.0643
-    ##  base_R_running   397.6931   430.5098   654.0105   505.1694   882.4682
-    ##      data.table   161.1109   162.0652   192.3184   164.4757   177.6825
-    ##           dplyr  2160.4281  2257.6933  2591.6680  2319.4578  2954.5711
+    ##    base_R_split 12650.9977 14041.3320 14417.0595 14341.4191 15309.4664
+    ##  base_R_running   400.1429   422.6459   652.3276   510.1481   859.6739
+    ##      data.table   158.5339   163.0760   195.0300   164.5713   184.1905
+    ##           dplyr  2227.6616  2296.3252  2638.2539  2380.4040  2974.8971
     ##         max neval cld
-    ##  16158.4283    10   c
-    ##   1192.3313    10 a  
-    ##    412.6025    10 a  
-    ##   3561.2299    10  b
+    ##  16411.9355    10   c
+    ##   1169.7952    10 a  
+    ##    404.3589    10 a  
+    ##   3653.6679    10  b
 
 ``` r
 tm <- as.data.frame(timing)
