@@ -1,6 +1,12 @@
 timings
 ================
 
+For details please see these articles:
+
+  * [Using a Column as a Column Index](http://www.win-vector.com/blog/2018/09/using-a-column-as-a-column-index/)
+  * [Timing Column Indexing in R](http://www.win-vector.com/blog/2018/09/timing-column-indexing-in-r/)
+
+
 ``` r
 library("microbenchmark")
 library("dplyr")
