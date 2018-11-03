@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Nov  3 16:17:10 2018"
+    ## [1] "Sat Nov  3 16:19:19 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -264,6 +264,13 @@ d_remote <- dplyr::copy_to(db, d_local,
 
 d_remote %>% 
   mutate(y = 1, y = y + 1, y = y + 1)
+```
+
+coalesce
+--------
+
+``` r
+coalesce(NA, 0)
 ```
 
 Conclusion

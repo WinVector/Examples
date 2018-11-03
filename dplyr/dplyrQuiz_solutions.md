@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Sat Nov  3 16:16:41 2018"
+    ## [1] "Sat Nov  3 16:19:00 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -380,6 +380,15 @@ d_remote %>%
     ##       x     y
     ##   <dbl> <dbl>
     ## 1     1     2
+
+coalesce
+--------
+
+``` r
+coalesce(NA, 0)
+```
+
+    ## Error: Argument 2 must be type logical, not double
 
 Conclusion
 ==========

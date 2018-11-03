@@ -255,7 +255,11 @@ d_remote %>%
   mutate(y = 1, y = y + 1, y = y + 1)
 ```
 
+## coalesce
 
+```{r dpc, error=TRUE, eval=DORUN}
+coalesce(NA, 0)
+```
 
 # Conclusion
 
