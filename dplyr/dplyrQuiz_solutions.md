@@ -26,7 +26,7 @@ With the current version of `dplyr` in mind, please anticipate the result of eac
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.7.6'
+    ## [1] '0.7.7'
 
 ``` r
 packageVersion("dbplyr")
@@ -44,7 +44,7 @@ packageVersion("RSQlite")
 packageVersion("rlang")
 ```
 
-    ## [1] '0.2.2'
+    ## [1] '0.3.0.1'
 
 ``` r
 packageVersion("magrittr")
@@ -56,7 +56,7 @@ packageVersion("magrittr")
 base::date()
 ```
 
-    ## [1] "Mon Sep 24 11:38:23 2018"
+    ## [1] "Sat Nov  3 16:16:41 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -198,48 +198,8 @@ rm(list='z') # clean up
 
 (From [`dplyr` issue 2945](https://github.com/tidyverse/dplyr/issues/2945).)
 
-Column grouping
----------------
-
-### Grouping by the .data pronoun
-
-In `dplyr` summary calculations the only grouping variables and summary results are retained. With that in mind to guess the column names produces in the following code snippet.
-
-``` r
-y <- 'x'
-
-data.frame(x = 1) %>% 
-  group_by(.data[[y]]) %>% 
-  summarize(count = n()) %>% 
-  colnames()
-```
-
-    ## [1] "y"     "count"
-
-``` r
-rm(list='y') # clean up
-```
-
-What is the result of this code snippet?
-
-``` r
-homeworld <- "homeworld"
-
-starwars %>%
-  group_by(.data[[homeworld]]) %>%
-  summarise_at(vars(height:mass), mean, na.rm = TRUE) %>%
-  head()
-```
-
-    ## Error in mutate_impl(.data, dots): Evaluation error: Must subset the data pronoun with a string.
-
-``` r
-rm(list='homeworld')
-```
-
-The above is essentially an un-run example from the [`dplyr 0.7.0` announcement](https://blog.rstudio.com/2017/06/13/dplyr-0-7-0/). One can guess that the group by was supposed to be written as `group_by(.data[[!!homeworld]])` or as `group_by(.data[[!!sym(homeworld)]])`. However, the notation in the above snippet seems to be actively promoted by the `dplyr` authors and appears to work until you get hit by a naming coincidence (a coincidence that is fairly likely as often parameter carrying variables do in fact match their typical or prototype value). In fact it is defense against such coincidences that is often sited as the payback for using the heavy `rlang` machinery.
-
-### Arrange documentation
+Arrange
+-------
 
 The `help(arrange, package = "dplyr")` says that the "`...`" arguments to arrange are a "Comma separated list of unquoted variable names. Use desc() to sort a variable in descending order."
 
@@ -304,91 +264,17 @@ rm(list = "iris2")
 
 (From [3782](https://github.com/tidyverse/dplyr/issues/3782).)
 
-### More on the .data pronoun
-
-The `.data` pronoun is supposed to give another a method to reliably refer to `data.frame` columns. However it represents a different execution path, and often has its own behavior. Guess the name of the column of this next pipeline. Bonus points: look at all of the intermediate results, you may notice the two identical selects have different meanings in this pipeline.
-
-``` r
-grouping_column <- "homeworld"
-
-starwars %>%
-  select(.data[[grouping_column]]) %>%
-  group_by(.data[[grouping_column]]) %>%
-  select(.data[[grouping_column]])
-```
-
-    ## # A tibble: 87 x 1
-    ## # Groups:   grouping_column [49]
-    ##    grouping_column
-    ##    <chr>          
-    ##  1 Tatooine       
-    ##  2 Tatooine       
-    ##  3 Naboo          
-    ##  4 Tatooine       
-    ##  5 Alderaan       
-    ##  6 Tatooine       
-    ##  7 Tatooine       
-    ##  8 Tatooine       
-    ##  9 Tatooine       
-    ## 10 Stewjon        
-    ## # ... with 77 more rows
-
-``` r
-rm(list='grouping_column')
-```
-
-(From [`dplyr` issue 2916](https://github.com/tidyverse/dplyr/issues/2916) and [`dplyr` issue 2991](https://github.com/tidyverse/dplyr/issues/2991), notation taken from [here](https://blog.rstudio.org/2017/06/13/dplyr-0-7-0/). A note on how the behavior of the "pronouns" has not matched their description since the announcement of `dplyr` `0.7.0` can be found [here](http://www.win-vector.com/blog/2017/08/is-dplyr-easily-comprehensible/#comment-66674).)
-
-Piping into different targets (functions, blocks expressions):
---------------------------------------------------------------
-
-functions
+summarize
 ---------
 
-`dplyr` has many tools and rules for introducing functions. I am not certain if the following is correct idiom, but three of these 4 pipelines appear to work. Please try to guess which one fails.
-
 ``` r
-f <- . %>% { sum(!is.na(.)) }
-
-dplyr::summarise_all(data.frame(wat = letters), 
-                     dplyr::funs(f))
+dplyr::summarize(data.frame(x = 1), 
+                 x = max(x), 
+                 min_x = min(x))
 ```
 
-    ##   wat
-    ## 1  26
-
-``` r
-dplyr::summarise_all(data.frame(wat = letters), 
-                     dplyr::funs(. %>% { sum(!is.na(.)) }))
-```
-
-    ##   wat
-    ## 1  26
-
-``` r
-f <- function(col) { sum(!is.na(col)) }
-
-dplyr::summarise_all(data.frame(wat = letters), 
-                     dplyr::funs(f))
-```
-
-    ##   wat
-    ## 1  26
-
-``` r
-dplyr::summarise_all(data.frame(wat = letters), 
-                     dplyr::funs(function(col) { sum(!is.na(col)) }))
-```
-
-    ## Error: `function(col) {
-    ##     sum(!is.na(col))
-    ## }` must be a function name (quoted or unquoted) or an unquoted call, not `function`
-
-``` r
-rm(list='f')
-```
-
-(From [`dplyr` issue 3094](https://github.com/tidyverse/dplyr/issues/3094).)
+    ##   x min_x
+    ## 1 1     0
 
 Databases
 =========
@@ -468,29 +354,32 @@ The above issue is indeed a shortcoming of the database, but it is possible to g
 
 (From [`dplyr` issue 2858](https://github.com/tidyverse/dplyr/issues/2858).)
 
-mutate\_all funs()
-------------------
-
-They following *does* make sense, *if* one knows the exact (undocumented) rules of what `dbplyr` is willing to translate and what it can not translate. Notice in each case the result is wrong (including having a mutate drop a column!).
+variable/value tracking
+-----------------------
 
 ``` r
-dL %>% select(x) %>% 
-  mutate_all(funs(round(., digits = 2)))
+d_local <- data.frame(x = 1)
+
+d_local %>% 
+  mutate(y = 1, y = y + 1, y = y + 1)
 ```
 
-    ##      x
-    ## 1 3.08
+    ##   x y
+    ## 1 1 3
 
 ``` r
-dR %>% select(x) %>% 
-  mutate_all(funs(round(., digits = 2)))
+d_remote <- dplyr::copy_to(db, d_local, 
+                           "d_remote")
+
+d_remote %>% 
+  mutate(y = 1, y = y + 1, y = y + 1)
 ```
 
-    ## Warning: Named arguments ignored for SQL ROUND
-
-    ## Error in result_create(conn@ptr, statement): near "AS": syntax error
-
-(From [`dplyr` issue 2890](https://github.com/tidyverse/dplyr/issues/2890) and [`dplyr` issue 2908](https://github.com/tidyverse/dplyr/issues/2908).)
+    ## # Source:   lazy query [?? x 2]
+    ## # Database: sqlite 3.22.0 [:memory:]
+    ##       x     y
+    ##   <dbl> <dbl>
+    ## 1     1     2
 
 Conclusion
 ==========
