@@ -53,10 +53,16 @@ packageVersion("magrittr")
     ## [1] '1.5'
 
 ``` r
+packageVersion("tidyselect")
+```
+
+    ## [1] '0.2.5'
+
+``` r
 base::date()
 ```
 
-    ## [1] "Sat Nov  3 16:19:00 2018"
+    ## [1] "Sun Nov  4 14:16:33 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -275,6 +281,140 @@ dplyr::summarize(data.frame(x = 1),
 
     ##   x min_x
     ## 1 1     0
+
+Grouping
+--------
+
+``` r
+x <- "Species"
+
+iris %>% group_by(Species) %>% summarize(n = n())
+```
+
+    ## # A tibble: 3 x 2
+    ##   Species        n
+    ##   <fct>      <int>
+    ## 1 setosa        50
+    ## 2 versicolor    50
+    ## 3 virginica     50
+
+``` r
+x <- "Species"
+
+iris %>% group_by(x) %>% summarize(n = n())
+```
+
+    ## Error in grouped_df_impl(data, unname(vars), drop): Column `x` is unknown
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!x) %>% summarize(n = n())
+```
+
+    ## # A tibble: 1 x 2
+    ##   `"Species"`     n
+    ##   <chr>       <int>
+    ## 1 Species       150
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!quo(x)) %>% summarize(n = n())
+```
+
+    ## Error in grouped_df_impl(data, unname(vars), drop): Column `x` is unknown
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!enquo(x)) %>% summarize(n = n())
+```
+
+    ## # A tibble: 1 x 2
+    ##   `"Species"`     n
+    ##   <chr>       <int>
+    ## 1 Species       150
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!expr(x)) %>% summarize(n = n())
+```
+
+    ## Error in grouped_df_impl(data, unname(vars), drop): Column `x` is unknown
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!enexpr(x)) %>% summarize(n = n())
+```
+
+    ## # A tibble: 1 x 2
+    ##   `"Species"`     n
+    ##   <chr>       <int>
+    ## 1 Species       150
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data$!!x) %>% summarize(n = n())
+```
+
+    ## Error: <text>:3:25: unexpected '!'
+    ## 2: 
+    ## 3: iris %>% group_by(.data$!
+    ##                            ^
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data[[x]]) %>% summarize(n = n())
+```
+
+    ## # A tibble: 3 x 2
+    ##   Species        n
+    ##   <fct>      <int>
+    ## 1 setosa        50
+    ## 2 versicolor    50
+    ## 3 virginica     50
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!sym(x)) %>% summarize(n = n())
+```
+
+    ## # A tibble: 3 x 2
+    ##   Species        n
+    ##   <fct>      <int>
+    ## 1 setosa        50
+    ## 2 versicolor    50
+    ## 3 virginica     50
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data[[!!x]]) %>% summarize(n = n())
+```
+
+    ## Warning: It is no longer necessary to unquote within the `.data` pronoun
+    ## This warning is displayed once per session.
+
+    ## # A tibble: 3 x 2
+    ##   Species        n
+    ##   <fct>      <int>
+    ## 1 setosa        50
+    ## 2 versicolor    50
+    ## 3 virginica     50
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data[[!!sym(x)]]) %>% summarize(n = n())
+```
+
+    ## Error in mutate_impl(.data, dots): Evaluation error: Must subset the data pronoun with a string.
 
 Databases
 =========

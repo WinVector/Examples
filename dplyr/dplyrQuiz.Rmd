@@ -48,6 +48,7 @@ packageVersion("dbplyr")
 packageVersion("RSQlite")
 packageVersion("rlang")
 packageVersion("magrittr")
+packageVersion("tidyselect")
 base::date()
 ```
 
@@ -188,10 +189,84 @@ rm(list = "iris2")
 
 ## summarize
 
-```{r dsumarrize, eval=DORUN}
+```{r dsumarrize, eval=DORUN, error=TRUE}
 dplyr::summarize(data.frame(x = 1), 
                  x = max(x), 
                  min_x = min(x))
+```
+
+## Grouping
+
+```{r dplyrqta01, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(Species) %>% summarize(n = n())
+```
+
+```{r dplyrqta02, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(x) %>% summarize(n = n())
+```
+
+```{r dplyrqta03, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(!!x) %>% summarize(n = n())
+```
+
+```{r dplyrqta04, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(!!quo(x)) %>% summarize(n = n())
+```
+
+```{r dplyrqta05, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(!!enquo(x)) %>% summarize(n = n())
+```
+
+```{r dplyrqta06, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(!!expr(x)) %>% summarize(n = n())
+```
+
+```{r dplyrqta07, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(!!enexpr(x)) %>% summarize(n = n())
+```
+
+```{r dplyrqa08, error=TRUE, message=FALSE, warning=FALSE}
+x <- "Species"
+
+iris %>% group_by(.data$!!x) %>% summarize(n = n())
+```
+
+```{r dplyrqta09, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(.data[[x]]) %>% summarize(n = n())
+```
+
+```{r dplyrqt10, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(!!sym(x)) %>% summarize(n = n())
+```
+
+```{r dplyrqta11, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(.data[[!!x]]) %>% summarize(n = n())
+```
+
+```{r dplyrqta12, eval=DORUN, error=TRUE}
+x <- "Species"
+
+iris %>% group_by(.data[[!!sym(x)]]) %>% summarize(n = n())
 ```
 
 # Databases

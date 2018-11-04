@@ -53,10 +53,16 @@ packageVersion("magrittr")
     ## [1] '1.5'
 
 ``` r
+packageVersion("tidyselect")
+```
+
+    ## [1] '0.2.5'
+
+``` r
 base::date()
 ```
 
-    ## [1] "Sat Nov  3 16:19:19 2018"
+    ## [1] "Sun Nov  4 14:17:19 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -199,6 +205,86 @@ summarize
 dplyr::summarize(data.frame(x = 1), 
                  x = max(x), 
                  min_x = min(x))
+```
+
+Grouping
+--------
+
+``` r
+x <- "Species"
+
+iris %>% group_by(Species) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(x) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!x) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!quo(x)) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!enquo(x)) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!expr(x)) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!enexpr(x)) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data$!!x) %>% summarize(n = n())
+```
+
+    ## Error: <text>:3:25: unexpected '!'
+    ## 2: 
+    ## 3: iris %>% group_by(.data$!
+    ##                            ^
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data[[x]]) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(!!sym(x)) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data[[!!x]]) %>% summarize(n = n())
+```
+
+``` r
+x <- "Species"
+
+iris %>% group_by(.data[[!!sym(x)]]) %>% summarize(n = n())
 ```
 
 Databases
