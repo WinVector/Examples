@@ -10,7 +10,7 @@ Advanced dplyr Quiz
 
 The `dplyr` system is built up of many exceptions and sub-systems (tidyselect, hybrideval, rlang) and legacy choices (choices that may or may not have made sense when made, but are harmful now). In my opinion `dplyr` can be more irregular than base-`R`, despite many claims and much teaching to the contrary. By all means use `dplyr`, but *please* take its marketing with a grain of salt (especially when working with new users). Also understand, if your method of promoting `dplyr` is to try and make the case that `R` is unusable: you are at best chasing users away from `R` (likely into `Python`, where they will actually be quite happy).
 
-Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz. It tries to show how anticipating the result of each operation can be difficult.
+Below is our advanced [`dplyr`](https://CRAN.R-project.org/package=dplyr) quiz. It tries to show how anticipating the result of each operation can be difficult. (The raw [quiz is here](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz.md) and [solutions are here](https://github.com/WinVector/Examples/blob/master/dplyr/dplyrQuiz_solutions.md).)
 
 ![](Pop_Quiz_Hot_Shot.jpg)
 
@@ -62,7 +62,7 @@ packageVersion("tidyselect")
 base::date()
 ```
 
-    ## [1] "Sun Nov  4 14:17:19 2018"
+    ## [1] "Mon Nov  5 08:57:47 2018"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
@@ -209,6 +209,8 @@ dplyr::summarize(data.frame(x = 1),
 
 Grouping
 --------
+
+`rlang` has a large number quoting mechanisms and various contexts (selection/non-selection) that decide which mechanisms apply. Please try to anticipate which of the following give correct results, errors, or warnings.
 
 ``` r
 x <- "Species"
