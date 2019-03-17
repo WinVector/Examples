@@ -145,6 +145,7 @@ summary(d$has_problem)
 
 ``` r
 d <- select_rows(d, !is.na(has_problem))
+d <- data.frame(d)
 
 # take a look
 d %.>% 
@@ -243,6 +244,12 @@ summary(pred_plus / pred)
 
 ``` r
 d$modeled_problem_probability <- pred
+
+write.csv(d[ , qc(Package, nUsing, 
+                  ERROR, FAIL, NOTE, OK, WARN, 
+                  has_problem, modeled_problem_probability)], 
+          "d.csv", 
+          row.names = FALSE, quote = FALSE)
 ```
 
 The above can be read that add an additional package is associated with an absolute 1.7% increase of probability of package problems and a relative increase of risk of 11%.
