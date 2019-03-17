@@ -6,13 +6,13 @@ Introduction
 
 The following is a *very* basic and cursory study on package Depends/Imports and its observed relation to package risk.
 
-The conclusion is: [R](https://www.r-project.org) packages on [CRAN](https://cran.r-project.org) tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 1.8% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect).
+The conclusion is: [R](https://www.r-project.org) packages on [CRAN](https://cran.r-project.org) tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 1.8% chance of being observed in the bad state or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect).
 
 This model captures and quantifies the fact that packages with 5 or more Imports plus Depends have an elevated number of problem indications on CRAN.
 
-There is a heavy censorship issue (CRAN tends to remove error packages). Obvious omitted variables include: package complexity in general and package authors. Also detected package issues is a weak proxy for package quality.
+There is a heavy statistical censorship issue (CRAN tends to remove error packages). Obvious omitted variables include: package complexity in general and package authors. Also detected package problems are only a weak proxy for package quality.
 
-One theory is: an excess number of dependencies is a "code smell" indicating broad packages that serve many purposes. Or that in addition to dependent packages possibly bringing in issue, they are themselves indicators of other issues.
+One theory is: an excess number of dependencies is a "code smell" indicating broad packages that serve many purposes. Or that in addition to dependent packages possibly bringing in issues, they are themselves indicators of other issues.
 
 The Study
 ---------
