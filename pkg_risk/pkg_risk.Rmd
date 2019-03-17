@@ -163,13 +163,6 @@ d$modeled_problem_probability <- pred
 
 The above can be read that add an additional package is associated with an absolute 1.7% increase of probability of package problems and a relative increase of risk of 11%.
 
-Let's take a look at some well know high dependency packages.
-
-```{r}
-d[d$Package %in% c("dplyr", "tidyverse"), 
-  c("Package", "nDepends", "nImports", "has_problem", "modeled_problem_probability")] %.>%
-  knitr::kable(.)
-```
 
 Now let's examine how sorting the data against different thresholds (either in model prediction or in usage count, which are monotone related) sorts problems.
 
@@ -239,6 +232,8 @@ table(high_risk = d$modeled_problem_probability>0.5,
       problem = d$has_problem,
       useNA = "ifany")
 ```
+
+For each of these tables note how much richer packages indicating problems are in the selected set than in the rejected set.
 
 ## Conclusion
 

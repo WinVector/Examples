@@ -247,19 +247,6 @@ d$modeled_problem_probability <- pred
 
 The above can be read that add an additional package is associated with an absolute 1.7% increase of probability of package problems and a relative increase of risk of 11%.
 
-Let's take a look at some well know high dependency packages.
-
-``` r
-d[d$Package %in% c("dplyr", "tidyverse"), 
-  c("Package", "nDepends", "nImports", "has_problem", "modeled_problem_probability")] %.>%
-  knitr::kable(.)
-```
-
-| Package   |  nDepends|  nImports| has\_problem |  modeled\_problem\_probability|
-|:----------|---------:|---------:|:-------------|------------------------------:|
-| dplyr     |         0|         9| TRUE         |                      0.2840181|
-| tidyverse |         0|        25| FALSE        |                      0.7574567|
-
 Now let's examine how sorting the data against different thresholds (either in model prediction or in usage count, which are monotone related) sorts problems.
 
 ``` r
@@ -268,7 +255,7 @@ ggplot(data = d, mapping = aes(x = nUsing)) +
   ggtitle("Distribution of count of package by number of Depends + Imports")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 ds <- data.frame(nUsing = 0:max(d$nUsing))
@@ -282,7 +269,7 @@ ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
           subtitle = "CRAN base problem rate shown for scale")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-2.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
 WVPlots::ROCPlot(d, 
@@ -292,7 +279,7 @@ WVPlots::ROCPlot(d,
                  "ROC plot of has_problem as function of prediction")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-3.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-3.png)
 
 ``` r
 WVPlots::PRTPlot(d, 
@@ -302,7 +289,7 @@ WVPlots::PRTPlot(d,
                  "has_problem prediction statistics as function of prediction")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-4.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-4.png)
 
 ``` r
 WVPlots::PRTPlot(d, 
@@ -313,7 +300,7 @@ WVPlots::PRTPlot(d,
                  plotvars = c("enrichment", "recall"))
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-5.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-5.png)
 
 ``` r
 WVPlots::LiftCurvePlot(d, 
@@ -323,7 +310,7 @@ WVPlots::LiftCurvePlot(d,
                  include_wizard = FALSE)
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-6.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-6.png)
 
 Application
 -----------
@@ -384,6 +371,8 @@ table(high_risk = d$modeled_problem_probability>0.5,
     ## high_risk FALSE  TRUE
     ##     FALSE 11497  2252
     ##     TRUE     92    80
+
+For each of these tables note how much richer packages indicating problems are in the selected set than in the rejected set.
 
 Conclusion
 ----------
