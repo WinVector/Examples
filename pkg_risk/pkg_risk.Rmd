@@ -3,9 +3,14 @@ title: "pgk_risk"
 output: github_document
 ---
 
-*Very* basic and cursory study on package use as package risk.  The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). Additional confounding factor is package use decreases chance of a package being observed in the Note state.  Obvious omitted points: package complexity in general and package authors.
+*Very* basic and cursory study on package use as package risk.  The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). 
+
+This model sees packages at the import level of `dplyr` as implying a an 11% problem rate and packages at the import level of `tidyverse` implying a 42% problem rate.  Both of these are far in excess of the current CRAN problem rate of 7.4%
+
+There is a heavy censorship issue (CRAN tends to remove error packages). Additional confounding factor is package use decreases chance of a package being observed in the Note state.  Obvious omitted points: package complexity in general and package authors.
 
 ```{r}
+library("wrapr")
 
 # load package facts
 cran <- tools::CRAN_package_db()
@@ -77,10 +82,18 @@ pred_plus <- predict(m, newdata = d2, type = "response")
 # bad status is rare (CRAN removes bad packages)
 summary(d$bad_status)
 
+mean(d$bad_status)
+
 # the absolute risk of each additional dependency is low
 summary(pred_plus - pred)
 
 # the relative risk of each additional dependency is medium
 summary(pred_plus / pred)
+
+d$predicted_problem_probability <- pred
+
+d[d$Package %in% c("dplyr", "tidyverse"), 
+  c("Package", "nDepends", "nImports", "Status", "predicted_problem_probability")] %.>%
+  knitr::kable(.)
 ```
 

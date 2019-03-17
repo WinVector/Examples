@@ -1,9 +1,15 @@
 pgk\_risk
 ================
 
-*Very* basic and cursory study on package use as package risk. The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). Additional confounding factor is package use decreases chance of a package being observed in the Note state. Obvious omitted points: package complexity in general and package authors.
+*Very* basic and cursory study on package use as package risk. The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect).
+
+This model sees packages at the import level of `dplyr` as implying a an 11% problem rate and packages at the import level of `tidyverse` implying a 42% problem rate. Both of these are far in excess of the current CRAN problem rate of 7.4%
+
+There is a heavy censorship issue (CRAN tends to remove error packages). Additional confounding factor is package use decreases chance of a package being observed in the Note state. Obvious omitted points: package complexity in general and package authors.
 
 ``` r
+library("wrapr")
+
 # load package facts
 cran <- tools::CRAN_package_db()
 cr <- tools::CRAN_check_results()
@@ -70,7 +76,7 @@ table(d$Status, useNA = "ifany")
 
     ## 
     ## ERROR  FAIL  NOTE    OK  WARN  <NA> 
-    ##   255     1  2354 10606   705     1
+    ##   255     1  2354 10606   705     2
 
 ``` r
 # build a simple model
@@ -99,7 +105,7 @@ summary(m)
     ## 
     ##     Null deviance: 15283  on 13920  degrees of freedom
     ## Residual deviance: 15255  on 13919  degrees of freedom
-    ##   (1 observation deleted due to missingness)
+    ##   (2 observations deleted due to missingness)
     ## AIC: 15259
     ## 
     ## Number of Fisher Scoring iterations: 4
@@ -122,20 +128,20 @@ summary(m)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.9634  -0.3788  -0.3407  -0.3064   2.4830  
+    ## -1.9635  -0.3788  -0.3407  -0.3063   2.4830  
     ## 
     ## Coefficients:
     ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -3.03562    0.04611  -65.83   <2e-16 ***
+    ## (Intercept) -3.03572    0.04611  -65.83   <2e-16 ***
     ## nUsing       0.10923    0.00654   16.70   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 6992.1  on 13921  degrees of freedom
-    ## Residual deviance: 6745.6  on 13920  degrees of freedom
-    ## AIC: 6749.6
+    ##     Null deviance: 6992.2  on 13922  degrees of freedom
+    ## Residual deviance: 6745.7  on 13921  degrees of freedom
+    ## AIC: 6749.7
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -151,7 +157,13 @@ summary(d$bad_status)
 ```
 
     ##    Mode   FALSE    TRUE 
-    ## logical   12961     961
+    ## logical   12962     961
+
+``` r
+mean(d$bad_status)
+```
+
+    ## [1] 0.06902248
 
 ``` r
 # the absolute risk of each additional dependency is low
@@ -159,7 +171,7 @@ summary(pred_plus - pred)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.005022 0.005539 0.006103 0.007146 0.007377 0.027293
+    ## 0.005022 0.005539 0.006103 0.007146 0.007377 0.027294
 
 ``` r
 # the relative risk of each additional dependency is medium
@@ -168,3 +180,16 @@ summary(pred_plus / pred)
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ##   1.015   1.107   1.108   1.107   1.109   1.110
+
+``` r
+d$predicted_problem_probability <- pred
+
+d[d$Package %in% c("dplyr", "tidyverse"), 
+  c("Package", "nDepends", "nImports", "Status", "predicted_problem_probability")] %.>%
+  knitr::kable(.)
+```
+
+|       | Package   |  nDepends|  nImports| Status |  predicted\_problem\_probability|
+|-------|:----------|---------:|---------:|:-------|--------------------------------:|
+| 2910  | dplyr     |         0|         9| ERROR  |                        0.1137870|
+| 12877 | tidyverse |         0|        25| OK     |                        0.4243566|
