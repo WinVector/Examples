@@ -3,6 +3,8 @@ title: "pgk_risk"
 output: github_document
 ---
 
+*Very* basic and cursory study on package use as package risk.  The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). Additional confounding factor is package use decreases chance of a package being observed in the Note state.  Obvious omitted points: package complexity in general and package authors.
+
 ```{r}
 
 # load package facts

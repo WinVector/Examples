@@ -1,6 +1,8 @@
 pgk\_risk
 ================
 
+*Very* basic and cursory study on package use as package risk. The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). Additional confounding factor is package use decreases chance of a package being observed in the Note state. Obvious omitted points: package complexity in general and package authors.
+
 ``` r
 # load package facts
 cran <- tools::CRAN_package_db()
@@ -67,8 +69,8 @@ table(d$Status, useNA = "ifany")
 ```
 
     ## 
-    ## ERROR  FAIL  NOTE    OK  WARN 
-    ##   255     1  2354 10606   705
+    ## ERROR  FAIL  NOTE    OK  WARN  <NA> 
+    ##   255     1  2354 10606   705     1
 
 ``` r
 # build a simple model
@@ -97,6 +99,7 @@ summary(m)
     ## 
     ##     Null deviance: 15283  on 13920  degrees of freedom
     ## Residual deviance: 15255  on 13919  degrees of freedom
+    ##   (1 observation deleted due to missingness)
     ## AIC: 15259
     ## 
     ## Number of Fisher Scoring iterations: 4
@@ -119,20 +122,20 @@ summary(m)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.9634  -0.3788  -0.3408  -0.3064   2.4829  
+    ## -1.9634  -0.3788  -0.3407  -0.3064   2.4830  
     ## 
     ## Coefficients:
     ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -3.03553    0.04611  -65.83   <2e-16 ***
-    ## nUsing       0.10922    0.00654   16.70   <2e-16 ***
+    ## (Intercept) -3.03562    0.04611  -65.83   <2e-16 ***
+    ## nUsing       0.10923    0.00654   16.70   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 6991.9  on 13920  degrees of freedom
-    ## Residual deviance: 6745.4  on 13919  degrees of freedom
-    ## AIC: 6749.4
+    ##     Null deviance: 6992.1  on 13921  degrees of freedom
+    ## Residual deviance: 6745.6  on 13920  degrees of freedom
+    ## AIC: 6749.6
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -148,7 +151,7 @@ summary(d$bad_status)
 ```
 
     ##    Mode   FALSE    TRUE 
-    ## logical   12960     961
+    ## logical   12961     961
 
 ``` r
 # the absolute risk of each additional dependency is low
@@ -156,7 +159,7 @@ summary(pred_plus - pred)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.005022 0.005539 0.006103 0.007147 0.007377 0.027291
+    ## 0.005022 0.005539 0.006103 0.007146 0.007377 0.027293
 
 ``` r
 # the relative risk of each additional dependency is medium
