@@ -301,3 +301,37 @@ table(high_risk = d$predicted_problem_probability>0.5,
     ## high_risk FALSE  TRUE
     ##     FALSE 12950   955
     ##     TRUE     12     6
+
+``` r
+# check again with NOTE excluded
+# notice effect is still present
+m2 <- glm(bad_status ~ nUsing,
+           data = d[d$Status!="NOTE", , drop=FALSE],
+           family = binomial)
+summary(m2)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = bad_status ~ nUsing, family = binomial, data = d[d$Status != 
+    ##     "NOTE", , drop = FALSE])
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.8296  -0.4138  -0.3769  -0.3431   2.3925  
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -2.803106   0.046968  -59.68   <2e-16 ***
+    ## nUsing       0.097028   0.006675   14.54   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 6621.7  on 11566  degrees of freedom
+    ## Residual deviance: 6432.1  on 11565  degrees of freedom
+    ##   (2 observations deleted due to missingness)
+    ## AIC: 6436.1
+    ## 
+    ## Number of Fisher Scoring iterations: 5

@@ -148,5 +148,12 @@ table(high_risk = d$nUsing>20,
 
 table(high_risk = d$predicted_problem_probability>0.5, 
       probem = d$bad_status)
+
+# check again with NOTE excluded
+# notice effect is still present
+m2 <- glm(bad_status ~ nUsing,
+           data = d[d$Status!="NOTE", , drop=FALSE],
+           family = binomial)
+summary(m2)
 ```
 
