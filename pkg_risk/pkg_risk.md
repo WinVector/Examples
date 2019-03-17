@@ -193,3 +193,27 @@ d[d$Package %in% c("dplyr", "tidyverse"),
 |-------|:----------|---------:|---------:|:-------|--------------------------------:|
 | 2910  | dplyr     |         0|         9| ERROR  |                        0.1137870|
 | 12877 | tidyverse |         0|        25| OK     |                        0.4243566|
+
+``` r
+library("ggplot2")
+
+ggplot(data = d, mapping = aes(x = nUsing)) +
+  geom_histogram(bins = 20) + 
+  ggtitle("Distribution of count of package by number of Depends + Imports")
+```
+
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-1.png)
+
+``` r
+ds <- data.frame(nUsing = 0:max(d$nUsing))
+ds$predicted_problem_probability <- predict(m, newdata = ds, type = "response")
+
+CRAN_rate <- mean(d$bad_status)
+ggplot(data = ds, mapping = aes(x = nUsing, y = predicted_problem_probability)) +
+  geom_line() +
+  geom_hline(yintercept = CRAN_rate, linetype=2) +
+  ggtitle("Modeled probablity of package problem as a function of Depends + Imports",
+          subtitle = "CRAN base problem rate shown for scale")
+```
+
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-2.png)

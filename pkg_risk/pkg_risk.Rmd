@@ -95,5 +95,21 @@ d$predicted_problem_probability <- pred
 d[d$Package %in% c("dplyr", "tidyverse"), 
   c("Package", "nDepends", "nImports", "Status", "predicted_problem_probability")] %.>%
   knitr::kable(.)
+
+library("ggplot2")
+
+ggplot(data = d, mapping = aes(x = nUsing)) +
+  geom_histogram(bins = 20) + 
+  ggtitle("Distribution of count of package by number of Depends + Imports")
+
+ds <- data.frame(nUsing = 0:max(d$nUsing))
+ds$predicted_problem_probability <- predict(m, newdata = ds, type = "response")
+
+CRAN_rate <- mean(d$bad_status)
+ggplot(data = ds, mapping = aes(x = nUsing, y = predicted_problem_probability)) +
+  geom_line() +
+  geom_hline(yintercept = CRAN_rate, linetype=2) +
+  ggtitle("Modeled probablity of package problem as a function of Depends + Imports",
+          subtitle = "CRAN base problem rate shown for scale")
 ```
 
