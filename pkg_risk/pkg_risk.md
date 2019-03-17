@@ -378,3 +378,8 @@ Conclusion
 ----------
 
 Package use count historically correlates with package problems both in a clinically significant and statistically significant manner.
+
+Matrials
+--------
+
+All code, data, results, and graphs can be found [here](https://github.com/WinVector/Examples/tree/master/pkg_risk).
