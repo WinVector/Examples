@@ -3,14 +3,29 @@ title: "pgk_risk"
 output: github_document
 ---
 
-*Very* basic and cursory study on package use as package risk.  The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 0.7% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). 
+## Introduction
 
-This model sees packages at the import level of `dplyr` as implying a an 11% problem rate and packages at the import level of `tidyverse` implying a 42% problem rate.  Both of these are far in excess of the current CRAN problem rate of 7.4%
+The following is a *Very* basic and cursory study on package Depends/Imports and its observed relation to package risk.  
 
-There is a heavy censorship issue (CRAN tends to remove error packages). Additional confounding factor is package use decreases chance of a package being observed in the Note state.  Obvious omitted points: package complexity in general and package authors.
+The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 1.8% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect). 
+
+This model sees packages at the import level of `dplyr` as implying a an 28% problem rate and packages at the import level of `tidyverse` implying a 76% problem rate.  Both of these are far in excess of the current CRAN problem rate of 17%
+
+There is a heavy censorship issue (CRAN tends to remove error packages). Additional confounding factor is package use decreases chance of a package being observed in the NOTE state.  Obvious omitted variables include: package complexity in general and package authors. Also detected package issues is a weak proxy for package quality.
+
+One theory is: number of dependencies is a "code smell" indicating broad packages that serve many purposes. Or that in addition to dependent packages possibly bringing in issue, they are themselves indicators of other issues.
+
+
+## The Study
+
+
+### Data
+
+First we bring in the packages we are going to use and the data. To enhance reproducibility we have cached data we pulled from the `tools` API on 2019-03-17.
 
 ```{r}
-library("wrapr")
+library("rqdatatable")
+library("ggplot2")
 
 # load package facts
 # cran <- tools::CRAN_package_db()
@@ -20,6 +35,51 @@ lst <- readRDS("cran_facts.RDS")
 cran <- lst$cran
 cr <- lst$cr
 
+dim(cran)
+#str(cran)
+
+dim(cr)
+#str(cr)
+```
+
+## DataPrep 
+
+Now we prepare the data for analysis.  
+
+We get per-package status summaries.
+
+```{r}
+package_summary <- cr %.>%
+  select_rows(.,
+              !is.na(Status)) %.>%
+  extend(., 
+         one = 1) %.>%
+  project(.,
+          groupby = c("Package", "Status"),
+          count = sum(one)) %.>%
+  cdata::pivot_to_rowrecs(., 
+                          columnToTakeKeysFrom = "Status",
+                          columnToTakeValuesFrom = "count",
+                          rowKeyColumns = "Package") %.>%
+  extend(.,
+         OK = ifelse(is.na(OK), 0, OK),
+         NOTE = ifelse(is.na(NOTE), 0, NOTE),
+         WARN = ifelse(is.na(WARN), 0, WARN),
+         ERROR = ifelse(is.na(ERROR), 0, ERROR),
+         FAIL = ifelse(is.na(FAIL), 0, FAIL)) %.>%
+  extend(.,
+         has_problem = (WARN + ERROR + FAIL)>0)
+  
+package_summary %.>% 
+  head(.) %.>%
+  knitr::kable(.)
+```
+
+For this study we consider a package to have problems if it has at least one `WARN`, `NOTE`, or `FAIL` record.
+
+We also unpack the Depends and Imports fields from comma separated strings into character vectors and then collect or statistics.
+
+```{r}
 # convert comma separated list into
 # sequence of non-core package names
 parse_lists <- function(strs) {
@@ -51,42 +111,46 @@ d$nImports <- vapply(d$Imports, length, numeric(1))
 d$nUsing <- d$nDepends + d$nImports
 
 # map check status into our data
-d$Status <- NA_character_
-smap <- as.character(cr$Status)
-names(smap) <- as.character(cr$Package)
-d$Status <- smap[d$Package]
+d <- natural_join(d, package_summary, 
+                  by = "Package", 
+                  jointype = "LEFT")
+summary(d$has_problem)
+d <- select_rows(d, !is.na(has_problem))
 
 # take a look
-head(d)
+d %.>% 
+  head(.) %.>%
+  knitr::kable(.)
 
 # summarize status
-table(d$Status, useNA = "ifany")
+table(d$has_problem, 
+      useNA = "ifany")
+mean(d$has_problem)
+```
 
+## Modeling
+
+```{r}
 # build a simple model
-m <- glm(Status!="OK" ~ nUsing,
+m <- glm(has_problem ~ nUsing,
          data = d,
          family = binomial)
 summary(m)
-# notice more package use reduces chance of Status!="OK"
-# however, we are mostly modeing if status is OK versus NOTE.
+```
 
-# build a simple model on bad states
-d$bad_status <- d$Status %in% c("ERROR", "FAIL", "WARN")
-m <- glm(bad_status ~ nUsing,
-           data = d,
-           family = binomial)
-summary(m)
+The model indicates package use count (`Imports` plus `Depends`) is correlated with packages having problems.
 
+## Interpretation
+
+To interpret that let's score our data and then re-score altered data where each package claims an additional package use.  How these predictions vary shows us how this factor related to problems by the model.
+
+```{r}
 # try to interpret
 pred <- predict(m, newdata = d, type = "response")
 d2 <- d
 d2$nUsing <- d$nUsing + 1
 pred_plus <- predict(m, newdata = d2, type = "response")
 
-# bad status is rare (CRAN removes bad packages)
-summary(d$bad_status)
-
-mean(d$bad_status)
 
 # the absolute risk of each additional dependency is low
 summary(pred_plus - pred)
@@ -94,66 +158,82 @@ summary(pred_plus - pred)
 # the relative risk of each additional dependency is medium
 summary(pred_plus / pred)
 
-d$predicted_problem_probability <- pred
+d$modeled_problem_probability <- pred
+```
 
+The above can be read that add an additional package is associated with an absolute 1.7% increase of probability of package problems and a relative increase of risk of 11%.
+
+Let's take a look at some well know high dependency packages.
+
+```{r}
 d[d$Package %in% c("dplyr", "tidyverse"), 
-  c("Package", "nDepends", "nImports", "Status", "predicted_problem_probability")] %.>%
+  c("Package", "nDepends", "nImports", "has_problem", "modeled_problem_probability")] %.>%
   knitr::kable(.)
+```
 
-library("ggplot2")
+Now let's examine how sorting the data against different thresholds (either in model prediction or in usage count, which are monotone related) sorts problems.
 
+```{r}
 ggplot(data = d, mapping = aes(x = nUsing)) +
   geom_histogram(bins = 20) + 
   ggtitle("Distribution of count of package by number of Depends + Imports")
 
 ds <- data.frame(nUsing = 0:max(d$nUsing))
-ds$predicted_problem_probability <- predict(m, newdata = ds, type = "response")
+ds$modeled_problem_probability <- predict(m, newdata = ds, type = "response")
 
-CRAN_rate <- mean(d$bad_status)
-ggplot(data = ds, mapping = aes(x = nUsing, y = predicted_problem_probability)) +
+CRAN_rate <- mean(d$has_problem)
+ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
   geom_line() +
-  geom_hline(yintercept = CRAN_rate, linetype=2) +
+  geom_hline(yintercept = CRAN_rate, linetype=2, color = "darkblue") +
   ggtitle("Modeled probablity of package problem as a function of Depends + Imports",
           subtitle = "CRAN base problem rate shown for scale")
 
 WVPlots::ROCPlot(d, 
-                 "predicted_problem_probability",
-                 "bad_status", 
+                 "modeled_problem_probability",
+                 "has_problem", 
                  TRUE, 
-                 "ROC plot of bad_status as function of prediction")
+                 "ROC plot of has_problem as function of prediction")
 
 WVPlots::PRTPlot(d, 
-                 "predicted_problem_probability",
-                 "bad_status", 
+                 "modeled_problem_probability",
+                 "has_problem", 
                  TRUE, 
-                 "bad_status prediction statistics as function of prediction")
+                 "has_problem prediction statistics as function of prediction")
 
 WVPlots::LiftCurvePlot(d, 
-                 "predicted_problem_probability",
-                 "bad_status", 
-                 "bad_status detection enrichment as a function of prediction",
+                 "modeled_problem_probability",
+                 "has_problem", 
+                 "has_problem detection enrichment as a function of prediction",
                  include_wizard = FALSE)
+```
 
-table(high_risk = d$predicted_problem_probability>CRAN_rate, 
-      probem = d$bad_status)
+## Application
+
+We can re-examine the facts summarized in the above graphs by tabulating data sorted by the model scores (or equivalently by the package usage count).
+
+```{r}
+table(high_risk = d$modeled_problem_probability>CRAN_rate, 
+      probem = d$has_problem,
+      useNA = "ifany")
 
 table(high_risk = d$nUsing>5, 
-      probem = d$bad_status)
+      probem = d$has_problem,
+      useNA = "ifany")
 
 table(high_risk = d$nUsing>10, 
-      probem = d$bad_status)
+      probem = d$has_problem,
+      useNA = "ifany")
 
 table(high_risk = d$nUsing>20, 
-      probem = d$bad_status)
+      probem = d$has_problem,
+      useNA = "ifany")
 
-table(high_risk = d$predicted_problem_probability>0.5, 
-      probem = d$bad_status)
-
-# check again with NOTE excluded
-# notice effect is still present
-m2 <- glm(bad_status ~ nUsing,
-           data = d[d$Status!="NOTE", , drop=FALSE],
-           family = binomial)
-summary(m2)
+table(high_risk = d$modeled_problem_probability>0.5, 
+      probem = d$has_problem,
+      useNA = "ifany")
 ```
+
+## Conclusion
+
+Package use count historically correlates with package problems both in a clinically significant and statistically significant manner.
 
