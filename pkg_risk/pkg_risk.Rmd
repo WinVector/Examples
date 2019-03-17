@@ -200,6 +200,13 @@ WVPlots::PRTPlot(d,
                  TRUE, 
                  "has_problem prediction statistics as function of prediction")
 
+WVPlots::PRTPlot(d, 
+                 "modeled_problem_probability",
+                 "has_problem", 
+                 TRUE, 
+                 "problem detection enrichment as function of prediction",
+                 plotvars = c("enrichment", "recall"))
+
 WVPlots::LiftCurvePlot(d, 
                  "modeled_problem_probability",
                  "has_problem", 
@@ -213,23 +220,23 @@ We can re-examine the facts summarized in the above graphs by tabulating data so
 
 ```{r}
 table(high_risk = d$modeled_problem_probability>CRAN_rate, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 
 table(high_risk = d$nUsing>5, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 
 table(high_risk = d$nUsing>10, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 
 table(high_risk = d$nUsing>20, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 
 table(high_risk = d$modeled_problem_probability>0.5, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 ```
 

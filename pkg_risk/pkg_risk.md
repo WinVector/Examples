@@ -305,6 +305,17 @@ WVPlots::PRTPlot(d,
 ![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-4.png)
 
 ``` r
+WVPlots::PRTPlot(d, 
+                 "modeled_problem_probability",
+                 "has_problem", 
+                 TRUE, 
+                 "problem detection enrichment as function of prediction",
+                 plotvars = c("enrichment", "recall"))
+```
+
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-5.png)
+
+``` r
 WVPlots::LiftCurvePlot(d, 
                  "modeled_problem_probability",
                  "has_problem", 
@@ -312,7 +323,7 @@ WVPlots::LiftCurvePlot(d,
                  include_wizard = FALSE)
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-5.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-6.png)
 
 Application
 -----------
@@ -321,55 +332,55 @@ We can re-examine the facts summarized in the above graphs by tabulating data so
 
 ``` r
 table(high_risk = d$modeled_problem_probability>CRAN_rate, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 ```
 
-    ##          probem
+    ##          problem
     ## high_risk FALSE TRUE
     ##     FALSE  8254 1105
     ##     TRUE   3335 1227
 
 ``` r
 table(high_risk = d$nUsing>5, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 ```
 
-    ##          probem
+    ##          problem
     ## high_risk FALSE TRUE
     ##     FALSE  9829 1518
     ##     TRUE   1760  814
 
 ``` r
 table(high_risk = d$nUsing>10, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 ```
 
-    ##          probem
+    ##          problem
     ## high_risk FALSE  TRUE
     ##     FALSE 11171  2069
     ##     TRUE    418   263
 
 ``` r
 table(high_risk = d$nUsing>20, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 ```
 
-    ##          probem
+    ##          problem
     ## high_risk FALSE  TRUE
     ##     FALSE 11552  2296
     ##     TRUE     37    36
 
 ``` r
 table(high_risk = d$modeled_problem_probability>0.5, 
-      probem = d$has_problem,
+      problem = d$has_problem,
       useNA = "ifany")
 ```
 
-    ##          probem
+    ##          problem
     ## high_risk FALSE  TRUE
     ##     FALSE 11497  2252
     ##     TRUE     92    80
