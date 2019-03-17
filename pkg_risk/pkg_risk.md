@@ -4,15 +4,15 @@ pgk\_risk
 Introduction
 ------------
 
-The following is a *Very* basic and cursory study on package Depends/Imports and its observed relation to package risk.
+The following is a *very* basic and cursory study on package Depends/Imports and its observed relation to package risk.
 
 The conclusion is: packages on CRAN tend not to be in a bad state (defined as one of FAIL, ERROR, WARN) but historically each additional package in Depends or Imports adds a 1.8% chance of being observed in the bad state (very small) or in relative terms an extra 11% relative-chance of being observed in the bad state (a moderately large effect).
 
 This model sees packages at the import level of `dplyr` as implying a an 28% problem rate and packages at the import level of `tidyverse` implying a 76% problem rate. Both of these are far in excess of the current CRAN problem rate of 17%
 
-There is a heavy censorship issue (CRAN tends to remove error packages). Additional confounding factor is package use decreases chance of a package being observed in the NOTE state. Obvious omitted variables include: package complexity in general and package authors. Also detected package issues is a weak proxy for package quality.
+There is a heavy censorship issue (CRAN tends to remove error packages). Obvious omitted variables include: package complexity in general and package authors. Also detected package issues is a weak proxy for package quality.
 
-One theory is: number of dependencies is a "code smell" indicating broad packages that serve many purposes. Or that in addition to dependent packages possibly bringing in issue, they are themselves indicators of other issues.
+One theory is: an excess number of dependencies is a "code smell" indicating broad packages that serve many purposes. Or that in addition to dependent packages possibly bringing in issue, they are themselves indicators of other issues.
 
 The Study
 ---------
