@@ -128,6 +128,12 @@ WVPlots::PRTPlot(d,
                  TRUE, 
                  "bad_status prediction statistics as function of prediction")
 
+WVPlots::LiftCurvePlot(d, 
+                 "predicted_problem_probability",
+                 "bad_status", 
+                 "bad_status detection enrichment as a function of prediction",
+                 include_wizard = FALSE)
+
 table(high_risk = d$predicted_problem_probability>CRAN_rate, 
       probem = d$bad_status)
 

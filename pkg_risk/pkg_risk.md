@@ -243,6 +243,16 @@ WVPlots::PRTPlot(d,
 ![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-4.png)
 
 ``` r
+WVPlots::LiftCurvePlot(d, 
+                 "predicted_problem_probability",
+                 "bad_status", 
+                 "bad_status detection enrichment as a function of prediction",
+                 include_wizard = FALSE)
+```
+
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-5.png)
+
+``` r
 table(high_risk = d$predicted_problem_probability>CRAN_rate, 
       probem = d$bad_status)
 ```
