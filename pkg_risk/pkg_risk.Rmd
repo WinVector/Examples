@@ -66,13 +66,7 @@ m <- glm(bad_status ~ nUsing,
            family = binomial)
 summary(m)
 
-d$bad_status <- d$Status %in% c("ERROR", "FAIL")
-m <- glm(bad_status ~ nUsing,
-         data = d,
-         family = binomial)
-summary(m)
-
-# try an interpret
+# try to interpret
 pred <- predict(m, newdata = d, type = "response")
 d2 <- d
 d2$nUsing <- d$nUsing + 1

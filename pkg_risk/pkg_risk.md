@@ -137,38 +137,7 @@ summary(m)
     ## Number of Fisher Scoring iterations: 5
 
 ``` r
-d$bad_status <- d$Status %in% c("ERROR", "FAIL")
-m <- glm(bad_status ~ nUsing,
-         data = d,
-         family = binomial)
-summary(m)
-```
-
-    ## 
-    ## Call:
-    ## glm(formula = bad_status ~ nUsing, family = binomial, data = d)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.4290  -0.1895  -0.1691  -0.1597   2.9938  
-    ## 
-    ## Coefficients:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -4.469923   0.085390  -52.35   <2e-16 ***
-    ## nUsing       0.114645   0.009959   11.51   <2e-16 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
-    ## 
-    ##     Null deviance: 2553.2  on 13920  degrees of freedom
-    ## Residual deviance: 2453.1  on 13919  degrees of freedom
-    ## AIC: 2457.1
-    ## 
-    ## Number of Fisher Scoring iterations: 7
-
-``` r
-# try an interpret
+# try to interpret
 pred <- predict(m, newdata = d, type = "response")
 d2 <- d
 d2$nUsing <- d$nUsing + 1
@@ -179,7 +148,7 @@ summary(d$bad_status)
 ```
 
     ##    Mode   FALSE    TRUE 
-    ## logical   13665     256
+    ## logical   12960     961
 
 ``` r
 # the absolute risk of each additional dependency is low
@@ -187,7 +156,7 @@ summary(pred_plus - pred)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.001358 0.001518 0.001697 0.002149 0.002118 0.028446
+    ## 0.005022 0.005539 0.006103 0.007147 0.007377 0.027291
 
 ``` r
 # the relative risk of each additional dependency is medium
@@ -195,4 +164,4 @@ summary(pred_plus / pred)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   1.041   1.119   1.120   1.119   1.120   1.120
+    ##   1.015   1.107   1.108   1.107   1.109   1.110
