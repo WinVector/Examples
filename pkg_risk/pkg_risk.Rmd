@@ -1,0 +1,90 @@
+---
+title: "pgk_risk"
+output: github_document
+---
+
+```{r}
+
+# load package facts
+cran <- tools::CRAN_package_db()
+cr <- tools::CRAN_check_results()
+
+# convert comma separated list into
+# sequence of non-core package names
+parse_lists <- function(strs) {
+  strs[is.na(strs)] <- ""
+  strs <- gsub("[(][^)]*[)]", "", strs)
+  strs <- gsub("\\s+", "", strs)
+  strs <- strsplit(strs, ",", fixed=TRUE)
+  strs <- lapply(
+    strs,
+    function(si) {
+      setdiff(si, c("", "R", 
+                    "base", "compiler", "datasets", 
+                    "graphics", "grDevices", "grid",
+                    "methods", "parallel", "splines", 
+                    "stats", "stats4", "tcltk", "tools",
+                    "translations", "utils"))
+    })
+  strs
+}
+
+# collect the columns we want
+d <- data.frame(
+  Package = cran$Package,
+  stringsAsFactors = FALSE)
+d$Depends <- parse_lists(cran$Depends)
+d$nDepends <- vapply(d$Depends, length, numeric(1))
+d$Imports <- parse_lists(cran$Imports)
+d$nImports <- vapply(d$Imports, length, numeric(1))
+d$nUsing <- d$nDepends + d$nImports
+
+# map check status into our data
+d$Status <- NA_character_
+smap <- as.character(cr$Status)
+names(smap) <- as.character(cr$Package)
+d$Status <- smap[d$Package]
+
+# take a look
+head(d)
+
+# summarize status
+table(d$Status, useNA = "ifany")
+
+# build a simple model
+m <- glm(Status!="OK" ~ nUsing,
+         data = d,
+         family = binomial)
+summary(m)
+# notice more package use reduces chance of Status!="OK"
+# however, we are mostly modeing if status is OK versus NOTE.
+
+# build a simple model on bad states
+d$bad_status <- d$Status %in% c("ERROR", "FAIL", "WARN")
+m <- glm(bad_status ~ nUsing,
+           data = d,
+           family = binomial)
+summary(m)
+
+d$bad_status <- d$Status %in% c("ERROR", "FAIL")
+m <- glm(bad_status ~ nUsing,
+         data = d,
+         family = binomial)
+summary(m)
+
+# try an interpret
+pred <- predict(m, newdata = d, type = "response")
+d2 <- d
+d2$nUsing <- d$nUsing + 1
+pred_plus <- predict(m, newdata = d2, type = "response")
+
+# bad status is rare (CRAN removes bad packages)
+summary(d$bad_status)
+
+# the absolute risk of each additional dependency is low
+summary(pred_plus - pred)
+
+# the relative risk of each additional dependency is medium
+summary(pred_plus / pred)
+```
+
