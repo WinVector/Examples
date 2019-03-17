@@ -133,5 +133,14 @@ table(high_risk = d$predicted_problem_probability>CRAN_rate,
 
 table(high_risk = d$nUsing>5, 
       probem = d$bad_status)
+
+table(high_risk = d$nUsing>10, 
+      probem = d$bad_status)
+
+table(high_risk = d$nUsing>20, 
+      probem = d$bad_status)
+
+table(high_risk = d$predicted_problem_probability>0.5, 
+      probem = d$bad_status)
 ```
 

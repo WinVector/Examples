@@ -261,3 +261,33 @@ table(high_risk = d$nUsing>5,
     ## high_risk FALSE  TRUE
     ##     FALSE 10746   603
     ##     TRUE   2216   358
+
+``` r
+table(high_risk = d$nUsing>10, 
+      probem = d$bad_status)
+```
+
+    ##          probem
+    ## high_risk FALSE  TRUE
+    ##     FALSE 12412   830
+    ##     TRUE    550   131
+
+``` r
+table(high_risk = d$nUsing>20, 
+      probem = d$bad_status)
+```
+
+    ##          probem
+    ## high_risk FALSE  TRUE
+    ##     FALSE 12908   942
+    ##     TRUE     54    19
+
+``` r
+table(high_risk = d$predicted_problem_probability>0.5, 
+      probem = d$bad_status)
+```
+
+    ##          probem
+    ## high_risk FALSE  TRUE
+    ##     FALSE 12950   955
+    ##     TRUE     12     6
