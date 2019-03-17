@@ -98,7 +98,7 @@ package_summary %.>%
 | ABC.RAP     |   11|     0|     1|      0|     0| TRUE         |
 | ABCanalysis |   12|     0|     0|      0|     0| FALSE        |
 
-For this study we consider a package to have problems if it has at least one `WARN`, `NOTE`, or `FAIL` record.
+For this study we consider a package to have problems if it has at least one `WARN`, or `FAIL` record.
 
 We also unpack the Depends and Imports fields from comma separated strings into character vectors and then collect or statistics.
 
