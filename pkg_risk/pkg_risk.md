@@ -11,8 +11,12 @@ There is a heavy censorship issue (CRAN tends to remove error packages). Additio
 library("wrapr")
 
 # load package facts
-cran <- tools::CRAN_package_db()
-cr <- tools::CRAN_check_results()
+# cran <- tools::CRAN_package_db()
+# cr <- tools::CRAN_check_results()
+# saveRDS(list(cran = cran, cr = cr), "cran_facts.RDS")
+lst <- readRDS("cran_facts.RDS")
+cran <- lst$cran
+cr <- lst$cr
 
 # convert comma separated list into
 # sequence of non-core package names
@@ -92,12 +96,12 @@ summary(m)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -0.7671  -0.7574  -0.7289  -0.6314   2.1651  
+    ## -0.7671  -0.7574  -0.7289  -0.6315   2.1646  
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -1.072744   0.026204 -40.938  < 2e-16 ***
-    ## nUsing      -0.029253   0.005721  -5.113 3.17e-07 ***
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -1.07284    0.02620 -40.942  < 2e-16 ***
+    ## nUsing      -0.02922    0.00572  -5.108 3.25e-07 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
@@ -128,20 +132,20 @@ summary(m)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.9635  -0.3788  -0.3407  -0.3063   2.4830  
+    ## -1.9633  -0.3787  -0.3407  -0.3063   2.4830  
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -3.03572    0.04611  -65.83   <2e-16 ***
-    ## nUsing       0.10923    0.00654   16.70   <2e-16 ***
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -3.035705   0.046108  -65.84   <2e-16 ***
+    ## nUsing       0.109223   0.006539   16.70   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 6992.2  on 13922  degrees of freedom
-    ## Residual deviance: 6745.7  on 13921  degrees of freedom
-    ## AIC: 6749.7
+    ## Residual deviance: 6745.6  on 13921  degrees of freedom
+    ## AIC: 6749.6
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -171,7 +175,7 @@ summary(pred_plus - pred)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.005022 0.005539 0.006103 0.007146 0.007377 0.027294
+    ## 0.005021 0.005539 0.006102 0.007146 0.007376 0.027292
 
 ``` r
 # the relative risk of each additional dependency is medium
@@ -191,8 +195,8 @@ d[d$Package %in% c("dplyr", "tidyverse"),
 
 |       | Package   |  nDepends|  nImports| Status |  predicted\_problem\_probability|
 |-------|:----------|---------:|---------:|:-------|--------------------------------:|
-| 2910  | dplyr     |         0|         9| ERROR  |                        0.1137870|
-| 12877 | tidyverse |         0|        25| OK     |                        0.4243566|
+| 2910  | dplyr     |         0|         9| ERROR  |                        0.1137800|
+| 12877 | tidyverse |         0|        25| OK     |                        0.4243035|
 
 ``` r
 library("ggplot2")
@@ -217,3 +221,43 @@ ggplot(data = ds, mapping = aes(x = nUsing, y = predicted_problem_probability)) 
 ```
 
 ![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-2.png)
+
+``` r
+WVPlots::ROCPlot(d, 
+                 "predicted_problem_probability",
+                 "bad_status", 
+                 TRUE, 
+                 "ROC plot of bad_status as function of prediction")
+```
+
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-3.png)
+
+``` r
+WVPlots::PRTPlot(d, 
+                 "predicted_problem_probability",
+                 "bad_status", 
+                 TRUE, 
+                 "bad_status prediction statistics as function of prediction")
+```
+
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-1-4.png)
+
+``` r
+table(high_risk = d$predicted_problem_probability>CRAN_rate, 
+      probem = d$bad_status)
+```
+
+    ##          probem
+    ## high_risk FALSE TRUE
+    ##     FALSE  8900  461
+    ##     TRUE   4062  500
+
+``` r
+table(high_risk = d$nUsing>5, 
+      probem = d$bad_status)
+```
+
+    ##          probem
+    ## high_risk FALSE  TRUE
+    ##     FALSE 10746   603
+    ##     TRUE   2216   358
