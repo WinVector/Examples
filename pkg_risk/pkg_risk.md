@@ -10,7 +10,7 @@ The conclusion is: [R](https://www.r-project.org) packages on [CRAN](https://cra
 
 This model captures and quantifies the fact that packages with 5 or more Imports plus Depends have an elevated number of problem indications on CRAN.
 
-There is a heavy statistical censorship issue (CRAN tends to remove error packages). Obvious omitted variables include: package complexity in general and package authors. Also detected package problems are only a weak proxy for package quality.
+There is a heavy statistical censorship issue (CRAN tends to remove error packages). Obvious omitted variables include: package complexity in general and package authors. And not all dependencies are the same (but we think that aspect could be handled by a pooled hierarchical modeling approach). Also detected package problems are only a weak proxy for package quality.
 
 One theory is: an excess number of dependencies is a "code smell" indicating broad packages that serve many purposes. Or that in addition to dependent packages possibly bringing in issues, they are themselves indicators of other issues.
 
@@ -186,6 +186,7 @@ Modeling
 m <- glm(has_problem ~ nUsing,
          data = d,
          family = binomial)
+
 summary(m)
 ```
 
@@ -211,6 +212,12 @@ summary(m)
     ## AIC: 12007
     ## 
     ## Number of Fisher Scoring iterations: 4
+
+``` r
+sigr::wrapChiSqTest(m)
+```
+
+    ## [1] "Chi-Square Test summary: pseudo-R2=0.04607 (X2(1,N=13921)=579.6, p<1e-05)."
 
 The model indicates package use count (`Imports` plus `Depends`) is correlated with packages having problems.
 
