@@ -417,4 +417,4 @@ Package use count historically correlates with package problems both in a clinic
 Matrials
 --------
 
-All code, data, results, and graphs can be found [here](https://github.com/WinVector/Examples/tree/master/pkg_risk).
+All code, data, results, and graphs can be found [here](https://github.com/WinVector/Examples/tree/master/pkg_risk). Discussion of the results can be found [here](http://www.win-vector.com/blog/2019/03/quantifying-r-package-dependency-risk/).
