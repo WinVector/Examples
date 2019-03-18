@@ -252,7 +252,7 @@ For each of these tables note how much richer packages indicating problems are i
 
 Package use count historically correlates with package problems both in a clinically significant and statistically significant manner.
 
-## Matrials
+## Materials
 
 All code, data, results, and graphs can be found [here](https://github.com/WinVector/Examples/tree/master/pkg_risk). Discussion of the results can be found [here](http://www.win-vector.com/blog/2019/03/quantifying-r-package-dependency-risk/).
 
