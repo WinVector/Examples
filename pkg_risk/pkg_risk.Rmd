@@ -181,13 +181,18 @@ ggplot(data = d, mapping = aes(x = nUsing)) +
 ds <- data.frame(nUsing = 0:max(d$nUsing))
 ds$modeled_problem_probability <- predict(m, newdata = ds, type = "response")
 
-CRAN_rate <- mean(d$has_problem)
+(CRAN_rate <- mean(d$has_problem))
+
 ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
   geom_line() +
   geom_hline(yintercept = CRAN_rate, linetype=2, color = "darkblue") +
   ggtitle("Modeled probablity of package problem as a function of Depends + Imports",
           subtitle = "CRAN base problem rate shown for scale")
 
+knitr::kable(ds[1:10,])
+```
+
+```{r}
 WVPlots::ROCPlot(d, 
                  "modeled_problem_probability",
                  "has_problem", 
@@ -223,9 +228,10 @@ table(high_risk = d$modeled_problem_probability>CRAN_rate,
       problem = d$has_problem,
       useNA = "ifany")
 
-table(high_risk = d$nUsing>5, 
+(t <- table(high_risk = d$nUsing>5, 
       problem = d$has_problem,
-      useNA = "ifany")
+      useNA = "ifany"))
+t[2,2]/sum(t[,2])
 
 table(high_risk = d$nUsing>10, 
       problem = d$has_problem,

@@ -268,7 +268,12 @@ ggplot(data = d, mapping = aes(x = nUsing)) +
 ds <- data.frame(nUsing = 0:max(d$nUsing))
 ds$modeled_problem_probability <- predict(m, newdata = ds, type = "response")
 
-CRAN_rate <- mean(d$has_problem)
+(CRAN_rate <- mean(d$has_problem))
+```
+
+    ## [1] 0.1675167
+
+``` r
 ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
   geom_line() +
   geom_hline(yintercept = CRAN_rate, linetype=2, color = "darkblue") +
@@ -279,6 +284,23 @@ ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
 ![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
+knitr::kable(ds[1:10,])
+```
+
+|  nUsing|  modeled\_problem\_probability|
+|-------:|------------------------------:|
+|       0|                      0.1105357|
+|       1|                      0.1238660|
+|       2|                      0.1385536|
+|       3|                      0.1546753|
+|       4|                      0.1722976|
+|       5|                      0.1914730|
+|       6|                      0.2122351|
+|       7|                      0.2345954|
+|       8|                      0.2585383|
+|       9|                      0.2840181|
+
+``` r
 WVPlots::ROCPlot(d, 
                  "modeled_problem_probability",
                  "has_problem", 
@@ -286,7 +308,7 @@ WVPlots::ROCPlot(d,
                  "ROC plot of has_problem as function of prediction")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-3.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 ``` r
 WVPlots::PRTPlot(d, 
@@ -296,7 +318,7 @@ WVPlots::PRTPlot(d,
                  "has_problem prediction statistics as function of prediction")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-4.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-2.png)
 
 ``` r
 WVPlots::PRTPlot(d, 
@@ -307,7 +329,7 @@ WVPlots::PRTPlot(d,
                  plotvars = c("enrichment", "recall"))
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-5.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-3.png)
 
 ``` r
 WVPlots::LiftCurvePlot(d, 
@@ -317,7 +339,7 @@ WVPlots::LiftCurvePlot(d,
                  include_wizard = FALSE)
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-6.png)
+![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-4.png)
 
 Application
 -----------
@@ -336,15 +358,21 @@ table(high_risk = d$modeled_problem_probability>CRAN_rate,
     ##     TRUE   3335 1227
 
 ``` r
-table(high_risk = d$nUsing>5, 
+(t <- table(high_risk = d$nUsing>5, 
       problem = d$has_problem,
-      useNA = "ifany")
+      useNA = "ifany"))
 ```
 
     ##          problem
     ## high_risk FALSE TRUE
     ##     FALSE  9829 1518
     ##     TRUE   1760  814
+
+``` r
+t[2,2]/sum(t[,2])
+```
+
+    ## [1] 0.3490566
 
 ``` r
 table(high_risk = d$nUsing>10, 
