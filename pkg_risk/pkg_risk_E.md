@@ -1,4 +1,4 @@
-pgk\_risk
+pgk\_risk\_E
 ================
 
 Introduction
@@ -60,12 +60,23 @@ DataPrep
 
 Now we prepare the data for analysis.
 
-We get per-package status summaries.
+We get per-package status summaries (restricting to a few build flavors).
 
 ``` r
+flavors = c("r-devel-linux-x86_64-debian-clang",
+            "r-devel-linux-x86_64-debian-gcc",
+            "r-devel-linux-x86_64-fedora-clang",
+            "r-devel-linux-x86_64-fedora-gcc", "r-devel-windows-ix86+x86_64",
+            "r-patched-linux-x86_64", "r-release-linux-x86_64",
+            "r-release-osx-x86_64", "r-release-windows-ix86+x86_64")
+
 package_summary <- cr %.>%
   select_rows(.,
               !is.na(Status)) %.>%
+  set_indicator(., 
+                rescol = "examine",
+                testcol = "Flavor",
+                testvalues = flavors) %.>%
   extend(., 
          one = 1) %.>%
   project(.,
@@ -82,8 +93,14 @@ package_summary <- cr %.>%
          ERROR = ifelse(is.na(ERROR), 0, ERROR),
          FAIL = ifelse(is.na(FAIL), 0, FAIL)) %.>%
   extend(.,
-         has_problem = (WARN + ERROR + FAIL)>0)
-  
+         has_problem = ERROR>0)
+
+dim(package_summary)
+```
+
+    ## [1] 13901     7
+
+``` r
 package_summary %.>% 
   head(.) %.>%
   knitr::kable(.)
@@ -95,10 +112,10 @@ package_summary %.>%
 | abbyyR      |   12|     0|     0|      0|     0| FALSE        |
 | abc         |    0|    12|     0|      0|     0| FALSE        |
 | abc.data    |   12|     0|     0|      0|     0| FALSE        |
-| ABC.RAP     |   11|     0|     1|      0|     0| TRUE         |
+| ABC.RAP     |   11|     0|     1|      0|     0| FALSE        |
 | ABCanalysis |   12|     0|     0|      0|     0| FALSE        |
 
-For this study we consider a package to have problems if it has at least one `WARN`, `ERROR`, or `FAIL` record.
+For this study we consider a package to have problems if it has at least one `ERROR` record.
 
 We also unpack the Depends and Imports fields from comma separated strings into character vectors and then collect or statistics.
 
@@ -141,7 +158,7 @@ summary(d$has_problem)
 ```
 
     ##    Mode   FALSE    TRUE 
-    ## logical   11589    2332
+    ## logical   12696    1225
 
 ``` r
 dim(d)
@@ -162,11 +179,11 @@ d %.>%
 | Package      | Depends                | Imports                  |  nDepends|  nImports|  nUsing|  ERROR|  FAIL| has\_problem |  NOTE|   OK|  WARN|
 |:-------------|:-----------------------|:-------------------------|---------:|---------:|-------:|------:|-----:|:-------------|-----:|----:|-----:|
 | A3           | c("xtable", "pbapply") | character(0)             |         2|         0|       2|      0|     0| FALSE        |     0|   12|     0|
-| ABC.RAP      | character(0)           | character(0)             |         0|         0|       0|      0|     0| TRUE         |     0|   11|     1|
+| ABC.RAP      | character(0)           | character(0)             |         0|         0|       0|      0|     0| FALSE        |     0|   11|     1|
 | ABCanalysis  | character(0)           | plotrix                  |         0|         1|       1|      0|     0| FALSE        |     0|   12|     0|
 | ABCoptim     | character(0)           | Rcpp                     |         0|         1|       1|      0|     0| FALSE        |     0|   12|     0|
 | ABCp2        | MASS                   | character(0)             |         1|         0|       1|      0|     0| FALSE        |     0|   12|     0|
-| ABHgenotypeR | character(0)           | c("ggplot2", "reshape2") |         0|         2|       2|      0|     0| TRUE         |     0|   11|     1|
+| ABHgenotypeR | character(0)           | c("ggplot2", "reshape2") |         0|         2|       2|      0|     0| FALSE        |     0|   11|     1|
 
 ``` r
 # summarize status
@@ -176,13 +193,13 @@ table(d$has_problem,
 
     ## 
     ## FALSE  TRUE 
-    ## 11589  2332
+    ## 12696  1225
 
 ``` r
 mean(d$has_problem)
 ```
 
-    ## [1] 0.1675167
+    ## [1] 0.08799655
 
 Modeling
 --------
@@ -202,28 +219,28 @@ summary(m)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -2.2944  -0.5797  -0.5143  -0.4840   2.0988  
+    ## -1.8251  -0.4302  -0.3840  -0.3424   2.3941  
     ## 
     ## Coefficients:
     ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -2.085281   0.032417  -64.33   <2e-16 ***
-    ## nUsing       0.128963   0.005432   23.74   <2e-16 ***
+    ## (Intercept) -2.807355   0.041915  -66.98   <2e-16 ***
+    ## nUsing       0.118424   0.006125   19.34   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 12583  on 13920  degrees of freedom
-    ## Residual deviance: 12003  on 13919  degrees of freedom
-    ## AIC: 12007
+    ##     Null deviance: 8293.5  on 13920  degrees of freedom
+    ## Residual deviance: 7947.7  on 13919  degrees of freedom
+    ## AIC: 7951.7
     ## 
-    ## Number of Fisher Scoring iterations: 4
+    ## Number of Fisher Scoring iterations: 5
 
 ``` r
 sigr::wrapChiSqTest(m)
 ```
 
-    ## [1] "Chi-Square Test summary: pseudo-R2=0.04607 (X2(1,N=13921)=579.6, p<1e-05)."
+    ## [1] "Chi-Square Test summary: pseudo-R2=0.04169 (X2(1,N=13921)=345.8, p<1e-05)."
 
 The model indicates package use count (`Imports` plus `Depends`) is correlated with packages having problems.
 
@@ -245,7 +262,7 @@ summary(pred_plus - pred)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.003175 0.014688 0.016122 0.017756 0.019175 0.032215
+    ## 0.006702 0.007431 0.008226 0.009594 0.010017 0.029593
 
 ``` r
 # the relative risk of each additional dependency is medium
@@ -253,7 +270,7 @@ summary(pred_plus / pred)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   1.003   1.111   1.116   1.112   1.119   1.121
+    ##   1.009   1.113   1.116   1.113   1.117   1.118
 
 ``` r
 d$modeled_problem_probability <- pred
@@ -275,7 +292,7 @@ ggplot(data = d, mapping = aes(x = nUsing)) +
   ggtitle("Distribution of count of package by number of Depends + Imports")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](pkg_risk_E_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 ds <- data.frame(nUsing = 0:max(d$nUsing))
@@ -284,7 +301,7 @@ ds$modeled_problem_probability <- predict(m, newdata = ds, type = "response")
 (CRAN_rate <- mean(d$has_problem))
 ```
 
-    ## [1] 0.1675167
+    ## [1] 0.08799655
 
 ``` r
 ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
@@ -294,7 +311,7 @@ ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
           subtitle = "CRAN base problem rate shown for scale")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-6-2.png)
+![](pkg_risk_E_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
 knitr::kable(ds[1:10,])
@@ -302,16 +319,16 @@ knitr::kable(ds[1:10,])
 
 |  nUsing|  modeled\_problem\_probability|
 |-------:|------------------------------:|
-|       0|                      0.1105357|
-|       1|                      0.1238660|
-|       2|                      0.1385536|
-|       3|                      0.1546753|
-|       4|                      0.1722976|
-|       5|                      0.1914730|
-|       6|                      0.2122351|
-|       7|                      0.2345954|
-|       8|                      0.2585383|
-|       9|                      0.2840181|
+|       0|                      0.0569280|
+|       1|                      0.0636297|
+|       2|                      0.0710609|
+|       3|                      0.0792864|
+|       4|                      0.0883735|
+|       5|                      0.0983908|
+|       6|                      0.1094072|
+|       7|                      0.1214910|
+|       8|                      0.1347075|
+|       9|                      0.1491177|
 
 ``` r
 WVPlots::ROCPlot(d, 
@@ -321,7 +338,7 @@ WVPlots::ROCPlot(d,
                  "ROC plot of has_problem as function of prediction")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](pkg_risk_E_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 ``` r
 WVPlots::PRTPlot(d, 
@@ -331,7 +348,7 @@ WVPlots::PRTPlot(d,
                  "has_problem prediction statistics as function of prediction")
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-2.png)
+![](pkg_risk_E_files/figure-markdown_github/unnamed-chunk-7-2.png)
 
 ``` r
 WVPlots::PRTPlot(d, 
@@ -342,7 +359,7 @@ WVPlots::PRTPlot(d,
                  plotvars = c("enrichment", "recall"))
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-3.png)
+![](pkg_risk_E_files/figure-markdown_github/unnamed-chunk-7-3.png)
 
 ``` r
 WVPlots::LiftCurvePlot(d, 
@@ -352,7 +369,7 @@ WVPlots::LiftCurvePlot(d,
                  include_wizard = FALSE)
 ```
 
-![](pkg_risk_files/figure-markdown_github/unnamed-chunk-7-4.png)
+![](pkg_risk_E_files/figure-markdown_github/unnamed-chunk-7-4.png)
 
 Application
 -----------
@@ -367,8 +384,8 @@ table(high_risk = d$modeled_problem_probability>CRAN_rate,
 
     ##          problem
     ## high_risk FALSE TRUE
-    ##     FALSE  8254 1105
-    ##     TRUE   3335 1227
+    ##     FALSE  8814  545
+    ##     TRUE   3882  680
 
 ``` r
 (t <- table(high_risk = d$nUsing>5, 
@@ -377,15 +394,15 @@ table(high_risk = d$modeled_problem_probability>CRAN_rate,
 ```
 
     ##          problem
-    ## high_risk FALSE TRUE
-    ##     FALSE  9829 1518
-    ##     TRUE   1760  814
+    ## high_risk FALSE  TRUE
+    ##     FALSE 10580   767
+    ##     TRUE   2116   458
 
 ``` r
 t[2,2]/sum(t[,2])
 ```
 
-    ## [1] 0.3490566
+    ## [1] 0.3738776
 
 ``` r
 table(high_risk = d$nUsing>10, 
@@ -395,8 +412,8 @@ table(high_risk = d$nUsing>10,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 11171  2069
-    ##     TRUE    418   263
+    ##     FALSE 12173  1067
+    ##     TRUE    523   158
 
 ``` r
 table(high_risk = d$nUsing>20, 
@@ -406,8 +423,8 @@ table(high_risk = d$nUsing>20,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 11552  2296
-    ##     TRUE     37    36
+    ##     FALSE 12644  1204
+    ##     TRUE     52    21
 
 ``` r
 table(high_risk = d$modeled_problem_probability>0.5, 
@@ -417,8 +434,8 @@ table(high_risk = d$modeled_problem_probability>0.5,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 11497  2252
-    ##     TRUE     92    80
+    ##     FALSE 12672  1213
+    ##     TRUE     24    12
 
 For each of these tables note how much richer packages indicating problems are in the selected set than in the rejected set.
 

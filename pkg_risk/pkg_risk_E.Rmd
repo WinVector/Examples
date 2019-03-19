@@ -1,5 +1,5 @@
 ---
-title: "pgk_risk"
+title: "pgk_risk_E"
 output: github_document
 ---
 
@@ -46,12 +46,23 @@ dim(cr)
 
 Now we prepare the data for analysis.  
 
-We get per-package status summaries.
+We get per-package status summaries (restricting to a few build flavors).
 
 ```{r}
+flavors = c("r-devel-linux-x86_64-debian-clang",
+            "r-devel-linux-x86_64-debian-gcc",
+            "r-devel-linux-x86_64-fedora-clang",
+            "r-devel-linux-x86_64-fedora-gcc", "r-devel-windows-ix86+x86_64",
+            "r-patched-linux-x86_64", "r-release-linux-x86_64",
+            "r-release-osx-x86_64", "r-release-windows-ix86+x86_64")
+
 package_summary <- cr %.>%
   select_rows(.,
               !is.na(Status)) %.>%
+  set_indicator(., 
+                rescol = "examine",
+                testcol = "Flavor",
+                testvalues = flavors) %.>%
   extend(., 
          one = 1) %.>%
   project(.,
@@ -68,14 +79,16 @@ package_summary <- cr %.>%
          ERROR = ifelse(is.na(ERROR), 0, ERROR),
          FAIL = ifelse(is.na(FAIL), 0, FAIL)) %.>%
   extend(.,
-         has_problem = (WARN + ERROR + FAIL)>0)
-  
+         has_problem = ERROR>0)
+
+dim(package_summary)
+
 package_summary %.>% 
   head(.) %.>%
   knitr::kable(.)
 ```
 
-For this study we consider a package to have problems if it has at least one `WARN`, `ERROR`, or `FAIL` record.
+For this study we consider a package to have problems if it has at least one `ERROR` record.
 
 We also unpack the Depends and Imports fields from comma separated strings into character vectors and then collect or statistics.
 
