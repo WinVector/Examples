@@ -93,7 +93,7 @@ package_summary <- cr %.>%
          ERROR = ifelse(is.na(ERROR), 0, ERROR),
          FAIL = ifelse(is.na(FAIL), 0, FAIL)) %.>%
   extend(.,
-         has_problem = ERROR>0)
+         has_problem = (FAIL + ERROR)>0)
 
 dim(package_summary)
 ```
@@ -115,7 +115,7 @@ package_summary %.>%
 | ABC.RAP     |   11|     0|     1|      0|     0| FALSE        |
 | ABCanalysis |   12|     0|     0|      0|     0| FALSE        |
 
-For this study we consider a package to have problems if it has at least one `ERROR` record.
+For this study we consider a package to have problems if it has at least one `ERROR` or `FAIL` record.
 
 We also unpack the Depends and Imports fields from comma separated strings into character vectors and then collect or statistics.
 
@@ -158,7 +158,7 @@ summary(d$has_problem)
 ```
 
     ##    Mode   FALSE    TRUE 
-    ## logical   12696    1225
+    ## logical   12681    1240
 
 ``` r
 dim(d)
@@ -193,13 +193,13 @@ table(d$has_problem,
 
     ## 
     ## FALSE  TRUE 
-    ## 12696  1225
+    ## 12681  1240
 
 ``` r
 mean(d$has_problem)
 ```
 
-    ## [1] 0.08799655
+    ## [1] 0.08907406
 
 Modeling
 --------
@@ -219,20 +219,20 @@ summary(m)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.8251  -0.4302  -0.3840  -0.3424   2.3941  
+    ## -1.8217  -0.4331  -0.3869  -0.3452   2.3874  
     ## 
     ## Coefficients:
     ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -2.807355   0.041915  -66.98   <2e-16 ***
-    ## nUsing       0.118424   0.006125   19.34   <2e-16 ***
+    ## (Intercept) -2.790286   0.041656  -66.98   <2e-16 ***
+    ## nUsing       0.117738   0.006107   19.28   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 8293.5  on 13920  degrees of freedom
-    ## Residual deviance: 7947.7  on 13919  degrees of freedom
-    ## AIC: 7951.7
+    ##     Null deviance: 8363.5  on 13920  degrees of freedom
+    ## Residual deviance: 8019.4  on 13919  degrees of freedom
+    ## AIC: 8023.4
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -240,7 +240,7 @@ summary(m)
 sigr::wrapChiSqTest(m)
 ```
 
-    ## [1] "Chi-Square Test summary: pseudo-R2=0.04169 (X2(1,N=13921)=345.8, p<1e-05)."
+    ## [1] "Chi-Square Test summary: pseudo-R2=0.04114 (X2(1,N=13921)=344, p<1e-05)."
 
 The model indicates package use count (`Imports` plus `Depends`) is correlated with packages having problems.
 
@@ -262,7 +262,7 @@ summary(pred_plus - pred)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.006702 0.007431 0.008226 0.009594 0.010017 0.029593
+    ## 0.006761 0.007491 0.008285 0.009644 0.010073 0.029422
 
 ``` r
 # the relative risk of each additional dependency is medium
@@ -270,7 +270,7 @@ summary(pred_plus / pred)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   1.009   1.113   1.116   1.113   1.117   1.118
+    ##   1.009   1.113   1.115   1.113   1.116   1.117
 
 ``` r
 d$modeled_problem_probability <- pred
@@ -301,7 +301,7 @@ ds$modeled_problem_probability <- predict(m, newdata = ds, type = "response")
 (CRAN_rate <- mean(d$has_problem))
 ```
 
-    ## [1] 0.08799655
+    ## [1] 0.08907406
 
 ``` r
 ggplot(data = ds, mapping = aes(x = nUsing, y = modeled_problem_probability)) +
@@ -319,16 +319,16 @@ knitr::kable(ds[1:10,])
 
 |  nUsing|  modeled\_problem\_probability|
 |-------:|------------------------------:|
-|       0|                      0.0569280|
-|       1|                      0.0636297|
-|       2|                      0.0710609|
-|       3|                      0.0792864|
-|       4|                      0.0883735|
-|       5|                      0.0983908|
-|       6|                      0.1094072|
-|       7|                      0.1214910|
-|       8|                      0.1347075|
-|       9|                      0.1491177|
+|       0|                      0.0578514|
+|       1|                      0.0646128|
+|       2|                      0.0721040|
+|       3|                      0.0803891|
+|       4|                      0.0895344|
+|       5|                      0.0996073|
+|       6|                      0.1106757|
+|       7|                      0.1228063|
+|       8|                      0.1360630|
+|       9|                      0.1505053|
 
 ``` r
 WVPlots::ROCPlot(d, 
@@ -384,8 +384,8 @@ table(high_risk = d$modeled_problem_probability>CRAN_rate,
 
     ##          problem
     ## high_risk FALSE TRUE
-    ##     FALSE  8814  545
-    ##     TRUE   3882  680
+    ##     FALSE  8806  553
+    ##     TRUE   3875  687
 
 ``` r
 (t <- table(high_risk = d$nUsing>5, 
@@ -395,14 +395,14 @@ table(high_risk = d$modeled_problem_probability>CRAN_rate,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 10580   767
-    ##     TRUE   2116   458
+    ##     FALSE 10570   777
+    ##     TRUE   2111   463
 
 ``` r
 t[2,2]/sum(t[,2])
 ```
 
-    ## [1] 0.3738776
+    ## [1] 0.3733871
 
 ``` r
 table(high_risk = d$nUsing>10, 
@@ -412,8 +412,8 @@ table(high_risk = d$nUsing>10,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 12173  1067
-    ##     TRUE    523   158
+    ##     FALSE 12159  1081
+    ##     TRUE    522   159
 
 ``` r
 table(high_risk = d$nUsing>20, 
@@ -423,7 +423,7 @@ table(high_risk = d$nUsing>20,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 12644  1204
+    ##     FALSE 12629  1219
     ##     TRUE     52    21
 
 ``` r
@@ -434,7 +434,7 @@ table(high_risk = d$modeled_problem_probability>0.5,
 
     ##          problem
     ## high_risk FALSE  TRUE
-    ##     FALSE 12672  1213
+    ##     FALSE 12657  1228
     ##     TRUE     24    12
 
 For each of these tables note how much richer packages indicating problems are in the selected set than in the rejected set.

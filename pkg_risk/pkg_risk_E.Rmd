@@ -79,7 +79,7 @@ package_summary <- cr %.>%
          ERROR = ifelse(is.na(ERROR), 0, ERROR),
          FAIL = ifelse(is.na(FAIL), 0, FAIL)) %.>%
   extend(.,
-         has_problem = ERROR>0)
+         has_problem = (FAIL + ERROR)>0)
 
 dim(package_summary)
 
@@ -88,7 +88,7 @@ package_summary %.>%
   knitr::kable(.)
 ```
 
-For this study we consider a package to have problems if it has at least one `ERROR` record.
+For this study we consider a package to have problems if it has at least one `ERROR` or `FAIL` record.
 
 We also unpack the Depends and Imports fields from comma separated strings into character vectors and then collect or statistics.
 
