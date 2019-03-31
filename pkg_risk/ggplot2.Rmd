@@ -141,6 +141,7 @@ d %.>%
   project(., 
           groupby = qc(Depends_ggplot2, Imports_ggplot2, Suggests_ggplot2),
           count = sum(one)) %.>% 
+  orderby(., qc(Depends_ggplot2, Imports_ggplot2, Suggests_ggplot2)) %.>%
   knitr::kable(.)
 
 # map check status into our data
@@ -159,6 +160,7 @@ d %.>%
           count = sum(one)) %.>% 
   extend(., 
          fraction = count/sum(count)) %.>%
+  orderby(., qc(uses_ggplot2, has_problem)) %.>%
   knitr::kable(.)
 
 model <- glm(has_problem ~ Depends_ggplot2 + Imports_ggplot2 + Suggests_ggplot2, 

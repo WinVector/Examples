@@ -425,6 +425,7 @@ d %.>%
   project(., 
           groupby = qc(Depends_ggplot2, Imports_ggplot2, Suggests_ggplot2),
           count = sum(one)) %.>% 
+  orderby(., qc(Depends_ggplot2, Imports_ggplot2, Suggests_ggplot2)) %.>%
   knitr::kable(.)
 ```
 
@@ -462,6 +463,7 @@ d %.>%
           count = sum(one)) %.>% 
   extend(., 
          fraction = count/sum(count)) %.>%
+  orderby(., qc(uses_ggplot2, has_problem)) %.>%
   knitr::kable(.)
 ```
 
@@ -469,8 +471,8 @@ d %.>%
 |:--------------|:-------------|------:|----------:|
 | FALSE         | FALSE        |  10234|  0.7309478|
 | FALSE         | TRUE         |   1630|  0.1164203|
-| TRUE          | TRUE         |   1693|  0.1209199|
 | TRUE          | FALSE        |    444|  0.0317120|
+| TRUE          | TRUE         |   1693|  0.1209199|
 
 ``` r
 model <- glm(has_problem ~ Depends_ggplot2 + Imports_ggplot2 + Suggests_ggplot2, 
