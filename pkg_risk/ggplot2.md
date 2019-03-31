@@ -317,6 +317,11 @@ cr <- lst$cr
 ```
 
 ``` r
+target_pkg <- "ggplot2"
+usage_types <- c("Depends", "Imports", "Suggests", "LinkingTo")
+```
+
+``` r
 package_summary <- cr %.>%
   select_rows(.,
               !is.na(Status)) %.>%
@@ -374,68 +379,62 @@ parse_lists <- function(strs) {
 }
 
 # collect the columns we want
+# collect the columns we want
 d <- data.frame(
   Package = cran$Package,
   stringsAsFactors = FALSE)
-d$Depends <- parse_lists(cran$Depends)
-d$nDepends <- vapply(d$Depends, length, numeric(1))
-d$Imports <- parse_lists(cran$Imports)
-d$nImports <- vapply(d$Imports, length, numeric(1))
-d$Suggests <- parse_lists(cran$Suggests)
-d$nSuggests <- vapply(d$Suggests, length, numeric(1))
-
-d$Depends_ggplot2 <- vapply(d$Depends, 
+for(use_type in c("Depends", "Imports", "Suggests", "LinkingTo")) {
+  d[[use_type]] <- parse_lists(cran[[use_type]])
+  d[[paste0("n_", use_type)]] <- vapply(d[[use_type]], length, numeric(1))
+  use_str <- paste(use_type, target_pkg, sep = "_")
+  d[[use_str]] <- vapply(d[[use_type]], 
                             function(di) {
-                              "ggplot2" %in% di
+                              target_pkg %in% di
                             }, logical(1))
-summary(d$Depends_ggplot2)
+  print(use_str)
+  print(table(d[[use_str]]))
+}
 ```
 
-    ##    Mode   FALSE    TRUE 
-    ## logical   13698     304
+    ## [1] "Depends_ggplot2"
+    ## 
+    ## FALSE  TRUE 
+    ## 13698   304 
+    ## [1] "Imports_ggplot2"
+    ## 
+    ## FALSE  TRUE 
+    ## 12765  1237 
+    ## [1] "Suggests_ggplot2"
+    ## 
+    ## FALSE  TRUE 
+    ## 13405   597 
+    ## [1] "LinkingTo_ggplot2"
+    ## 
+    ## FALSE 
+    ## 14002
 
 ``` r
-d$Imports_ggplot2 <- vapply(d$Imports, 
-                            function(di) {
-                              "ggplot2" %in% di
-                            }, logical(1))
-summary(d$Imports_ggplot2)
-```
+per_pkg_uses <- paste(usage_types, target_pkg, sep = "_")
 
-    ##    Mode   FALSE    TRUE 
-    ## logical   12765    1237
-
-``` r
-d$Suggests_ggplot2 <- vapply(d$Suggests, 
-                            function(di) {
-                              "ggplot2" %in% di
-                            }, logical(1))
-summary(d$Suggests_ggplot2)
-```
-
-    ##    Mode   FALSE    TRUE 
-    ## logical   13405     597
-
-``` r
-d <- d[, c("Package", "nDepends", "nImports", "nSuggests",
-           "Depends_ggplot2", "Imports_ggplot2", "Suggests_ggplot2")]
+d <- d[, c("Package", "n_Depends", "n_Imports", "n_Suggests",
+           per_pkg_uses)]
 
 d %.>%
   extend(., one = 1) %.>%
   project(., 
-          groupby = qc(Depends_ggplot2, Imports_ggplot2, Suggests_ggplot2),
+          groupby = per_pkg_uses,
           count = sum(one)) %.>% 
-  orderby(., qc(Depends_ggplot2, Imports_ggplot2, Suggests_ggplot2)) %.>%
+  orderby(., per_pkg_uses) %.>%
   knitr::kable(.)
 ```
 
-| Depends\_ggplot2 | Imports\_ggplot2 | Suggests\_ggplot2 |  count|
-|:-----------------|:-----------------|:------------------|------:|
-| FALSE            | FALSE            | FALSE             |  11865|
-| FALSE            | FALSE            | TRUE              |    596|
-| FALSE            | TRUE             | FALSE             |   1237|
-| TRUE             | FALSE            | FALSE             |    303|
-| TRUE             | FALSE            | TRUE              |      1|
+| Depends\_ggplot2 | Imports\_ggplot2 | Suggests\_ggplot2 | LinkingTo\_ggplot2 |  count|
+|:-----------------|:-----------------|:------------------|:-------------------|------:|
+| FALSE            | FALSE            | FALSE             | FALSE              |  11865|
+| FALSE            | FALSE            | TRUE              | FALSE              |    596|
+| FALSE            | TRUE             | FALSE             | FALSE              |   1237|
+| TRUE             | FALSE            | FALSE             | FALSE              |    303|
+| TRUE             | FALSE            | TRUE              | FALSE              |      1|
 
 ``` r
 # map check status into our data
@@ -454,16 +453,17 @@ d <- natural_join(d, package_summary,
     ## [1] 14001
 
 ``` r
+uses_package <- paste("uses", target_pkg, sep = "_")
 d %.>%
-  extend(., 
-         one = 1,
-         uses_ggplot2 = (Depends_ggplot2 + Imports_ggplot2 + Suggests_ggplot2)>0) %.>%
+  extend_se(., 
+            list(qe(one := 1),
+                 paste(uses_package, " := (", paste(per_pkg_uses, collapse = " + "), ")>0"))) %.>%
   project(., 
-          groupby = qc(uses_ggplot2, has_problem),
+          groupby = c(uses_package, "has_problem"),
           count = sum(one)) %.>% 
   extend(., 
          fraction = count/sum(count)) %.>%
-  orderby(., qc(uses_ggplot2, has_problem)) %.>%
+  orderby(., c(uses_package, "has_problem")) %.>%
   knitr::kable(.)
 ```
 
@@ -475,7 +475,8 @@ d %.>%
 | TRUE          | TRUE         |   1693|  0.1209199|
 
 ``` r
-model <- glm(has_problem ~ Depends_ggplot2 + Imports_ggplot2 + Suggests_ggplot2, 
+f <- wrapr::mk_formula("has_problem", per_pkg_uses)
+model <- glm(f, 
              data = d, 
              family = binomial)
 summary(model)
@@ -483,19 +484,19 @@ summary(model)
 
     ## 
     ## Call:
-    ## glm(formula = has_problem ~ Depends_ggplot2 + Imports_ggplot2 + 
-    ##     Suggests_ggplot2, family = binomial, data = d)
+    ## glm(formula = f, family = binomial, data = d)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
     ## -1.9090  -0.5437  -0.5437  -0.5437   1.9925  
     ## 
-    ## Coefficients:
-    ##                      Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)          -1.83714    0.02667  -68.89   <2e-16 ***
-    ## Depends_ggplot2TRUE   3.48293    0.15828   22.00   <2e-16 ***
-    ## Imports_ggplot2TRUE   3.28731    0.07723   42.56   <2e-16 ***
-    ## Suggests_ggplot2TRUE  2.83971    0.09620   29.52   <2e-16 ***
+    ## Coefficients: (1 not defined because of singularities)
+    ##                       Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)           -1.83714    0.02667  -68.89   <2e-16 ***
+    ## Depends_ggplot2TRUE    3.48293    0.15828   22.00   <2e-16 ***
+    ## Imports_ggplot2TRUE    3.28731    0.07723   42.56   <2e-16 ***
+    ## Suggests_ggplot2TRUE   2.83971    0.09620   29.52   <2e-16 ***
+    ## LinkingTo_ggplot2TRUE       NA         NA      NA       NA    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
