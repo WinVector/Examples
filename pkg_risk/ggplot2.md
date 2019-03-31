@@ -3,6 +3,303 @@ ggplot2
 
 Look at size of the ggplot2 `VECTOR_ELT()` issue.
 
+[CRAN Package Check Results for Package ggplot2](https://cran.r-project.org/web/checks/check_results_ggplot2.html)
+
+<p>
+Last updated on 2019-03-31 21:47:09 CEST.
+</p>
+<table border="1" summary="CRAN check results for package ggplot2">
+<tr>
+<th>
+Flavor
+</th>
+<th>
+Version
+</th>
+<th>
+T<sub>install</sub>
+</th>
+<th>
+T<sub>check</sub>
+</th>
+<th>
+T<sub>total</sub>
+</th>
+<th>
+Status
+</th>
+<th>
+Flags
+</th>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-devel-linux-x86_64-debian-clang"> r-devel-linux-x86\_64-debian-clang </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+20.49
+</td>
+<td class="r">
+175.94
+</td>
+<td class="r">
+196.43
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-devel-linux-x86_64-debian-clang/ggplot2-00check.html"><span class="check_ko">ERROR</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-devel-linux-x86_64-debian-gcc"> r-devel-linux-x86\_64-debian-gcc </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+14.63
+</td>
+<td class="r">
+239.16
+</td>
+<td class="r">
+253.79
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-devel-linux-x86_64-debian-gcc/ggplot2-00check.html"><span class="check_ok">OK</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-devel-linux-x86_64-fedora-clang"> r-devel-linux-x86\_64-fedora-clang </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td class="r">
+392.78
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-devel-linux-x86_64-fedora-clang/ggplot2-00check.html">NOTE</a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-devel-linux-x86_64-fedora-gcc"> r-devel-linux-x86\_64-fedora-gcc </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td class="r">
+379.50
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-devel-linux-x86_64-fedora-gcc/ggplot2-00check.html">NOTE</a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-devel-windows-ix86_x86_64"> r-devel-windows-ix86+x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+46.00
+</td>
+<td class="r">
+421.00
+</td>
+<td class="r">
+467.00
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-devel-windows-ix86+x86_64/ggplot2-00check.html"><span class="check_ok">OK</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-patched-linux-x86_64"> r-patched-linux-x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+18.84
+</td>
+<td class="r">
+129.45
+</td>
+<td class="r">
+148.29
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-patched-linux-x86_64/ggplot2-00check.html"><span class="check_ko">ERROR</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-patched-solaris-x86"> r-patched-solaris-x86 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td class="r">
+524.10
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-patched-solaris-x86/ggplot2-00check.html">NOTE</a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-release-linux-x86_64"> r-release-linux-x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+13.63
+</td>
+<td class="r">
+309.95
+</td>
+<td class="r">
+323.58
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-release-linux-x86_64/ggplot2-00check.html"><span class="check_ok">OK</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-release-windows-ix86_x86_64"> r-release-windows-ix86+x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+23.00
+</td>
+<td class="r">
+311.00
+</td>
+<td class="r">
+334.00
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-release-windows-ix86+x86_64/ggplot2-00check.html"><span class="check_ko">WARN</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-release-osx-x86_64"> r-release-osx-x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-release-osx-x86_64/ggplot2-00check.html">NOTE</a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-oldrel-windows-ix86_x86_64"> r-oldrel-windows-ix86+x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+15.00
+</td>
+<td class="r">
+498.00
+</td>
+<td class="r">
+513.00
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-oldrel-windows-ix86+x86_64/ggplot2-00check.html"><span class="check_ko">WARN</span></a>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<a href="check_flavors.html#r-oldrel-osx-x86_64"> r-oldrel-osx-x86\_64 </a>
+</td>
+<td>
+3.1.0
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td class="r">
+</td>
+<td>
+<a href="https://www.R-project.org/nosvn/R.check/r-oldrel-osx-x86_64/ggplot2-00check.html">NOTE</a>
+</td>
+<td>
+</td>
+</tr>
+</table>
+r-devel-linux-x86\_64-debian-clang
+
+    > geom_jitter() +
+     + scale_x_discrete(expand = expand_scale(add = .6)) +
+     + scale_y_continuous(expand = expand_scale(mult = .05))
+     Error: Cannot add ggproto objects together. Did you forget to add this object to a ggplot object?
+     Execution halted
+
+r-patched-linux-x86\_64
+
+    > ggplot(mpg, aes(displ, hwy)) + geom_point()
+      Error in grid.Call.graphics(C_setviewport, vp, TRUE) : 
+        VECTOR_ELT() can only be applied to a 'list', not a 'double'
+      Calls: <Anonymous> ... lapply -> FUN -> push.vp.viewport -> grid.Call.graphics
+
 ``` r
 library("rqdatatable")
 ```
