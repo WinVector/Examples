@@ -160,6 +160,25 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 ```
 
 ```{r}
+# look at page rank
+pr <- igraph::page_rank(graph, directed = FALSE)
+ranksu <- pr[[1]]
+head(ranksu[order(-ranksu)], n = 100)
+
+# graph with edges reversed
+rgraph <- igraph::graph_from_edgelist(as.matrix(ee[ , c("Package", "Uses"), ]), directed = TRUE)
+pr <- igraph::page_rank(rgraph, directed = TRUE)
+ranksr <- pr[[1]]
+head(ranksr[order(-ranksr)], n = 100)
+
+# original graph (edges not in correct direction for this application)
+pr <- igraph::page_rank(graph, directed = TRUE)
+rankse <- pr[[1]]
+head(rankse[order(rankse)], n = 100)
+```
+
+
+```{r}
 # look for large/famous packages
 target_pkgs <- sort(unique(ee$Uses))
 reaches <- vapply(target_pkgs,

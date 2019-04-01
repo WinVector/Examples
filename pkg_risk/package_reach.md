@@ -233,6 +233,211 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 ![](package_reach_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
+# look at page rank
+pr <- igraph::page_rank(graph, directed = FALSE)
+ranksu <- pr[[1]]
+head(ranksu[order(-ranksu)], n = 100)
+```
+
+    ##          Rcpp          MASS       ggplot2         dplyr        Matrix 
+    ##  0.0176048480  0.0147493539  0.0142858040  0.0094262472  0.0081686009 
+    ##       mvtnorm      survival       stringr      magrittr          plyr 
+    ##  0.0064296145  0.0060656663  0.0059605732  0.0059290170  0.0059170282 
+    ## RcppArmadillo      jsonlite    data.table          httr        igraph 
+    ##  0.0058286223  0.0055452347  0.0051754217  0.0050758330  0.0043153151 
+    ##       foreach       lattice            sp        tibble         shiny 
+    ##  0.0042677377  0.0041529766  0.0040827879  0.0039682756  0.0038400250 
+    ##      reshape2         tidyr         purrr         rlang    doParallel 
+    ##  0.0036398494  0.0034885900  0.0032318578  0.0031999917  0.0030088077 
+    ##  RColorBrewer          coda           zoo        raster        scales 
+    ##  0.0027112694  0.0025823188  0.0024735797  0.0024487715  0.0022703492 
+    ##     lubridate           XML      numDeriv          nlme     gridExtra 
+    ##  0.0022686519  0.0022510433  0.0022402631  0.0021926590  0.0021010654 
+    ##          boot         RCurl        glmnet          xml2           ape 
+    ##  0.0020989121  0.0020960222  0.0020163019  0.0020080026  0.0019898175 
+    ##          mgcv           rgl            R6          lme4         Hmisc 
+    ##  0.0019668707  0.0019329109  0.0019321364  0.0019196030  0.0017979698 
+    ##     RcppEigen        gtools         readr         knitr        digest 
+    ##  0.0017735282  0.0017538998  0.0017530324  0.0017119153  0.0016775741 
+    ##       cluster            BH         rJava    assertthat         rgdal 
+    ##  0.0016597348  0.0015806091  0.0015585240  0.0015027618  0.0014995369 
+    ##           car        fields         abind       Formula       stringi 
+    ##  0.0014965067  0.0014462739  0.0014233428  0.0014227795  0.0013724622 
+    ##        pracma          curl         e1071        gplots     htmltools 
+    ##  0.0012731778  0.0012530704  0.0012102455  0.0011908229  0.0011722599 
+    ##   htmlwidgets  randomForest   matrixStats           DBI     rmarkdown 
+    ##  0.0011588519  0.0011332387  0.0011235511  0.0011109912  0.0011061578 
+    ##          nnet      quadprog        xtable         rgeos         vegan 
+    ##  0.0010958997  0.0010911149  0.0010722776  0.0010660375  0.0010505855 
+    ##         rpart       corpcor       plotrix         psych      quantreg 
+    ##  0.0010450481  0.0010270037  0.0010054516  0.0009994554  0.0009522582 
+    ##        crayon    robustbase      spatstat      lazyeval           xts 
+    ##  0.0009489958  0.0009367402  0.0009361444  0.0009063139  0.0009058668 
+    ##      forecast        plotly    colorspace       R.utils      sandwich 
+    ##  0.0008923884  0.0008919703  0.0008849384  0.0008799795  0.0008673012 
+    ##          glue       deSolve        Rdpack      maptools        mclust 
+    ##  0.0008641411  0.0008634447  0.0008618278  0.0008586200  0.0008440189 
+    ##     checkmate     iterators            sf         caret         rjson 
+    ##  0.0008382363  0.0008128617  0.0008111455  0.0007794065  0.0007793108
+
+``` r
+# graph with edges reversed
+rgraph <- igraph::graph_from_edgelist(as.matrix(ee[ , c("Package", "Uses"), ]), directed = TRUE)
+pr <- igraph::page_rank(rgraph, directed = TRUE)
+ranksr <- pr[[1]]
+head(ranksr[order(-ranksr)], n = 100)
+```
+
+    ##          Rcpp       lattice        Matrix          MASS       ggplot2 
+    ##  0.0413945385  0.0413057550  0.0214926964  0.0205909949  0.0113395298 
+    ##      magrittr      survival       mvtnorm      jsonlite          plyr 
+    ##  0.0102471424  0.0078643741  0.0074593760  0.0073796442  0.0071147497 
+    ##       stringr         dplyr         rlang            sp RcppArmadillo 
+    ##  0.0069379931  0.0066855165  0.0065268746  0.0063306080  0.0049965502 
+    ##          nlme        tibble           zoo          httr        digest 
+    ##  0.0049420396  0.0048866417  0.0048422050  0.0047213480  0.0046898774 
+    ##       foreach    data.table            R6        igraph         shiny 
+    ##  0.0046282540  0.0045512645  0.0045202085  0.0040472914  0.0035924613 
+    ##     iterators          glue      reshape2       stringi          coda 
+    ##  0.0035059262  0.0033956235  0.0033365715  0.0032382916  0.0032194850 
+    ##          mgcv      numDeriv        gtools        crayon          boot 
+    ##  0.0029639734  0.0028704246  0.0027152258  0.0026826909  0.0026591405 
+    ##  RColorBrewer     pkgconfig     codetools        bitops            BH 
+    ##  0.0026193534  0.0025979958  0.0025881399  0.0025344829  0.0024783472 
+    ##     htmltools        gtable         rJava        scales    assertthat 
+    ##  0.0024707188  0.0024498776  0.0024322962  0.0024024732  0.0023664016 
+    ##          curl         purrr           XML       cluster         RCurl 
+    ##  0.0023028882  0.0022735869  0.0022604477  0.0022584838  0.0019404629 
+    ##           ape         tidyr         abind    doParallel        raster 
+    ##  0.0019094729  0.0018855494  0.0018331338  0.0018285317  0.0018126972 
+    ##      quadprog     RcppEigen           rgl          lme4          mime 
+    ##  0.0017927820  0.0017612387  0.0017544487  0.0017128052  0.0016807821 
+    ##        glmnet         knitr          xml2     lubridate         class 
+    ##  0.0016433711  0.0016284379  0.0016283552  0.0015710750  0.0015311418 
+    ##      lazyeval       Formula        gplots     gridExtra   htmlwidgets 
+    ##  0.0015003746  0.0014838267  0.0014695057  0.0014542295  0.0014093439 
+    ##           car   viridisLite           DBI         Hmisc     backports 
+    ##  0.0013952689  0.0013918201  0.0013571766  0.0013522150  0.0013388502 
+    ##         rpart          yaml         withr   R.methodsS3      sandwich 
+    ##  0.0013306353  0.0013070122  0.0012904007  0.0012521829  0.0012297654 
+    ##    colorspace          nnet      quantreg       openssl           cli 
+    ##  0.0012187920  0.0012186620  0.0011920099  0.0011912211  0.0011852173 
+    ##        fields       lpSolve       askpass         readr        xtable 
+    ##  0.0011733873  0.0011533725  0.0011171720  0.0011092892  0.0011068106 
+    ##           sys          maps        pracma    KernSmooth     checkmate 
+    ##  0.0011035439  0.0010955005  0.0010796890  0.0010703314  0.0010199584 
+    ##       foreign   matrixStats         rgdal         e1071        mnormt 
+    ##  0.0010153012  0.0009849114  0.0009549801  0.0009435228  0.0009377159
+
+``` r
+# original graph (edges not in correct direction for this application)
+pr <- igraph::page_rank(graph, directed = TRUE)
+rankse <- pr[[1]]
+head(rankse[order(rankse)], n = 100)
+```
+
+    ##                        MASS                     stringi 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        Rcpp                     pbapply 
+    ##                6.411838e-05                6.411838e-05 
+    ##                      xtable                        curl 
+    ##                6.411838e-05                6.411838e-05 
+    ##                         XML                    abc.data 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        nnet                     plotrix 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    corrplot                     lattice 
+    ##                6.411838e-05                6.411838e-05 
+    ##                 matrixStats                       abind 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        glue                    magrittr 
+    ##                6.411838e-05                6.411838e-05 
+    ##                       rlang                  rstudioapi 
+    ##                6.411838e-05                6.411838e-05 
+    ##                       Cairo                     cluster 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     kernlab                     Biobase 
+    ##                6.411838e-05                6.411838e-05 
+    ##                       DESeq                       limma 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        QUIC                  data.table 
+    ##                6.411838e-05                6.411838e-05 
+    ##                         DBI                   iterators 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     nleqslv            PhysicalActivity 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        fgui                      tcltk2 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     compare                          BH 
+    ##                6.411838e-05                6.411838e-05 
+    ##                  filematrix                     foreign 
+    ##                6.411838e-05                6.411838e-05 
+    ##                 R.methodsS3                     dummies 
+    ##                6.411838e-05                6.411838e-05 
+    ##                randomForest                     lpSolve 
+    ##                6.411838e-05                6.411838e-05 
+    ##                   acss.data                  Biostrings 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    BSgenome BSgenome.Hsapiens.UCSC.hg19 
+    ##                6.411838e-05                6.411838e-05 
+    ##                GenomeInfoDb               GenomicRanges 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     IRanges                   S4Vectors 
+    ##                6.411838e-05                6.411838e-05 
+    ##                       chron                      expint 
+    ##                6.411838e-05                6.411838e-05 
+    ##                   fftwtools                       rpart 
+    ##                6.411838e-05                6.411838e-05 
+    ##                         FNN                        nnls 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        lars                    quadprog 
+    ##                6.411838e-05                6.411838e-05 
+    ##                      digest                       git2r 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    versions                      pracma 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    phyloseq                     mvtnorm 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        boot                   rootSolve 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    rappdirs                  lpSolveAPI 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    combinat                        glm2 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     tkrplot                       pdist 
+    ##                6.411838e-05                6.411838e-05 
+    ##                  KernSmooth                      deldir 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    filehash                       audio 
+    ##                6.411838e-05                6.411838e-05 
+    ##                       shape                       clipr 
+    ##                6.411838e-05                6.411838e-05 
+    ##                   highlight                  manipulate 
+    ##                6.411838e-05                6.411838e-05 
+    ##                 viridisLite                     polynom 
+    ##                6.411838e-05                6.411838e-05 
+    ##                  awsMethods                RcppProgress 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     ellipse                GenBinomApps 
+    ##                6.411838e-05                6.411838e-05 
+    ##                    waveslim                  assertthat 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     Formula                  colorspace 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     writexl                     moments 
+    ##                6.411838e-05                6.411838e-05 
+    ##                         png                  minpack.lm 
+    ##                6.411838e-05                6.411838e-05 
+    ##                     geepack                       dummy 
+    ##                6.411838e-05                6.411838e-05 
+    ##                 binaryLogic                   AlgDesign 
+    ##                6.411838e-05                6.411838e-05 
+    ##                  matrixcalc                        yaml 
+    ##                6.411838e-05                6.411838e-05 
+    ##                        VGAM                     nortest 
+    ##                6.411838e-05                6.411838e-05
+
+``` r
 # look for large/famous packages
 target_pkgs <- sort(unique(ee$Uses))
 reaches <- vapply(target_pkgs,
@@ -282,7 +487,7 @@ ggplot(data = reachf, mapping = aes(x = Package, y = reach)) +
   ggtitle("package reach")
 ```
 
-![](package_reach_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](package_reach_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 ``` r
 reachf <- reachf[order(as.character(reachf$Package)), , drop = FALSE]
@@ -414,7 +619,7 @@ g <- create_graph(nodes_df = nodes_df,
 render_graph(g, layout="fr")
 ```
 
-![](package_reach_files/figure-markdown_github/unnamed-chunk-7-2.png)
+![](package_reach_files/figure-markdown_github/unnamed-chunk-8-2.png)
 
 ``` r
 g %.>%
@@ -426,4 +631,4 @@ plot(find_induced_subgraph("stringi", "ggplot2"))
 title(paste("paths from", "stringi", "to", "ggplot2"))
 ```
 
-![](package_reach_files/figure-markdown_github/unnamed-chunk-7-3.png)
+![](package_reach_files/figure-markdown_github/unnamed-chunk-8-3.png)
