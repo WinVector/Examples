@@ -135,13 +135,15 @@ find_induced_subgraph <- function(start, end) {
 
 (sum(sizes)-1)/n_nodes
 
-last <- min(which(sizes==0))-2
-(pkg <- setdiff(names(igraph::ego(graph, mode="out", nodes = target_pkg, order = last)[[1]]), 
-                names(igraph::ego(graph, mode="out", nodes = target_pkg, order = last-1)[[1]])))
-pkg <- pkg[[1]]
-
-plot(find_induced_subgraph(target_pkg, pkg))
-title(paste("paths from", target_pkg, "to", pkg))
+for(i in wrapr::seqi(1, min(which(sizes==0))-2)) {
+  print(i)
+  (pkg <- setdiff(names(igraph::ego(graph, mode="out", nodes = target_pkg, order = i)[[1]]), 
+                  names(igraph::ego(graph, mode="out", nodes = target_pkg, order = i-1)[[1]])))
+  (pkg <- pkg[[sample.int(length(pkg),1)]])
+  
+  plot(find_induced_subgraph(target_pkg, pkg))
+  title(paste("paths from", target_pkg, "to", pkg))
+}
 ```
 
 ```{r, error=TRUE}

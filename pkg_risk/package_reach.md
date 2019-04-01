@@ -174,21 +174,40 @@ find_induced_subgraph <- function(start, end) {
     ## [1] 0.4525068
 
 ``` r
-last <- min(which(sizes==0))-2
-(pkg <- setdiff(names(igraph::ego(graph, mode="out", nodes = target_pkg, order = last)[[1]]), 
-                names(igraph::ego(graph, mode="out", nodes = target_pkg, order = last-1)[[1]])))
+for(i in wrapr::seqi(1, min(which(sizes==0))-2)) {
+  print(i)
+  (pkg <- setdiff(names(igraph::ego(graph, mode="out", nodes = target_pkg, order = i)[[1]]), 
+                  names(igraph::ego(graph, mode="out", nodes = target_pkg, order = i-1)[[1]])))
+  (pkg <- pkg[[sample.int(length(pkg),1)]])
+  
+  plot(find_induced_subgraph(target_pkg, pkg))
+  title(paste("paths from", target_pkg, "to", pkg))
+}
 ```
 
-    ## [1] "kwb.hantush"
-
-``` r
-pkg <- pkg[[1]]
-
-plot(find_induced_subgraph(target_pkg, pkg))
-title(paste("paths from", target_pkg, "to", pkg))
-```
+    ## [1] 1
 
 ![](package_reach_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+    ## [1] 2
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-5-2.png)
+
+    ## [1] 3
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-5-3.png)
+
+    ## [1] 4
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-5-4.png)
+
+    ## [1] 5
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-5-5.png)
+
+    ## [1] 6
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-5-6.png)
 
 ``` r
 # Look at some examples
