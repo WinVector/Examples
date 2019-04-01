@@ -82,7 +82,8 @@ for(use_type in c("Depends", "Imports", "Suggests", "LinkingTo")) {
 
 ``` r
 # build relation graph edges
-want <- logical(nrow(d))
+n_nodes <- nrow(d)
+want <- logical(n_nodes)
 for(relation in c("LinkingTo", "Depends", "Imports")) {
   want <- want | d[[paste(relation, target_pkg, sep = "_")]]
 }
@@ -120,7 +121,7 @@ get_edges <- function(row) {
       Package = row$Package[[1]],
       stringsAsFactors = FALSE)
 }
-ee <- lapply(seq_len(nrow(d)),
+ee <- lapply(seq_len(n_nodes),
              function(i) {
                get_edges(d[i, , drop = FALSE])
              })
@@ -144,7 +145,7 @@ find_induced_subgraph <- function(start, end) {
   if(is.infinite(dist)) {
     return(NULL)
   }
-  nbhd <- igraph::ego(graph, mode="out", nodes = start, order = dist)[[1]]
+  nbhd <- igraph::ego(graph, mode="out", nodes = start, order = n_nodes)[[1]]
   dback <- igraph::distances(graph, v = end, to = nbhd , mode = "in")
   nodes <- dback[ , !is.infinite(dback[1, , drop = TRUE]), drop = TRUE]
   subg <- igraph::induced_subgraph(graph, nbhd[names(nodes)], impl = "create_from_scratch")
@@ -167,7 +168,7 @@ find_induced_subgraph <- function(start, end) {
     ##  [1]    1 1605 3293 1253  162   22    1    0    0    0    0
 
 ``` r
-(sum(sizes)-1)/nrow(d)
+(sum(sizes)-1)/n_nodes
 ```
 
     ## [1] 0.4525068
@@ -257,7 +258,7 @@ ggplot(data = reachf, mapping = aes(x = Package, y = reach)) +
 ``` r
 reachf <- reachf[order(as.character(reachf$Package)), , drop = FALSE]
 rownames(reachf) <- NULL
-reachf$fraction <- reachf$reach / nrow(d)
+reachf$fraction <- reachf$reach / n_nodes
 knitr::kable(reachf)
 ```
 
