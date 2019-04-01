@@ -205,3 +205,101 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 ```
 
 ![](package_reach_files/figure-markdown_github/unnamed-chunk-6-2.png)
+
+``` r
+# look for large packages
+root_pkgs <- setdiff(unique(ee$Uses), ee$Package)
+seeds <- c("dplyr", "tidyr", "ggplot2", "rlang", "reshape", "reshape2", "plyr", "tibble")
+root_pkgs <- sort(unique(c(root_pkgs, seeds)))
+reach <- vapply(root_pkgs,
+                function(pi) {
+                  length(igraph::ego(graph, mode="out", nodes = pi, order = 100)[[1]])
+                }, numeric(1))
+reach <- reach[(reach>=1000) | (names(reach) %in% seeds)]
+reach <- reach[order(-reach)]
+reach
+```
+
+    ##         Rcpp      lattice     magrittr         MASS           R6 
+    ##         6337         6045         4901         4617         4300 
+    ##        rlang    pkgconfig         glue       crayon   assertthat 
+    ##         4017         4005         3971         3945         3880 
+    ##      stringi         utf8        fansi       tibble       digest 
+    ##         3714         3613         3612         3608         3387 
+    ##         plyr           BH RColorBrewer   colorspace        withr 
+    ##         3108         2832         2754         2709         2689 
+    ##     reshape2  viridisLite     lazyeval     labeling       gtable 
+    ##         2681         2595         2584         2580         2554 
+    ##      ggplot2     jsonlite         mime        plogr        dplyr 
+    ##         2507         2399         2142         1745         1671 
+    ##         curl   data.table    codetools         yaml      mvtnorm 
+    ##         1647         1418         1383         1366         1279 
+    ##    base64enc       xtable          sys        tidyr      reshape 
+    ##         1042         1034         1021          898          179
+
+``` r
+reachf <- data.frame(Package = names(reach),
+                     reach = reach,
+                     stringsAsFactors = FALSE)
+reachf$Package <- reorder(reachf$Package, reachf$reach)
+
+library("ggplot2")
+
+ggplot(data = reachf, mapping = aes(x = Package, y = reach)) + 
+  geom_segment(aes(xend = Package, yend=0), color = "blue") +
+  geom_point(color = "blue", size = 2) +
+  coord_flip() +
+  ggtitle("package reach")
+```
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+``` r
+reachf <- reachf[order(as.character(reachf$Package)), , drop = FALSE]
+rownames(reachf) <- NULL
+reachf$fraction <- reachf$reach / nrow(d)
+knitr::kable(reachf)
+```
+
+| Package      |  reach|   fraction|
+|:-------------|------:|----------:|
+| assertthat   |   3880|  0.2771033|
+| base64enc    |   1042|  0.0744179|
+| BH           |   2832|  0.2022568|
+| codetools    |   1383|  0.0987716|
+| colorspace   |   2709|  0.1934724|
+| crayon       |   3945|  0.2817455|
+| curl         |   1647|  0.1176261|
+| data.table   |   1418|  0.1012712|
+| digest       |   3387|  0.2418940|
+| dplyr        |   1671|  0.1193401|
+| fansi        |   3612|  0.2579631|
+| ggplot2      |   2507|  0.1790459|
+| glue         |   3971|  0.2836023|
+| gtable       |   2554|  0.1824025|
+| jsonlite     |   2399|  0.1713327|
+| labeling     |   2580|  0.1842594|
+| lattice      |   6045|  0.4317240|
+| lazyeval     |   2584|  0.1845451|
+| magrittr     |   4901|  0.3500214|
+| MASS         |   4617|  0.3297386|
+| mime         |   2142|  0.1529781|
+| mvtnorm      |   1279|  0.0913441|
+| pkgconfig    |   4005|  0.2860306|
+| plogr        |   1745|  0.1246251|
+| plyr         |   3108|  0.2219683|
+| R6           |   4300|  0.3070990|
+| RColorBrewer |   2754|  0.1966862|
+| Rcpp         |   6337|  0.4525782|
+| reshape      |    179|  0.0127839|
+| reshape2     |   2681|  0.1914726|
+| rlang        |   4017|  0.2868876|
+| stringi      |   3714|  0.2652478|
+| sys          |   1021|  0.0729182|
+| tibble       |   3608|  0.2576775|
+| tidyr        |    898|  0.0641337|
+| utf8         |   3613|  0.2580346|
+| viridisLite  |   2595|  0.1853307|
+| withr        |   2689|  0.1920440|
+| xtable       |   1034|  0.0738466|
+| yaml         |   1366|  0.0975575|
