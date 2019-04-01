@@ -78,7 +78,7 @@ edges <- data.frame(
 nrow(edges)
 
 # ick row-wise
-get_edges <- function(row) {
+get_edges_f <- function(row) {
   deps <- character(0)
   if(row$Package[[1]]!=target_pkg) {
     deps <- sort(base::unique(c(row$Depends[[1]], row$Imports[[1]], row$LinkingTo[[1]])))
@@ -96,7 +96,7 @@ get_edges <- function(row) {
 }
 ee <- lapply(seq_len(n_nodes),
              function(i) {
-               get_edges(d[i, , drop = FALSE])
+               get_edges_f(d[i, , drop = FALSE])
              })
 ee <- do.call(rbind, ee)
 ee <- ee[(ee$Uses!=target_pkg) & (ee$Package!=target_pkg), , drop = FALSE]
@@ -107,6 +107,8 @@ ee <- ee[(!(ee$Uses %in% base_pkgs)) & (!(ee$Package %in% base_pkgs)), , drop = 
 ```{r}
 # analyze the graph
 graph <- igraph::graph_from_edgelist(as.matrix(ee), directed = TRUE)
+igraph::is.dag(graph)
+
 f <- function(order) {
   length(igraph::ego(graph, mode="out", nodes = target_pkg, order = order)[[1]])
 }
@@ -158,15 +160,17 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 ```
 
 ```{r}
-# look for large packages
-root_pkgs <- setdiff(unique(ee$Uses), ee$Package)
-seeds <- c("dplyr", "tidyr", "ggplot2", "rlang", "reshape", "reshape2", "plyr", "tibble")
-root_pkgs <- sort(unique(c(root_pkgs, seeds)))
-reach <- vapply(root_pkgs,
+# look for large/famous packages
+#root_pkgs <- setdiff(unique(ee$Uses), ee$Package)
+# seeds <- c("caret", "dplyr", "tidyr", "ggplot2", "rlang", "recipes", "reshape", "reshape2", "plyr", "tibble")
+seeds <- c()
+#target_pkgs <- sort(unique(c(root_pkgs, seeds)))
+target_pkgs <- sort(unique(ee$Uses))
+reaches <- vapply(target_pkgs,
                 function(pi) {
                   length(igraph::ego(graph, mode="out", nodes = pi, order = 100)[[1]])
                 }, numeric(1))
-reach <- reach[(reach>=1000) | (names(reach) %in% seeds)]
+reach <- reaches[(reaches>=2000) | (names(reaches) %in% seeds)]
 reach <- reach[order(-reach)]
 reach
 
@@ -187,6 +191,47 @@ reachf <- reachf[order(as.character(reachf$Package)), , drop = FALSE]
 rownames(reachf) <- NULL
 reachf$fraction <- reachf$reach / n_nodes
 knitr::kable(reachf)
+
+# get relations
+paths <- igraph::distances(graph, v = as.character(reachf$Package), to = as.character(reachf$Package) , mode = "out")
+pe <- lapply(colnames(paths),
+             function(ci) {
+               pi <- paths[, ci]
+               pi <- pi[!is.infinite(pi)]
+               pi <- pi[names(pi)!=ci]
+               if(length(pi)<1) {
+                 return(
+                   data.frame(
+                     Uses = character(0),
+                     Package = character(0),
+                     stringsAsFactors = FALSE)
+                 )
+               }
+               data.frame(
+                 Uses = names(pi),
+                 Package = ci,
+                 stringsAsFactors = FALSE)
+             })
+pe <- do.call(rbind, pe)
+subg <- igraph::graph_from_edgelist(as.matrix(pe), directed = TRUE)
+igraph::is.dag(subg)
+
+library("DiagrammeR")
+nodes <- sort(unique(c(pe$Uses, pe$Package)))
+node_map <- seq_len(length(nodes))
+names(node_map) <- nodes
+nodes_df <- create_node_df(n = length(nodes))
+nodes_df$label <- nodes
+edges_df <- create_edge_df(from = node_map[pe$Uses],
+                       to = node_map[pe$Package],
+                       rel = "leading_to",
+                       values = 1)
+g <- create_graph(nodes_df = nodes_df,
+                  edges_df = edges_df,
+                  directed = TRUE)
+
+plot(find_induced_subgraph("stringi", "ggplot2"))
+title(paste("paths from", "stringi", "to", "ggplot2"))
 ```
 
 
