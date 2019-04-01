@@ -161,16 +161,12 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 
 ```{r}
 # look for large/famous packages
-#root_pkgs <- setdiff(unique(ee$Uses), ee$Package)
-# seeds <- c("caret", "dplyr", "tidyr", "ggplot2", "rlang", "recipes", "reshape", "reshape2", "plyr", "tibble")
-seeds <- c()
-#target_pkgs <- sort(unique(c(root_pkgs, seeds)))
 target_pkgs <- sort(unique(ee$Uses))
 reaches <- vapply(target_pkgs,
                 function(pi) {
                   length(igraph::ego(graph, mode="out", nodes = pi, order = 100)[[1]])
                 }, numeric(1))
-reach <- reaches[(reaches>=2000) | (names(reaches) %in% seeds)]
+reach <- reaches[reaches>=1000]
 reach <- reach[order(-reach)]
 reach
 
@@ -204,31 +200,57 @@ pe <- lapply(colnames(paths),
                    data.frame(
                      Uses = character(0),
                      Package = character(0),
+                     length = numeric(0),
                      stringsAsFactors = FALSE)
                  )
                }
                data.frame(
                  Uses = names(pi),
                  Package = ci,
+                 length = pi,
                  stringsAsFactors = FALSE)
              })
 pe <- do.call(rbind, pe)
-subg <- igraph::graph_from_edgelist(as.matrix(pe), directed = TRUE)
+
+
+# because our node filter is consistent with edges (a -> b means b in set implies a in set)
+# there can not be any indirect paths not in the selected nodes, so we can
+# recover the graph structure by restricting to direct edges (undo the transitivie
+# closure computed by using path length not infinite above.
+pe <- pe[pe$length==1, , drop = FALSE]  
+out_deg <- pe %.>% extend(., one = 1) %.>% project(., groupby = "Uses", count = sum(one))
+in_deg <- pe %.>% extend(., one = 1) %.>% project(., groupby = "Package", count = sum(one))
+
+subg <- igraph::graph_from_edgelist(as.matrix(pe[ , c("Uses", "Package")]), directed = TRUE)
 igraph::is.dag(subg)
 
 library("DiagrammeR")
-nodes <- sort(unique(c(pe$Uses, pe$Package)))
+nodes <- names(reach)
+no_out <- !(nodes %in% out_deg$Uses)
+no_in <- !(nodes %in% in_deg$Package)
+colors <- ifelse(no_in, ifelse(no_out, "#1b9e77", "#d95f02") , ifelse(no_out, "#7570b3", "#e7298a"))
 node_map <- seq_len(length(nodes))
 names(node_map) <- nodes
-nodes_df <- create_node_df(n = length(nodes))
-nodes_df$label <- nodes
+nodes_df <- create_node_df(n = length(nodes),
+                           color = colors,
+                           fillcolor = colors,
+                           fontcolor = "black",
+                           style = "filled")
+nodes_df$label <- paste0(nodes, "\n", reach)
 edges_df <- create_edge_df(from = node_map[pe$Uses],
                        to = node_map[pe$Package],
                        rel = "leading_to",
-                       values = 1)
+                       values = pe$length)
 g <- create_graph(nodes_df = nodes_df,
                   edges_df = edges_df,
                   directed = TRUE)
+
+render_graph(g, layout="fr")
+
+g %.>%
+  render_graph(., layout="fr") %.>%
+  DiagrammeRsvg::export_svg(.) %.>%
+  writeLines(text = ., con = "pkgs.svg")
 
 plot(find_induced_subgraph("stringi", "ggplot2"))
 title(paste("paths from", "stringi", "to", "ggplot2"))

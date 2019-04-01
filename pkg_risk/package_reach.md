@@ -105,7 +105,7 @@ nrow(edges)
 
 ``` r
 # ick row-wise
-get_edges <- function(row) {
+get_edges_f <- function(row) {
   deps <- character(0)
   if(row$Package[[1]]!=target_pkg) {
     deps <- sort(base::unique(c(row$Depends[[1]], row$Imports[[1]], row$LinkingTo[[1]])))
@@ -123,7 +123,7 @@ get_edges <- function(row) {
 }
 ee <- lapply(seq_len(n_nodes),
              function(i) {
-               get_edges(d[i, , drop = FALSE])
+               get_edges_f(d[i, , drop = FALSE])
              })
 ee <- do.call(rbind, ee)
 ee <- ee[(ee$Uses!=target_pkg) & (ee$Package!=target_pkg), , drop = FALSE]
@@ -134,6 +134,12 @@ ee <- ee[(!(ee$Uses %in% base_pkgs)) & (!(ee$Package %in% base_pkgs)), , drop = 
 ``` r
 # analyze the graph
 graph <- igraph::graph_from_edgelist(as.matrix(ee), directed = TRUE)
+igraph::is.dag(graph)
+```
+
+    ## [1] TRUE
+
+``` r
 f <- function(order) {
   length(igraph::ego(graph, mode="out", nodes = target_pkg, order = order)[[1]])
 }
@@ -227,35 +233,39 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 ![](package_reach_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
 ``` r
-# look for large packages
-root_pkgs <- setdiff(unique(ee$Uses), ee$Package)
-seeds <- c("dplyr", "tidyr", "ggplot2", "rlang", "reshape", "reshape2", "plyr", "tibble")
-root_pkgs <- sort(unique(c(root_pkgs, seeds)))
-reach <- vapply(root_pkgs,
+# look for large/famous packages
+target_pkgs <- sort(unique(ee$Uses))
+reaches <- vapply(target_pkgs,
                 function(pi) {
                   length(igraph::ego(graph, mode="out", nodes = pi, order = 100)[[1]])
                 }, numeric(1))
-reach <- reach[(reach>=1000) | (names(reach) %in% seeds)]
+reach <- reaches[reaches>=1000]
 reach <- reach[order(-reach)]
 reach
 ```
 
-    ##         Rcpp      lattice     magrittr         MASS           R6 
-    ##         6337         6045         4901         4617         4300 
-    ##        rlang    pkgconfig         glue       crayon   assertthat 
-    ##         4017         4005         3971         3945         3880 
-    ##      stringi         utf8        fansi       tibble       digest 
-    ##         3714         3613         3612         3608         3387 
-    ##         plyr           BH RColorBrewer   colorspace        withr 
-    ##         3108         2832         2754         2709         2689 
-    ##     reshape2  viridisLite     lazyeval     labeling       gtable 
-    ##         2681         2595         2584         2580         2554 
-    ##      ggplot2     jsonlite         mime        plogr        dplyr 
-    ##         2507         2399         2142         1745         1671 
-    ##         curl   data.table    codetools         yaml      mvtnorm 
-    ##         1647         1418         1383         1366         1279 
-    ##    base64enc       xtable          sys        tidyr      reshape 
-    ##         1042         1034         1021          898          179
+    ##         Rcpp      lattice       Matrix     magrittr         MASS 
+    ##         6337         6045         5012         4901         4617 
+    ##           R6        rlang    pkgconfig         glue       crayon 
+    ##         4300         4017         4005         3971         3945 
+    ##   assertthat          cli      stringi         utf8        fansi 
+    ##         3880         3718         3714         3613         3612 
+    ##       pillar       tibble      stringr         nlme       digest 
+    ##         3610         3608         3535         3511         3387 
+    ##         plyr         mgcv           BH RColorBrewer   colorspace 
+    ##         3108         2976         2832         2754         2709 
+    ##        withr     reshape2  viridisLite     lazyeval     labeling 
+    ##         2689         2681         2595         2584         2580 
+    ##      munsell       scales       gtable      ggplot2     jsonlite 
+    ##         2579         2578         2554         2507         2399 
+    ##         mime        purrr        plogr   tidyselect        dplyr 
+    ##         2142         1820         1745         1684         1671 
+    ##         curl    htmltools   data.table    codetools         yaml 
+    ##         1647         1464         1418         1383         1366 
+    ##     survival      mvtnorm           sp          zoo    base64enc 
+    ##         1340         1279         1074         1060         1042 
+    ##       xtable          sys  htmlwidgets      askpass      openssl 
+    ##         1034         1021         1018         1014         1004
 
 ``` r
 reachf <- data.frame(Package = names(reach),
@@ -283,9 +293,11 @@ knitr::kable(reachf)
 
 | Package      |  reach|   fraction|
 |:-------------|------:|----------:|
+| askpass      |   1014|  0.0724182|
 | assertthat   |   3880|  0.2771033|
 | base64enc    |   1042|  0.0744179|
 | BH           |   2832|  0.2022568|
+| cli          |   3718|  0.2655335|
 | codetools    |   1383|  0.0987716|
 | colorspace   |   2709|  0.1934724|
 | crayon       |   3945|  0.2817455|
@@ -297,29 +309,121 @@ knitr::kable(reachf)
 | ggplot2      |   2507|  0.1790459|
 | glue         |   3971|  0.2836023|
 | gtable       |   2554|  0.1824025|
+| htmltools    |   1464|  0.1045565|
+| htmlwidgets  |   1018|  0.0727039|
 | jsonlite     |   2399|  0.1713327|
 | labeling     |   2580|  0.1842594|
 | lattice      |   6045|  0.4317240|
 | lazyeval     |   2584|  0.1845451|
 | magrittr     |   4901|  0.3500214|
 | MASS         |   4617|  0.3297386|
+| Matrix       |   5012|  0.3579489|
+| mgcv         |   2976|  0.2125411|
 | mime         |   2142|  0.1529781|
+| munsell      |   2579|  0.1841880|
 | mvtnorm      |   1279|  0.0913441|
+| nlme         |   3511|  0.2507499|
+| openssl      |   1004|  0.0717040|
+| pillar       |   3610|  0.2578203|
 | pkgconfig    |   4005|  0.2860306|
 | plogr        |   1745|  0.1246251|
 | plyr         |   3108|  0.2219683|
+| purrr        |   1820|  0.1299814|
 | R6           |   4300|  0.3070990|
 | RColorBrewer |   2754|  0.1966862|
 | Rcpp         |   6337|  0.4525782|
-| reshape      |    179|  0.0127839|
 | reshape2     |   2681|  0.1914726|
 | rlang        |   4017|  0.2868876|
+| scales       |   2578|  0.1841166|
+| sp           |   1074|  0.0767033|
 | stringi      |   3714|  0.2652478|
+| stringr      |   3535|  0.2524639|
+| survival     |   1340|  0.0957006|
 | sys          |   1021|  0.0729182|
 | tibble       |   3608|  0.2576775|
-| tidyr        |    898|  0.0641337|
+| tidyselect   |   1684|  0.1202685|
 | utf8         |   3613|  0.2580346|
 | viridisLite  |   2595|  0.1853307|
 | withr        |   2689|  0.1920440|
 | xtable       |   1034|  0.0738466|
 | yaml         |   1366|  0.0975575|
+| zoo          |   1060|  0.0757035|
+
+``` r
+# get relations
+paths <- igraph::distances(graph, v = as.character(reachf$Package), to = as.character(reachf$Package) , mode = "out")
+pe <- lapply(colnames(paths),
+             function(ci) {
+               pi <- paths[, ci]
+               pi <- pi[!is.infinite(pi)]
+               pi <- pi[names(pi)!=ci]
+               if(length(pi)<1) {
+                 return(
+                   data.frame(
+                     Uses = character(0),
+                     Package = character(0),
+                     length = numeric(0),
+                     stringsAsFactors = FALSE)
+                 )
+               }
+               data.frame(
+                 Uses = names(pi),
+                 Package = ci,
+                 length = pi,
+                 stringsAsFactors = FALSE)
+             })
+pe <- do.call(rbind, pe)
+
+
+# because our node filter is consistent with edges (a -> b means b in set implies a in set)
+# there can not be any indirect paths not in the selected nodes, so we can
+# recover the graph structure by restricting to direct edges (undo the transitivie
+# closure computed by using path length not infinite above.
+pe <- pe[pe$length==1, , drop = FALSE]  
+out_deg <- pe %.>% extend(., one = 1) %.>% project(., groupby = "Uses", count = sum(one))
+in_deg <- pe %.>% extend(., one = 1) %.>% project(., groupby = "Package", count = sum(one))
+
+subg <- igraph::graph_from_edgelist(as.matrix(pe[ , c("Uses", "Package")]), directed = TRUE)
+igraph::is.dag(subg)
+```
+
+    ## [1] TRUE
+
+``` r
+library("DiagrammeR")
+nodes <- names(reach)
+no_out <- !(nodes %in% out_deg$Uses)
+no_in <- !(nodes %in% in_deg$Package)
+colors <- ifelse(no_in, ifelse(no_out, "#1b9e77", "#d95f02") , ifelse(no_out, "#7570b3", "#e7298a"))
+node_map <- seq_len(length(nodes))
+names(node_map) <- nodes
+nodes_df <- create_node_df(n = length(nodes),
+                           color = colors,
+                           fillcolor = colors,
+                           fontcolor = "black",
+                           style = "filled")
+nodes_df$label <- paste0(nodes, "\n", reach)
+edges_df <- create_edge_df(from = node_map[pe$Uses],
+                       to = node_map[pe$Package],
+                       rel = "leading_to",
+                       values = pe$length)
+g <- create_graph(nodes_df = nodes_df,
+                  edges_df = edges_df,
+                  directed = TRUE)
+
+render_graph(g, layout="fr")
+```
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-7-2.png)
+
+``` r
+g %.>%
+  render_graph(., layout="fr") %.>%
+  DiagrammeRsvg::export_svg(.) %.>%
+  writeLines(text = ., con = "pkgs.svg")
+
+plot(find_induced_subgraph("stringi", "ggplot2"))
+title(paste("paths from", "stringi", "to", "ggplot2"))
+```
+
+![](package_reach_files/figure-markdown_github/unnamed-chunk-7-3.png)
