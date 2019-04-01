@@ -232,6 +232,8 @@ title(paste("paths from", target_pkg, "to", "tidyr"))
 
 ![](package_reach_files/figure-markdown_github/unnamed-chunk-6-2.png)
 
+For page-rank see also the earlier work of [andrie/pagerank](https://github.com/andrie/pagerank).
+
 ``` r
 # look at page rank
 pr <- igraph::page_rank(graph, directed = FALSE)

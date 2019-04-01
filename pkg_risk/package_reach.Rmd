@@ -159,6 +159,10 @@ plot(find_induced_subgraph(target_pkg, "tidyr"))
 title(paste("paths from", target_pkg, "to", "tidyr"))
 ```
 
+For page-rank see also the earlier work of
+[andrie/pagerank](https://github.com/andrie/pagerank). 
+
+
 ```{r}
 # look at page rank
 pr <- igraph::page_rank(graph, directed = FALSE)
