@@ -23,10 +23,6 @@ cran <- lst$cran
 
 
 ```{r}
-usage_types <- c("Depends", "Imports", "Suggests", "LinkingTo")
-```
-
-```{r}
 # convert comma separated list into
 # sequence of non-core package names
 parse_lists <- function(strs) {

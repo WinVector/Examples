@@ -23,10 +23,6 @@ cran <- lst$cran
 ```
 
 ``` r
-usage_types <- c("Depends", "Imports", "Suggests", "LinkingTo")
-```
-
-``` r
 # convert comma separated list into
 # sequence of non-core package names
 parse_lists <- function(strs) {
@@ -188,7 +184,7 @@ plot(find_induced_subgraph(target_pkg, pkg))
 title(paste("paths from", target_pkg, "to", pkg))
 ```
 
-![](package_reach_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](package_reach_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
 # Look at some examples
@@ -198,11 +194,11 @@ plot(find_induced_subgraph(target_pkg, "ggplot2"))
 title(paste("paths from", target_pkg, "to", "ggplot2"))
 ```
 
-![](package_reach_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](package_reach_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 plot(find_induced_subgraph(target_pkg, "tidyr"))
 title(paste("paths from", target_pkg, "to", "tidyr"))
 ```
 
-![](package_reach_files/figure-markdown_github/unnamed-chunk-7-2.png)
+![](package_reach_files/figure-markdown_github/unnamed-chunk-6-2.png)
