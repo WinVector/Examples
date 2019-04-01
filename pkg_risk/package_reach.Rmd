@@ -23,6 +23,13 @@ cran <- lst$cran
 
 
 ```{r}
+base_pkgs <- c("", "R", 
+               "base", "compiler", "datasets", 
+               "graphics", "grDevices", "grid",
+               "methods", "parallel", "splines", 
+               "stats", "stats4", "tcltk", "tools",
+               "translations", "utils")
+
 # convert comma separated list into
 # sequence of non-core package names
 parse_lists <- function(strs) {
@@ -33,12 +40,7 @@ parse_lists <- function(strs) {
   strs <- lapply(
     strs,
     function(si) {
-      setdiff(si, c("", "R", 
-                    "base", "compiler", "datasets", 
-                    "graphics", "grDevices", "grid",
-                    "methods", "parallel", "splines", 
-                    "stats", "stats4", "tcltk", "tools",
-                    "translations", "utils"))
+      setdiff(si, base_pkgs)
     })
   strs
 }
@@ -98,6 +100,7 @@ ee <- lapply(seq_len(nrow(d)),
 ee <- do.call(rbind, ee)
 ee <- ee[(ee$Uses!=target_pkg) & (ee$Package!=target_pkg), , drop = FALSE]
 ee <- rbind(edges, ee)
+ee <- ee[(!(ee$Uses %in% base_pkgs)) & (!(ee$Package %in% base_pkgs)), , drop = FALSE]
 ```
 
 ```{r}
