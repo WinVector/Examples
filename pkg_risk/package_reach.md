@@ -607,6 +607,77 @@ direct_reach <- direct_reach_map[nodes]
 direct_reach[is.na(direct_reach)] <- 0
 direct_reach_frac <- sprintf("%.2g", direct_reach/n_nodes)
 
+nf <- data.frame(
+  node = nodes,
+  reach = reach,
+  reach_frac = reach/n_nodes,
+  direct_reach = direct_reach,
+  direct_reach_frac = direct_reach/n_nodes,
+  stringsAsFactors = FALSE)
+nf <- nf[order(-nf$direct_reach), , drop = FALSE]
+rownames(nf) <- NULL
+knitr::kable(nf)
+```
+
+| node         |  reach|  reach\_frac|  direct\_reach|  direct\_reach\_frac|
+|:-------------|------:|------------:|--------------:|--------------------:|
+| Rcpp         |   6337|    0.4525782|           1605|            0.1146265|
+| ggplot2      |   2507|    0.1790459|           1541|            0.1100557|
+| MASS         |   4617|    0.3297386|           1357|            0.0969147|
+| dplyr        |   1671|    0.1193401|           1123|            0.0802028|
+| Matrix       |   5012|    0.3579489|            779|            0.0556349|
+| magrittr     |   4901|    0.3500214|            726|            0.0518497|
+| stringr      |   3535|    0.2524639|            681|            0.0486359|
+| plyr         |   3108|    0.2219683|            637|            0.0454935|
+| jsonlite     |   2399|    0.1713327|            612|            0.0437080|
+| mvtnorm      |   1279|    0.0913441|            570|            0.0407085|
+| data.table   |   1418|    0.1012712|            553|            0.0394944|
+| survival     |   1340|    0.0957006|            496|            0.0354235|
+| tibble       |   3608|    0.2576775|            493|            0.0352093|
+| sp           |   1074|    0.0767033|            462|            0.0329953|
+| purrr        |   1820|    0.1299814|            418|            0.0298529|
+| reshape2     |   2681|    0.1914726|            408|            0.0291387|
+| rlang        |   4017|    0.2868876|            405|            0.0289244|
+| lattice      |   6045|    0.4317240|            397|            0.0283531|
+| RColorBrewer |   2754|    0.1966862|            297|            0.0212113|
+| scales       |   2578|    0.1841166|            271|            0.0193544|
+| zoo          |   1060|    0.0757035|            263|            0.0187830|
+| R6           |   4300|    0.3070990|            206|            0.0147122|
+| nlme         |   3511|    0.2507499|            205|            0.0146408|
+| digest       |   3387|    0.2418940|            186|            0.0132838|
+| mgcv         |   2976|    0.2125411|            181|            0.0129267|
+| assertthat   |   3880|    0.2771033|            170|            0.0121411|
+| BH           |   2832|    0.2022568|            168|            0.0119983|
+| stringi      |   3714|    0.2652478|            161|            0.0114984|
+| curl         |   1647|    0.1176261|            143|            0.0102128|
+| htmltools    |   1464|    0.1045565|            141|            0.0100700|
+| htmlwidgets  |   1018|    0.0727039|            129|            0.0092130|
+| crayon       |   3945|    0.2817455|            113|            0.0080703|
+| glue         |   3971|    0.2836023|            112|            0.0079989|
+| lazyeval     |   2584|    0.1845451|            111|            0.0079274|
+| xtable       |   1034|    0.0738466|            111|            0.0079274|
+| colorspace   |   2709|    0.1934724|             92|            0.0065705|
+| yaml         |   1366|    0.0975575|             76|            0.0054278|
+| base64enc    |   1042|    0.0744179|             67|            0.0047850|
+| cli          |   3718|    0.2655335|             52|            0.0037138|
+| gtable       |   2554|    0.1824025|             49|            0.0034995|
+| withr        |   2689|    0.1920440|             44|            0.0031424|
+| openssl      |   1004|    0.0717040|             41|            0.0029282|
+| tidyselect   |   1684|    0.1202685|             34|            0.0024282|
+| viridisLite  |   2595|    0.1853307|             32|            0.0022854|
+| codetools    |   1383|    0.0987716|             25|            0.0017855|
+| mime         |   2142|    0.1529781|             19|            0.0013569|
+| sys          |   1021|    0.0729182|             10|            0.0007142|
+| pillar       |   3610|    0.2578203|              9|            0.0006428|
+| pkgconfig    |   4005|    0.2860306|              7|            0.0004999|
+| askpass      |   1014|    0.0724182|              6|            0.0004285|
+| labeling     |   2580|    0.1842594|              5|            0.0003571|
+| plogr        |   1745|    0.1246251|              5|            0.0003571|
+| fansi        |   3612|    0.2579631|              4|            0.0002857|
+| utf8         |   3613|    0.2580346|              3|            0.0002143|
+| munsell      |   2579|    0.1841880|              3|            0.0002143|
+
+``` r
 library("DiagrammeR")
 no_out <- !(nodes %in% out_deg$Uses)
 no_in <- !(nodes %in% in_deg$Package)
@@ -621,15 +692,15 @@ nodes_df <- create_node_df(n = length(nodes),
 nodes_df$label <- paste0(nodes, "\n",  
                          direct_reach_map[nodes], " (",  direct_reach_frac, ")\n", 
                          reach, " (",  reach_frac, ")")
-nodes_df$height = 0.6
-nodes_df$width = 0.6
+nodes_df$height <- 0.6
+nodes_df$width <- 0.6
 edges_df <- create_edge_df(from = node_map[pe$Uses],
                        to = node_map[pe$Package],
                        rel = "leading_to",
                        values = pe$length)
 # http://rich-iannone.github.io/DiagrammeR/graphviz_and_mermaid.html
-edges_df$arrowsize = 1.2
-edges_df$color = "black"
+edges_df$arrowsize <- 1.2
+edges_df$color <- "black"
 g <- create_graph(nodes_df = nodes_df,
                   edges_df = edges_df,
                   directed = TRUE)
