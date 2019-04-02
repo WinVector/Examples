@@ -247,8 +247,17 @@ in_deg <- pe %.>% extend(., one = 1) %.>% project(., groupby = "Package", count 
 subg <- igraph::graph_from_edgelist(as.matrix(pe[ , c("Uses", "Package")]), directed = TRUE)
 igraph::is.dag(subg)
 
-library("DiagrammeR")
+direct_reach <- ee %.>% extend(., one = 1) %.>% project(., groupby = "Uses", count = sum(one))
+direct_reach_map <- direct_reach$count
+names(direct_reach_map) <- direct_reach$Uses
+
 nodes <- names(reach)
+reach_frac <- sprintf("%.2g", reach/n_nodes)
+direct_reach <- direct_reach_map[nodes]
+direct_reach[is.na(direct_reach)] <- 0
+direct_reach_frac <- sprintf("%.2g", direct_reach/n_nodes)
+
+library("DiagrammeR")
 no_out <- !(nodes %in% out_deg$Uses)
 no_in <- !(nodes %in% in_deg$Package)
 colors <- ifelse(no_in, ifelse(no_out, "#1b9e77", "#d95f02") , ifelse(no_out, "#7570b3", "#e7298a"))
@@ -259,11 +268,18 @@ nodes_df <- create_node_df(n = length(nodes),
                            fillcolor = colors,
                            fontcolor = "black",
                            style = "filled")
-nodes_df$label <- paste0(nodes, "\n", reach)
+nodes_df$label <- paste0(nodes, "\n",  
+                         direct_reach_map[nodes], " (",  direct_reach_frac, ")\n", 
+                         reach, " (",  reach_frac, ")")
+nodes_df$height = 0.6
+nodes_df$width = 0.6
 edges_df <- create_edge_df(from = node_map[pe$Uses],
                        to = node_map[pe$Package],
                        rel = "leading_to",
                        values = pe$length)
+# http://rich-iannone.github.io/DiagrammeR/graphviz_and_mermaid.html
+edges_df$arrowsize = 1.2
+edges_df$color = "black"
 g <- create_graph(nodes_df = nodes_df,
                   edges_df = edges_df,
                   directed = TRUE)
