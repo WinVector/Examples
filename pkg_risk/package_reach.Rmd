@@ -206,9 +206,14 @@ ggplot(data = reachf, mapping = aes(x = Package, y = reach)) +
   coord_flip() +
   ggtitle("package reach")
 
+reachf$fraction <- reachf$reach / n_nodes
+
+reachf <- reachf[order(-reachf$reach), , drop = FALSE]
+rownames(reachf) <- NULL
+knitr::kable(reachf)
+
 reachf <- reachf[order(as.character(reachf$Package)), , drop = FALSE]
 rownames(reachf) <- NULL
-reachf$fraction <- reachf$reach / n_nodes
 knitr::kable(reachf)
 
 # get relations

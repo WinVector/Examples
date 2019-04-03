@@ -492,9 +492,74 @@ ggplot(data = reachf, mapping = aes(x = Package, y = reach)) +
 ![](package_reach_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
 ``` r
+reachf$fraction <- reachf$reach / n_nodes
+
+reachf <- reachf[order(-reachf$reach), , drop = FALSE]
+rownames(reachf) <- NULL
+knitr::kable(reachf)
+```
+
+| Package      |  reach|   fraction|
+|:-------------|------:|----------:|
+| Rcpp         |   6337|  0.4525782|
+| lattice      |   6045|  0.4317240|
+| Matrix       |   5012|  0.3579489|
+| magrittr     |   4901|  0.3500214|
+| MASS         |   4617|  0.3297386|
+| R6           |   4300|  0.3070990|
+| rlang        |   4017|  0.2868876|
+| pkgconfig    |   4005|  0.2860306|
+| glue         |   3971|  0.2836023|
+| crayon       |   3945|  0.2817455|
+| assertthat   |   3880|  0.2771033|
+| cli          |   3718|  0.2655335|
+| stringi      |   3714|  0.2652478|
+| utf8         |   3613|  0.2580346|
+| fansi        |   3612|  0.2579631|
+| pillar       |   3610|  0.2578203|
+| tibble       |   3608|  0.2576775|
+| stringr      |   3535|  0.2524639|
+| nlme         |   3511|  0.2507499|
+| digest       |   3387|  0.2418940|
+| plyr         |   3108|  0.2219683|
+| mgcv         |   2976|  0.2125411|
+| BH           |   2832|  0.2022568|
+| RColorBrewer |   2754|  0.1966862|
+| colorspace   |   2709|  0.1934724|
+| withr        |   2689|  0.1920440|
+| reshape2     |   2681|  0.1914726|
+| viridisLite  |   2595|  0.1853307|
+| lazyeval     |   2584|  0.1845451|
+| labeling     |   2580|  0.1842594|
+| munsell      |   2579|  0.1841880|
+| scales       |   2578|  0.1841166|
+| gtable       |   2554|  0.1824025|
+| ggplot2      |   2507|  0.1790459|
+| jsonlite     |   2399|  0.1713327|
+| mime         |   2142|  0.1529781|
+| purrr        |   1820|  0.1299814|
+| plogr        |   1745|  0.1246251|
+| tidyselect   |   1684|  0.1202685|
+| dplyr        |   1671|  0.1193401|
+| curl         |   1647|  0.1176261|
+| htmltools    |   1464|  0.1045565|
+| data.table   |   1418|  0.1012712|
+| codetools    |   1383|  0.0987716|
+| yaml         |   1366|  0.0975575|
+| survival     |   1340|  0.0957006|
+| mvtnorm      |   1279|  0.0913441|
+| sp           |   1074|  0.0767033|
+| zoo          |   1060|  0.0757035|
+| base64enc    |   1042|  0.0744179|
+| xtable       |   1034|  0.0738466|
+| sys          |   1021|  0.0729182|
+| htmlwidgets  |   1018|  0.0727039|
+| askpass      |   1014|  0.0724182|
+| openssl      |   1004|  0.0717040|
+
+``` r
 reachf <- reachf[order(as.character(reachf$Package)), , drop = FALSE]
 rownames(reachf) <- NULL
-reachf$fraction <- reachf$reach / n_nodes
 knitr::kable(reachf)
 ```
 
