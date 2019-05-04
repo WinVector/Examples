@@ -1,0 +1,62 @@
+---
+title: "Dead Souls"
+output: github_document
+---
+
+```{r}
+library("rqdatatable")
+
+# # load package facts
+# cran <- tools::CRAN_package_db()
+# cr <- tools::CRAN_check_results()
+# saveRDS(list(cran = cran, cr = cr), "cran_facts_2019_05_04.RDS")
+lst <- readRDS("cran_facts_2019_05_04.RDS")
+cran <- lst$cran
+```
+
+
+```{r}
+base_pkgs <- c("", "R", 
+               "base", "compiler", "datasets", 
+               "graphics", "grDevices", "grid",
+               "methods", "parallel", "splines", 
+               "stats", "stats4", "tcltk", "tools",
+               "translations", "utils")
+
+# convert comma separated list into
+# sequence of non-core package names
+parse_lists <- function(strs) {
+  strs[is.na(strs)] <- ""
+  strs <- gsub("[(][^)]*[)]", "", strs)
+  strs <- gsub("\\s+", "", strs)
+  strs <- strsplit(strs, ",", fixed=TRUE)
+  strs <- lapply(
+    strs,
+    function(si) {
+      setdiff(si, base_pkgs)
+    })
+  strs
+}
+
+# collect the columns we want
+d <- data.frame(
+  Package = cran$Package,
+  stringsAsFactors = FALSE)
+for(use_type in c("Depends", "Imports", "Suggests", "LinkingTo")) {
+  d[[use_type]] <- parse_lists(cran[[use_type]])
+  d[[paste0("n_", use_type)]] <- vapply(d[[use_type]], length, numeric(1))
+}
+```
+
+```{r}
+# look for orphans
+refs <- unique(unlist(c(d$Depends, d$LinkingTo)))
+ghosts <- setdiff(refs, d$Package)
+d[vapply(d$Depends, function(di) { "impute" %in% di }, logical(1)), ]
+
+bioc <- readxl::read_xlsx("Bioconductor3.9.xlsx")
+ghosts <- setdiff(ghosts, bioc$Package)
+print(ghosts)
+# http://www.bioconductor.org/packages/release/data/experiment/html/breastCancerVDX.html
+```
+
