@@ -1,0 +1,150 @@
+---
+title: "dplyr::slice timing"
+output: github_document
+---
+
+```{r}
+# From: https://github.com/tidyverse/dplyr/issues/4312
+library("dplyr")
+library("ggplot2")
+library("rqdatatable")
+library("cdata")
+packageVersion("dplyr")
+R.version
+
+
+d0 <- iris
+
+
+f <- function(k, d0) {
+  d <- data.frame(data.table::rbindlist(rep(list(d0), k)))
+  rownames(d) <- NULL
+  d <- tbl_df(d)
+  gc()
+  tm <- microbenchmark::microbenchmark(
+    slice(d, 1),
+    d[1, ],
+    times = 3L
+  )
+  td <- data.frame(tm)
+  td$nrow <- nrow(d)
+  td
+}
+
+
+times <- lapply(2^(0:20), 
+                function(k) {
+                  f(k, d0)
+                })
+times <- data.frame(data.table::rbindlist(times))
+times$seconds <- times$time/1e9
+
+
+ggplot(data = times, 
+       mapping = aes(x = nrow, y = seconds, color = expr)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("Example 1 (standard rep): time to extract first row, dplyr::slice() versus base R [, ]",
+          subtitle = "task time plotted as a function of number of data rows")
+
+
+
+# compute time ratios
+layout <- blocks_to_rowrecs_spec(
+  wrapr::qchar_frame(
+    "expr"         , "seconds"     |
+      "slice(d, 1)", slice_time |
+      "d[1, ]"     , base_R_time      ),
+  recordKeys = "nrow")
+
+print(layout)
+
+calc_ratios <- local_td(times) %.>%
+  project(., 
+          groupby = c("expr", "nrow"),
+          seconds = mean(seconds)) %.>%
+  layout %.>%
+  extend(.,
+         ratio = slice_time/base_R_time)
+
+cat(format(calc_ratios))
+
+ratios <- times %.>% calc_ratios
+
+ggplot(data = ratios, 
+       mapping = aes(x = nrow, y = ratio)) +
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("Example 1 (standard rep): ratio of time to extract first row, dplyr::slice() over base R [, ]",
+          subtitle = "ratio plotted as a function of number of data rows")
+
+
+
+
+f2 <- function(k) {
+  # first touch seems to trigger a conversion, so only measure that
+  d <- data.frame(x = 1:k, y = 1:k)
+  rownames(d) <- NULL
+  d <- tbl_df(d)
+  gc()
+  tm <- microbenchmark::microbenchmark(
+    slice(d, 1),
+    times = 1L
+  )
+  td1 <- data.frame(tm)
+  td1$nrow <- nrow(d)
+  d <- data.frame(x = 1:k, y = 1:k)
+  rownames(d) <- NULL
+  d <- tbl_df(d)
+  gc()
+  tm <- microbenchmark::microbenchmark(
+    d[1, ],
+    times = 1L
+  )
+  td2 <- data.frame(tm)
+  td2$nrow <- nrow(d)
+  rbind(td1, td2)
+}
+
+
+times_ALTREP <- lapply(2^(0:30), f2)
+times_ALTREP <- data.frame(data.table::rbindlist(times_ALTREP))
+times_ALTREP$seconds <- times_ALTREP$time/1e9
+
+
+ggplot(data = times_ALTREP, 
+       mapping = aes(x = nrow, y = seconds, color = expr)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("Example 2 (ALTREP): time to extract first row, dplyr::slice() versus base R [, ]",
+          subtitle = "task time plotted as a function of number of data rows")
+
+
+
+# compute time ratios
+ratios_ALTREP <- times_ALTREP %.>% calc_ratios
+
+ggplot(data = ratios_ALTREP, 
+       mapping = aes(x = nrow, y = ratio)) +
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("Example 2 (ALTREP): ratio of time to extract first row, dplyr::slice() over base R [, ]",
+          subtitle = "ratio plotted as a function of number of data rows")
+```
+
