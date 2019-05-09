@@ -96,7 +96,7 @@ ggplot(data = times,
   scale_y_log10() + 
   theme(legend.position = "bottom") +
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("Example 1 (standard rep): time to extract first row, dplyr::slice() versus base R [, ]",
+  ggtitle("Time to extract first row, dplyr::slice() versus base R [, ]",
           subtitle = "task time plotted as a function of number of data rows")
 ```
 
@@ -167,7 +167,7 @@ ggplot(data = ratios,
   scale_y_log10() + 
   theme(legend.position = "bottom") +
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("Example 1 (standard rep): ratio of time to extract first row, dplyr::slice() over base R [, ]",
+  ggtitle("Time to extract first row, dplyr::slice() over base R [, ]",
           subtitle = "ratio plotted as a function of number of data rows")
 ```
 
@@ -215,7 +215,7 @@ ggplot(data = times_ALTREP,
   scale_y_log10() + 
   theme(legend.position = "bottom") +
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("Example 2 (ALTREP): time to extract first row, dplyr::slice() versus base R [, ]",
+  ggtitle("ALTREP: time to extract first row, dplyr::slice() versus base R [, ]",
           subtitle = "task time plotted as a function of number of data rows")
 ```
 
@@ -235,7 +235,7 @@ ggplot(data = ratios_ALTREP,
   scale_y_log10() + 
   theme(legend.position = "bottom") +
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("Example 2 (ALTREP): ratio of time to extract first row, dplyr::slice() over base R [, ]",
+  ggtitle("ALTREP: time to extract first row, dplyr::slice() over base R [, ]",
           subtitle = "ratio plotted as a function of number of data rows")
 ```
 
