@@ -78,7 +78,7 @@ f <- function(k) {
 }
 
 
-times <- lapply(2^(0:15), f)
+times <- lapply(2^(0:17), f)
 times <- data.frame(data.table::rbindlist(times))
 times$seconds <- times$time/1e9
 
