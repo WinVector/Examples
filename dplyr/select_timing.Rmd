@@ -1,0 +1,86 @@
+---
+title: "select_timing.Rmd"
+output: github_document
+---
+
+
+```{r}
+library("dplyr")
+library("ggplot2")
+library("rqdatatable")
+library("cdata")
+packageVersion("dplyr")
+R.version
+
+
+
+f <- function(k) {
+  d <- rep(list(1:5), k)
+  names(d) <- paste0("col_", seq_len(k))
+  d <- data.frame(d)
+  rownames(d) <- NULL
+  d <- tbl_df(d)
+  gc()
+  tm <- microbenchmark::microbenchmark(
+    select(d, col_1),
+    d[, "col_1", drop = FALSE],
+    times = 3L
+  )
+  td <- data.frame(tm)
+  td$ncol <- ncol(d)
+  td
+}
+
+
+times <- lapply(2^(0:15), f)
+times <- data.frame(data.table::rbindlist(times))
+times$seconds <- times$time/1e9
+
+
+ggplot(data = times, 
+       mapping = aes(x = ncol, y = seconds, color = expr)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("Time to extract first column, dplyr::select() versus base R [, ]",
+          subtitle = "task time plotted as a function of number of data columns")
+
+
+
+# compute time ratios
+layout <- blocks_to_rowrecs_spec(
+  wrapr::qchar_frame(
+    "expr"         , "seconds"     |
+      "select(d, col_1)", select_time |
+      'd[, "col_1", drop = FALSE]'     , base_R_time      ),
+  recordKeys = "ncol")
+
+print(layout)
+
+calc_ratios <- local_td(times) %.>%
+  project(., 
+          groupby = c("expr", "ncol"),
+          seconds = mean(seconds)) %.>%
+  layout %.>%
+  extend(.,
+         ratio = select_time/base_R_time)
+
+cat(format(calc_ratios))
+
+ratios <- times %.>% calc_ratios
+
+ggplot(data = ratios, 
+       mapping = aes(x = ncol, y = ratio)) +
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  scale_x_log10() + 
+  scale_y_log10() + 
+  theme(legend.position = "bottom") +
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("Time to extract first column, dplyr::select() over base R [, ]",
+          subtitle = "ratio plotted as a function of number of data columns")
+```
+
