@@ -90,12 +90,15 @@ new_names <- "col_1_max"
 #' @return d with new per-group aggregation columns added
 #'
 window_summary_base <- function(d, group_cols, target_cols, new_names, FUN = max) {
+  # build a table of per-group aggregations of columns of interest
   d_agg <- aggregate(d[, target_cols, drop = FALSE], 
                      d[, group_cols, drop = FALSE], 
                      FUN = FUN)
+  # re-map these derived columns to new column names
   nm_map <- c(group_cols, new_names)
   names(nm_map) <- c(group_cols, target_cols)
   colnames(d_agg) <- nm_map[colnames(d_agg)]
+  # merge the aggregation results back into original data.frame
   merge(d, d_agg, by = group_cols)
 }
 
@@ -105,11 +108,11 @@ d %.>%
 
 |    col\_1 | group\_1 | group\_2 |
 | --------: | :------- | :------- |
-| 0.8875918 | b        | b        |
-| 0.9799595 | b        | a        |
-| 0.3740186 | b        | a        |
-| 0.0469195 | a        | a        |
-| 0.6826373 | a        | a        |
+| 0.0329693 | a        | b        |
+| 0.1148309 | a        | a        |
+| 0.0975654 | b        | b        |
+| 0.9320809 | b        | b        |
+| 0.7320338 | a        | a        |
 
 ``` r
 window_summary_base(d, group_cols, target_cols, new_names, max) %.>%
@@ -118,11 +121,11 @@ window_summary_base(d, group_cols, target_cols, new_names, max) %.>%
 
 | group\_1 | group\_2 |    col\_1 | col\_1\_max |
 | :------- | :------- | --------: | ----------: |
-| a        | a        | 0.0469195 |   0.6826373 |
-| a        | a        | 0.6826373 |   0.6826373 |
-| b        | a        | 0.9799595 |   0.9799595 |
-| b        | a        | 0.3740186 |   0.9799595 |
-| b        | b        | 0.8875918 |   0.8875918 |
+| a        | a        | 0.1148309 |   0.7320338 |
+| a        | a        | 0.7320338 |   0.7320338 |
+| a        | b        | 0.0329693 |   0.0329693 |
+| b        | b        | 0.0975654 |   0.9320809 |
+| b        | b        | 0.9320809 |   0.9320809 |
 
 ``` r
 #' Add aggregations of target columns by groups to data.frame.
@@ -132,13 +135,28 @@ window_summary_base(d, group_cols, target_cols, new_names, max) %.>%
 #' @param target_cols names of columns to summarize (non-empty).
 #' @param new_names new column names for results.
 #' @param FUN aggregation function
+#' @param env evaluatin environment
 #' @return d with new per-group aggregation columns added
 #'
-window_summary_dplyr <- function(d, group_cols, target_cols, new_names, FUN = max) {
+window_summary_dplyr <- function(d, group_cols, target_cols, new_names, FUN = max,
+                                 env = parent.frame()) {
+  # in all cases want to use a grouped mutate
   dg <- group_by(d, !!!rlang::syms(group_cols)) 
-  for(i in seq_len(length(target_cols))) {
-    dg <- mutate(dg, !!rlang::sym(new_names[[i]]) := FUN(!!rlang::sym(target_cols[[i]])))
-  }
+  # first alternative: splice eval method
+  force(env)
+  eval_env <- new.env(parent = env)
+  assign("FUN", FUN, envir = eval_env)
+  terms <- lapply(seq_len(length(target_cols)),
+                  function(i) {
+                    rlang::parse_quo(paste(new_names[[i]], " = FUN(", target_cols[[i]], ")"),
+                                     env = eval_env)
+                  })
+  dg <- mutate(dg, !!!terms)
+  # # second alternate: non-slice way to mutate parametricly
+  # for(i in seq_len(length(target_cols))) {
+  #   dg <- mutate(dg, !!rlang::sym(new_names[[i]]) := FUN(!!rlang::sym(target_cols[[i]])))
+  # }
+  # # third alternative: mutate_at() with an appropriat renaming strategy
   ungroup(dg)
 }
 
@@ -146,17 +164,17 @@ window_summary_dplyr(d, group_cols, target_cols, new_names, max) %.>%
   knitr::kable(.)
 ```
 
-|    col\_1 | group\_1 | group\_2 | col\_1\_max |
-| --------: | :------- | :------- | ----------: |
-| 0.8875918 | b        | b        |   0.8875918 |
-| 0.9799595 | b        | a        |   0.9799595 |
-| 0.3740186 | b        | a        |   0.9799595 |
-| 0.0469195 | a        | a        |   0.6826373 |
-| 0.6826373 | a        | a        |   0.6826373 |
+|    col\_1 | group\_1 | group\_2 | col\_1\_max = FUN(col\_1) |
+| --------: | :------- | :------- | ------------------------: |
+| 0.0329693 | a        | b        |                 0.0329693 |
+| 0.1148309 | a        | a        |                 0.7320338 |
+| 0.0975654 | b        | b        |                 0.9320809 |
+| 0.9320809 | b        | b        |                 0.9320809 |
+| 0.7320338 | a        | a        |                 0.7320338 |
 
 ``` r
 f <- function(k) {
-  d <- mk_data(10, letters, k, 1)
+  d <- mk_data(5, letters, k, 1)
   group_cols <- colnames(d)[grepl("^group_", colnames(d))]
   target_cols <- "col_1"
   new_names <- "col_1_max"
@@ -173,7 +191,7 @@ f <- function(k) {
 }
 
 
-times <- lapply(2^(0:17), f)
+times <- lapply(2^(0:20), f)
 times <- data.frame(data.table::rbindlist(times))
 times$seconds <- times$time/1e9
 
