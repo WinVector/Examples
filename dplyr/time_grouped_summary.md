@@ -1,4 +1,4 @@
-time\_grouped\_max
+time\_grouped\_summary
 ================
 
 ``` r
@@ -61,7 +61,7 @@ R.version
 
 ``` r
 mk_data <- function(ngroup_rows, symbols, nrow, ncol) {
-  d <- rep(list(runif(nrow)), ncol)
+  d <- replicate(ncol, list(runif(nrow)))
   names(d) <- paste0("col_", seq_len(ncol))
   d <- data.frame(d)
   rownames(d) <- NULL
@@ -74,11 +74,6 @@ mk_data <- function(ngroup_rows, symbols, nrow, ncol) {
   d
 }
 
-d <- mk_data(2, c("a", "b"), 5, 1)
-
-group_cols <- c("group_1", "group_2")
-target_cols <- "col_1"
-new_names <- "col_1_max"
 
 #' Add aggregations of target columns by groups to data.frame.
 #' 
@@ -89,7 +84,9 @@ new_names <- "col_1_max"
 #' @param FUN aggregation function
 #' @return d with new per-group aggregation columns added
 #'
-window_summary_base <- function(d, group_cols, target_cols, new_names, FUN = max) {
+window_summary_base <- function(d, group_cols, target_cols, 
+                                new_names = paste0(target_cols, "_sum"), 
+                                FUN = sum) {
   # build a table of per-group aggregations of columns of interest
   d_agg <- aggregate(d[, target_cols, drop = FALSE], 
                      d[, group_cols, drop = FALSE], 
@@ -102,30 +99,36 @@ window_summary_base <- function(d, group_cols, target_cols, new_names, FUN = max
   merge(d, d_agg, by = group_cols)
 }
 
+d <- mk_data(2, c("a", "b"), 5, 2)
+
 d %.>%
   knitr::kable(.)
 ```
 
-|    col\_1 | group\_1 | group\_2 |
-| --------: | :------- | :------- |
-| 0.0329693 | a        | b        |
-| 0.1148309 | a        | a        |
-| 0.0975654 | b        | b        |
-| 0.9320809 | b        | b        |
-| 0.7320338 | a        | a        |
+|    col\_1 |    col\_2 | group\_1 | group\_2 |
+| --------: | --------: | :------- | :------- |
+| 0.1419297 | 0.8729708 | a        | a        |
+| 0.9063941 | 0.6731498 | b        | a        |
+| 0.8010750 | 0.7861796 | a        | a        |
+| 0.6259197 | 0.5756482 | b        | a        |
+| 0.6721926 | 0.1457101 | b        | b        |
 
 ``` r
-window_summary_base(d, group_cols, target_cols, new_names, max) %.>%
+group_cols <- c("group_1", "group_2")
+target_cols <- c("col_1", "col_2")
+new_names <- c("col_1_sum", "col_2_sum")
+
+window_summary_base(d, group_cols, target_cols, new_names, sum) %.>%
   knitr::kable(.)
 ```
 
-| group\_1 | group\_2 |    col\_1 | col\_1\_max |
-| :------- | :------- | --------: | ----------: |
-| a        | a        | 0.1148309 |   0.7320338 |
-| a        | a        | 0.7320338 |   0.7320338 |
-| a        | b        | 0.0329693 |   0.0329693 |
-| b        | b        | 0.0975654 |   0.9320809 |
-| b        | b        | 0.9320809 |   0.9320809 |
+| group\_1 | group\_2 |    col\_1 |    col\_2 | col\_1\_sum | col\_2\_sum |
+| :------- | :------- | --------: | --------: | ----------: | ----------: |
+| a        | a        | 0.1419297 | 0.8729708 |   0.9430047 |   1.6591504 |
+| a        | a        | 0.8010750 | 0.7861796 |   0.9430047 |   1.6591504 |
+| b        | a        | 0.9063941 | 0.6731498 |   1.5323139 |   1.2487980 |
+| b        | a        | 0.6259197 | 0.5756482 |   1.5323139 |   1.2487980 |
+| b        | b        | 0.6721926 | 0.1457101 |   0.6721926 |   0.1457101 |
 
 ``` r
 #' Add aggregations of target columns by groups to data.frame.
@@ -138,7 +141,9 @@ window_summary_base(d, group_cols, target_cols, new_names, max) %.>%
 #' @param env evaluatin environment
 #' @return d with new per-group aggregation columns added
 #'
-window_summary_dplyr <- function(d, group_cols, target_cols, new_names, FUN = max,
+window_summary_dplyr <- function(d, group_cols, target_cols, 
+                                 new_names = paste0(target_cols, "_sum"), 
+                                 FUN = sum,
                                  env = parent.frame()) {
   # in all cases want to use a grouped mutate
   dg <- group_by(d, !!!rlang::syms(group_cols)) 
@@ -146,11 +151,13 @@ window_summary_dplyr <- function(d, group_cols, target_cols, new_names, FUN = ma
   force(env)
   eval_env <- new.env(parent = env)
   assign("FUN", FUN, envir = eval_env)
-  terms <- lapply(seq_len(length(target_cols)),
-                  function(i) {
-                    rlang::parse_quo(paste(new_names[[i]], " = FUN(", target_cols[[i]], ")"),
-                                     env = eval_env)
-                  })
+  terms <- lapply(
+    seq_len(length(target_cols)),
+    function(i) {
+      rlang::parse_quo(paste("FUN(", target_cols[[i]], ")"),
+                       env = eval_env)
+    })
+  names(terms) <- new_names
   dg <- mutate(dg, !!!terms)
   # # second alternate: non-slice way to mutate parametricly
   # for(i in seq_len(length(target_cols))) {
@@ -160,28 +167,28 @@ window_summary_dplyr <- function(d, group_cols, target_cols, new_names, FUN = ma
   ungroup(dg)
 }
 
-window_summary_dplyr(d, group_cols, target_cols, new_names, max) %.>%
+window_summary_dplyr(d, group_cols, target_cols, new_names, sum) %.>%
   knitr::kable(.)
 ```
 
-|    col\_1 | group\_1 | group\_2 | col\_1\_max = FUN(col\_1) |
-| --------: | :------- | :------- | ------------------------: |
-| 0.0329693 | a        | b        |                 0.0329693 |
-| 0.1148309 | a        | a        |                 0.7320338 |
-| 0.0975654 | b        | b        |                 0.9320809 |
-| 0.9320809 | b        | b        |                 0.9320809 |
-| 0.7320338 | a        | a        |                 0.7320338 |
+|    col\_1 |    col\_2 | group\_1 | group\_2 | col\_1\_sum | col\_2\_sum |
+| --------: | --------: | :------- | :------- | ----------: | ----------: |
+| 0.1419297 | 0.8729708 | a        | a        |   0.9430047 |   1.6591504 |
+| 0.9063941 | 0.6731498 | b        | a        |   1.5323139 |   1.2487980 |
+| 0.8010750 | 0.7861796 | a        | a        |   0.9430047 |   1.6591504 |
+| 0.6259197 | 0.5756482 | b        | a        |   1.5323139 |   1.2487980 |
+| 0.6721926 | 0.1457101 | b        | b        |   0.6721926 |   0.1457101 |
 
 ``` r
 f <- function(k) {
   d <- mk_data(5, letters, k, 1)
   group_cols <- colnames(d)[grepl("^group_", colnames(d))]
-  target_cols <- "col_1"
-  new_names <- "col_1_max"
+  target_cols <- colnames(d)[grepl("^col_", colnames(d))]
+  new_names <- paste0(target_cols, "_sum")
   gc()
   tm <- microbenchmark::microbenchmark(
-    base_R_time = window_summary_base(d, group_cols, target_cols, new_names, max),
-    dplyr_group_agg_time = window_summary_dplyr(d, group_cols, target_cols, new_names, max),
+    base_R_time = window_summary_base(d, group_cols, target_cols, new_names, sum),
+    dplyr_group_agg_time = window_summary_dplyr(d, group_cols, target_cols, new_names, sum),
     times = 3L
   )
   td <- data.frame(tm)
@@ -210,7 +217,7 @@ ggplot(data = times,
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](time_grouped_max_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+![](time_grouped_summary_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 ``` r
 # compute time ratios
@@ -282,4 +289,4 @@ ggplot(data = ratios,
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-![](time_grouped_max_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->
+![](time_grouped_summary_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->
