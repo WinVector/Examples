@@ -38,7 +38,7 @@ library("cdata")
 packageVersion("dplyr")
 ```
 
-    ## [1] '0.8.0.1'
+    ## [1] '0.8.1'
 
 ``` r
 R.version
