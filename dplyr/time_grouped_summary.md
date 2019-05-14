@@ -34,6 +34,17 @@ library("rqdatatable")
 
 ``` r
 library("cdata")
+library("wrapr")
+```
+
+    ## 
+    ## Attaching package: 'wrapr'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     coalesce
+
+``` r
 packageVersion("dplyr")
 ```
 
@@ -107,11 +118,11 @@ d %.>%
 
 |    col\_1 |    col\_2 | group\_1 | group\_2 |
 | --------: | --------: | :------- | :------- |
-| 0.1419297 | 0.8729708 | a        | a        |
-| 0.9063941 | 0.6731498 | b        | a        |
-| 0.8010750 | 0.7861796 | a        | a        |
-| 0.6259197 | 0.5756482 | b        | a        |
-| 0.6721926 | 0.1457101 | b        | b        |
+| 0.8097685 | 0.3365113 | a        | a        |
+| 0.4884981 | 0.7870978 | b        | a        |
+| 0.1375909 | 0.8189787 | b        | b        |
+| 0.4216615 | 0.9880847 | b        | b        |
+| 0.9531570 | 0.4267701 | b        | a        |
 
 ``` r
 group_cols <- c("group_1", "group_2")
@@ -124,11 +135,43 @@ window_summary_base(d, group_cols, target_cols, new_names, sum) %.>%
 
 | group\_1 | group\_2 |    col\_1 |    col\_2 | col\_1\_sum | col\_2\_sum |
 | :------- | :------- | --------: | --------: | ----------: | ----------: |
-| a        | a        | 0.1419297 | 0.8729708 |   0.9430047 |   1.6591504 |
-| a        | a        | 0.8010750 | 0.7861796 |   0.9430047 |   1.6591504 |
-| b        | a        | 0.9063941 | 0.6731498 |   1.5323139 |   1.2487980 |
-| b        | a        | 0.6259197 | 0.5756482 |   1.5323139 |   1.2487980 |
-| b        | b        | 0.6721926 | 0.1457101 |   0.6721926 |   0.1457101 |
+| a        | a        | 0.8097685 | 0.3365113 |   0.8097685 |   0.3365113 |
+| b        | a        | 0.4884981 | 0.7870978 |   1.4416551 |   1.2138679 |
+| b        | a        | 0.9531570 | 0.4267701 |   1.4416551 |   1.2138679 |
+| b        | b        | 0.1375909 | 0.8189787 |   0.5592524 |   1.8070634 |
+| b        | b        | 0.4216615 | 0.9880847 |   0.5592524 |   1.8070634 |
+
+``` r
+#' Add aggregations of target columns by groups to data.frame.
+#' 
+#' @param d data.frame to work with
+#' @param group_cols names of columns to group by (non-empty).
+#' @param target_cols names of columns to summarize (non-empty).
+#' @param new_names new column names for results.
+#' @param FUN aggregation function
+#' @param env evaluatin environment
+#' @return d with new per-group aggregation columns added
+#'
+window_summary_rqdatatable <- function(d, group_cols, target_cols, 
+                                       new_names = paste0(target_cols, "_sum"), 
+                                       FUN = sum,
+                                       env = parent.frame()) {
+  extend_se(d, 
+            new_names := paste("FUN(", target_cols, ")"),
+            partitionby = group_cols)
+}
+
+window_summary_rqdatatable(d, group_cols, target_cols, new_names, sum) %.>%
+  knitr::kable(.)
+```
+
+|    col\_1 |    col\_2 | group\_1 | group\_2 | col\_1\_sum | col\_2\_sum |
+| --------: | --------: | :------- | :------- | ----------: | ----------: |
+| 0.8097685 | 0.3365113 | a        | a        |   0.8097685 |   0.3365113 |
+| 0.4884981 | 0.7870978 | b        | a        |   1.4416551 |   1.2138679 |
+| 0.9531570 | 0.4267701 | b        | a        |   1.4416551 |   1.2138679 |
+| 0.1375909 | 0.8189787 | b        | b        |   0.5592524 |   1.8070634 |
+| 0.4216615 | 0.9880847 | b        | b        |   0.5592524 |   1.8070634 |
 
 ``` r
 #' Add aggregations of target columns by groups to data.frame.
@@ -173,11 +216,11 @@ window_summary_dplyr(d, group_cols, target_cols, new_names, sum) %.>%
 
 |    col\_1 |    col\_2 | group\_1 | group\_2 | col\_1\_sum | col\_2\_sum |
 | --------: | --------: | :------- | :------- | ----------: | ----------: |
-| 0.1419297 | 0.8729708 | a        | a        |   0.9430047 |   1.6591504 |
-| 0.9063941 | 0.6731498 | b        | a        |   1.5323139 |   1.2487980 |
-| 0.8010750 | 0.7861796 | a        | a        |   0.9430047 |   1.6591504 |
-| 0.6259197 | 0.5756482 | b        | a        |   1.5323139 |   1.2487980 |
-| 0.6721926 | 0.1457101 | b        | b        |   0.6721926 |   0.1457101 |
+| 0.8097685 | 0.3365113 | a        | a        |   0.8097685 |   0.3365113 |
+| 0.4884981 | 0.7870978 | b        | a        |   1.4416551 |   1.2138679 |
+| 0.1375909 | 0.8189787 | b        | b        |   0.5592524 |   1.8070634 |
+| 0.4216615 | 0.9880847 | b        | b        |   0.5592524 |   1.8070634 |
+| 0.9531570 | 0.4267701 | b        | a        |   1.4416551 |   1.2138679 |
 
 ``` r
 f <- function(k) {
@@ -188,6 +231,7 @@ f <- function(k) {
   gc()
   tm <- microbenchmark::microbenchmark(
     base_R_time = window_summary_base(d, group_cols, target_cols, new_names, sum),
+    rqdatatable_time = window_summary_rqdatatable(d, group_cols, target_cols, new_names, sum),
     dplyr_group_agg_time = window_summary_dplyr(d, group_cols, target_cols, new_names, sum),
     times = 3L
   )
@@ -211,82 +255,10 @@ ggplot(data = times,
   scale_y_log10() + 
   theme(legend.position = "bottom") +
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("Time to group summarize, dplyr::mutate() versus base R",
+  ggtitle("Time to group summarize, by method",
           subtitle = "task time plotted as a function of number of data rows")
 ```
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
 ![](time_grouped_summary_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
-
-``` r
-# compute time ratios
-layout <- blocks_to_rowrecs_spec(
-  wrapr::qchar_frame(
-    "expr"         , "seconds"     |
-      "dplyr_group_agg_time", dplyr_group_agg_time |
-      'base_R_time'     , base_R_time      ),
-  recordKeys = "nrow")
-
-print(layout)
-```
-
-    ## {
-    ##  block_record <- wrapr::qchar_frame(
-    ##    "nrow"  , "expr"                , "seconds"            |
-    ##      .     , "dplyr_group_agg_time", dplyr_group_agg_time |
-    ##      .     , "base_R_time"         , base_R_time          )
-    ##  block_keys <- c('nrow', 'expr')
-    ## 
-    ##  # becomes
-    ## 
-    ##  row_record <- wrapr::qchar_frame(
-    ##    "nrow"  , "dplyr_group_agg_time", "base_R_time" |
-    ##      .     , dplyr_group_agg_time  , base_R_time   )
-    ##  row_keys <- c('nrow')
-    ## 
-    ##  # args: c(checkNames = TRUE, checkKeys = TRUE, strict = FALSE, allow_rqdatatable = FALSE)
-    ## }
-
-``` r
-calc_ratios <- local_td(times) %.>%
-  project(., 
-          groupby = c("expr", "nrow"),
-          seconds = mean(seconds)) %.>%
-  layout %.>%
-  extend(.,
-         ratio = dplyr_group_agg_time/base_R_time)
-
-cat(format(calc_ratios))
-```
-
-    ## table(times; 
-    ##   expr,
-    ##   time,
-    ##   ncol,
-    ##   nrow,
-    ##   seconds) %.>%
-    ##  project(., seconds := mean(seconds),
-    ##   g= expr, nrow) %.>%
-    ##  non_sql_node(., blocks_to_rowrecs(.)) %.>%
-    ##  extend(.,
-    ##   ratio := dplyr_group_agg_time / base_R_time)
-
-``` r
-ratios <- times %.>% calc_ratios
-
-ggplot(data = ratios, 
-       mapping = aes(x = nrow, y = ratio)) +
-  geom_point() + 
-  geom_smooth(se = FALSE) + 
-  scale_x_log10() + 
-  scale_y_log10() + 
-  theme(legend.position = "bottom") +
-  scale_color_brewer(palette = "Dark2") +
-  ggtitle("Time to group summarize, dplyr time over base R",
-          subtitle = "ratio plotted as a function of number of data rows")
-```
-
-    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
-
-![](time_grouped_summary_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->

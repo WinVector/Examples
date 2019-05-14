@@ -9,6 +9,7 @@ library("dplyr")
 library("ggplot2")
 library("rqdatatable")
 library("cdata")
+library("wrapr")
 packageVersion("dplyr")
 R.version
 
@@ -64,6 +65,30 @@ window_summary_base(d, group_cols, target_cols, new_names, sum) %.>%
   knitr::kable(.)
 
 
+
+#' Add aggregations of target columns by groups to data.frame.
+#' 
+#' @param d data.frame to work with
+#' @param group_cols names of columns to group by (non-empty).
+#' @param target_cols names of columns to summarize (non-empty).
+#' @param new_names new column names for results.
+#' @param FUN aggregation function
+#' @param env evaluatin environment
+#' @return d with new per-group aggregation columns added
+#'
+window_summary_rqdatatable <- function(d, group_cols, target_cols, 
+                                       new_names = paste0(target_cols, "_sum"), 
+                                       FUN = sum,
+                                       env = parent.frame()) {
+  extend_se(d, 
+            new_names := paste("FUN(", target_cols, ")"),
+            partitionby = group_cols)
+}
+
+window_summary_rqdatatable(d, group_cols, target_cols, new_names, sum) %.>%
+  knitr::kable(.)
+
+
 #' Add aggregations of target columns by groups to data.frame.
 #' 
 #' @param d data.frame to work with
@@ -112,6 +137,7 @@ f <- function(k) {
   gc()
   tm <- microbenchmark::microbenchmark(
     base_R_time = window_summary_base(d, group_cols, target_cols, new_names, sum),
+    rqdatatable_time = window_summary_rqdatatable(d, group_cols, target_cols, new_names, sum),
     dplyr_group_agg_time = window_summary_dplyr(d, group_cols, target_cols, new_names, sum),
     times = 3L
   )
@@ -135,42 +161,8 @@ ggplot(data = times,
   scale_y_log10() + 
   theme(legend.position = "bottom") +
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("Time to group summarize, dplyr::mutate() versus base R",
+  ggtitle("Time to group summarize, by method",
           subtitle = "task time plotted as a function of number of data rows")
 
-
-
-# compute time ratios
-layout <- blocks_to_rowrecs_spec(
-  wrapr::qchar_frame(
-    "expr"         , "seconds"     |
-      "dplyr_group_agg_time", dplyr_group_agg_time |
-      'base_R_time'     , base_R_time      ),
-  recordKeys = "nrow")
-
-print(layout)
-
-calc_ratios <- local_td(times) %.>%
-  project(., 
-          groupby = c("expr", "nrow"),
-          seconds = mean(seconds)) %.>%
-  layout %.>%
-  extend(.,
-         ratio = dplyr_group_agg_time/base_R_time)
-
-cat(format(calc_ratios))
-
-ratios <- times %.>% calc_ratios
-
-ggplot(data = ratios, 
-       mapping = aes(x = nrow, y = ratio)) +
-  geom_point() + 
-  geom_smooth(se = FALSE) + 
-  scale_x_log10() + 
-  scale_y_log10() + 
-  theme(legend.position = "bottom") +
-  scale_color_brewer(palette = "Dark2") +
-  ggtitle("Time to group summarize, dplyr time over base R",
-          subtitle = "ratio plotted as a function of number of data rows")
 ```
 
