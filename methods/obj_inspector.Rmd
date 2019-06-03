@@ -1,0 +1,57 @@
+---
+title: "Suggested packagse"
+output: github_document
+---
+
+Find suggested packages (without package order) for `R` objects.
+
+First: define the suggestion function.
+
+```{r setup}
+source("find_pkgs.R")
+```
+
+Example 1: `xts` object.
+
+```{r}
+library("tibble")
+library("xts")
+
+data(sample_matrix)
+sample.xts <- as.xts(sample_matrix, descr='my new xts object')
+
+suggested_packages(sample.xts)
+```
+
+However, notice if `data.table` is attached the advice changes.
+
+```{r}
+library("data.table")
+
+suggested_packages(sample.xts)
+```
+
+We can ask for more details to see why this is.
+
+```{r}
+
+suggested_packages(sample.xts, show_details = "data.table")
+```
+
+
+Example 2 a `tibble`.
+
+```{r}
+d <- as_tibble(data.frame(x = 1))
+
+suggested_packages(d)
+
+```
+
+Example 3 `data.table`.
+
+```{r}
+dt <- data.table(x = 2)
+
+suggested_packages(dt)
+```
