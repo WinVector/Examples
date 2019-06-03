@@ -1,7 +1,18 @@
 Suggested packages
 ================
 
-Find suggested packages (without package order) for `R` objects.
+`R` has the issue that some `R` objects that don’t work correctly if
+their package is not attached (common to `xts`, `tibble`, and
+`data.table`). This is, unfortunately, easier to do in `R` than in other
+languages (for example `Python`’s `pickle` will attach packages).
+
+A solution is: `saveRDS()` could be augmented to add the
+`suggested_packages()` as an attribute of what it writes out, say
+".suggested\_packages`. Then`readRDS()\` could look for this attribute
+and issue a warning if any of them are not attached during the read.
+
+To explore the feasibility of the above, let’s experiment with finding
+suggested packages (without package order) for `R` objects.
 
 First: define the suggestion function.
 
@@ -10,27 +21,6 @@ source("find_pkgs.R")
 ```
 
 Example 1: an `xts` object.
-
-``` r
-library("tidyverse") # extra packages to show interference effects
-```
-
-    ## Registered S3 methods overwritten by 'ggplot2':
-    ##   method         from 
-    ##   [.quosures     rlang
-    ##   c.quosures     rlang
-    ##   print.quosures rlang
-
-    ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
-
-    ## ✔ ggplot2 3.1.1     ✔ purrr   0.3.2
-    ## ✔ tibble  2.1.1     ✔ dplyr   0.8.1
-    ## ✔ tidyr   0.8.3     ✔ stringr 1.4.0
-    ## ✔ readr   1.3.1     ✔ forcats 0.4.0
-
-    ## ── Conflicts ────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
 
 ``` r
 library("tibble")
@@ -49,13 +39,6 @@ library("xts")
     ## Registered S3 method overwritten by 'xts':
     ##   method     from
     ##   as.zoo.xts zoo
-
-    ## 
-    ## Attaching package: 'xts'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     first, last
 
 ``` r
 data(sample_matrix)
@@ -79,14 +62,6 @@ library("data.table")
     ## 
     ##     first, last
 
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     between, first, last
-
-    ## The following object is masked from 'package:purrr':
-    ## 
-    ##     transpose
-
 ``` r
 suggested_packages(sample.xts)
 ```
@@ -105,6 +80,78 @@ suggested_packages(sample.xts, show_details = "data.table")
     ## 1   xts as.data.table.xts as.data.table data.table
 
 Example 2: a `tibble`.
+
+``` r
+d <- as_tibble(data.frame(x = 1))
+
+suggested_packages(d)
+```
+
+    ## [1] "tibble"
+
+Example 3: a `data.table`.
+
+``` r
+dt <- data.table(x = 2)
+
+suggested_packages(dt)
+```
+
+    ## [1] "data.table"
+
+Example 4: `data.frame`
+
+``` r
+df <- data.frame(x = 4)
+
+suggested_packages(df)
+```
+
+    ## NULL
+
+Example 5: nested stuff.
+
+``` r
+df2 <- data.frame(x = 1)
+df2$y <- list(tibble(x = 5))
+
+class(df2)
+```
+
+    ## [1] "data.frame"
+
+``` r
+suggested_packages(df2)
+```
+
+    ## [1] "tibble"
+
+Example 6: `tidyverse` adding packages to the outcome
+
+``` r
+library("tidyverse") # extra packages to show interference effects
+```
+
+    ## Registered S3 methods overwritten by 'ggplot2':
+    ##   method         from 
+    ##   [.quosures     rlang
+    ##   c.quosures     rlang
+    ##   print.quosures rlang
+
+    ## ── Attaching packages ─────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──
+
+    ## ✔ ggplot2 3.1.1     ✔ purrr   0.3.2
+    ## ✔ tidyr   0.8.3     ✔ dplyr   0.8.1
+    ## ✔ readr   1.3.1     ✔ stringr 1.4.0
+    ## ✔ ggplot2 3.1.1     ✔ forcats 0.4.0
+
+    ## ── Conflicts ────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ✖ dplyr::between()   masks data.table::between()
+    ## ✖ dplyr::filter()    masks stats::filter()
+    ## ✖ dplyr::first()     masks data.table::first(), xts::first()
+    ## ✖ dplyr::lag()       masks stats::lag()
+    ## ✖ dplyr::last()      masks data.table::last(), xts::last()
+    ## ✖ purrr::transpose() masks data.table::transpose()
 
 ``` r
 d <- as_tibble(data.frame(x = 1))
@@ -146,49 +193,3 @@ suggested_packages(d, show_details = c("dplyr", "ggplot2", "tidyr"))
     ## 23 tbl_df  summarise.tbl_df  summarise   dplyr
     ## 24    tbl        as.tbl.tbl     as.tbl   dplyr
     ## 25    tbl       fortify.tbl    fortify ggplot2
-
-Example 3: a `data.table`.
-
-``` r
-dt <- data.table(x = 2)
-
-suggested_packages(dt)
-```
-
-    ## [1] "data.table"
-
-Example 4: `data.frame`
-
-``` r
-df <- data.frame(x = 4)
-
-suggested_packages(df)
-```
-
-    ## NULL
-
-Example 5: nested stuff.
-
-``` r
-df2 <- data.frame(x = 1)
-df2$y <- list(tibble(x = 5))
-
-class(df2)
-```
-
-    ## [1] "data.frame"
-
-``` r
-suggested_packages(df2)
-```
-
-    ## [1] "dplyr"   "ggplot2" "tibble"  "tidyr"
-
-The idea is: `saveRDS()` could be augmented to add the
-`suggested_packages()` as an attribute of what it writes out, say
-".suggested\_packages`. Then`readRDS()\` could look for this attribute
-and issue a warning if any of them are not attached during the read.
-
-The problem we are working around is `R` objects that don’t work
-correctly if their package is not attached (common to `xts`, `tibble`,
-and `data.table`).
