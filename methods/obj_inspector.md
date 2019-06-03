@@ -1,4 +1,4 @@
-Suggested packagse
+Suggested packages
 ================
 
 Find suggested packages (without package order) for `R` objects.
