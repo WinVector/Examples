@@ -167,7 +167,7 @@ suggested_packages(df)
 
     ## NULL
 
-Example 5: nested crap.
+Example 5: nested stuff.
 
 ``` r
 df2 <- data.frame(x = 1)
