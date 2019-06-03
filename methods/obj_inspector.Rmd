@@ -14,6 +14,7 @@ source("find_pkgs.R")
 Example 1: an `xts` object.
 
 ```{r}
+library("tidyverse") # extra packages to show interference effects
 library("tibble")
 library("xts")
 
@@ -46,6 +47,7 @@ d <- as_tibble(data.frame(x = 1))
 
 suggested_packages(d)
 
+suggested_packages(d, show_details = c("dplyr", "ggplot2", "tidyr"))
 ```
 
 Example 3: a `data.table`.
