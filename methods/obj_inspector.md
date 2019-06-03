@@ -9,7 +9,7 @@ First: define the suggestion function.
 source("find_pkgs.R")
 ```
 
-Example 1: `xts` object.
+Example 1: an `xts` object.
 
 ``` r
 library("tibble")
@@ -68,7 +68,7 @@ suggested_packages(sample.xts, show_details = "data.table")
     ##   class           methods      generics    package
     ## 1   xts as.data.table.xts as.data.table data.table
 
-Example 2 a `tibble`.
+Example 2: a `tibble`.
 
 ``` r
 d <- as_tibble(data.frame(x = 1))
@@ -78,7 +78,7 @@ suggested_packages(d)
 
     ## [1] "tibble"
 
-Example 3 `data.table`.
+Example 3: a `data.table`.
 
 ``` r
 dt <- data.table(x = 2)
@@ -87,3 +87,39 @@ suggested_packages(dt)
 ```
 
     ## [1] "data.table"
+
+Example 4: `data.frame`
+
+``` r
+df <- data.frame(x = 4)
+
+suggested_packages(df)
+```
+
+    ## NULL
+
+Example 5: nested crap.
+
+``` r
+df2 <- data.frame(x = 1)
+df2$y <- list(tibble(x = 5))
+
+class(df2)
+```
+
+    ## [1] "data.frame"
+
+``` r
+suggested_packages(df2)
+```
+
+    ## [1] "tibble"
+
+The idea is: `saveRDS()` could be augmented to add the
+`suggested_packages()` as an attribute of what it writes out, say
+".suggested\_packages`. Then`readRDS()\` could look for this attribute
+and issue a warning if any of them are not attached during the read.
+
+The problem we are working around is `R` objects that don’t work
+correctly if their package is not attached (common to `xts`, `tibble`,
+and `data.table`).

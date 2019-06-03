@@ -9,7 +9,8 @@ suggested_packages <- function(obj, pkg_list = .packages(), show_details = NULL)
   force(pkg_list)
 
   base_packages <- c("stats", "graphics", "grDevices", "utils", "datasets", "methods", "base", "")
-  base_classes <- c("data.frame", "numeric", "character", "factor", "integer", "logical", "")
+  base_classes <- c("data.frame", "numeric", "character", "factor", "integer", "logical",
+                    "list", "")
 
   #' @param obj object to inspect
   #' @return charater vector of classes of object and contained objects
