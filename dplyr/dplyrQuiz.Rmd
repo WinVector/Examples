@@ -1,7 +1,6 @@
 ---
 title: "Advanced dplyr Quiz"
 author: "John Mount"
-date: "9/24/2018"
 output: github_document
 params:
   dorun: true
@@ -106,6 +105,12 @@ data.frame(x = c(1, 1)) %>%
   distinct() %>%
   nrow()
 
+d2 <- data.frame(x = c(1, 1)) %>% 
+  select(one_of(character(0))) 
+
+print(d2)
+
+# yet
 data.frame(x = c(1, 1)) %>% 
   select(one_of(character(0))) %>%
   distinct() %>%
@@ -114,42 +119,9 @@ data.frame(x = c(1, 1)) %>%
 
 (From [`dplyr` issue 2954](https://github.com/tidyverse/dplyr/issues/2954).)
 
-## tally
-
-It can be hard to predict what column `count` or `tally` will land their counts in (usually `n`, but often `nn`, even when there is no conflict).  Please try and guess the column name produced by the following pipelines.
-
-```{r tallyn, eval=DORUN}
-data.frame(g = c(1, 1, 2), n = 0) %>% 
-  select(-n) %>%
-  count(., g)
-
-data.frame(g = c(1, 1, 2), n = 0) %>% 
-  count(., g)
-```
-
-Not being able to reliably anticipate the result column name makes it difficult to use that produced value later.
-
-[`dplyr` issue 3838](https://github.com/tidyverse/dplyr/issues/3838).
-
 
 ## rename and mutate
 
-
-## NULL (constant versus in a variable)
-
-In `R` is traditional to use `NULL` assignment to remove columns.  In the code below *if* [referential transparency](https://en.wikipedia.org/wiki/Referential_transparency) were respected we should have values behaving the same as variables containing the same values.  Please anticipate the result of each of the following pipelines.
-
-```{r nullv, eval=DORUN, error=TRUE}
-data.frame(x=1, y=2) %>% mutate(x = NULL)
-
-z <- NULL 
-data.frame(x=1, y=2) %>% mutate(x = z)
-
-rm(list='z') # clean up
-```
-
-
-(From [`dplyr` issue 2945](https://github.com/tidyverse/dplyr/issues/2945).)
 
 
 ## Arrange 
@@ -187,14 +159,6 @@ rm(list = "iris2")
 
 (From [3782](https://github.com/tidyverse/dplyr/issues/3782).)
 
-
-## summarize
-
-```{r dsumarrize, eval=DORUN, error=TRUE}
-dplyr::summarize(data.frame(x = 1), 
-                 x = max(x), 
-                 min_x = min(x))
-```
 
 ## Grouping
 
