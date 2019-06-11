@@ -51,7 +51,7 @@ packageVersion("dplyr")
 packageVersion("dbplyr")
 ```
 
-    ## [1] '1.4.0'
+    ## [1] '1.4.1'
 
 ``` r
 packageVersion("RSQlite")
@@ -81,7 +81,7 @@ packageVersion("tidyselect")
 base::date()
 ```
 
-    ## [1] "Tue Jun 11 07:16:52 2019"
+    ## [1] "Tue Jun 11 07:33:19 2019"
 
 ``` r
 suppressPackageStartupMessages(library("dplyr"))
