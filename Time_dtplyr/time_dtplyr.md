@@ -6,8 +6,6 @@ library("microbenchmark")
 library("dplyr")
 ```
 
-    ## Warning: package 'dplyr' was built under R version 3.5.1
-
     ## 
     ## Attaching package: 'dplyr'
 
@@ -34,7 +32,23 @@ library("data.table")
 ``` r
 library("ggplot2")
 library("WVPlots")
+
+packageVersion("dplyr")
 ```
+
+    ## [1] '0.8.1'
+
+``` r
+packageVersion("dtplyr")
+```
+
+    ## [1] '0.0.3'
+
+``` r
+R.version.string
+```
+
+    ## [1] "R version 3.6.0 (2019-04-26)"
 
 ``` r
 mk_data <- function(nrow, ncol) {
@@ -88,37 +102,37 @@ nstep <- 5
 base_r_fn(df)
 ```
 
-    ##         x1         x2
-    ## 1 3.813766 -0.5188262
-    ## 2 6.493606 -0.8801488
-    ## 3 3.289314 -1.0606017
+    ##         x1        x2
+    ## 1 4.264622 0.5668608
+    ## 2 6.353611 0.8614390
+    ## 3 6.070827 1.0268441
 
 ``` r
 dplyr_fn(df)
 ```
 
-    ##         x1         x2
-    ## 1 3.813766 -0.5188262
-    ## 2 6.493606 -0.8801488
-    ## 3 3.289314 -1.0606017
+    ##         x1        x2
+    ## 1 4.264622 0.5668608
+    ## 2 6.353611 0.8614390
+    ## 3 6.070827 1.0268441
 
 ``` r
 dtplyr_fn(df)
 ```
 
-    ##          x1         x2
-    ## 1: 3.813766 -0.5188262
-    ## 2: 6.493606 -0.8801488
-    ## 3: 3.289314 -1.0606017
+    ##          x1        x2
+    ## 1: 4.264622 0.5668608
+    ## 2: 6.353611 0.8614390
+    ## 3: 6.070827 1.0268441
 
 ``` r
 data.table_fn(df)
 ```
 
-    ##          x1         x2
-    ## 1: 3.813766 -0.5188262
-    ## 2: 6.493606 -0.8801488
-    ## 3: 3.289314 -1.0606017
+    ##          x1        x2
+    ## 1: 4.264622 0.5668608
+    ## 2: 6.353611 0.8614390
+    ## 3: 6.070827 1.0268441
 
 ``` r
 df <- mk_data(100000, 100)
@@ -149,10 +163,10 @@ as.data.table(tdf)[
 ```
 
     ##        method mean_seconds
-    ## 1:     base_r    0.5926309
-    ## 2: data.table    1.0159766
-    ## 3:      dplyr    5.6442961
-    ## 4:     dtplyr  125.3737996
+    ## 1:     base_r    0.8367011
+    ## 2: data.table    1.5592681
+    ## 3:      dplyr    2.6420171
+    ## 4:     dtplyr  151.0217646
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
@@ -161,7 +175,7 @@ WVPlots::ScatterBoxPlotH(tdf, "seconds","method",
   xlab(NULL)
 ```
 
-![](time_dtplyr_files/figure-markdown_github/present-1.png)
+![](time_dtplyr_files/figure-gfm/present-1.png)<!-- -->
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
@@ -171,4 +185,4 @@ WVPlots::ScatterBoxPlotH(tdf, "seconds","method",
   xlab(NULL)
 ```
 
-![](time_dtplyr_files/figure-markdown_github/present-2.png)
+![](time_dtplyr_files/figure-gfm/present-2.png)<!-- -->

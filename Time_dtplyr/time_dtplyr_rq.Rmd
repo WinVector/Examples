@@ -11,6 +11,10 @@ library("data.table")
 library("ggplot2")
 library("WVPlots")
 library("rqdatatable")
+
+packageVersion("dplyr")
+packageVersion("dtplyr")
+R.version.string
 ```
 
 ```{r data}

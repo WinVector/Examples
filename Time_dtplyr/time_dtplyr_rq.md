@@ -6,8 +6,6 @@ library("microbenchmark")
 library("dplyr")
 ```
 
-    ## Warning: package 'dplyr' was built under R version 3.5.1
-
     ## 
     ## Attaching package: 'dplyr'
 
@@ -38,6 +36,24 @@ library("rqdatatable")
 ```
 
     ## Loading required package: rquery
+
+``` r
+packageVersion("dplyr")
+```
+
+    ## [1] '0.8.1'
+
+``` r
+packageVersion("dtplyr")
+```
+
+    ## [1] '0.0.3'
+
+``` r
+R.version.string
+```
+
+    ## [1] "R version 3.6.0 (2019-04-26)"
 
 ``` r
 mk_data <- function(nrow, ncol) {
@@ -100,36 +116,36 @@ base_r_fn(df)
 ```
 
     ##         x1         x2
-    ## 1 3.835724  0.1982309
-    ## 2 7.027512 -0.8240383
-    ## 3 4.599942  0.1939567
+    ## 1 5.551550 -1.6453351
+    ## 2 5.290844 -0.6474038
+    ## 3 5.470944  0.9277007
 
 ``` r
 dplyr_fn(df)
 ```
 
     ##         x1         x2
-    ## 1 3.835724  0.1982309
-    ## 2 7.027512 -0.8240383
-    ## 3 4.599942  0.1939567
+    ## 1 5.551550 -1.6453351
+    ## 2 5.290844 -0.6474038
+    ## 3 5.470944  0.9277007
 
 ``` r
 dtplyr_fn(df)
 ```
 
     ##          x1         x2
-    ## 1: 3.835724  0.1982309
-    ## 2: 7.027512 -0.8240383
-    ## 3: 4.599942  0.1939567
+    ## 1: 5.551550 -1.6453351
+    ## 2: 5.290844 -0.6474038
+    ## 3: 5.470944  0.9277007
 
 ``` r
 data.table_fn(df)
 ```
 
     ##          x1         x2
-    ## 1: 3.835724  0.1982309
-    ## 2: 7.027512 -0.8240383
-    ## 3: 4.599942  0.1939567
+    ## 1: 5.551550 -1.6453351
+    ## 2: 5.290844 -0.6474038
+    ## 3: 5.470944  0.9277007
 
 ``` r
 ops <- mk_rqdatatable_pipe(df, nstep)
@@ -137,11 +153,16 @@ df %.>% ops
 ```
 
     ##          x1         x2
-    ## 1: 3.835724  0.1982309
-    ## 2: 7.027512 -0.8240383
-    ## 3: 4.599942  0.1939567
+    ## 1: 5.551550 -1.6453351
+    ## 2: 5.290844 -0.6474038
+    ## 3: 5.470944  0.9277007
 
-Note: due to the recursive nature of the `rquery`/`rqdatatabl` query tools they can not operate on 1000 stage pipelines. This is a limitation of these packages, and not one we are not likely to attempt to work around (as `rquery` is primarily intended as a query generator, and most `SQL` back-ends are not going to accept a query that large or complex). So, for this test we will look at a 100 stage pipeline.
+Note: due to the recursive nature of the `rquery`/`rqdatatabl` query
+tools they can not operate on 1000 stage pipelines. This is a limitation
+of these packages, and not one we are not likely to attempt to work
+around (as `rquery` is primarily intended as a query generator, and most
+`SQL` back-ends are not going to accept a query that large or complex).
+So, for this test we will look at a 100 stage pipeline.
 
 ``` r
 df <- mk_data(100000, 100)
@@ -179,12 +200,12 @@ as.data.table(tdf)[
 ```
 
     ##               method mean_seconds
-    ## 1:            base_r    0.0648502
-    ## 2:        data.table    0.1932956
-    ## 3:  rqdatatable_pipe    0.3587767
-    ## 4: rqdatatable_parse    0.4811331
-    ## 5:             dplyr    0.5684685
-    ## 6:            dtplyr   12.0156819
+    ## 1:            base_r    0.0583806
+    ## 2:        data.table    0.2492908
+    ## 3:             dplyr    0.2981445
+    ## 4:  rqdatatable_pipe    0.5660557
+    ## 5: rqdatatable_parse    0.6841873
+    ## 6:            dtplyr   14.9061524
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
@@ -193,7 +214,7 @@ WVPlots::ScatterBoxPlotH(tdf, "seconds","method",
   xlab(NULL)
 ```
 
-![](time_dtplyr_rq_files/figure-markdown_github/present-1.png)
+![](time_dtplyr_rq_files/figure-gfm/present-1.png)<!-- -->
 
 ``` r
 WVPlots::ScatterBoxPlotH(tdf, "seconds","method",  
@@ -203,4 +224,4 @@ WVPlots::ScatterBoxPlotH(tdf, "seconds","method",
   xlab(NULL)
 ```
 
-![](time_dtplyr_rq_files/figure-markdown_github/present-2.png)
+![](time_dtplyr_rq_files/figure-gfm/present-2.png)<!-- -->

@@ -10,6 +10,10 @@ library("dtplyr")
 library("data.table")
 library("ggplot2")
 library("WVPlots")
+
+packageVersion("dplyr")
+packageVersion("dtplyr")
+R.version.string
 ```
 
 ```{r data}
