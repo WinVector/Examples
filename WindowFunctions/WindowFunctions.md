@@ -40,7 +40,7 @@ mk_td("d", c("group", "value")) %.>%
     ##   "value"
     ##  FROM
     ##   "d"
-    ##  ) tsql_39366907550820502222_0000000000
+    ##  ) tsql_93887685089181500000_0000000000
 
 ``` r
 library("dplyr")
@@ -152,7 +152,7 @@ packageVersion("rqdatatable")
 rqdatatable_soln <- function(d) {
   d %.>%
     extend(., 
-           partitionby ="group", 
+           partitionby = "group", 
            fraction := value/sum(value))
 }
 
@@ -229,12 +229,12 @@ print(timings1)
 ```
 
     ## Unit: milliseconds
-    ##                expr       min         lq       mean     median        uq
-    ##  base_R_lookup_soln  70.77886   71.87442   82.30154   78.79368   85.6437
-    ##   base_R_merge_soln 985.73607 1001.61202 1016.09712 1009.55543 1025.1233
-    ##       max neval
-    ##   104.417     5
-    ##  1058.459     5
+    ##                expr       min         lq       mean     median         uq
+    ##  base_R_lookup_soln   70.6214   71.15655   83.75928   81.68444   94.32267
+    ##   base_R_merge_soln 1006.9388 1015.58817 1221.15268 1065.15864 1238.35575
+    ##        max neval
+    ##   101.0113     5
+    ##  1779.7220     5
 
 ``` r
 # merge solution is bad, likely due to merge() step
@@ -253,17 +253,17 @@ print(timings2)
 
     ## Unit: milliseconds
     ##                expr       min        lq      mean    median        uq
-    ##          dplyr_soln 3545.4420 3597.6367 4403.4747 3842.0041 4694.8211
-    ##      datatable_soln  294.2609  334.2081  414.3972  378.5495  488.2055
-    ##         dtplyr_soln  534.7203  704.8316  787.5820  750.1034  791.2549
-    ##    rqdatatable_soln  488.8316  720.6075  757.1495  761.0332  791.9466
-    ##  base_R_lookup_soln 1314.2077 1373.1657 1473.9223 1456.9126 1504.2548
+    ##          dplyr_soln 3453.5092 3519.5205 3987.8501 3764.5597 3850.1427
+    ##      datatable_soln  289.0628  328.2310  384.4908  349.8896  425.2604
+    ##         dtplyr_soln  574.2986  640.6621  801.8947  724.8340 1002.1765
+    ##    rqdatatable_soln  463.0133  653.7966  816.4745  807.6268  953.0376
+    ##  base_R_lookup_soln 1341.3012 1358.4321 1476.3975 1446.0355 1538.2011
     ##        max neval
-    ##  7347.8653    10
-    ##   599.3328    10
-    ##  1169.1007    10
-    ##   997.6759    10
-    ##  1830.2139    10
+    ##  6601.8748    10
+    ##   601.8762    10
+    ##  1053.3063    10
+    ##  1366.4888    10
+    ##  1803.7111    10
 
 ``` r
 # now try medium example with large number of irrelevant columns
@@ -280,18 +280,27 @@ print(timings3)
 ```
 
     ## Unit: milliseconds
-    ##                expr       min        lq      mean    median        uq
-    ##          dplyr_soln 219.91423 228.81952 264.08625 258.66492 288.81289
-    ##      datatable_soln  75.20412  82.76477 108.08750  88.94729 115.28512
-    ##         dtplyr_soln 355.69799 368.02524 421.09500 390.96714 493.16737
-    ##    rqdatatable_soln 175.10557 185.54118 244.23055 219.89990 278.26537
-    ##  base_R_lookup_soln  74.83041  76.56702  95.81418  81.14828  94.51147
+    ##                expr       min        lq     mean    median       uq
+    ##          dplyr_soln 210.36176 218.86410 243.5021 229.25856 244.8467
+    ##      datatable_soln  72.78887  75.86477 110.6873  81.40946 139.8924
+    ##         dtplyr_soln 270.43692 382.29037 443.0467 441.47911 541.9696
+    ##    rqdatatable_soln 162.40317 197.00949 279.5261 258.59914 370.6062
+    ##  base_R_lookup_soln  75.33275  81.08655 101.1837  97.69725 119.9376
     ##       max neval
-    ##  323.6208    10
-    ##  189.9545    10
-    ##  569.2427    10
-    ##  405.8715    10
-    ##  181.2697    10
+    ##  366.7221    10
+    ##  202.5554    10
+    ##  573.0294    10
+    ##  431.8661    10
+    ##  146.9001    10
+
+Run on an idle Mac mini (Late 2014 model), macOS 10.13.6, 8 GB 1600 MHz
+DDR3.
+
+``` r
+date()
+```
+
+    ## [1] "Sat Jun 29 10:40:55 2019"
 
 ``` r
 R.version

@@ -77,7 +77,7 @@ packageVersion("rqdatatable")
 rqdatatable_soln <- function(d) {
   d %.>%
     extend(., 
-           partitionby ="group", 
+           partitionby = "group", 
            fraction := value/sum(value))
 }
 
@@ -162,7 +162,10 @@ print(timings3)
 ```
 
 
+Run on an idle Mac mini (Late 2014 model), macOS 10.13.6, 8 GB 1600 MHz DDR3.
+
 ```{r version}
+date()
 R.version
 ```
 
