@@ -1,0 +1,170 @@
+---
+title: "WindowFunctions"
+output: github_document
+---
+
+
+
+```{r data}
+d <- wrapr::build_frame(
+   "group"  , "value" |
+     "a"    , 1L      |
+     "a"    , 2L      |
+     "b"    , 3L      |
+     "b"    , 4L      )
+
+knitr::kable(d)
+```
+
+```{r rquery}
+library("rquery")
+
+mk_td("d", c("group", "value")) %.>%
+  extend(., 
+         partitionby ="group", 
+         fraction := value/sum(value)) %.>%
+  to_sql(., rquery_default_db_info()) %.>%
+  cat(.)
+```
+
+
+```{r dplyr}
+library("dplyr")
+packageVersion("dplyr")
+
+dplyr_soln <- function(d) {
+  d %>% 
+    group_by(group) %>%
+    mutate(fraction = value/sum(value)) %>%
+    ungroup()
+}
+
+dplyr_soln(d)
+```
+
+```{r data_table}
+library("data.table")
+packageVersion("data.table")
+
+datatable_soln <- function(d) {
+  dt <- data.table::as.data.table(d)
+  dt[, fraction := value/sum(value), by = "group"][]
+}
+
+datatable_soln(d)
+```
+
+```{r dtplyr}
+library("dtplyr")
+packageVersion("dtplyr")
+
+dtplyr_soln <- function(d) {
+  d %>% 
+    data.table::as.data.table() %>%
+    group_by(group) %>%
+    mutate(fraction = value/sum(value)) %>%
+    ungroup()
+}
+
+dplyr_soln(d)
+```
+
+
+```{r rqdatatable}
+library("rqdatatable")
+packageVersion("rqdatatable")
+
+rqdatatable_soln <- function(d) {
+  d %.>%
+    extend(., 
+           partitionby ="group", 
+           fraction := value/sum(value))
+}
+
+rqdatatable_soln(d)
+```
+
+
+```{r baseR_lookup}
+base_R_lookup_soln <- function(d) {
+  sums <- tapply(d$value, d$group, sum)
+  d$fraction <- d$value/sums[d$group] # or transform(d, fraction = value/sums[group]) 
+  d
+}
+
+base_R_lookup_soln(d)
+```
+
+```{r baseR_merge}
+base_R_merge_soln <- function(d) {
+  sums <- tapply(d$value, d$group, sum)
+  sums_frame <- data.frame(group = names(sums),
+                           sum = as.numeric(sums),
+                           stringsAsFactors = FALSE)
+  result <- merge(d, sums_frame, by = "group")
+  result$fraction <- result$value/result$sum
+  result$sum <- NULL
+  result
+}
+
+base_R_merge_soln(d)
+```
+
+```{r timings}
+library("microbenchmark")
+
+
+mk_data <- function(nrow, nextracol, npossiblegroups) {
+  d <- data.frame(group = sample(paste0("g_", seq_len(npossiblegroups)), nrow, replace = TRUE),
+                  value = rnorm(nrow),
+                  stringsAsFactors = FALSE)
+  for(ci in paste0("c_", seq_len(nextracol))) {
+    d[[ci]] <- rnorm(nrow)
+  }
+  d
+}
+
+
+set.seed(235253)
+
+# first compare base_R_lookup_soln() to base_R_merge_soln()
+d <- mk_data(100000, 10, 10000)
+timings1 <- microbenchmark(
+  base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_merge_soln = base_R_merge_soln(d),
+  times = 5L)
+print(timings1)
+
+# merge solution is bad, likely due to merge() step
+
+# now try bigger example with small number of irrelevant columns
+d <- mk_data(1000000, 10, 100000)
+timings2 <- microbenchmark(
+  dplyr_soln = dplyr_soln(d),
+  datatable_soln = datatable_soln(d),
+  dtplyr_soln = dtplyr_soln(d),
+  rqdatatable_soln = rqdatatable_soln(d),
+  base_R_lookup_soln = base_R_lookup_soln(d),
+  times = 10L)
+print(timings2)
+
+# now try medium example with large number of irrelevant columns
+# translators such as dtplyr and rqdatatable are likely sensitive to column counts
+d <- mk_data(100000, 100, 10000)
+timings3 <- microbenchmark(
+  dplyr_soln = dplyr_soln(d),
+  datatable_soln = datatable_soln(d),
+  dtplyr_soln = dtplyr_soln(d),
+  rqdatatable_soln = rqdatatable_soln(d),
+  base_R_lookup_soln = base_R_lookup_soln(d),
+  times = 10L)
+print(timings3)
+```
+
+
+```{r version}
+R.version
+```
+
+
+
