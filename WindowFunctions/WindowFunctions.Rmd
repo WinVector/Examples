@@ -3,7 +3,7 @@ title: "WindowFunctions"
 output: github_document
 ---
 
-
+Backing materials for ["My Favorite data.table Feature"](http://www.win-vector.com/blog/2019/06/my-favorite-data-table-feature/).  Timings will be slightly different as we have since re-run this worksheet.
 
 ```{r data}
 d <- wrapr::build_frame(
@@ -110,6 +110,16 @@ base_R_merge_soln <- function(d) {
 base_R_merge_soln(d)
 ```
 
+```{r baseR_ave}
+base_R_ave_soln <- function(d) {
+  sums <- ave(d$value, d$group, FUN = sum)
+  d$fraction <- d$value/sums
+  d
+}
+
+base_R_ave_soln(d)
+```
+
 ```{r timings}
 library("microbenchmark")
 
@@ -130,12 +140,17 @@ set.seed(235253)
 # first compare base_R_lookup_soln() to base_R_merge_soln()
 d <- mk_data(100000, 10, 10000)
 timings1 <- microbenchmark(
+  dplyr_soln = dplyr_soln(d),
+  datatable_soln = datatable_soln(d),
+  dtplyr_soln = dtplyr_soln(d),
+  rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
   base_R_merge_soln = base_R_merge_soln(d),
+  base_R_ave_soln = base_R_ave_soln(d),
   times = 5L)
 print(timings1)
 
-# merge solution is bad, likely due to merge() step
+# merge solution is bad, likely due to cost of merge() step
 
 # now try bigger example with small number of irrelevant columns
 d <- mk_data(1000000, 10, 100000)
@@ -145,6 +160,7 @@ timings2 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_ave_soln = base_R_ave_soln(d),
   times = 10L)
 print(timings2)
 
@@ -157,6 +173,7 @@ timings3 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_ave_soln = base_R_ave_soln(d),
   times = 10L)
 print(timings3)
 ```

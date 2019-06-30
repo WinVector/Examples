@@ -1,6 +1,11 @@
 WindowFunctions
 ================
 
+Backing materials for [“My Favorite data.table
+Feature”](http://www.win-vector.com/blog/2019/06/my-favorite-data-table-feature/).
+Timings will be slightly different as we have since re-run this
+worksheet.
+
 ``` r
 d <- wrapr::build_frame(
    "group"  , "value" |
@@ -40,7 +45,7 @@ mk_td("d", c("group", "value")) %.>%
     ##   "value"
     ##  FROM
     ##   "d"
-    ##  ) tsql_93887685089181500000_0000000000
+    ##  ) tsql_65091634801521878401_0000000000
 
 ``` r
 library("dplyr")
@@ -203,6 +208,22 @@ base_R_merge_soln(d)
     ## 4     b     4 0.5714286
 
 ``` r
+base_R_ave_soln <- function(d) {
+  sums <- ave(d$value, d$group, FUN = sum)
+  d$fraction <- d$value/sums
+  d
+}
+
+base_R_ave_soln(d)
+```
+
+    ##   group value  fraction
+    ## 1     a     1 0.3333333
+    ## 2     a     2 0.6666667
+    ## 3     b     3 0.4285714
+    ## 4     b     4 0.5714286
+
+``` r
 library("microbenchmark")
 
 
@@ -222,22 +243,37 @@ set.seed(235253)
 # first compare base_R_lookup_soln() to base_R_merge_soln()
 d <- mk_data(100000, 10, 10000)
 timings1 <- microbenchmark(
+  dplyr_soln = dplyr_soln(d),
+  datatable_soln = datatable_soln(d),
+  dtplyr_soln = dtplyr_soln(d),
+  rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
   base_R_merge_soln = base_R_merge_soln(d),
+  base_R_ave_soln = base_R_ave_soln(d),
   times = 5L)
 print(timings1)
 ```
 
     ## Unit: milliseconds
-    ##                expr       min         lq       mean     median         uq
-    ##  base_R_lookup_soln   70.6214   71.15655   83.75928   81.68444   94.32267
-    ##   base_R_merge_soln 1006.9388 1015.58817 1221.15268 1065.15864 1238.35575
-    ##        max neval
-    ##   101.0113     5
-    ##  1779.7220     5
+    ##                expr       min        lq       mean     median         uq
+    ##          dplyr_soln 208.86172 211.23851  214.92834  215.51877  218.66900
+    ##      datatable_soln  27.58407  27.91690   37.08973   39.56568   42.36004
+    ##         dtplyr_soln  45.24744  47.16940   57.54716   56.55981   67.16639
+    ##    rqdatatable_soln  49.50242  51.96162   73.20169   58.01081   64.44770
+    ##  base_R_lookup_soln  74.61456  77.25313   92.92758   89.76125  109.46147
+    ##   base_R_merge_soln 966.48667 999.02050 1047.65113 1087.60085 1091.22055
+    ##     base_R_ave_soln  80.34756  82.48274   98.31047   82.81353  100.16647
+    ##         max neval
+    ##   220.35370     5
+    ##    48.02194     5
+    ##    71.59274     5
+    ##   142.08589     5
+    ##   113.54747     5
+    ##  1093.92706     5
+    ##   145.74204     5
 
 ``` r
-# merge solution is bad, likely due to merge() step
+# merge solution is bad, likely due to cost of merge() step
 
 # now try bigger example with small number of irrelevant columns
 d <- mk_data(1000000, 10, 100000)
@@ -247,23 +283,26 @@ timings2 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_ave_soln = base_R_ave_soln(d),
   times = 10L)
 print(timings2)
 ```
 
     ## Unit: milliseconds
     ##                expr       min        lq      mean    median        uq
-    ##          dplyr_soln 3453.5092 3519.5205 3987.8501 3764.5597 3850.1427
-    ##      datatable_soln  289.0628  328.2310  384.4908  349.8896  425.2604
-    ##         dtplyr_soln  574.2986  640.6621  801.8947  724.8340 1002.1765
-    ##    rqdatatable_soln  463.0133  653.7966  816.4745  807.6268  953.0376
-    ##  base_R_lookup_soln 1341.3012 1358.4321 1476.3975 1446.0355 1538.2011
+    ##          dplyr_soln 3536.0378 3579.7881 3620.5774 3606.9280 3613.6726
+    ##      datatable_soln  272.5039  310.9330  343.5773  320.6331  378.3368
+    ##         dtplyr_soln  565.8834  737.2592  800.2368  782.1983  902.6253
+    ##    rqdatatable_soln  557.3124  583.2941  706.7368  699.3231  758.8063
+    ##  base_R_lookup_soln 1320.4560 1347.6206 1409.3101 1376.7020 1450.9999
+    ##     base_R_ave_soln 1353.5795 1371.9668 1427.5839 1391.2620 1496.7291
     ##        max neval
-    ##  6601.8748    10
-    ##   601.8762    10
-    ##  1053.3063    10
-    ##  1366.4888    10
-    ##  1803.7111    10
+    ##  3750.2049    10
+    ##   505.2334    10
+    ##   970.7965    10
+    ##  1058.5922    10
+    ##  1565.3882    10
+    ##  1581.0163    10
 
 ``` r
 # now try medium example with large number of irrelevant columns
@@ -275,23 +314,26 @@ timings3 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_ave_soln = base_R_ave_soln(d),
   times = 10L)
 print(timings3)
 ```
 
     ## Unit: milliseconds
-    ##                expr       min        lq     mean    median       uq
-    ##          dplyr_soln 210.36176 218.86410 243.5021 229.25856 244.8467
-    ##      datatable_soln  72.78887  75.86477 110.6873  81.40946 139.8924
-    ##         dtplyr_soln 270.43692 382.29037 443.0467 441.47911 541.9696
-    ##    rqdatatable_soln 162.40317 197.00949 279.5261 258.59914 370.6062
-    ##  base_R_lookup_soln  75.33275  81.08655 101.1837  97.69725 119.9376
-    ##       max neval
-    ##  366.7221    10
-    ##  202.5554    10
-    ##  573.0294    10
-    ##  431.8661    10
-    ##  146.9001    10
+    ##                expr       min        lq      mean    median        uq
+    ##          dplyr_soln 201.58665 207.31926 213.73509 210.23327 215.62834
+    ##      datatable_soln  67.78353  70.48399 112.78156  96.88809 171.16055
+    ##         dtplyr_soln 238.86614 265.16600 313.71999 337.85567 349.00317
+    ##    rqdatatable_soln 166.00339 169.39873 207.53317 187.52156 267.85092
+    ##  base_R_lookup_soln  70.17179  75.20082  76.66798  76.17772  77.15854
+    ##     base_R_ave_soln  75.22433  75.84596  83.31147  80.01347  86.27543
+    ##        max neval
+    ##  234.41137    10
+    ##  195.66240    10
+    ##  362.26320    10
+    ##  283.48345    10
+    ##   84.51599    10
+    ##  111.65765    10
 
 Run on an idle Mac mini (Late 2014 model), macOS 10.13.6, 8 GB 1600 MHz
 DDR3.
@@ -300,7 +342,7 @@ DDR3.
 date()
 ```
 
-    ## [1] "Sat Jun 29 10:40:55 2019"
+    ## [1] "Sun Jun 30 10:17:34 2019"
 
 ``` r
 R.version
