@@ -36,7 +36,7 @@ mk_td("d", c("group", "value")) %.>%
     ##   "value"
     ##  FROM
     ##   "d"
-    ##  ) tsql_88423853009367798682_0000000000
+    ##  ) tsql_58591674243505989231_0000000000
     ## GROUP BY
     ##  "group"
 
@@ -98,7 +98,7 @@ packageVersion("data.table")
 ``` r
 datatable_soln <- function(d) {
   dt <- data.table::as.data.table(d)
-  dt[, list(sum = sum(value)), by = "group"]
+  dt[, .(sum = sum(value)), by = "group"]
 }
 
 datatable_soln(d)
@@ -199,18 +199,18 @@ print(timings1)
 ```
 
     ## Unit: milliseconds
-    ##                expr       min        lq      mean    median        uq
-    ##          dplyr_soln 104.36746 111.47936 121.68849 120.49694 131.06930
-    ##      datatable_soln  11.38687  15.66917  18.20750  17.10564  22.58313
-    ##         dtplyr_soln  60.97170  64.52915 100.76422  73.60517 144.69103
-    ##    rqdatatable_soln  12.85540  14.43563  17.42355  15.62907  17.72362
-    ##  base_R_lookup_soln  82.76607  92.04244 103.90669  92.54040  96.80224
+    ##                expr       min       lq      mean    median        uq
+    ##          dplyr_soln 90.057213 94.14632 112.54812 104.24340 118.04166
+    ##      datatable_soln  9.900004 12.65102  15.94681  14.24296  16.60382
+    ##         dtplyr_soln 53.421789 63.56419 109.51679  74.01572 151.36640
+    ##    rqdatatable_soln 10.801057 13.56356  15.21794  14.94448  17.24860
+    ##  base_R_lookup_soln 67.230965 83.38247 113.65644 116.88634 130.43197
     ##        max neval
-    ##  139.50024    10
-    ##   26.35489    10
-    ##  168.14311    10
-    ##   33.51638    10
-    ##  209.30101    10
+    ##  175.17569    10
+    ##   28.50283    10
+    ##  240.98074    10
+    ##   20.70654    10
+    ##  168.49241    10
 
 ``` r
 # now try bigger example with small number of irrelevant columns
@@ -227,17 +227,17 @@ print(timings2)
 
     ## Unit: milliseconds
     ##                expr       min        lq      mean    median        uq
-    ##          dplyr_soln 1768.3320 1937.7464 2068.4152 2089.1402 2134.3383
-    ##      datatable_soln  143.9574  170.5984  244.8870  196.5139  270.4079
-    ##         dtplyr_soln  743.2921  789.9880  870.6912  838.8895  892.1501
-    ##    rqdatatable_soln  114.4732  149.7780  186.9856  162.4099  220.5923
-    ##  base_R_lookup_soln 1246.9553 1344.8032 1603.3240 1651.8532 1693.7059
+    ##          dplyr_soln 1543.9823 1573.6822 1791.9790 1658.5995 2072.7789
+    ##      datatable_soln  141.4548  149.8420  206.4489  156.6491  214.6359
+    ##         dtplyr_soln  612.9404  707.9020  788.0161  732.9196  791.7844
+    ##    rqdatatable_soln  118.3758  120.9281  176.3847  179.3689  206.8276
+    ##  base_R_lookup_soln 1189.4972 1254.8078 1435.4358 1328.5802 1524.9679
     ##        max neval
-    ##  2471.4399    10
-    ##   482.2308    10
-    ##  1240.5779    10
-    ##   318.2165    10
-    ##  2116.6516    10
+    ##  2406.0105    10
+    ##   407.8885    10
+    ##  1192.4385    10
+    ##   267.2239    10
+    ##  1948.3233    10
 
 ``` r
 # now try medium example with large number of irrelevant columns
@@ -254,18 +254,18 @@ print(timings3)
 ```
 
     ## Unit: milliseconds
-    ##                expr        min        lq      mean    median        uq
-    ##          dplyr_soln  82.378788  84.95316  89.11358  87.12364  90.43574
-    ##      datatable_soln  53.252407  55.34744  70.55867  59.55131  65.15286
-    ##         dtplyr_soln 226.403444 243.87508 281.92697 286.52095 322.12152
-    ##    rqdatatable_soln   9.638939  10.84006  33.00082  11.59810  16.23251
-    ##  base_R_lookup_soln  63.898388  69.02701  90.95358  70.44159  85.68363
+    ##                expr       min        lq      mean    median        uq
+    ##          dplyr_soln  80.32505  83.64389  89.65582  88.83205  90.70663
+    ##      datatable_soln  54.21628  59.88788  73.47135  65.45852  66.92157
+    ##         dtplyr_soln 234.84862 252.28784 290.94890 294.13237 331.87897
+    ##    rqdatatable_soln  10.19361  11.48504  33.37004  12.68630  15.79134
+    ##  base_R_lookup_soln  65.61910  68.73846  91.15363  71.12531  84.39944
     ##       max neval
-    ##  107.2206    10
-    ##  170.9068    10
-    ##  327.3176    10
-    ##  121.4666    10
-    ##  177.3301    10
+    ##  112.1866    10
+    ##  164.7957    10
+    ##  339.8169    10
+    ##  117.0547    10
+    ##  169.4107    10
 
 Run on an idle Mac mini (Late 2014 model), macOS 10.13.6, 8 GB 1600 MHz
 DDR3.
@@ -274,7 +274,7 @@ DDR3.
 date()
 ```
 
-    ## [1] "Sat Jun 29 17:22:32 2019"
+    ## [1] "Sat Jun 29 17:29:29 2019"
 
 ``` r
 R.version

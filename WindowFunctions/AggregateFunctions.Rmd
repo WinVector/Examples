@@ -48,7 +48,7 @@ packageVersion("data.table")
 
 datatable_soln <- function(d) {
   dt <- data.table::as.data.table(d)
-  dt[, list(sum = sum(value)), by = "group"]
+  dt[, .(sum = sum(value)), by = "group"]
 }
 
 datatable_soln(d)
