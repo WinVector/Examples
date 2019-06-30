@@ -96,6 +96,18 @@ base_R_lookup_soln <- function(d) {
 base_R_lookup_soln(d)
 ```
 
+```{r baseR_rowsum}
+base_R_rowsum_soln <- function(d) {
+  res <- as.data.frame(rowsum(d$value, d$group))
+  colnames(res) <- "group"
+  res$sum = rownames(res)
+  rownames(res) <- NULL
+  res
+}
+
+base_R_rowsum_soln(d)
+```
+
 
 ```{r timings}
 library("microbenchmark")
@@ -121,6 +133,7 @@ timings1 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_rowsum_soln = base_R_rowsum_soln(d),
   times = 10L)
 print(timings1)
 
@@ -132,6 +145,7 @@ timings2 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_rowsum_soln = base_R_rowsum_soln(d),
   times = 10L)
 print(timings2)
 
@@ -144,6 +158,7 @@ timings3 <- microbenchmark(
   dtplyr_soln = dtplyr_soln(d),
   rqdatatable_soln = rqdatatable_soln(d),
   base_R_lookup_soln = base_R_lookup_soln(d),
+  base_R_rowsum_soln = base_R_rowsum_soln(d),
   times = 10L)
 print(timings3)
 ```
