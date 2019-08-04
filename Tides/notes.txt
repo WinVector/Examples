@@ -1,0 +1,5 @@
+https://github.com/sam-cox/pytides/wiki/Example-Pytides-Usage
+https://pypi.org/project/tidetable/
+https://cran.r-project.org/web/packages/TideHarmonics/vignettes/austides.pdf
+https://cran.r-project.org/web/packages/TideHarmonics/index.html
+https://medium.com/@josemarcialportilla/using-python-and-auto-arima-to-forecast-seasonal-time-series-90877adff03c
