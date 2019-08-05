@@ -16,8 +16,13 @@ library(ggplot2)
 
 ``` r
 harmonics = harmonics
-harmonics$in_hc60 = (harmonics$name %in% hc60) | (harmonics$sname %in% hc60)
+
 harmonics$in_hc4 = (harmonics$name %in% hc4) | (harmonics$sname %in% hc4)
+harmonics$in_hc7 = (harmonics$name %in% hc7) | (harmonics$sname %in% hc7)
+harmonics$in_hc37 = (harmonics$name %in% hc37) | (harmonics$sname %in% hc37)
+harmonics$in_hc60 = (harmonics$name %in% hc60) | (harmonics$sname %in% hc60)
+harmonics$in_hc114 = (harmonics$name %in% hc114) | (harmonics$sname %in% hc114)
+
 write.csv(harmonics, 'harmonics.csv', quote = FALSE, row.names = FALSE)
 ```
 
