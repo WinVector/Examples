@@ -10,6 +10,11 @@ library(ggplot2)
 ```
 
 ```{r}
+write.csv(harmonics, 'harmonics.csv', quote = FALSE, row.names = FALSE)
+```
+
+
+```{r}
 tides <- readRDS('tides.RDS')
 ```
 

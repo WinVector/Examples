@@ -15,6 +15,10 @@ library(ggplot2)
     ## Warning: package 'ggplot2' was built under R version 3.5.2
 
 ``` r
+write.csv(harmonics, 'harmonics.csv', quote = FALSE, row.names = FALSE)
+```
+
+``` r
 tides <- readRDS('tides.RDS')
 ```
 
@@ -48,7 +52,7 @@ ggplot(aes(x=dt), data=dtest) +
   ggtitle("prediction (blue) superimposed on actuals on test")
 ```
 
-![](TidesR_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](TidesR_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 ggplot(aes(x=pred, y=tide_feet), data=dtest) +
@@ -56,4 +60,4 @@ ggplot(aes(x=pred, y=tide_feet), data=dtest) +
   ggtitle("prediction versus actual on test")
 ```
 
-![](TidesR_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](TidesR_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
