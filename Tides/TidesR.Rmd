@@ -3,44 +3,14 @@ title: "Tides.Rmd"
 output: github_document
 ---
 
-Read data.
-
 ```{r}
-library(wrapr)
 library(TideHarmonics)
+library(wrapr)
 library(ggplot2)
-
-files <- list.files('tide_data',
-               pattern='.*.csv') %.>%
-  sort(.)
-
-dat_list <- lapply(
-  files,
-  function(fi) {
-     read.csv(paste0('tide_data/', fi),
-              strip.white = TRUE, 
-              na.strings = c("", "NA", "-"),
-              stringsAsFactors = FALSE)
-  })
-
-tides = do.call(rbind, dat_list)
-tides['tide_feet'] <- tides['Verified..ft.']
-missing_v = is.na(tides['tide_feet'])
-tides['tide_feet'][missing_v] <- tides['Preliminary..ft.'][missing_v]
-summary(tides['tide_feet'])
 ```
 
 ```{r}
-tides['dt'] <- as.POSIXct(paste(tides[['Date']], tides[['Time..GMT.']]), 
-                          tz = "UTC")
-head(tides)
-```
-
-```{r}
-deltas <- difftime(tides[['dt']][-1], 
-                   tides[['dt']][-length(tides[['dt']])], 
-                   units='secs')
-summary(as.numeric(deltas))
+tides <- readRDS('tides.RDS')
 ```
 
 ```{r}
@@ -49,8 +19,8 @@ first_date_time =  as.POSIXct('2019/06/01 00:00', tz = "UTC")
 cut_date_time = as.POSIXct('2019/07/15 00:00', tz = "UTC")
 ```
 
+
 ```{r}
-#tides <- tides[tides$dt>first_date_time, , drop = FALSE]
 dtrain <- tides[tides$dt<cut_date_time, , drop = FALSE]
 dtest <- tides[tides$dt>=cut_date_time, , drop = FALSE]
 ```
