@@ -15,6 +15,9 @@ library(ggplot2)
     ## Warning: package 'ggplot2' was built under R version 3.5.2
 
 ``` r
+harmonics = harmonics
+harmonics$in_hc60 = (harmonics$name %in% hc60) | (harmonics$sname %in% hc60)
+harmonics$in_hc4 = (harmonics$name %in% hc4) | (harmonics$sname %in% hc4)
 write.csv(harmonics, 'harmonics.csv', quote = FALSE, row.names = FALSE)
 ```
 
