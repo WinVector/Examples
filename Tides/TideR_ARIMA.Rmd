@@ -1,0 +1,58 @@
+---
+title: "Tides_ARIMA.Rmd"
+output: github_document
+---
+
+```{r}
+library(wrapr)
+library(forecast)
+library(ggplot2)
+```
+
+
+```{r}
+tides <- readRDS('tides.RDS')
+```
+
+```{r}
+base_date_time =  as.POSIXct('2001/01/01 00:00', tz = "UTC")
+cut_date_time = as.POSIXct('2019/07/15 00:00', tz = "UTC")
+```
+
+
+```{r}
+dtrain <- tides[tides$dt<cut_date_time, , drop = FALSE]
+dtest <- tides[tides$dt>=cut_date_time, , drop = FALSE]
+```
+
+```{r}
+wcount = 1440/6
+print(wcount)
+model <- auto.arima(dtrain$tide_feet,
+                    max.p = wcount,
+                    max.q = wcount,
+                    max.P = wcount,
+                    max.Q = wcount,
+                    max.d = wcount,
+                    max.D = wcount,
+                    stepwise = TRUE,
+                    nmodels = 16*wcount,
+                    max.order = 4*wcount,
+                    approximation = TRUE,
+                    parallel = TRUE,
+                    num.cores = 4)
+print(model)
+pred <- forecast(model, h = nrow(dtest))
+plot(pred)
+
+dtrain$pred <- pred$mean[1:nrow(dtrain)]
+dtest$pred <- pred$mean[nrow(dtrain) + (1:nrow(dtest))]
+```
+
+The above is, unfortunately, pretty typical for ARIMA methods.  From the [package help](https://www.rdocumentation.org/packages/forecast/versions/8.7/topics/auto.arima):
+
+```{r}
+fit <- auto.arima(WWWusage)
+plot(forecast(fit,h=20))
+```
+
