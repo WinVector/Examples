@@ -3,3 +3,5 @@ https://pypi.org/project/tidetable/
 https://cran.r-project.org/web/packages/TideHarmonics/vignettes/austides.pdf
 https://cran.r-project.org/web/packages/TideHarmonics/index.html
 https://medium.com/@josemarcialportilla/using-python-and-auto-arima-to-forecast-seasonal-time-series-90877adff03c
+https://github.com/sam-cox/pytides
+https://tidesandcurrents.noaa.gov/harcon.html?unit=0&timezone=0&id=8516945&name=Kings+Point&state=NY
