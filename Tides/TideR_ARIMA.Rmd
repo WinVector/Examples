@@ -49,10 +49,11 @@ dtrain$pred <- pred$mean[1:nrow(dtrain)]
 dtest$pred <- pred$mean[nrow(dtrain) + (1:nrow(dtest))]
 ```
 
-The above is, unfortunately, pretty typical for ARIMA methods.  From the [package help](https://www.rdocumentation.org/packages/forecast/versions/8.7/topics/auto.arima):
+The above is, unfortunately, pretty typical for uncontrolled ARIMA methods.  From the [package help](https://www.rdocumentation.org/packages/forecast/versions/8.7/topics/auto.arima):
 
 ```{r}
 fit <- auto.arima(WWWusage)
 plot(forecast(fit,h=20))
 ```
 
+A better approach can be found [here]((https://htmlpreview.github.io/?https://github.com/OVVO-Financial/NNS/blob/NNS-Beta-Version/examples/tides.html).
