@@ -3,21 +3,25 @@ Tides\_ARIMA.Rmd
 
 ``` r
 library(wrapr)
-```
-
-    ## Warning: package 'wrapr' was built under R version 3.5.2
-
-``` r
 library(forecast)
 ```
 
-    ## Warning: package 'forecast' was built under R version 3.5.2
+    ## Registered S3 method overwritten by 'xts':
+    ##   method     from
+    ##   as.zoo.xts zoo
+
+    ## Registered S3 method overwritten by 'quantmod':
+    ##   method            from
+    ##   as.zoo.data.frame zoo
+
+    ## Registered S3 methods overwritten by 'forecast':
+    ##   method             from    
+    ##   fitted.fracdiff    fracdiff
+    ##   residuals.fracdiff fracdiff
 
 ``` r
 library(ggplot2)
 ```
-
-    ## Warning: package 'ggplot2' was built under R version 3.5.2
 
 ``` r
 tides <- readRDS('tides.RDS')
@@ -93,8 +97,9 @@ dtrain$pred <- pred$mean[1:nrow(dtrain)]
 dtest$pred <- pred$mean[nrow(dtrain) + (1:nrow(dtest))]
 ```
 
-
-The above is, unfortunately, pretty typical for uncontrolled ARIMA methods.  From the [package help](https://www.rdocumentation.org/packages/forecast/versions/8.7/topics/auto.arima):
+The above is, unfortunately, pretty typical for uncontrolled ARIMA
+methods. From the [package
+help](https://www.rdocumentation.org/packages/forecast/versions/8.7/topics/auto.arima):
 
 ``` r
 fit <- auto.arima(WWWusage)
@@ -103,6 +108,5 @@ plot(forecast(fit,h=20))
 
 ![](TideR_ARIMA_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-
-
-A better approach can be found [here]((https://htmlpreview.github.io/?https://github.com/OVVO-Financial/NNS/blob/NNS-Beta-Version/examples/tides.html).
+A better approach can be found
+\[here\]((<https://htmlpreview.github.io/?https://github.com/OVVO-Financial/NNS/blob/NNS-Beta-Version/examples/tides.html>).
