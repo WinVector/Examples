@@ -1,0 +1,88 @@
+---
+title: "NNS solution 2"
+output: github_document
+---
+
+Variation on [Fred Viole's excellent NNS solution](https://htmlpreview.github.io/?https://github.com/OVVO-Financial/NNS/blob/NNS-Beta-Version/examples/tides.html).
+
+```{r}
+library(ggplot2)
+library(NNS)  # CRAN version August 8, 2019
+packageVersion('NNS')
+```
+
+```{r}
+tides <- readRDS('tides.RDS')
+
+base_date_time =  as.POSIXct('2001/01/01 00:00', tz = "UTC")
+first_date_time =  as.POSIXct('2019/06/01 00:00', tz = "UTC")
+cut_date_time = as.POSIXct('2019/07/15 00:00', tz = "UTC")
+
+dtrain <- tides[tides$dt<cut_date_time, , drop = FALSE]
+dtest <- tides[tides$dt>=cut_date_time, , drop = FALSE]
+
+training_length <- dim(dtrain)[1] - dim(dtest)[1]
+```
+
+```{r}
+nns_periods <- NNS.seas(dtrain$tide_feet)
+```
+
+```{r}
+nns_periods <- nns_periods$all.periods$Period
+nns_periods_seconds <- (nns_periods * (6*60))
+take_period <- nns_periods_seconds<86400*120
+nns_periods_seconds <- nns_periods_seconds[take_period]
+nns_periods_seconds <- nns_periods_seconds[1:100]
+
+ggplot(data.frame(nns_periods_days = nns_periods_seconds/86400), 
+       aes(x=nns_periods_days)) + 
+  geom_density(adjust = 0.25)
+
+head(nns_periods_seconds)
+length(nns_periods_seconds)
+```
+
+```{r}
+nns_periods_constrained <- nns_periods[take_period]
+
+
+arma_parameters <- NNS.ARMA.optim(variable = dtrain$tide_feet,
+                                  training.set = training_length,
+                                  seasonal.factor = nns_periods_constrained[1:100])
+```
+
+
+```{r}
+nns_estimates <- NNS.ARMA(dtrain$tide_feet, 
+                          h = dim(dtest)[1], 
+                          method = arma_parameters$method,
+                          seasonal.factor = arma_parameters$periods, 
+                          weights = arma_parameters$weights,
+                          negative.values = TRUE,
+                          seasonal.plot = FALSE)
+```
+
+```{r}
+r_squared <- function(est, y) {
+  1- sum((y-est)^2)/sum((y-mean(y))^2)
+}
+
+r_squared(nns_estimates, dtest$tide_feet)
+```
+
+```{r}
+dtest$nns_estimates <- nns_estimates
+sigr::wrapFTest(dtest, 
+                predictionColumnName = 'nns_estimates',
+                yColumnName = 'tide_feet')
+```
+
+
+```{r}
+ggplot(aes(x=dt), data=dtest) +
+  geom_line(aes(y=tide_feet), color='blue', alpha=0.5) + 
+  geom_line(aes(y=nns_estimates), color='black', alpha=0.5) +
+  ggtitle("prediction (blue) superimposed on actuals on test")
+```
+
