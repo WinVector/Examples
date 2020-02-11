@@ -9,3 +9,4 @@
 .ipynb_checkpoints
 log4j.spark.log*
 derby.log
+.Rproj
