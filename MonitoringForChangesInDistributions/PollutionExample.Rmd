@@ -101,7 +101,7 @@ comparison_stats(dframe,
     print(.)
 ```
 
-Now we can use the KS test to check if the distribution has changed from 2010 to 2011. As in the blog article, we will use a p-value threshold of 0.005, and call `Matching::ks.boot()` with 1000 iterations. Since `ks.boot()` also returns the results of the closed form test (`ks.test()`), we can also return those results, as well.
+Now we can use the KS test to check if the distribution has changed from 2010 to 2011. As in the blog article, we will use a p-value threshold of 0.002, and call `Matching::ks.boot()` with 1000 iterations. Since `ks.boot()` also returns the results of the closed form test (`ks.test()`), we can also return those results, as well.
 
 ```{r echo=TRUE, results='asis'}
 library(Matching)

@@ -34,7 +34,7 @@ We can also compare the summary statistics:
 | 2011             |   99.071340|  92.9672978|   71.00000|  112|
 | % diff from 2010 |   -4.780965|   0.7435018|  -10.12658|    0|
 
-Now we can use the KS test to check if the distribution has changed from 2010 to 2011. As in the blog article, we will use a p-value threshold of 0.005, and call `Matching::ks.boot()` with 1000 iterations. Since `ks.boot()` also returns the results of the closed form test (`ks.test()`), we can also return those results, as well.
+Now we can use the KS test to check if the distribution has changed from 2010 to 2011. As in the blog article, we will use a p-value threshold of 0.002, and call `Matching::ks.boot()` with 1000 iterations. Since `ks.boot()` also returns the results of the closed form test (`ks.test()`), we can also return those results, as well.
 
 ``` r
 library(Matching)
