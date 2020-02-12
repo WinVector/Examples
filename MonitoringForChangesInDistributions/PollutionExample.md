@@ -3,7 +3,7 @@ Pollution Example
 Nina Zumel
 1/29/2020
 
-This is an extended example to accompany the Win-Vector blog article *Monitoring for Changes in Distribution with Resampling Tests* \[LINK\]. In this example, we want to check whether overall yearly distribution of pollution readings in a certain locale changes from year to year.
+This is an extended example to accompany the Win-Vector blog article [*Monitoring for Changes in Distribution with Resampling Tests*](http://www.win-vector.com/blog/2020/02/monitoring-for-changes-in-distribution-with-resampling-tests/). In this example, we want to check whether overall yearly distribution of pollution readings in a certain locale changes from year to year.
 
 Pollution data set
 ------------------
