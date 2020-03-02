@@ -16,6 +16,7 @@ import numpy
 import sklearn
 import sklearn.model_selection
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.model_selection import cross_val_predict
 
 sklearn.__version__
 ```
@@ -61,91 +62,91 @@ d
     <tr>
       <th>0</th>
       <td>a</td>
-      <td>0.231771</td>
+      <td>-0.090306</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>a</td>
-      <td>-0.643458</td>
+      <td>-0.062128</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>a</td>
-      <td>-0.814504</td>
+      <td>0.530181</td>
       <td>2</td>
     </tr>
     <tr>
       <th>3</th>
       <td>a</td>
-      <td>-1.346967</td>
+      <td>-0.769375</td>
       <td>3</td>
     </tr>
     <tr>
       <th>4</th>
       <td>a</td>
-      <td>2.123949</td>
+      <td>-2.082851</td>
       <td>4</td>
     </tr>
     <tr>
       <th>5</th>
       <td>a</td>
-      <td>-1.543649</td>
+      <td>0.703230</td>
       <td>5</td>
     </tr>
     <tr>
       <th>6</th>
       <td>a</td>
-      <td>0.427300</td>
+      <td>0.404206</td>
       <td>6</td>
     </tr>
     <tr>
       <th>7</th>
       <td>a</td>
-      <td>0.376089</td>
+      <td>-0.648879</td>
       <td>7</td>
     </tr>
     <tr>
       <th>8</th>
       <td>a</td>
-      <td>0.562063</td>
+      <td>0.149515</td>
       <td>8</td>
     </tr>
     <tr>
       <th>9</th>
       <td>a</td>
-      <td>0.503133</td>
+      <td>-0.697519</td>
       <td>9</td>
     </tr>
     <tr>
       <th>10</th>
       <td>a</td>
-      <td>-0.693433</td>
+      <td>-0.177883</td>
       <td>10</td>
     </tr>
     <tr>
       <th>11</th>
       <td>a</td>
-      <td>1.035914</td>
+      <td>0.809709</td>
       <td>11</td>
     </tr>
     <tr>
       <th>12</th>
       <td>a</td>
-      <td>1.054931</td>
+      <td>0.956048</td>
       <td>12</td>
     </tr>
     <tr>
       <th>13</th>
       <td>a</td>
-      <td>-0.193353</td>
+      <td>0.621239</td>
       <td>13</td>
     </tr>
     <tr>
       <th>14</th>
       <td>a</td>
-      <td>-0.145543</td>
+      <td>-0.579699</td>
       <td>14</td>
     </tr>
   </tbody>
@@ -158,7 +159,8 @@ We now use `sklearn.model_selection.cross_val_predict` to land some derived colu
 
 
 ```python
-class CopyYMeanTransform(BaseEstimator, TransformerMixin):
+class CopyYMeanTransform(BaseEstimator, 
+                         TransformerMixin):
     def __init__(self):
         self.est = 0
         BaseEstimator.__init__(self)
@@ -181,16 +183,87 @@ class CopyYMeanTransform(BaseEstimator, TransformerMixin):
     def fit_predict(self, X, y):
         return self.fit_transform(X, y)
 
-ests = sklearn.model_selection.cross_val_predict(CopyYMeanTransform(), d, y, cv=cv)
+ests1 = cross_val_predict(CopyYMeanTransform(), d, y, cv=cv)
 
-ests
+pandas.DataFrame({'ests': ests1})
 ```
 
 
 
 
-    array([3273.6, 3273.6, 3273.6, 3273.6, 3273.6, 3177.5, 3177.5, 3177.5,
-           3177.5, 3177.5,  102.3,  102.3,  102.3,  102.3,  102.3])
+<div>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ests</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3273.6</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>3273.6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3273.6</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3273.6</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>3273.6</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>3177.5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>3177.5</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>3177.5</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>3177.5</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>3177.5</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>102.3</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>102.3</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>102.3</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>102.3</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>102.3</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 
 
@@ -203,27 +276,88 @@ Let's re-encode the output to see what is going on.  We deliberately chose the `
 
 
 ```python
-[format(int(v*(nrow-nrow/cv)), '#0' + str(nrow+2) + 'b') for v in ests]
+pandas.DataFrame({
+    'blocks': 
+    [format(int(v*(nrow-nrow/cv)), '#0' + str(nrow+2) + 'b') for v in ests1]
+})
 ```
 
 
 
 
-    ['0b111111111100000',
-     '0b111111111100000',
-     '0b111111111100000',
-     '0b111111111100000',
-     '0b111111111100000',
-     '0b111110000011111',
-     '0b111110000011111',
-     '0b111110000011111',
-     '0b111110000011111',
-     '0b111110000011111',
-     '0b000001111111111',
-     '0b000001111111111',
-     '0b000001111111111',
-     '0b000001111111111',
-     '0b000001111111111']
+<div>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>blocks</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0b111111111100000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0b111111111100000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0b111111111100000</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0b111111111100000</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0b111111111100000</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0b111110000011111</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0b111110000011111</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0b111110000011111</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0b111110000011111</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0b111110000011111</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0b000001111111111</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>0b000001111111111</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>0b000001111111111</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>0b000001111111111</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>0b000001111111111</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 
 
@@ -238,29 +372,90 @@ The solution is, as documented, avoid the default by explicitly setting the cros
 
 ```python
 cvstrat = sklearn.model_selection.KFold(shuffle=True, n_splits=3)
-ests = sklearn.model_selection.cross_val_predict(CopyYMeanTransform(), d, y, cv=cvstrat)
+ests2 = sklearn.model_selection.cross_val_predict(CopyYMeanTransform(), d, y, cv=cvstrat)
 
-[format(int(v*(nrow-nrow/cv)), '#0' + str(nrow+2) + 'b') for v in ests]
+pandas.DataFrame({
+    'ests2': 
+    [format(int(v*(nrow-nrow/cv)), '#0' + str(nrow+2) + 'b') for v in ests2]
+})
 ```
 
 
 
 
-    ['0b111111101110000',
-     '0b111111101110000',
-     '0b111111101110000',
-     '0b111111101110000',
-     '0b111010010101111',
-     '0b000101111011111',
-     '0b111010010101111',
-     '0b111111101110000',
-     '0b111010010101111',
-     '0b111010010101111',
-     '0b000101111011111',
-     '0b111010010101111',
-     '0b000101111011111',
-     '0b000101111011111',
-     '0b000101111011111']
+<div>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>ests2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0b111101010110110</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0b110111111001001</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0b110111111001001</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0b111101010110110</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0b110111111001001</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>0b110111111001001</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>0b111101010110110</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0b001010101111111</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>0b111101010110110</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>0b001010101111111</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>0b111101010110110</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>0b001010101111111</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>0b110111111001001</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>0b001010101111111</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>0b001010101111111</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 
 
@@ -291,27 +486,120 @@ class CopyXTransform(BaseEstimator, TransformerMixin):
     def fit_predict(self, X, y):
         return self.fit_transform(X, y)
 
-sklearn.model_selection.cross_val_predict(CopyXTransform(), d, y, cv=cvstrat)
+preds = sklearn.model_selection.cross_val_predict(
+    CopyXTransform(), d, y, cv=cvstrat)
+
+pandas.DataFrame(preds)
 ```
 
 
 
 
-    array([['a', 0.2317708416646105, 0],
-           ['a', -0.6434576761630608, 1],
-           ['a', -0.8145042224405192, 2],
-           ['a', -1.346967064864293, 3],
-           ['a', 2.1239493751828085, 4],
-           ['a', -1.543648551466407, 5],
-           ['a', 0.42730030589837925, 6],
-           ['a', 0.37608917089238997, 7],
-           ['a', 0.5620629364384716, 8],
-           ['a', 0.5031329594694133, 9],
-           ['a', -0.6934327743260298, 10],
-           ['a', 1.0359136201260202, 11],
-           ['a', 1.0549306824041969, 12],
-           ['a', -0.19335275803764576, 13],
-           ['a', -0.14554310090071113, 14]], dtype=object)
+<div>
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>a</td>
+      <td>-0.0903059</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>a</td>
+      <td>-0.0621276</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>a</td>
+      <td>0.530181</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>a</td>
+      <td>-0.769375</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>a</td>
+      <td>-2.08285</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>a</td>
+      <td>0.70323</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>a</td>
+      <td>0.404206</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>a</td>
+      <td>-0.648879</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>a</td>
+      <td>0.149515</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>a</td>
+      <td>-0.697519</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>a</td>
+      <td>-0.177883</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>a</td>
+      <td>0.809709</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>a</td>
+      <td>0.956048</td>
+      <td>12</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>a</td>
+      <td>0.621239</td>
+      <td>13</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>a</td>
+      <td>-0.579699</td>
+      <td>14</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 
 
 
