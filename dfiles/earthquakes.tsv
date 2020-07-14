@@ -1,0 +1,255 @@
+I_D	FLAG_TSUNAMI	YEAR	MONTH	DAY	HOUR	MINUTE	SECOND	FOCAL_DEPTH	EQ_PRIMARY	EQ_MAG_MW	EQ_MAG_MS	EQ_MAG_MB	EQ_MAG_ML	EQ_MAG_MFA	EQ_MAG_UNK	INTENSITY	COUNTRY	STATE	LOCATION_NAME	LATITUDE	LONGITUDE	REGION_CODE	DEATHS	DEATHS_DESCRIPTION	MISSING	MISSING_DESCRIPTION	INJURIES	INJURIES_DESCRIPTION	DAMAGE_MILLIONS_DOLLARS	DAMAGE_DESCRIPTION	HOUSES_DESTROYED	HOUSES_DESTROYED_DESCRIPTION	HOUSES_DAMAGED	HOUSES_DAMAGED_DESCRIPTION	TOTAL_DEATHS	TOTAL_DEATHS_DESCRIPTION	TOTAL_MISSING	TOTAL_MISSING_DESCRIPTION	TOTAL_INJURIES	TOTAL_INJURIES_DESCRIPTION	TOTAL_DAMAGE_MILLIONS_DOLLARS	TOTAL_DAMAGE_DESCRIPTION	TOTAL_HOUSES_DESTROYED	TOTAL_HOUSES_DESTROYED_DESCRIPTION	TOTAL_HOUSES_DAMAGED	TOTAL_HOUSES_DAMAGED_DESCRIPTION
+6697	Tsu	1500															USA	HI	HAWAII			150														2										
+6013	Tsu	1668	4	13												4	USA	MA	BOSTON AND SALEM, MASSACHUSETTS	  42.350	  -71.050	150																								
+9954	Tsu	1700	1	27	5	0			 9.0		 9.0						USA	OR	CASCADIA SUBDUCTION ZONE	  45.000	 -125.000	150														1						3				
+5828	Tsu	1755	11	18	9	11	 35.0		 7.0				7			8	USA	MA	MASSACHUSETTS:  EAST OF CAPE ANN	  42.700	  -70.300	150								2																
+5926	Tsu	1788	7	21					 8.0		 8.0					7	USA	AK	ALASKA PENINSULA: UNGA ISLAND	  57.000	 -153.000	150														3						1		1		
+5927	Tsu	1788	8	6					 8.0		 8.0						USA	AK	ALASKA PENINSULA	  55.000	 -161.000	150														3										
+7057	Tsu	1792														7	USA	AK	ALASKA:  KODIAK ISLAND	  57.000	 -152.000	150								1												1				
+5857	Tsu	1806	3	25	8											6	USA	CA	CALIFORNIA:  SANTA BARBARA	  34.400	 -119.700	150								1												1				
+1594	Tsu	1811	12	16	8	15			 8.5		 8.5			7.2		11	USA	AR	ARKANSAS: NORTHEAST (NEW MADRID EARTHQUAKES)	  35.600	  -90.400	150		1						3						1						3				
+7058	Tsu	1811	12	16	14	15			 8.0		 8.0			7		10	USA	AR	ARKANSAS: NORTHEAST (NEW MADRID EARTHQUAKES)	  35.600	  -90.400	150																								
+1597	Tsu	1812	1	23	15		    		 8.4		 8.4			7.1		10	USA	MO	MISSOURI:  NEW MADRID	  36.300	  -89.600	150								3																
+1598	Tsu	1812	2	7	9	45	    		 8.8		 8.8			7.4			USA	MO	MISSOURI:  NEW MADRID	  36.500	  -89.600	150								3																
+1609		1812	12	8	15				 6.9				6.9			8	USA	CA	CALIFORNIA:   SAN JUAN CAPISTRANO	  34.370	 -117.650	150	      40	1						2				1	      40	1						2				1
+1610	Tsu	1812	12	21	19				 7.5		 7.5		7.1		 7.7	8	USA	CA	CALIFORNIA:   PURISIMA	  34.200	 -119.900	150	       1	1				1		2			100	1	       1	1				1		2		1	100	1
+6635	Tsu	1817	1	8													USA	PA	PENNSYLVANIA:  PHILADELPHIA	  39.950	  -75.100	150																								
+6650	Tsu	1820	3	1													USA	AK	ALASKA:  EAST ALEUTIAN ISLANDS	  54.520	 -164.650	150																								
+6636	Tsu	1823	5	30													USA	NY	LAKE ERIE (GREAT LAKES)	  42.700	  -79.000	150																								
+1789		1836	6	10	15	30	    									10	USA	CA	CALIFORNIA	  38.000	 -122.000	150																								
+1808		1838	6						 7.0				7			8	USA	CA	CALIFORNIA:  SAN FRANCISCO,SAN JOSE,SANTA CLARA	  37.600	 -122.400	150								1												1				
+6076	Tsu	1839	3														USA	HI	HAWAII			150																								
+6514	Tsu	1840	11	11					 5.2				5.2				USA	PA	PENNSYLVANIA:  PHILADELPHIA	  39.800	  -75.200	150																								
+6064	Tsu	1851	5	15	16	10	    									6	USA	CA	CALIFORNIA:  NORTHERN	  37.800	 -122.400	150																								
+6065	Tsu	1851	11	13	2	51	    										USA	CA	CALIFORNIA:  NORTHERN	  40.000	 -122.000	150																								
+6067	Tsu	1852	11	25	7	9	    										USA	CA	CALIFORNIA:  NORTHERN			150																								
+1938		1853	2	1	21		    									8	USA	CA	CALIFORNIA:  SAN SIMEON	  35.500	 -121.000	150								2																
+6116	Tsu	1854	1	27	18	10	    									5	USA	AK	ALASKA:  GULF OF ALASKA	  57.000	 -152.000	150																								
+6117	Tsu	1854	5	31	12	59											USA	CA	CALIFORNIA:  SOUTHERN	  34.400	 -119.700	150																								
+6120	Tsu	1854	10	22	3	35											USA	CA	CALIFORNIA:  NORTHERN	  37.800	 -122.400	150																								
+6121	Tsu	1855	3	20	0	30	    									5	USA	CA	CALIFORNIA:  NORTHERN	  40.750	 -124.200	150																								
+1984	Tsu	1855	7	11	4	15			 6.0				6			8	USA	CA	CALIFORNIA:  LOS ANGELES	  34.100	 -118.100	150								2	1	1	26	1								2	1	1	26	1
+10017	Tsu	1855	10	22	3	45											USA	CA	CALIFORNIA:  SAN FRANCISCO	  37.800	 -122.400	150																								
+6977	Tsu	1856	2	15	13	25			 5.5				5.5			7	USA	CA	CALIFORNIA:  NORTHERN	  37.500	 -122.300	150																				1				
+2007		1857	1	9	10	13	    		 8.3						 8.3	7	USA	CA	CALIFORNIA:  SAN FRANCISCO	  35.000	 -119.000	150								3																
+2031		1858	11	26	8	35	    									9	USA	CA	CALIFORNIA:  SAN JOSE,SAN FRANCISCO	  37.500	 -122.000	150								3																
+6135	Tsu	1859	9	24			    										USA	CA	CALIFORNIA:  HALF MOON BAY	  37.600	 -122.300	150																								
+2051		1861	7	4	0	11	    									11	USA	CA	CALIFORNIA:  CONTRA COSTA,ALAMEDA COUNTIES	  37.500	 -122.000	150								3																
+6978	Tsu	1862	5	27					 5.9				5.9			7	USA	CA	CALIFORNIA:  SAN DIEGO	  32.700	 -117.200	150																								
+2093		1865	3	7	14		    									8	USA	CA	CALIFORNIA:  SONOMA COUNTY:  E CENTRAL	  38.500	 -122.500	150								2																
+2098		1865	10	1	17	15	    									9	USA	CA	CALIFORNIA:  FORT HUMBOLDT, EUREKA	  41.000	 -124.500	150								2																
+2099	Tsu	1865	10	8	20	46			 6.3				6.3			8	USA	CA	CALIFORNIA:  SANTA CRUZ	  37.200	 -121.900	150							        .500	1		2									        .500	1		2		
+6565	Tsu	1866	9	5	13	0	    										USA	AK	ALASKA:  KODIAK ISLAND, AK	  58.000	 -152.000	150																								
+2125	Tsu	1868	4	3	2	24			 7.9					7.9		10	USA	HI	HAWAII:  SE OF	  19.000	 -155.500	150	      31	1						1	46	1			      77	2						2		3		
+6156	Tsu	1868	5	15			    										USA	AK	ALASKA PENINSULA	  55.000	 -161.000	150																								
+2148	Tsu	1868	10	21	15	53	    		 6.8				6.8			9	USA	CA	CALIFORNIA:  HAYWARD,SAN FRANCISCO	  37.700	 -122.100	150	      30	1					        .350	1		2			      30	1					        .350	1		3		
+10019	Tsu	1869	2	10	11	50											USA	CA	CALIFORNIA:  SAN FRANCISCO	  37.783	 -122.417	150																								
+10020	Tsu	1869	2	13	11	30											USA	CA	CALIFORNIA:  SAN FRANCISCO	  37.783	 -122.417	150																								
+6937	Tsu	1871	2	20	8	41			 7.0		 7.0						USA	HI	HAWAIIAN ISLANDS	  20.700	 -157.000	150								2				2								2				2
+2180		1871	3	2	21	5			 5.9				5.9			7	USA	CA	CALIFORNIA:  HUMBOLDT COUNTY	  40.400	 -124.200	150								1												1				
+6515	Tsu	1871	6	18	0	0	    										USA	NY	NEW YORK:  LONG ISLAND	  40.500	  -73.900	150																								
+2195	Tsu	1872	3	26	10	30			 7.8	 7.8			7.3			10	USA	CA	CALIFORNIA:  OWENS VALLEY	  36.700	 -118.100	150	      27	1			        56	2	        .250	1	52	2			      27	1			56	2	        .250	1	52	2		
+6176	Tsu	1872	8	23	18	6											USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  52.200	 -168.500	150																								
+6177		1872	11	18			    										USA	NH	NEW HAMPSHIRE: CONCORD	  43.200	  -71.530	150																								
+6179	Tsu	1873	11	23	5	9			 6.7				6.7			8	USA	CA	CALIFORNIA:  NORTHERN	  42.000	 -124.000	150								1												1				
+10023	Tsu	1877	2	24													USA	HI	HAWAII			150																								
+6306	Tsu	1878	1	20													USA	AK	ALASKA:  ALEUTIAN ISLANDS			150																								
+6198	Tsu	1878	8	29			    										USA	AK	ALASKA:  EAST ALEUTIAN ISLANDS	  53.600	 -166.400	150																								
+8118	Tsu	1879	8	10	21	7											USA	CA	CALIFORNIA:  SAN FERNANDO	  34.227	 -118.433	150																								
+6199	Tsu	1880	9	29	4	0	    										USA	AK	ALASKA PENINSULA	  55.800	 -155.600	150																								
+6200	Tsu	1880	10	26	22	20	    		 7.0		 7.0						USA	AK	ALASKA:  SOUTHEASTERN	  57.000	 -136.000	150																								
+6516	Tsu	1884	8	10	19	7			 5.5					5.5		7	USA	NY	NEW YORK: ROCKAWAY BEACH, NEAR NEW YORK CITY	  40.600	  -73.750	150																								
+7037	Tsu	1884	12	21													USA	CT	CONNECTICUT: NEW HAVEN	  41.310	  -72.920	150																								
+2362	Tsu	1886	9	1	2	51	    		 7.7	 7.7						9	USA	SC	SOUTH CAROLINA:  CHARLESTON	  32.900	  -80.000	150	      60	2					       5.000	2					      60	2					       6.000	3				
+6980	Tsu	1891	11	29	23	21										6	USA	WA	WASHINGTON:  PUGET SOUND	  48.000	 -123.500	150																								
+2416		1892	4	19	10	50	    									9	USA	CA	CALIFORNIA:  VACAVILLE,WINTERS	  38.500	 -122.500	150							        .250	1																
+2418		1892	4	21	17	43			 6.2				6.2			9	USA	CA	CALIFORNIA:  WINTERS	  38.500	 -121.900	150								2												2				
+6637	Tsu	1895	9	1	11	9			 4.3					4.3		6	USA	NY	NEW JERSEY: HIGH BRIDGE	  40.667	  -74.883	150																								
+6532	Tsu	1895	10	31	11	8											USA	MO	MISSOURI:  CHARLESTON	  37.000	  -89.400	150																								
+2532	Tsu	1898	3	31	7	43			 6.5		 6.5		6.2			8	USA	CA	CALIFORNIA:  SONOMA COUNTY	  38.200	 -122.400	150								2												2				
+2533		1898	4	14			    									10	USA	CA	CALIFORNIA:  N COAST,MENDOCINO COUNTY	  39.000	 -124.000	150								1																
+2540		1898	6	29	18	36	    		 7.6						 7.6		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  NEAR ISLANDS	  52.000	  172.000	150																								
+2553	Tsu	1899	9	4	0	22		25	 8.2		 8.2					11	USA	AK	ALASKA:  CAPE YAKATAGA	  60.000	 -142.000	150								1												1				
+2554		1899	9	10	17	4		25	 7.8		 7.8					7	USA	AK	ALASKA:  CAPE YAKATAGA	  60.000	 -140.000	150																								
+2557	Tsu	1899	9	10	21	41		60	 8.2	 8.2	 8.6					11	USA	AK	ALASKA:  SE ALASKA	  60.000	 -140.000	150								1												3				
+2564	Tsu	1899	12	25	12	25			 6.4		 6.4		6.6			9	USA	CA	CALIFORNIA	  33.500	 -117.000	150	       6	1			         8	1		2																
+6231	Tsu	1900	8	11	4	40	    										USA	AK	ALASKA:  SE. ALASKA	  58.600	 -137.500	150													       5	1										
+2580		1900	10	9	12	25			 8.3		 8.3					8	USA	AK	ALASKA:  KODIAK ISLAND	  57.090	 -153.480	150								1												1				
+7018	Tsu	1901	3	3	7	45			 6.4				6.4			8	USA	CA	CALIFORNIA:  SAN DIEGO	  36.000	 -120.500	150								1												1				
+2603	Tsu	1901	12	31	9	2	 30.0		 7.8		 7.8				 7.8		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  51.450	 -171.020	150								1																
+2606		1902	1	1	5	20	    		 7.8						 7.8		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  52.400	 -167.500	150																								
+2619		1902	4	29	6	57	    									7	USA	CA	CALIFORNIA:  SOUTHERN	  34.500	 -120.500	150								2																
+2656	Tsu	1903	6	2	13	17			 8.3		 8.3						USA	AK	ALASKA:  SOUTHWEST	  61.560	 -158.540	150																								
+2690		1904	8	27	21	56			 8.3		 8.3	 7.8				6	USA	AK	ALASKA:  RAMPART	  64.660	 -148.080	150																								
+2703		1905	2	14	8	46			 7.9		 7.9	 7.5					USA	AK	ALASKA:  ANDREANOF ISLANDS	  50.730	 -178.550	150																								
+2768	Tsu	1906	4	18	13	12	 21.0	20	 7.9	 7.9	 7.8				 8.3	11	USA	CA	CALIFORNIA:  SAN FRANCISCO	  37.670	 -122.480	150	     700	3					     400.000	4	28188	4														
+2777		1906	8	17	0	10	 42.0	25	 7.8		 7.8				 8.3		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  RAT ISLANDS	  51.050	  179.690	150																								
+2796		1906	12	23	17	22			 7.6						 7.6		USA	AK	ALASKA:  ALEUTIAN ISLANDS	  56.850	 -153.900	150																								
+2816		1907	9	2	16	1			 7.8		 7.8	 7.3					USA	AK	ALASKA:  ALEUTIAN ISLANDS	  52.590	 -169.730	150																								
+8053	Tsu	1907	9	24	12	59			 5.5		 5.5					5	USA	AK	ALASKA:  SKAGWAY	  59.500	 -135.500	150																								
+6251	Tsu	1908	2	14	11	25			 6.0		 6.0						USA	AK	ALASKA:  GULF OF ALASKA	  61.000	 -146.200	150																								
+6252	Tsu	1908	9	21	6	31		33	 6.8		 6.8						USA	HI	HAWAII	  19.000	 -155.000	150																								
+2860		1909	4	10	19	36			 7.8		 7.8						USA	AK	ALASKA:  ALEUTIAN ISLANDS	  52.000	  175.000	150																								
+10027		1911	9	22	5	1	 24.0	60	 6.9		 6.9					8	USA	AK	ALASKA:  PRINCE WILLIAM SOUND	  60.500	 -149.000	150																				1				
+2964		1912	11	7	7	40	    	90	 7.5						 7.5	5	USA	AK	ALASKA:  ALASKA PENINSULA	  57.500	 -155.000	150																								
+3033		1915	6	23	4	56	    		 6.2						 6.2		USA	CA	CALIFORNIA:  EL CENTRO	  32.800	 -115.500	150	       6	1					        .900	1																
+3038		1915	10	3	6	52	 48.0		 7.6		 7.6	 7.3			 7.7	10	USA	NV	NEVADA:  PLEASANT VALLEY	  40.500	 -117.500	150								1												1				
+3051		1916	2	6	21	51	    	60	 7.7						 7.7		USA	AK	ALASKA:  ALEUTIAN ISLANDS	  48.500	  178.500	150																								
+3053		1916	4	18	4	1	    	170	 7.5						 7.5		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  53.300	 -170.000	150																								
+3083		1917	5	31	8	47			 7.9		 7.9					5	USA	AK	ALASKA:  ALASKA PENINSULA	  54.790	 -169.120	150																								
+3111		1918	4	21	22	32	    		 6.8						 6.8		USA	CA	CALIFORNIA	  33.700	 -117.000	150							        .200	1																
+3189		1922	1	31	13	17	    		 7.6						 7.6		USA	CA	CALIFORNIA:  NORTHERN	  41.000	 -125.500	150								1																
+6280	Tsu	1923	1	22	9	4	 18.0		 7.2		 7.2		6.5			8	USA	CA	CALIFORNIA:  NORTHERN	  40.800	 -124.500	150								1												1				
+6295	Tsu	1925	2	23	23	54	    		 6.8		 6.8						USA	AK	ALASKA:  GULF OF ALASKA	  60.000	 -146.000	150																								
+9672		1925	6	28	1	21	  5.0	25	 6.7		 6.7					8	USA		MONTANA:  CLARKSTON VALLEY	  46.400	 -111.240	150							        .150	1				2							        .150	1				2
+3270		1925	6	29	14	42	 26.2	10	 6.8	 6.8	 6.3					9	USA	CA	CALIFORNIA:  SANTA BARBARA	  34.418	 -120.196	150	      13	1					       8.000	3		3			      13	1					       8.000	3		3		
+6298	Tsu	1926	3	20	9	3	    										USA	HI	HAWAII	  20.500	 -155.500	150																								
+3305	Tsu	1927	1	1	8	16	    		 5.8						 5.8		USA	CA	CALIFORNIA, MEXICO	  32.500	 -115.500	150						1	       1.000	2		1	20	1	       1	1				1	       3.000	2		1	20	1
+7442	Tsu	1927	10	24	15	59	 44.8	0	 7.1		 7.1	 7.1				7	USA	AK	ALASKA:  SE ALASKA	  57.690	 -136.070	150								1																
+3335	Tsu	1927	11	4	13	50	 43.0	10	 7.3	 7.3	 7.1	 7.3				8	USA	CA	CALIFORNIA:  S:  OFF COAST	  34.813	 -120.774	150								2												2				
+3389	Tsu	1929	3	7	1	34	    	50	 7.8	 7.8	 7.5	 7.9			 8.6	5	USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  51.000	 -170.000	150																								
+6518	Tsu	1929	8	12	11	24	    										USA	NY	NEW YORK:  ATTICA	  42.900	  -78.300	150																								
+3404		1929	12	17	10	58	    	25	 7.8						 7.8		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  NEAR ISLANDS	  52.500	  171.500	150																								
+6619	Tsu	1930	8	31	0	40	 38.0	15	 5.2		 5.2					7	USA	CA	CALIFORNIA:  SOUTHERN	  34.030	 -118.643	150								1					       1	1						1				
+6639	Tsu	1932	11	10													USA	NY	NEW YORK:  WILLETTS POINT			150																								
+3505		1932	12	20			    		 7.2						 7.2	12	USA	NV	NEVADA:  CEDAR MOUNTAIN	  38.700	 -117.800	150																								
+3516	Tsu	1933	3	11	1	54	  7.8	16	 6.3				6.3			9	USA	CA	CALIFORNIA:  LONG BEACH	  33.620	 -117.970	150	     120	3					      40.000	4																
+3539		1934	12	31			    		 7.1						 7.1	10	USA	CA	CALIFORNIA:  BAJA,IMPERIAL VALLEY	  31.800	 -115.500	150																								
+3561		1935	10	19	4	48	  2.0		 6.2		 6.2					8	USA	MT	MONTANA:  HELENA	  46.600	 -112.000	150	       2	1				3	      19.000	3	300	3			       2	1				3	      19.000	3	300	3		
+3563		1935	10	31	18	37	 47.0		 6.0		 6.0		5.5			8	USA	MT	MONTANA:  HELENA	  46.600	 -112.000	150	       2	1					       6.000	3					       2	1					       6.000	3				
+3629	Tsu	1938	11	10	20	18	 41.2	25	 8.2	 8.2	 8.3	 8.2				6	USA	AK	ALASKA	  55.480	 -158.370	150																								
+3662		1940	5	19	4	36	 40.9	16	 7.2		 7.2	 6.9	6.4			10	USA	CA	CALIFORNIA; MEXICO	  32.733	 -115.500	150	       9	1					      33.000	4					       9	1					      33.000	4				
+3669		1940	7	14	5	52	 53.5	65	 7.4			 7.4					USA	AK	ALASKA:  ALEUTIAN ISLANDS:  RAT ISLANDS	  52.000	  178.200	150																								
+6346	Tsu	1941	2	9	9	44	  4.0		 6.6		 6.6		6.4			6	USA	CA	CALIFORNIA:  NORTHERN	  40.500	 -125.250	150								1												1				
+3784		1944	9	5	4	38	 45.7	12	 5.6		 5.6				 5.6	8	USA	NY	NEW YORK:  MASSENA	  44.957	  -74.723	150							       2.000	2											       2.000	2				
+3822	Tsu	1946	4	1	12	29	  1.3	15	 8.6	 8.6	 7.3					6	USA	AK	ALASKA:  UNIMAK ISLAND	  53.492	 -162.832	150													     167	3					      26.046	4		3		
+6352	Tsu	1946	11	1	11	14	    	40									USA	AK	ALASKA:  EAST ALEUTIAN ISLANDS	  51.500	 -174.500	150																								
+3852		1947	4	10	15	58	    		 6.4						 6.4		USA	CA	CALIFORNIA	  35.000	 -116.600	150								2																
+3877		1948	5	14	22	31	    	25	 7.5						 7.5		USA	AK	ALASKA:  ALASKA PENINSULA	  54.500	 -161.000	150																								
+3898	Tsu	1949	4	13	19	55	 42.0		 7.0		 7.0	 6.9				8	USA	WA	WASHINGTON	  47.167	 -122.617	150	       8	1					      25.000	4					       8	1					      25.000	4				
+3923		1949	11	17	1	19	 52.0									5	USA	CA	CALIFORNIA:  SOUTHERN	  33.750	 -118.250	150							       9.000	3											       9.000	3				
+3979		1951	8	15	7	23	    									5	USA	CA	CALIFORNIA:  TERMINAL ISLAND	  33.500	 -118.200	150							       3.000	2																
+3980	Tsu	1951	8	21	10	57	    	60	 6.9						 6.9		USA	HI	HAWAII	  19.700	 -156.000	150					         2	1		2	8	1	230	3												
+6364	Tsu	1952	3	17	3	58	    	33									USA	HI	HAWAII	  19.110	 -155.033	150																								
+3999		1952	7	21	11	52	 14.0	16	 7.7		 7.7	 7.3	7.2		 7.7	11	USA	CA	CALIFORNIA:  KERN COUNTY	  35.000	 -119.017	150	      12	1					      60.000	4																
+4002		1952	8	22	22	41	 24.0	16	 5.8				5.8			8	USA	CA	CALIFORNIA:  KERN COUNTY	  35.333	 -118.917	150	       2	1				2	      10.000	3	90	2			       2	1					      10.000	3	90	2		
+4050		1954	7	6	11	13	    		 6.8						 6.8		USA	NV	NEVADA:  FALLON	  39.400	 -118.500	150								2																
+4052		1954	8	23			    		 6.8						 6.8	12	USA	NV	NEVADA:  STILLWATER RANGE	  39.600	 -118.500	150																								
+4060		1954	12	16	11	7	    		 7.0						 7.0	10	USA	NV	NEVADA:  DIXIE VALLEY	  39.300	 -118.200	150																								
+4061		1955	1	25	12	23	    									4	USA	CA	CALIFORNIA:  TERMINAL ISLAND	  33.800	 -118.200	150							       3.000	2																
+4116	Tsu	1957	3	9	14	22	 31.9	33	 8.6	 8.6	 9.1						USA	AK	ALASKA	  51.292	 -175.629	150								1					       2	1			1	1		3				
+4118		1957	3	22	14	21	    		 7.5						 7.5	5	USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  55.000	 -165.200	150																								
+4167	Tsu	1958	7	10	6	15	 59.9	35	 7.8	 7.8	 7.9					11	USA	AK	ALASKA:  LITUYA BAY	  58.370	 -136.665	150								1		1			       5	1					        .100	1		1		
+4199	Tsu	1959	8	18	6	37	 13.5	5	 7.7				7.7		 7.1	10	USA	MT	MONTANA:  HEBGEN LAKE	  44.712	 -111.215	150	      28	1					      11.000	3					      28	1					      11.000	3				
+4242		1961	4	4	21	32	    	16									USA	CA	CALIFORNIA:  TERMINAL ISLAND	  34.000	 -118.000	150							       4.500	2																
+4274		1962	8	30	13	35	    	37	 5.8						 5.8		USA	UT	UTAH	  41.800	 -111.800	150							       2.000	2																
+6326	Tsu	1962	12	21	8	42	 43.0	33	 6.5						 6.5		USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  52.470	 -168.540	150																								
+4311	Tsu	1964	3	28	3	36	    	33	 9.2	 9.2	 8.4					10	USA	AK	ALASKA	  61.017	 -147.648	150	      15	1					     284.000	4		3			     139	3					     400.000	4		3		
+4337	Tsu	1965	2	4	5	1	 21.6	36	 8.7	 8.7	 7.8	 7.7				6	USA	AK	ALASKA:  ALEUTIAN ISLANDS:  RAT ISLANDS	  51.290	  178.550	150								1											        .010	1				
+4347	Tsu	1965	3	30	2	27	  3.4	20	 7.6	 7.6	 7.4						USA	AK	ALASKA:  ALEUTIAN ISLANDS:  RAT ISLANDS	  50.320	  177.930	150																								
+4351		1965	4	29	15	28	 43.7	59	 6.6		 6.6	 6.5			 6.5	8	USA	WA	WASHINGTON:  SEATTLE	  47.400	 -122.300	150	       7	1					      28.000	4					       7	1					      28.000	4				
+6414	Tsu	1965	7	2	20	58	 38.1	40	 6.5		 6.5	 7.0					USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  53.030	 -167.550	150								1												1				
+4502		1969	10	2	4	56	 46.5	10	 4.8		 4.8	 5.2	5.6			8	USA	CA	CALIFORNIA:  SANTA ROSA	  38.467	 -122.692	150	       1	1					       8.350	3					       1	1					       8.350	3				
+7654	Tsu	1970	3	11	22	38	 34.6	29	 6.0		 6.0					5	USA	AK	ALASKA:  ANDREANOF ISLANDS	  57.500	 -153.900	150								1												1				
+4558		1971	2	9	14	0	 41.8	8	 6.5		 6.5	 6.2	6.4			11	USA	CA	CALIFORNIA:  SAN FERNANDO	  34.412	 -118.400	150	      65	2			      2000	4	     505.000	4					      65	2			2000	4	     505.000	4				
+6433	Tsu	1971	5	2	6	8	 27.3	43	 7.1		 7.1	 6.0				6	USA	AK	ALASKA:  ANDREANOF ISLANDS	  51.400	 -177.200	150																								
+6438	Tsu	1971	11	6	22	0	   .1	2	 5.7		 5.7	 6.8					USA	AK	ALASKA:  ALEUTIAN ISLANDS:  RAT ISLANDS	  51.500	  179.100	150																								
+4609	Tsu	1972	7	30	21	45	 14.1	25	 7.6		 7.6	 6.5			 7.6	7	USA	AK	ALASKA:  SITKA, JUNEAU	  56.820	 -135.680	150								1												1				
+4626		1973	2	21	14	45	 57.3	8	 5.7		 5.7	 5.7	5.9			7	USA	CA	CALIFORNIA:  OXNARD	  34.100	 -119.000	150							       1.000	2																
+4637		1973	4	26	20	26	 28.6	48	 6.5	 6.5	 6.3		6.2			8	USA	HI	HAWAII: HILO	  19.936	 -155.098	150					        11	1	       5.750	3									11	1	       5.750	3				
+4680		1975	2	2	8	43	 39.1	10	 7.6		 7.6	 6.1				9	USA	AK	ALASKA:  ALEUTIAN ISLANDS:  NEAR ISLANDS	  53.110	  173.500	150								2																
+4687		1975	3	28	2	31	  5.7	5	 6.0		 6.0	 6.1	6.2		 6.2	8	USA	ID	IDAHO:  POCATELLO VALLEY	  42.060	 -112.550	150							       1.000	2																
+4696		1975	8	1	20	20	 12.9	15	 5.6		 5.6	 5.8	5.7			8	USA	CA	CALIFORNIA:  OROVILLE	  39.439	 -121.528	150					        10	1	       3.000	2									10	1	       3.000	2				
+4704	Tsu	1975	11	29	14	47	 40.9	2	 7.7	 7.7	 7.2	 6.0				9	USA	HI	HAWAII	  19.451	 -155.033	150							       4.000	2					       2	1					       4.000	2		3		
+4813		1978	8	13	22	54	 53.5	7	 5.6		 5.6	 5.5	5.7		 5.6	7	USA	CA	CALIFORNIA:  SOUTHERN	  34.350	 -119.700	150					        65	2	      15.000	3																
+6457	Tsu	1979	2	28	21	27	  8.1	18	 7.5	 7.5	 7.1	 6.4				7	USA	AK	ALASKA	  60.691	 -141.671	150								1												1				
+4847		1979	10	15	23	16	 54.1	10	 6.9		 6.9	 5.7	6.4			9	USA	CA	CALIFORNIA:  IMPERIAL VALLEY; MEXICO: MEXICALI	  32.634	 -115.324	150					        91	2	      30.000	4																
+4870		1980	1	24	19	0	  9.5	11	 5.9		 5.9	 5.3	5.8			7	USA	CA	CALIFORNIA:  LIVERMORE	  37.855	 -121.816	150					        50	1	      11.500	3									50	1	      11.500	3				
+4876	Tsu	1980	5	18	15	32	 11.4	4	 5.2		 5.2	 4.7	5			5	USA	WA	WASHINGTON:  MT ST HELENS	  46.214	 -122.194	150													      57	2					    2000.000	4				
+4878		1980	5	25	16	33	 44.7	7	 6.1		 6.1	 6.1				7	USA	CA	CALIFORNIA:  MAMMOTH LAKES	  37.600	 -118.840	150					         7	1	       2.000	2									7	1	       2.000	2				
+4887		1980	7	27	18	52	 21.8	8	 5.1		 5.1	 4.7				7	USA	KY	KENTUCKY:  MAYSVILLE	  38.174	  -83.907	150					         2	1	       1.000	2									2	1	       1.000	2				
+4901		1980	11	8	10	27	 34.0	19	 7.2		 7.2	 6.2				7	USA	CA	CALIFORNIA:  NORTH COAST	  41.117	 -124.253	150	       5	1					       2.750	2																
+4919		1981	4	26	12	9	 28.4	6	 6.0		 6.0	 5.5				7	USA	CA	CALIFORNIA:  WESTMORLAND,CALIPATRIA	  33.133	 -115.650	150							       1.500	2											       1.500	2				
+4977		1983	5	2	23	42	 37.7	10	 6.2		 6.2	 6.2				8	USA	CA	CALIFORNIA:  CENTRAL, COALINGA	  36.219	 -120.317	150					        45	1	      31.000	4	500	3							45	1	      31.000	4	500	3		
+4982		1983	7	12	15	10	  3.4	37	 6.1		 6.1	 6.1				6	USA	AK	ALASKA:  PRINCE WILLIAM SOUND	  61.031	 -147.286	150							       1.000	2											       1.000	2				
+5677		1983	10	28	14	6	  6.5	14	 7.3		 7.3	 6.2	7.2			9	USA	ID	IDAHO:  BORAH PEAK, CHALLIS, MACKAY	  43.974	 -113.916	150	       2	1			         2	1	      12.500	3					       2	1			2	1	      12.500	3				
+5006		1983	11	16	16	13	    	12	 6.7		 6.7	 6.4				8	USA	HI	HAWAII: KAPAPALA	  19.430	 -155.454	150					         6	1	       6.500	3									6	1	       6.500	3				
+5030		1984	4	24	21	15	 19.0	8	 6.1		 6.1	 5.7	6.2			8	USA	CA	CALIFORNIA:  CENTRAL:  MORGAN HILL	  37.320	 -121.698	150					        27	1	       8.000	3									27	1	       8.000	3				
+5051		1984	10	18	15	30	 23.0	33	 5.1		 5.1	 5.4				6	USA	WY	WYOMING:  DOUGLAS, MEDICINE BOW	  42.375	 -105.720	150								1												1				
+5095	Tsu	1986	5	7	22	47	 10.8	19	 8.0	 8.0	 7.7	 6.4				6	USA	AK	ALASKA:  ALEUTIAN ISLANDS:  ADAK	  51.520	 -174.776	150								2				2								2				2
+6468	Tsu	1986	5	17	16	20	 22.2	26	 6.4	 6.4	 6.6	 5.8					USA	AK	ALASKA:  ANDREANOF ISLANDS	  52.327	 -174.504	150																								
+5100		1986	7	8	9	20	 44.5	12	 6.0		 6.0	 5.8				7	USA	CA	CALIFORNIA:  PALM SPRINGS	  34.000	 -116.610	150					        29	1	       4.500	2									29	1	       4.500	2				
+5102		1986	7	13	13	47	  8.2	6	 5.8		 5.8	 5.6	5.3			6	USA	CA	CALIFORNIA:  SAN DIEGO, NEWPORT BEACH	  32.970	 -117.869	150							        .700	1											        .700	1				
+5105		1986	7	21	14	42	 26.6	9	 6.2		 6.2	 6.0				6	USA	CA	CALIFORNIA-NEVADA:  CHALFANT VALLEY	  37.537	 -118.447	150							       1.000	2											       1.000	2				
+5143		1987	10	1	14	42	 20.0	10	 5.7		 5.7	 5.8	5.9			8	USA	CA	CALIFORNIA:  WHITTIER	  34.061	 -118.078	150	       8	1			       200	3	     358.000	4					       8	1			200	3	     358.000	4				
+5146		1987	10	4	10	59	 38.1	8	 4.8		 4.8	 5.2					USA	CA	CALIFORNIA:  WHITTIER, PASADENA	  34.070	 -118.100	150	       1	1				2		2					       1	1				2		2				
+6472	Tsu	1987	11	17	8	46	 53.3	10	 7.2	 7.2	 6.9	 6.6					USA	AK	ALASKA:  GULF OF ALASKA	  58.586	 -143.270	150																								
+5148		1987	11	24	1	54	 14.5	5	 6.2		 6.2	 5.7				6	USA	CA	CALIFORNIA:  SUPERSTITION HILLS	  33.082	 -115.775	150	       2	1					       3.000	2					       2	1					       3.000	2				
+5152	Tsu	1987	11	30	19	23	 19.5	10	 7.9	 7.9	 7.6	 6.7				6	USA	AK	ALASKA:  YAKUTAT	  58.679	 -142.786	150								1												1				
+5159	Tsu	1988	3	6	22	35	 36.9	15	 7.8	 7.8	 7.6	 6.8	7.4			5	USA	AK	ALASKA:  GULF OF ALASKA:  ANCHORAGE	  57.262	 -142.747	150								1												1				
+5203	Tsu	1989	6	26	3	27	  3.9	9	 6.1		 6.1	 5.8				6	USA	HI	HAWAIIAN ISLANDS:  PUNA DISTRICT	  19.362	 -155.083	150					         5	1		2	105	3							5	1		2	105	3		
+6475	Tsu	1989	9	4	13	14	 58.2	11	 6.9		 6.9	 6.5	6.9				USA	AK	ALASKA	  55.543	 -156.835	150																								
+5213	Tsu	1989	10	18	0	4	 15.2	19	 6.9	 6.9	 7.1	 6.5				9	USA	CA	CALIFORNIA:  LOMA PRIETA	  37.036	 -121.883	150	      62	2			      3757	4	    5600.000	4		3			      62	2			3757	4	    5600.000	4		3		
+5223		1990	2	28	23	43	 36.6	5	 5.5		 5.5	 5.5				7	USA	CA	CALIFORNIA:  S,  CLAREMONT,  COVINA	  34.140	 -117.700	150					        30	1	      12.700	3									30	1	      12.700	3				
+5295		1991	6	28	14	43	 54.5	11	 5.1		 5.1	 5.8				7	USA	CA	CALIFORNIA:  ARCADIA, GLENDALE, LOS ANGELES	  34.262	 -118.002	150	       2	1			       104	3	      33.500	4					       2	1			104	3	      33.500	4				
+5304		1991	8	17	19	29	 40.0	12	 6.2		 6.2	 6.0				7	USA	CA	CALIFORNIA:  HONEYDEW, WHITETHORN, PETROLIA	  40.235	 -124.348	150								2												2				
+5320		1992	4	23	4	50	 23.2	12	 6.3		 6.3	 5.7	6.1			7	USA	CA	CALIFORNIA:  JOSHUA TREE, ANGELUS OAKS	  33.961	 -116.318	150					        32	1		2									32	1		2				
+5321	Tsu	1992	4	25	18	6	  4.2	15	 7.1		 7.1	 6.3				8	USA	CA	CALIFORNIA: HUMBOLDT COUNTY: FERNDALE, PETROLIA	  40.368	 -124.316	150					        98	2	      75.000	4									98	2	      75.000	4				
+5328		1992	6	28	11	57	 34.1	1	 7.6		 7.6	 6.2				9	USA	CA	CALIFORNIA: LANDERS, YUCCA  VALLEY	  34.201	 -116.436	150	       3	1			       400	3	      92.000	4					       3	1			400	3	      92.000	4				
+5330		1992	6	28	15	5	 30.7	5	 6.7		 6.7	 6.3				8	USA	CA	CALIFORNIA: BIG BEAR LAKE, BIG BEAR CITY	  34.203	 -116.827	150						2		2										2		2				
+5331		1992	6	29	10	14	 22.2	9	 5.4		 5.4	 5.6					USA	NV	NEVADA-CALIFORNIA BORDER:  NEVADA TEST SITE	  36.705	 -116.293	150								2												2				
+5351		1993	3	25	13	34	 35.4	21	 5.6	 5.6	 5.4	 5.5				7	USA	WA	WASHINGTON-OREGON BORDER	  45.035	 -122.607	150							      28.400	4																
+5363		1993	9	21	3	28	 55.4	11	 6.0	 6.0	 5.8	 5.7				7	USA	OR	OREGON:  KLAMATH FALLS	  42.314	 -122.012	150	       2	1					       7.500	3																
+5371		1994	1	16	1	49	 16.2	5	 4.6			 4.6				5	USA	PA	PENNSYLVANIA: READING, FELT TO CANADA	  40.330	  -76.037	150								1												1				
+5372	Tsu	1994	1	17	12	30	 55.3	18	 6.7	 6.7	 6.8	 6.4				9	USA	CA	CALIFORNIA:  NORTHRIDGE	  34.213	 -118.537	150	      60	2			      7000	4	   40000.000	4	40000	4			      60	2			7000	4	   40000.000	4	40000	4		
+5376		1994	2	3	9	5	  4.2	8	 5.8	 5.8	 5.5	 5.4				7	USA	WY	WYOMING:  AFTON	  42.762	 -110.976	150								1												1				
+6488	Tsu	1994	9	1	15	15	 53.0	10	 7.0	 7.0	 7.0	 6.6				6	USA	CA	CALIFORNIA:  NORTH:  HONEYDEW	  40.402	 -125.680	150								1												1				
+5395		1994	12	26	14	10	 29.1	23	 5.5	 5.5	 5.0	 5.1				7	USA	CA	CALIFORNIA:  EUREKA, SAMOA, ARCATA, BLUE LAKE	  40.741	 -124.310	150							       2.100	2											       2.100	2				
+5421		1995	10	6	5	23	 18.5	9	 6.0	 6.0	 5.8	 5.7					USA	AK	ALASKA:  FAIRBANKS NORTH STAR COUNTY	  65.170	 -148.565	150								1												1				
+5440	Tsu	1996	6	10	4	3	 35.4	33	 7.9	 7.9	 7.6	 6.6				6	USA	AK	ALASKA:  ANDREANOF ISLANDS	  51.564	 -177.632	150																								
+6498	Tsu	1996	6	10	15	24	 56.0	24	 7.3	 7.3	 7.1	 5.9					USA	AK	ALASKA:  ANDREANOF ISLANDS	  51.478	 -176.847	150																								
+5538		1999	10	16	9	46	 44.1		 7.2	 7.2	 7.4	 6.3				7	USA	CA	CALIFORNIA:  LUDLOW, LANDERS, TWENTYNINE PALMS	  34.594	 -116.271	150					         4	1		1									4	1		1				
+5576		2000	9	3	8	36	 30.0	10	 5.0	 5.0	 4.9	 4.9				7	USA	CA	CALIFORNIA:  NAPA	  38.379	 -122.413	150					        41	1	      50.000	4									41	1	      50.000	4				
+5595		2001	2	28	18	54	 32.8	52	 6.8	 6.8	 6.6	 6.5				8	USA	WA	WASHINGTON:  OLYMPIA, SEATTLE, TACOMA	  47.149	 -122.727	150	       1	1			       400	3	    2000.000	4					       1	1			400	3	    2000.000	4				
+5608		2001	9	9	23	59	 18.0	5	 4.2			 4.2				6	USA	CA	CALIFORNIA:  LOS ANGELES	  34.059	 -118.387	150								1												1				
+5631		2002	4	20	10	50	 47.5	11	 5.2	 5.2	 4.2	 5.2				7	USA	NY	NEW YORK:  CLINTON, ESSEX, AU SABLE FORKS	  44.513	  -73.699	150								1												1				
+5657		2002	10	23	11	27	 19.4	4	 6.7	 6.7	 6.7	 6.0				8	USA	AK	ALASKA:  CANTWELL, DENALI NATL PARK	  63.514	 -147.912	150								2												2				
+5663		2002	11	3	22	12	 41.0	5	 7.9	 7.9	 8.5	 7.0				9	USA	AK	ALASKA:  SLANA, MENTASTA LAKE, FAIRBANKS	  63.517	 -147.444	150					         1	1	      56.000	4									1	1	      56.000	4				
+5680		2003	2	22	12	19	 10.5	1	 5.2	 5.2	 4.8	 4.9				6	USA	CA	CALIFORNIA:  BIG BEAR CITY	  34.310	 -116.848	150								1												1				
+5703		2003	4	29	8	59	 39.0	20	 4.6	 4.6		 4.4				6	USA	AL	ALABAMA:  FORT PAYNE,GAYLESVILLE,VALLEY HEAD	  34.494	  -85.629	150								1												1				
+5698		2003	6	6	12	29	 34.0	3	 4.0	 4.0		 3.9				6	USA	KY	KENTUCKY:  BARDWELL	  36.870	  -88.980	150								1												1				
+5735	Tsu	2003	11	17	6	43	  6.8	33	 7.8	 7.8	 7.2	 6.2					USA	AK	ALASKA:  ALEUTIAN ISLANDS:  RAT ISLANDS	  51.146	  178.650	150																								
+5749		2003	12	22	19	15	 56.0	8	 6.6	 6.6	 6.4	 6.1				8	USA	CA	CALIFORNIA:  PASO ROBLES,TEMPLETON,ATASCADERO	  35.706	 -121.102	150	       2	1			        40	1	     300.000	4	40	1			       2	1			40	1	     300.000	4				
+5803		2004	9	28	17	15	 24.2	9	 6.0	 6.0	 5.8	 5.4				6	USA	CA	CALIFORNIA:  CENTRAL: PARKFIELD, SAN MIGUEL	  35.819	 -120.364	150								1												1				
+6738	Tsu	2005	6	15	2	50	 53.1	10	 7.2	 7.2	 7.1	 6.2				4	USA	CA	CALIFORNIA:  OFF COAST NORTHERN	  41.301	 -125.970	150																								
+6764		2005	7	26	4	8	 37.1	13	 5.6	 5.6	 5.2	 5.7				6	USA	MT	MONTANA:  DILLON, SILVER STAR, TWIN BRIDGES	  45.365	 -112.615	150								1												1				
+7368	Tsu	2006	10	15	17	7	 49.2	39	 6.7	 6.7	 6.6	 6.2				8	USA	HI	HAWAIIAN ISLANDS	  19.878	 -155.935	150						3	      73.000	4										3	      73.000	4				
+7522		2007	5	8	15	46	 49.1	14	 4.5	 4.5		 4.8	4.7			5	USA	MT	MONTANA:  SHERIDAN	  45.394	 -112.130	150								1												1				
+7596		2007	7	20	11	42	 22.3	5	 4.2	 4.2							USA	CA	CALIFORNIA:  MONTCLAIR	  37.804	 -122.193	150								1												1				
+7532	Tsu	2007	8	2	3	21	 42.8	21	 6.7	 6.7	 6.6	 6.3					USA	AK	ALASKA:  ALEUTIAN ISLANDS	  51.307	 -179.971	150																								
+7601		2007	8	6	8	48	 40.0	2	 4.2			 4.2	3.9				USA	UT	UTAH:  HUNTINGTON	  39.465	 -111.237	150	       9	1				1							       9	1				1						
+7614		2007	8	17	0	38	 56.0	0	 1.6				1.6				USA	UT	UTAH	  39.464	 -111.207	150	       3	1			         6	1							       3	1			6	1						
+7698		2007	10	31	3	4	 54.8	10	 5.6	 5.6	 5.1	 5.3					USA	CA	CALIFORNIA:  SAN JOSE	  37.434	 -121.774	150								1												1				
+7871		2008	2	21	14	16	  2.7	7	 6.0	 6.0	 5.8	 5.7				8	USA	NV	NEVADA:  WELLS	  41.153	 -114.867	150					         3	1		2			720	3					3	1		2			720	3
+7823		2008	4	18	9	36	 59.1	14	 5.3	 5.3	 4.8	 5.1					USA		ILLINOIS:  WEST SALEM	  38.452	  -87.886	150								1				1								1				1
+8128		2008	4	26	6	40	 10.6	1	 5.0	 5.0	 4.8	 4.8	4.7				USA		NEVADA:  FALLON	  39.520	 -119.930	150								1				1								1				1
+8166		2008	7	29	18	42	 15.7	15	 5.4	 5.4	 5.5	 5.5				6	USA	CA	CALIFORNIA:  LOS ANGELES	  33.953	 -117.761	150					         8	1		1				1					8	1		1				1
+8712		2010	1	10	0	27	 39.3	29	 6.5	 6.5	 6.3	 6.5					USA	CA	CALIFORNIA:  OFF COAST NORTHERN	  40.652	 -124.692	150					        30	1	      21.800	3									30	1	      21.800	3				
+9764		2010	6	15	4	26	 58.4	5	 5.8	 5.8	 5.7	 5.6					USA		CALIFORNIA:  OCOTILLO	  32.700	 -115.921	150								1				1								1				1
+9826		2010	12	19	5	5	 30.0	5	 3.7		 3.7						USA	OK	OKLAHOMA:  LUTHER	  35.827	  -96.772	150								1				1								1				1
+9832		2011	2	17	22	47	 21.5	1	 3.1				3.1				USA		COLORADO:  PAONIA	  38.947	 -107.497	150								1												1				
+9824	Tsu	2011	6	24	3	9	 39.4	52	 7.3	 7.3		 6.9	6.7				USA		ALASKA: ALEUTIAN ISLANDS: FOX ISLANDS	  52.050	 -171.836	150																								
+9873		2011	8	23	5	46	 18.2	4	 5.4	 5.4		 5.0				7	USA	CO	COLORADO:  SEGUNDO	  37.063	 -104.701	150								2												2				
+9861		2011	8	23	17	51	  4.5	6	 5.8	 5.8	 5.6	 5.9				7	USA	VA	VIRGINIA:  LOUISA COUNTY, MARYLAND, WASHINGTON D.C.	  37.936	  -77.933	150								2												2				
+9839	Tsu	2011	9	2	10	55	 53.5	32	 6.8	 6.8	 6.9	 6.5					USA	AK	ALASKA:  ALEUTIAN ISLANDS:  FOX ISLANDS	  52.171	 -171.708	150																								
+9850		2011	11	6	3	53	 10.0	5	 5.7	 5.7	 5.6	 5.2				8	USA		OKLAHOMA:  SPARKS	  35.532	  -96.765	150					         2	1		2	14	1		3					2	1		2	14	1		3
+9889		2011	11	8	2	46	 57.0	5	 5.0	 5.0		 4.7					USA		OKLAHOMA:  SPARKS, PRAGUE	  35.531	  -96.788	150								1				2								1				2
+9953	Tsu	2013	1	5	8	58	 19.3	10	 7.5	 7.5	 7.7	 6.4					USA	AK	ALASKA:  SOUTHEASTERN	  55.393	 -134.652	150																				1				
+10036		2013	4	18	0	50	 38.5	0	 2.1			 2.1					USA		TEXAS:  WEST	  31.817	  -97.088	150	      14	1			       200	3	     100.000	4	50	1			      14	1			200	3	     100.000	4	50	1		
+10082		2014	3	29	4	9	 42.0	5	 5.1	 5.1						6	USA	CA	CALIFORNIA:  LA HABRA, BREA, FULLERTON	  33.932	 -117.917	150						1	      10.800	3				2						1	      10.800	3				2
+10100	Tsu	2014	6	23	20	53	 10.0	108	 7.9	 7.9							USA	AK	ALASKA:  ALEUTIAN ISLANDS	  51.797	  178.760	150																								
+10107	Tsu	2014	7	25	10	54	 49.0	10	 6.1	 6.1							USA	AK	ALASKA:  SOUTHEASTERN	  58.358	 -137.130	150																								
+10110		2014	8	24	10	20	 44.0	11	 6.0	 6.0							USA	CA	CALIFORNIA:  NAPA, VALLEJO	  38.220	 -122.313	150	       1	1			       172	3	     700.000	4	126	3	532	3	       1	1			172	3	     700.000	4	126	3	532	3
+10157	Tsu	2015	7	27	4	49	 46.0	29	 6.9	 6.9							USA	AK	ALASKA	  52.376	 -169.446	150																								
+10172		2016	1	24	10	30	 30.0	128	 7.1	 7.1							USA	AK	ALASKA:  KENAI	  59.658	 -153.452	150								1	4	1										1	4	1		
+10204		2016	11	7	1	44	 24.0	5	 5.0	 5.0							USA	OK	OKLAHOMA:  CUSHING	  35.984	  -96.798	150						1		1			50	1						1		1			50	1

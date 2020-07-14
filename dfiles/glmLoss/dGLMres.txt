@@ -1,0 +1,90 @@
+> #n <- 20
+> #d <- data.frame(x1=rnorm(n),x2=rnorm(n))
+> #d$y <- with(d,x1+2*x2>3*rnorm(n))
+> #write.table(d,file='dGLMdat.csv',quote=F,sep=',',row.names=F)
+> #d <- read.table(file='dGLMdat.csv',header=T,sep=',')
+> d <- read.table(file='http://www.win-vector.com/dfiles/glmLoss/dGLMdat.csv',header=T,sep=',')
+> m <- glm(y~x1+x2,data=d,family=binomial(link='logit'))
+> summary(m)
+
+Call:
+glm(formula = y ~ x1 + x2, family = binomial(link = "logit"), 
+    data = d)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-1.933  -1.177   0.731   1.007   1.251  
+
+Coefficients:
+            Estimate Std. Error z value Pr(>|z|)
+(Intercept)   0.2415     0.4873   0.496    0.620
+x1            0.7573     0.7552   1.003    0.316
+x2            0.3530     0.5485   0.643    0.520
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 26.920  on 19  degrees of freedom
+Residual deviance: 25.557  on 17  degrees of freedom
+AIC: 31.557
+
+Number of Fisher Scoring iterations: 4
+
+> d$s <- predict(m,type='response')
+> sum(with(d,2*(s-y)))
+[1] -1.050271e-12
+> sum(with(d,2*(s-y)*x1))
+[1] -1.173884e-12
+> sum(with(d,2*(s-y)*x2))
+[1] -7.624248e-13
+> sum(with(d,2*(s-y)*s*(1-s)))
+[1] -0.05593889
+> sum(with(d,2*(s-y)*s*(1-s)*x1))
+[1] -0.09833072
+> sum(with(d,2*(s-y)*s*(1-s)*x2))
+[1] -0.2266276
+> grad <- c(sum(with(d,2*(s-y)*s*(1-s))),sum(with(d,2*(s-y)*s*(1-s)*x1)),sum(with(d,2*(s-y)*s*(1-s)*x2)))
+> f <- function(a,b,c) {
++    s <- function(x) { 1/(1+exp(-x)) }
++    v <- s(a + b*d$x1 + c*d$x2)
++    d <- v-d$y
++    sum(d*d)
++ }
+> g <- function(w) { f(m$coefficients[1]-w*grad[1],m$coefficients[2]-w*grad[2],m$coefficients[3]-w*grad[3]) }
+> opt <- optimize(g,interval=c(-20,20))
+> w  <- opt$minimum
+> m$coefficients
+(Intercept)          x1          x2 
+  0.2415262   0.7573462   0.3529519 
+> c(m$coefficients[1]-w*grad[1],m$coefficients[2]-w*grad[2],m$coefficients[3]-w*grad[3])
+(Intercept)          x1          x2 
+  0.3151981   0.8868485   0.6514221 
+> sum(with(d,(y-s)*(y-s)))
+[1] 4.416638
+> f(m$coefficients[1],m$coefficients[2],m$coefficients[3])
+[1] 4.416638
+> f(m$coefficients[1]-w*grad[1],m$coefficients[2]-w*grad[2],m$coefficients[3]-w*grad[3])
+[1] 4.37759
+> d
+            x1          x2     y         s
+1   0.09793624 -0.50020073 FALSE 0.5347317
+2  -0.54933361  0.00834841  TRUE 0.4572142
+3   0.18499020 -0.79325364  TRUE 0.5253900
+4   0.58316450  2.06501637  TRUE 0.8040867
+5   0.09607855  0.42724062  TRUE 0.6142201
+6  -0.44772937  0.23267758 FALSE 0.4961411
+7   1.24981165 -0.24492799  TRUE 0.7505632
+8   0.13378532 -0.21985529  TRUE 0.5659263
+9   0.41987141 -0.63677825 FALSE 0.5829176
+10  1.28558918  1.37708143 FALSE 0.8456922
+11  0.32590303  0.90813181  TRUE 0.6918696
+12  0.01148262 -1.35426485 FALSE 0.4433029
+13 -0.98502686  1.85317024  TRUE 0.5373304
+14 -0.23017795 -0.06923035 FALSE 0.5106901
+15  1.29606888 -0.80930538  TRUE 0.7185849
+16  0.31286797  0.21319610  TRUE 0.6349991
+17  0.03766960 -1.13314348  TRUE 0.4675731
+18  0.03662855  0.67440240 FALSE 0.6241729
+19  1.62032558 -0.57165979  TRUE 0.7802125
+20 -0.63236983 -0.30736577 FALSE 0.4143814
+> 
+> 

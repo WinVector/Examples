@@ -1,0 +1,4 @@
+<availablePackage>
+  <package><name>AutoDiff</name><version>0.3</version><depends></depends><description>Automatic Differentiation with Scala: see http://www.win-vector.com/blog/2010/06/automatic-differentiation-with-scala/</description></package>
+  <link>http://www.win-vector.com/dfiles/AutoDiff-0.3.sbp</link>
+</availablePackage>
