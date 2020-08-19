@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
-John Mount, Nina Zume; <https://www.win-vector.com>
-Wed Aug 19 11:53:52 2020
+John Mount, Nina Zumel; <https://www.win-vector.com>
+Wed Aug 19 12:23:16 2020
 
 Here is an example of how re-weighting data as function of the training
 outcome to balance the positive and negative examples can change results
@@ -16,6 +16,13 @@ possible](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant
 ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/)
 which lead us to conclude: if re-balancing does anything better than
 moving your threshold, this is in fact evidence of a missed interaction.
+
+It is our thesis that their is little benefit to re-balancing data and
+if there appears to be such a benefit it means you failded to use
+numeric scores (converted to a classification rule too early) or missed
+an interaction in your data (which can be fixed by a bit more feature
+engineering, the non-montone change suggests some interactions that can
+be introduced).
 
 Let’s work our example in [`R`](https://www.r-project.org).
 
@@ -245,8 +252,9 @@ a saturated version of this data set will not have the non-monotone
 property. With enough training data the satuarating is mere feature
 engineering.
 
-For example we can saturate our example by adding a few interaction
-variables.
+For example we get rid of the non-monotone change (and claimed
+advantage) by adding a few interaction variables (it is not necessary to
+fully saturate the system).
 
 ``` r
 d$x3 <- d$x1 * d$x2
@@ -307,6 +315,14 @@ predict(model2s, newdata = d, type = 'response')
     ## 2.272475e-09
 
 Notice the two predictions have the same order-statistics.
+
+The point is: with individual variables that contain finer detail about
+the data fewer trade-offs are required, not leaving in the possibility
+of a non-monotone. Likely higher complexity models such as polynomial
+regression, kernelized methods, tree based methods, ensemble methods,
+and neural nets introduce enough interactions to not fundementally need
+the re-balance (though any one particular implementation may fall
+short).
 
 This can be achieved quicker by introducing the obvious categorical
 variable that the partition implied by the satured variables.

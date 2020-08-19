@@ -1,6 +1,6 @@
 ---
 title: "Some Examples Where re-Weighting Data Doesn't do Much"
-author: "John Mount, Nina Zume; https://www.win-vector.com"
+author: "John Mount, Nina Zumel; https://www.win-vector.com"
 date: "`r date()`"
 output: github_document
 ---
@@ -11,6 +11,8 @@ output: github_document
 Re-weighting data for unbalanced classification tasks is a popular data transform used to attempt to improve model sensitivity for important rare events. The method can help, but [we feel it is over-used as it also helps to work around the common mistake of using classification rules where numeric or probability models are more appropriate](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/). 
 
 [Nina Zumel had some interesting comments on the ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/) which lead us to conclude: if re-balancing does anything better than moving your threshold, this is in fact evidence of a missed interaction.
+
+It is our thesis that their is little benefit to re-balancing data and if there appears to be such a benefit it means you failded to use numeric scores (converted to a classification rule too early) or missed an interaction in your data (which can be fixed by a bit more feature engineering, the non-montone change suggests some interactions that can be introduced).
 
 Let's work some simple examples to try and illustrate this point.
 
@@ -187,6 +189,8 @@ Suppose all of our explanatory variables only take on the values `0` and `1`. Fu
 <li>If `xa` is an explanatory variables then `1 - xa` is also an explanatory variable.</li>
 <li>If `xa` and `xb` are explanatory variables then `xa * xb` is either all zero, or already an explanatory variable.</li>
 </ul>
+
+Essentially we are adding enough interactions or derived variables that the sets corresponding to the indicators for an *algebra of sets* (family closed under union and complement).  This also means essentialy we have enough variables such that every subset of the partition of rows implied by the variables jointly has an indicator variable.
 
 In this case the explanatory variables partition the training data into sets that are all identifiable by single variables. In this case it is simple to see logistic regression, with some slight regularization in place, becomes just a look-up table. Training examples associated with one of our disjoint partition sets are scored with a probability of `a / (a + b)`, where `a` is the number of positive examples for this set during training and `b` is the number of negative examples seen in this set during training (assuming we don't have a separated problem, i.e. that `a` and `b` are both greater that zero). Then up-weighting the positive examples replaces the prediction with `(a w) / (a w + b)`, where `w` is our positive re-weighting factor.  A little algebra is enough to show that this transform, while non-linear, is monotone.  If `a / (a + b) > c / (c + d)` then `(a w) / (a w + b) > (c w) / (c w + d)`.
 

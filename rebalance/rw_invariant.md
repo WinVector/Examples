@@ -1,7 +1,7 @@
 Some Examples Where re-Weighting Data Doesn’t do Much
 ================
-John Mount, Nina Zume; <https://www.win-vector.com>
-Wed Aug 19 11:53:58 2020
+John Mount, Nina Zumel; <https://www.win-vector.com>
+Wed Aug 19 12:23:22 2020
 
 ## Introduction
 
@@ -16,6 +16,13 @@ appropriate](https://win-vector.com/2020/08/07/dont-use-classification-rules-for
 ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/)
 which lead us to conclude: if re-balancing does anything better than
 moving your threshold, this is in fact evidence of a missed interaction.
+
+It is our thesis that their is little benefit to re-balancing data and
+if there appears to be such a benefit it means you failded to use
+numeric scores (converted to a classification rule too early) or missed
+an interaction in your data (which can be fixed by a bit more feature
+engineering, the non-montone change suggests some interactions that can
+be introduced).
 
 Let’s work some simple examples to try and illustrate this point.
 
@@ -374,6 +381,12 @@ zero, or already an explanatory variable.
 </li>
 
 </ul>
+
+Essentially we are adding enough interactions or derived variables that
+the sets corresponding to the indicators for an *algebra of sets*
+(family closed under union and complement). This also means essentialy
+we have enough variables such that every subset of the partition of rows
+implied by the variables jointly has an indicator variable.
 
 In this case the explanatory variables partition the training data into
 sets that are all identifiable by single variables. In this case it is
