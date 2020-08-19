@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zume; <https://www.win-vector.com>
-Wed Aug 19 11:50:47 2020
+Wed Aug 19 11:53:52 2020
 
 Here is an example of how re-weighting data as function of the training
 outcome to balance the positive and negative examples can change results
@@ -9,7 +9,8 @@ in a non-monotone manner, even for a simple logistic regression. This
 means in this case re-weighing is not equivalent to sweeping the chosen
 threshold that converts a score into a classification rule. However,
 [for single variable plus intercept logistic regression models no such
-non-monotone re-ordering is possible](rw_invariant.md).
+non-monotone re-ordering is
+possible](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md).
 
 [Nina Zumel had some interesting comments on the
 ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/)
@@ -238,9 +239,11 @@ It is our opinion that data re-sampling is often used to work around the
 avoidable mistake of using a classification rule where a detailed
 numeric score would in fact to better.
 
-As we mentioned in our [invariant note](TODO:%20url) a saturated version
-of this data set will not have the non-monotone property. With enough
-training data the satuarating is mere feature engineering.
+As we mentioned in our [invariant
+note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
+a saturated version of this data set will not have the non-monotone
+property. With enough training data the satuarating is mere feature
+engineering.
 
 For example we can saturate our example by adding a few interaction
 variables.

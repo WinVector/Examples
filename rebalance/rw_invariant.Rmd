@@ -40,7 +40,7 @@ In this note we will characterize some cases where such a data re-weighting or r
 
 ### The Non-Monotone Case
 
-There are, of course, cases where re-weighting the data by the outcome class can change the order of predictions. For example, we demonstrate a non-trivial reordering effect with two variable (plus intercept) logistic regression [here](rw_example_R.md). In this case we do get different models with different data weightings, but one still must determine which of these different models in in fact better for a given application.
+There are, of course, cases where re-weighting the data by the outcome class can change the order of predictions. For example, we demonstrate a non-trivial reordering effect with two variable (plus intercept) logistic regression [here](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md). In this case we do get different models with different data weightings, but one still must determine which of these different models in in fact better for a given application.
 
 ## Single Numeric Variable (plus intercept) Logistic Regression
 
@@ -143,7 +143,7 @@ The sign of `b = m$coefficients['x']` is the same the sign of `mean(d$x[d$y]) - 
 
 Or: the sign of the logistic regression coefficient is the same is the sign of the difference in conditonal means of the explanatory variable.
 
-For our example data `mean(d$x[d$y]) - mean(d$x[!d$y])` is very easy to calculate, it is `r mean(d$x[d$y]) - mean(d$x[!d$y])`. So we know that `m$coefficients['x']` must be negative, without having to go to the full effort of estimating it. This also is exactly what we need to characterize single variable logistic regression and show in this case explanatory variable proportional data re-weighting is a mere monotone transform (though as [we mentioned earlier](rw_example_R.md), this is not always the case when more variables are present).
+For our example data `mean(d$x[d$y]) - mean(d$x[!d$y])` is very easy to calculate, it is `r mean(d$x[d$y]) - mean(d$x[!d$y])`. So we know that `m$coefficients['x']` must be negative, without having to go to the full effort of estimating it. This also is exactly what we need to characterize single variable logistic regression and show in this case explanatory variable proportional data re-weighting is a mere monotone transform (though as [we mentioned earlier](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md), this is not always the case when more variables are present).
 
 It takes a little bit of effort to establish this lemma, as it is elementary so we tend to have to use small steps in the proof. However, this effort is to be preferred to claiming the observation is "obvious" before moving on.
 
@@ -194,7 +194,7 @@ So in the fully saturated indicators case, re-weighting the data as a function o
 
 ## Single Categorical Variable
 
-Notice the saturated indicators has variables that partition the training data. This data partition can be realized a single categorical variable. In fact any such partition or single categorical variable model is going to have the predictions move in a monotone fashion when up-sampling data. TODO: link to example note.
+Notice the saturated indicators has variables that partition the training data. This data partition can be realized a single categorical variable. In fact any such partition or single categorical variable model is going to have the predictions move in a monotone fashion when up-sampling data ([example](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md)).
 
 ## Conclusion
 

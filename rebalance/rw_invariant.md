@@ -1,7 +1,7 @@
 Some Examples Where re-Weighting Data Doesn’t do Much
 ================
 John Mount, Nina Zume; <https://www.win-vector.com>
-Wed Aug 19 11:50:43 2020
+Wed Aug 19 11:53:58 2020
 
 ## Introduction
 
@@ -106,10 +106,11 @@ will help demonstrate our thesis in a non-confrontational manner.
 There are, of course, cases where re-weighting the data by the outcome
 class can change the order of predictions. For example, we demonstrate a
 non-trivial reordering effect with two variable (plus intercept)
-logistic regression [here](rw_example_R.md). In this case we do get
-different models with different data weightings, but one still must
-determine which of these different models in in fact better for a given
-application.
+logistic regression
+[here](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md).
+In this case we do get different models with different data weightings,
+but one still must determine which of these different models in in fact
+better for a given application.
 
 ## Single Numeric Variable (plus intercept) Logistic Regression
 
@@ -272,8 +273,8 @@ negative, without having to go to the full effort of estimating it. This
 also is exactly what we need to characterize single variable logistic
 regression and show in this case explanatory variable proportional data
 re-weighting is a mere monotone transform (though as [we mentioned
-earlier](rw_example_R.md), this is not always the case when more
-variables are present).
+earlier](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md),
+this is not always the case when more variables are present).
 
 It takes a little bit of effort to establish this lemma, as it is
 elementary so we tend to have to use small steps in the proof. However,
@@ -397,7 +398,8 @@ Notice the saturated indicators has variables that partition the
 training data. This data partition can be realized a single categorical
 variable. In fact any such partition or single categorical variable
 model is going to have the predictions move in a monotone fashion when
-up-sampling data. TODO: link to example note.
+up-sampling data
+([example](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md)).
 
 ## Conclusion
 
