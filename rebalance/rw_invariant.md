@@ -1,0 +1,415 @@
+Some Examples Where re-Weighting Data Doesn’t do Much
+================
+John Mount, Nina Zume; <https://www.win-vector.com>
+Wed Aug 19 11:50:43 2020
+
+## Introduction
+
+Re-weighting data for unbalanced classification tasks is a popular data
+transform used to attempt to improve model sensitivity for important
+rare events. The method can help, but [we feel it is over-used as it
+also helps to work around the common mistake of using classification
+rules where numeric or probability models are more
+appropriate](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/).
+
+[Nina Zumel had some interesting comments on the
+ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/)
+which lead us to conclude: if re-balancing does anything better than
+moving your threshold, this is in fact evidence of a missed interaction.
+
+Let’s work some simple examples to try and illustrate this point.
+
+### Terminology
+
+In this note (and our earlier one: [“Don’t Use Classification Rules for
+Classification
+Problems”](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/))
+we are going to need to lock down some terms at very specific uses (some
+standard, some a little less standard).
+
+Our problem is: modeling an outcome or dependent variable that takes the
+value `TRUE`/`FALSE` (or `1`/`0`) in terms of numeric explanatory
+variables. A *numeric score model* is a model that returns a number or
+score for each instance, with higher scores being predictions that the
+dependent variable is more likely to be `TRUE`. A *probability model* is
+a score model where the number returned is in the range `[0, 1]` *and*
+we expect the probability that the explanatory is `TRUE` (over some
+aggregation) *is* estimated by the model score.
+
+A *classification rule* is a model that returns a decision for each
+instance: a prediction of “POSITIVE” indicating a prediction that the
+dependent is `TRUE` and “NEGATIVE” indicating a prediction that the
+dependent variables is `FALSE`. Often a classification rule is formed by
+taking a scoring model and declaring the determination to be “POSITIVE”
+if the score is at least a value called the *classification threshold*.
+
+In [`R`](https://www.r-project.org) the standard logistic regression
+`stats::glm()` *always* returns numeric scores (be they “link”,
+“response”, or even “terms”). So `R` users tend to use numeric scores.
+
+In [`Python`](https://www.python.org)
+[`scikit-learn`](https://scikit-learn.org/stable/) the convention is
+`.predict()` returns categorical decisions, and `.predict_proba()`
+returns scores (usually probabilities). So `Python` users are led toward
+classification rules as `.predict()` is the more common method. However,
+the mere discipline of going to the trouble to use `.predict_proba()`
+disposes of this bias.
+
+The type of *data re-weighting* we are discussing is “outcome
+proportional”: all of the weights of one outcome class (usually the
+positive examples) are re-weighted by the same constant. Common examples
+of this are “positive up-sampling” (replicating positive examples to
+give them more emphasis), “negative down-sampling” (down-weighting or
+censoring negative examples to give them less emphasis). The issues of
+these procedures: up-sampling breaks example independence, up-sampling
+can cause data leaks if examples are not moved in groups during
+cross-validation and test/train split, down-sampling loses some
+statistical efficiency, and both procedures no longer match the actual
+training distribution prevalence.
+
+Obviously arbitrary data re-weighting (changing each row’s amount of
+representation in the data set arbitrarily) can change everything about
+the model, as this has enough power to select completely different sets
+of training data under different re-weightings. The “outcome
+proportional” re-weighting, is are more limited set of transformations.
+
+[Our thesis
+is](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/):
+a model that returns a continuous numeric score typically contains
+*more* useful information than any one classification rule. One should
+work with scores as much as possible, and delay the conversion to rules
+as long possible. In fact later altering or adjusting rules in
+production by moving classification thresholds can be very useful. Once
+one takes the care to work with scores, data re-weighting becomes much
+less attractive as most of the *perceived* benefit is now redundant to
+threshold adjustment.
+
+What we are trying to say: there is a minor problem that classification
+rules are used too often, when numeric scores are usually much more
+useful. Obviously numeric scores must be translated into classification
+rules for many applications. However, this is best done at the point of
+application, not early in the modeling process. One noticeable
+distortion of switching to classification rules too early is the false
+impression that outcome proportional data re-weighting is more useful
+than it really is and needed more places than it really is.
+
+### The Plan
+
+In this note we will characterize some cases where such a data
+re-weighting or re-balancing is monotone. In these cases the
+re-weighting re-orders no predictions, so does nothing that a threshold
+change wouldn’t do better. It is our hope that working a few examples
+will help demonstrate our thesis in a non-confrontational manner.
+
+### The Non-Monotone Case
+
+There are, of course, cases where re-weighting the data by the outcome
+class can change the order of predictions. For example, we demonstrate a
+non-trivial reordering effect with two variable (plus intercept)
+logistic regression [here](rw_example_R.md). In this case we do get
+different models with different data weightings, but one still must
+determine which of these different models in in fact better for a given
+application.
+
+## Single Numeric Variable (plus intercept) Logistic Regression
+
+Let’s look at an example where outcome proportional data re-weighting is
+provably no different than just choosing a different score threshold:
+single variable (plus intercept) logistic regression models. On the way
+we can prove a really fun lemma about the sign of one of the logistic
+regression coefficients.
+
+Nina Zumel has a great article on proving theorems about logistic
+regression
+[here](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/).
+For our purposes, a single variable (plus intercept) logistic regression
+is a probability model of the following form (examples in [`R`
+code)](https://www.r-project.org)).
+
+``` r
+sigmoid <- function(x) {
+  1/(1 + exp(-x))
+}
+
+predict_logistic <- function(
+  a,  # scalar, model intercept
+  b,  # scalar, model linear term
+  x   # vector of instances of 
+      # our single explanatory variable
+  ) {
+  sigmoid(a + b * x)
+}
+```
+
+The above is what we mean by “a single variable (plus intercept)
+logistic regression model” (sometimes abbreviated as “a single variable
+logistic regression model”). The “single variable” is the unknown value
+`b`, and the “intercept” is `a`.
+
+Typically we will have a training data set with has a numeric
+explanatory variable `x` and the dependent variable `y` taking values
+from `c(TRUE, FALSE)` that we are trying to predict. For example we
+might have data such as the following.
+
+``` r
+d <- data.frame(
+  x = c(-5,   0,     1),
+  y = c(TRUE, FALSE, TRUE))
+
+knitr::kable(d)
+```
+
+|   x | y     |
+| --: | :---- |
+| \-5 | TRUE  |
+|   0 | FALSE |
+|   1 | TRUE  |
+
+And could then fit a model as follows.
+
+``` r
+m <- glm(
+  y ~ x,
+  data = d,
+  family = binomial())
+
+m$coefficients
+```
+
+    ## (Intercept)           x 
+    ##   0.3829363  -0.3648728
+
+Predictions can be performed using the standard `predict()` method.
+
+``` r
+predict(m, newdata = d, type = 'response')
+```
+
+    ##         1         2         3 
+    ## 0.9009031 0.5945811 0.5045158
+
+Or, using our example method.
+
+``` r
+predict_logistic(
+  a = m$coefficients['(Intercept)'],
+  b = m$coefficients['x'],
+  x = d$x)
+```
+
+    ## [1] 0.9009031 0.5945811 0.5045158
+
+### Re-Weighting Data Versus Moving The Classification Threshold
+
+What we want to show is: re-weighting the training data proportional to
+the explanatory variable for a single variable model doesn’t re-order
+predictions. This means for single-variable logistic models there is no
+point in such re-weighting of data, as the exact same set of
+classification rules can be found by moving the classification
+threshold. In more detail, altering `k` in the following can trade
+sensitivity/specificity or precision/recall.
+
+``` r
+positive <- predict(
+  glm(
+    y ~ x,
+    data = d,
+    family = binomial(), weights = k + d$y),
+  newdata = d,
+  type = 'response') >= 0.5
+```
+
+In `Python` `sklearn`’s `.predict()` method the comparison of the model
+score to the threshold of `0.5` is often hard-coded. This feeds the
+mistaken belief that to change the classification rule you have to
+change the score by a transform of the form `weights = k + d$y`. Our
+position is: prefer calling something like `.predict_proba()` over using
+`.predict()`.
+
+It is much simpler to consider moving the threshold away from `0.5`
+before monkeying with the training and score (our notes on this can be
+found
+[here](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/)).
+A note on exploring threshold trade-offs can be found
+[here](https://win-vector.com/2020/08/17/unrolling-the-roc/).
+
+However, for single variable logistic models, the data re-weighting
+transform is monotone in the predictions. So the same family of
+classification rules can always be achieved by picking an appropriate
+threshold `t` in the following.
+
+``` r
+positive <- predict(
+  glm(
+    y ~ x,
+    data = d,
+    family = binomial()),
+  newdata = d,
+  type = 'response') >= t
+```
+
+One advantage of this latest form is: it is easier to try many values of
+`t` than many values of `k`.
+
+### The Sign Lemma
+
+To show the monotone property we are gong to establish a really neat
+lemma:
+
+<blockquote>
+
+The sign of `b = m$coefficients['x']` is the same the sign of
+`mean(d$x[d$y]) - mean(d$x[!d$y])`.
+
+</blockquote>
+
+Or: the sign of the logistic regression coefficient is the same is the
+sign of the difference in conditonal means of the explanatory variable.
+
+For our example data `mean(d$x[d$y]) - mean(d$x[!d$y])` is very easy to
+calculate, it is -2. So we know that `m$coefficients['x']` must be
+negative, without having to go to the full effort of estimating it. This
+also is exactly what we need to characterize single variable logistic
+regression and show in this case explanatory variable proportional data
+re-weighting is a mere monotone transform (though as [we mentioned
+earlier](rw_example_R.md), this is not always the case when more
+variables are present).
+
+It takes a little bit of effort to establish this lemma, as it is
+elementary so we tend to have to use small steps in the proof. However,
+this effort is to be preferred to claiming the observation is “obvious”
+before moving on.
+
+To establish our lemma pick the value `o` such that `sum((1 - s(o)) y) =
+sum((s(o) (1 - y))`. By the intermediate value theorem, there is such a
+value. Suppose `(a, b)` is the solution to our logistic regression
+problem. Now pick `d = (o - a) / b`. We replace our explanatory variable
+vector `x` with the vector `x' = x + d`.
+
+This replacement means the new solution to the logistic regression
+problem is `(a + b * d, b)`, or `(o, b)` (as `sigmoid(o + b x')` =
+`sigmoid(a + b x)`). The point is: shifting the data alters the
+intercept coefficient, but not the slope-coefficient `b`. Also shifting
+the data does not alter `mean(d$x[d$y]) - mean(d$x[!d$y])`. As we are
+only interested in the relation between `sign(b)` and
+`sign(mean(d$x[d$y]) - mean(d$x[!d$y]))`, we can without loss of
+generality assume the problem is already in this form with the intercept
+coefficient equal to `o`. That is: if we could prove the result in for
+problems in this form, that would be enough to establish the result in
+general.
+
+Logistic regression coefficients are the unique solution to a loss
+function called deviance (essentially a scaling of cross-entropy). In
+our case the loss function is:
+
+``` r
+loss <- function(b) {
+  -2 * ( sum(y * log(sigmoid(o + b * x))) + 
+           sum((1 - y) * log(1 - sigmoid(o + b * x))) )
+}
+```
+
+It is a standard result that `loss()` is a one dimensional [convex
+function](https://en.wikipedia.org/wiki/Convex_function). So if we know
+the sign of the derivative of the loss at `b = 0`, then we know if the
+minimum is to the left or to the right of zero. That is: the derivative
+of the loss tells us the sign of the optimal `b`, what we are trying to
+establish.
+
+The derivative with respect to `b` of `log(sigmoid(o + b x))` is
+`1-sigmoid(o + b x)`, and the derivative of `log(1-sigmoid(o + b x))` is
+`-sigmoid(o + b x)`. This means the derivative of the loss with respect
+to `b` evaluated at `b = 0` is:
+
+``` r
+2 * ( sum(y * (1 - sigmoid(o)) * x) -
+           sum((1 - y) * sigmoid(o) * x) )
+```
+
+By our choice of `o`, this is non-negative scaling of `mean(d$x[d$y]) -
+mean(d$x[!d$y])`. So have established our claim: `sign(mean(d$x[d$y]) -
+mean(d$x[!d$y])) = sign(m$coefficients['x'])`.
+
+### Back To The Monotone Property
+
+With our lemma shown, it is possible to see that explanatory variable
+proportional data re-weighting moves predicitons in a monotone fashion.
+Notice re-weighting all of the examples of the positive class by the
+same amount doesn’t change `mean(d$x[d$y]) - mean(d$x[!d$y])`. Therefore
+the sign of `b = m$coefficients['x']` is not changed. As `sigmoid(a + b
+x)` is monotone in `x` for a known-sign `b` we now have: no predictions
+change order under this sort of data re-scaling.
+
+And that is the result: re-weighting all of the positives by the same
+amount can’t re-order predictions for a single variable (plus intercept)
+logistic regression model. Thus for this style model there is no point
+to the procedure, as from an prediction-order perspective it
+accomplishes nothing more than a threshold change.
+
+### Another Example: The Saturated Indicators Case
+
+One case where re-weighting the data as a function of the outcome class
+is monotone (and therefore not very powerful) is the case of saturated
+indicators.
+
+Suppose all of our explanatory variables only take on the values `0` and
+`1`. Further suppose we have so many explanatory variables that the
+system is saturated in the sense that:
+
+<ul>
+
+<li>
+
+If `xa` is an explanatory variables then `1 - xa` is also an explanatory
+variable.
+
+</li>
+
+<li>
+
+If `xa` and `xb` are explanatory variables then `xa * xb` is either all
+zero, or already an explanatory variable.
+
+</li>
+
+</ul>
+
+In this case the explanatory variables partition the training data into
+sets that are all identifiable by single variables. In this case it is
+simple to see logistic regression, with some slight regularization in
+place, becomes just a look-up table. Training examples associated with
+one of our disjoint partition sets are scored with a probability of `a /
+(a + b)`, where `a` is the number of positive examples for this set
+during training and `b` is the number of negative examples seen in this
+set during training (assuming we don’t have a separated problem,
+i.e. that `a` and `b` are both greater that zero). Then up-weighting
+the positive examples replaces the prediction with `(a w) / (a w + b)`,
+where `w` is our positive re-weighting factor. A little algebra is
+enough to show that this transform, while non-linear, is monotone. If `a
+/ (a + b) > c / (c + d)` then `(a w) / (a w + b) > (c w) / (c w + d)`.
+
+So in the fully saturated indicators case, re-weighting the data as a
+function of the positive class is also monotone.
+
+## Single Categorical Variable
+
+Notice the saturated indicators has variables that partition the
+training data. This data partition can be realized a single categorical
+variable. In fact any such partition or single categorical variable
+model is going to have the predictions move in a monotone fashion when
+up-sampling data. TODO: link to example note.
+
+## Conclusion
+
+We have some some examples where re-weighting the data as a function of
+the class to be predicted does nothing interesting, where it is a
+monotone transform. In these cases the same set of classification rules
+that can be found by such a re-weighting scheme can all be found just by
+picking different classification rule thresholds. Picking classification
+rule thresholds is much easier than re-training models and is something
+that can even be used as a useful adjustment later in production.
+
+In addition to the examples, I also think the sign lemma is of interest.
+It emphasizes that coefficient sign is about the relative position of
+the conditional means, which is very much how methods such as linear
+discriminant analysis treat data.
