@@ -1,7 +1,9 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Wed Aug 19 12:23:16 2020
+Thu Aug 20 09:00:56 2020
+
+## Introduction
 
 Here is an example of how re-weighting data as function of the training
 outcome to balance the positive and negative examples can change results
@@ -23,6 +25,8 @@ numeric scores (converted to a classification rule too early) or missed
 an interaction in your data (which can be fixed by a bit more feature
 engineering, the non-montone change suggests some interactions that can
 be introduced).
+
+## Example
 
 Let’s work our example in [`R`](https://www.r-project.org).
 
@@ -58,6 +62,8 @@ knitr::kable(d)
 |  1 |  0 | 0 |  2 |
 |  1 |  0 | 1 |  5 |
 |  1 |  1 | 0 |  2 |
+
+### First Model
 
 Fit a logistic regression model
 
@@ -125,6 +131,8 @@ sum(d$y) / nrow(d)
 
     ## [1] 0.2857143
 
+### Re-balanced Model
+
 Let’s see if fitting a balanced copy of the data set (created by
 up-sampling the positive examples) gives us a structurally different
 answer.
@@ -189,6 +197,8 @@ knitr::kable(d)
 |  1 |  0 | 1 |  5 | 0.1796789 | 0.3930810 |
 |  1 |  1 | 0 |  2 | 0.4609633 | 0.7311357 |
 
+### The Difference
+
 Notice rows 1 and 2 are predicted to have larger probability (prediction
 \~ 0.23) in model1 than rows 4 and 5 (prediction \~ 0.18). This relation
 is reversed in model2. So the models have essentially different order,
@@ -238,6 +248,8 @@ PRPlot(
 
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
+## Moving Forward
+
 It is not obvious that re-scaling is always going to be a bad transform.
 But our point is: it is not obvious re-scaling is always going to be a
 good transform. As we have [written
@@ -250,34 +262,69 @@ As we mentioned in our [invariant
 note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
 a saturated version of this data set will not have the non-monotone
 property. With enough training data the satuarating is mere feature
-engineering.
+engineering. The non-monotone transform is a symptom of a missing
+interaction forcing the modeling to make different compromises at
+different data prevalences. With a richer feature set the model can make
+different decisions for subsets of rows, yielding a better model with
+fewer compromises.
 
-For example we get rid of the non-monotone change (and claimed
-advantage) by adding a few interaction variables (it is not necessary to
-fully saturate the system).
+The non-monotone set can actually suggest interactions to add.
 
 ``` r
-d$x3 <- d$x1 * d$x2
-d$x4 <- (1 - d$x1) * d$x2
-d$x5 <- d$x1 * (1 - d$x2)
-d$x6 <- (1 - d$x1) * (1 - d$x2)
+# find the order changes.
+combs <- combn(seq_len(nrow(d)), 2)
+reversals <- ( d$pred1[combs[1, ]] > d$pred1[combs[2, ]] ) & 
+  ( d$pred2[combs[1, ]] < d$pred2[combs[2, ]] )
+pairs <- combs[, reversals, drop = FALSE]
+pairs
+```
 
+    ##      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+    ## [1,]    1    1    1    2    2    2    3
+    ## [2,]    4    5    6    4    5    6    7
+
+`pairs` is the edge-set of a graph where the top ends of edges are
+greater than the bottom ends in the `pred1` order and also less than the
+bottom ends in the `pred2` order. The components of this graph are
+bipartite, and we want new variables eliminate edges from these graphs.
+
+In our case the supports of the bipartite components are `{({1,2},
+{4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that
+identify these support sets, as this would give the model the degrees of
+freedom needed to re-score these sets independtly and remove the
+compromises forcing the non-monotone change.
+
+``` r
+d$s_456 <- d$x1 - d$x1 * d$x2
+d$s_12 <- (1 - d$x1) * (1 - d$x2)
+d$s_3 <- (1 - d$x1) * d$x2
+d$s_7 <- d$x1 * d$x2
 knitr::kable(d)
 ```
 
-| x1 | x2 | y | w2 |     pred1 |     pred2 | x3 | x4 | x5 | x6 |
-| -: | -: | -: | -: | --------: | --------: | -: | -: | -: | -: |
-|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |  0 |  0 |  0 |  1 |
-|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |  0 |  0 |  0 |  1 |
-|  0 |  1 | 1 |  5 | 0.5390367 | 0.7075457 |  0 |  1 |  0 |  0 |
-|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |  0 |  0 |  1 |  0 |
-|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |  0 |  0 |  1 |  0 |
-|  1 |  0 | 1 |  5 | 0.1796789 | 0.3930810 |  0 |  0 |  1 |  0 |
-|  1 |  1 | 0 |  2 | 0.4609633 | 0.7311357 |  1 |  0 |  0 |  0 |
+| x1 | x2 | y | w2 |     pred1 |     pred2 | s\_456 | s\_12 | s\_3 | s\_7 |
+| -: | -: | -: | -: | --------: | --------: | -----: | ----: | ---: | ---: |
+|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |      0 |     1 |    0 |    0 |
+|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |      0 |     1 |    0 |    0 |
+|  0 |  1 | 1 |  5 | 0.5390367 | 0.7075457 |      0 |     0 |    1 |    0 |
+|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |      1 |     0 |    0 |    0 |
+|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |      1 |     0 |    0 |    0 |
+|  1 |  0 | 1 |  5 | 0.1796789 | 0.3930810 |      1 |     0 |    0 |    0 |
+|  1 |  1 | 0 |  2 | 0.4609633 | 0.7311357 |      0 |     0 |    0 |    1 |
+
+The idea is: we are working in the set-algebra of the indicator
+variables. Complement is subtraction from one, intersection is
+represented by multiplication, union compliment of intersection of
+complements. The supports must be in this algebra as rows that are
+indistinguishible by combinations of our variables must enter and leave
+the supports together.
+
+Once we have an augmented set of variables we can re-solve for models
+under both data weightings.
 
 ``` r
 model1s <- glm(
-  y ~ x1 + x2 + x3 + x4 + x5 + x6,
+  y ~ x1 + x2 + s_456 + s_12 + s_3 + s_7,
   data = d,
   family = binomial())
 ```
@@ -296,7 +343,7 @@ predict(model1s, newdata = d, type = 'response')
 
 ``` r
 model2s <- glm(
-  y ~ x1 + x2 + x3 + x4 + x5 + x6,
+  y ~ x1 + x2 + s_456 + s_12 + s_3 + s_7,
   data = d,
   weights = w2,
   family = binomial())
@@ -314,7 +361,12 @@ predict(model2s, newdata = d, type = 'response')
     ##            7 
     ## 2.272475e-09
 
-Notice the two predictions have the same order-statistics.
+Notice the two predictions, while different, now have the same
+order-statistics. So instead of worrying which of the original two
+models was better, we instead say the original order difference were in
+fact evidence of missing interaction variables. With the additional
+interaction variables we have a model structure, that with enough
+training data, should dominate both original models.
 
 The point is: with individual variables that contain finer detail about
 the data fewer trade-offs are required, not leaving in the possibility
@@ -324,8 +376,9 @@ and neural nets introduce enough interactions to not fundementally need
 the re-balance (though any one particular implementation may fall
 short).
 
-This can be achieved quicker by introducing the obvious categorical
-variable that the partition implied by the satured variables.
+This can be achieved all at once by introducing the obvious categorical
+variable that the partition implied by the combinations of the original
+variables variables.
 
 ``` r
 d$cat <- paste(d$x1, d$x2)
@@ -363,3 +416,7 @@ predict(model2c, newdata = d, type = 'response')
     ## 2.272475e-09 2.272475e-09 1.000000e+00 5.555556e-01 5.555556e-01 5.555556e-01 
     ##            7 
     ## 2.272475e-09
+
+TODO: mention how fitting with a different prevalance or replacing out
+priors both don’t give the balance conditions of a standard logistic
+regression.
