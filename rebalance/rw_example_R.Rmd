@@ -176,15 +176,23 @@ The non-monotone set can actually suggest interactions to add.
 
 
 ```{r}
-# find the order changes.
-combs <- combn(seq_len(nrow(d)), 2)
-reversals <- ( d$pred1[combs[1, ]] > d$pred1[combs[2, ]] ) & 
-  ( d$pred2[combs[1, ]] < d$pred2[combs[2, ]] )
-pairs <- combs[, reversals, drop = FALSE]
+find_order_reversals <- function(p1, p2) {
+  # find the order changes.
+  eps <- 1e-12
+  combs <- combn(seq_len(nrow(d)), 2)
+  reversals <- ( p1[combs[1, ]] > p1[combs[2, ]] + eps) & 
+    ( p2[combs[1, ]] + eps < p2[combs[2, ]] )
+  combs[, reversals, drop = FALSE]
+}
+
+pairs <- list(
+  find_order_reversals(d$pred1, d$pred2),
+  find_order_reversals(d$pred2, d$pred1))
+
 pairs
 ```
 
-`pairs` is the edge-set of a graph where the top ends of edges are greater than the bottom ends in the `pred1` order and also less than the bottom ends in the `pred2` order. The components of this graph are bipartite, and we want new variables eliminate edges from these graphs.
+Each entry of `pairs` is the edge-set of a graph where `pred1` and `pred2` orders disagree. The components of this graph are bipartite, and we want new variables eliminate edges from these graphs.
 
 In our case the supports of the bipartite components are `{({1,2}, {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that identify these support sets, as this would give the model the degrees of freedom needed to re-score these sets independently and remove the compromises forcing the non-monotone change.
 
@@ -205,10 +213,14 @@ model1s <- glm(
   y ~ x1 + x2 + s_456 + s_12 + s_3 + s_7,
   data = d,
   family = binomial())
+
+model1s$coefficients
 ```
 
 ```{r}
-predict(model1s, newdata = d, type = 'response')
+d$pred1s <- predict(model1s, newdata = d, type = 'response')
+
+d$pred1s
 ```
 
 ```{r}
@@ -217,11 +229,21 @@ model2s <- glm(
   data = d,
   weights = w2,
   family = binomial())
+
+model2s$coefficients
 ```
 
 
 ```{r}
-predict(model2s, newdata = d, type = 'response')
+d$pred2s <- predict(model2s, newdata = d, type = 'response')
+
+d$pred2s
+```
+
+```{r}
+list(
+  find_order_reversals(d$pred1s, d$pred2s),
+  find_order_reversals(d$pred2s, d$pred1s))
 ```
 
 Notice the two predictions, while different, now have the same order-statistics. So instead of worrying which of the original two models was better, we instead say the original order difference were in fact evidence of missing interaction variables. With the additional interaction variables we have a model structure, that with enough training data, should dominate both original models.
@@ -239,6 +261,8 @@ model1c <- glm(
   y ~ cat,
   data = d,
   family = binomial())
+
+model1c$coefficients
 ```
 
 ```{r}
@@ -252,6 +276,8 @@ model2c <- glm(
   data = d,
   weights = w2,
   family = binomial())
+
+model2c$coefficients
 ```
 
 

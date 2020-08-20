@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 09:48:08 2020
+Thu Aug 20 11:56:39 2020
 
 ## Introduction
 
@@ -310,22 +310,35 @@ fewer compromises.
 The non-monotone set can actually suggest interactions to add.
 
 ``` r
-# find the order changes.
-combs <- combn(seq_len(nrow(d)), 2)
-reversals <- ( d$pred1[combs[1, ]] > d$pred1[combs[2, ]] ) & 
-  ( d$pred2[combs[1, ]] < d$pred2[combs[2, ]] )
-pairs <- combs[, reversals, drop = FALSE]
+find_order_reversals <- function(p1, p2) {
+  # find the order changes.
+  eps <- 1e-12
+  combs <- combn(seq_len(nrow(d)), 2)
+  reversals <- ( p1[combs[1, ]] > p1[combs[2, ]] + eps) & 
+    ( p2[combs[1, ]] + eps < p2[combs[2, ]] )
+  combs[, reversals, drop = FALSE]
+}
+
+pairs <- list(
+  find_order_reversals(d$pred1, d$pred2),
+  find_order_reversals(d$pred2, d$pred1))
+
 pairs
 ```
 
+    ## [[1]]
     ##      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
     ## [1,]    1    1    1    2    2    2    3
     ## [2,]    4    5    6    4    5    6    7
+    ## 
+    ## [[2]]
+    ##     
+    ## [1,]
+    ## [2,]
 
-`pairs` is the edge-set of a graph where the top ends of edges are
-greater than the bottom ends in the `pred1` order and also less than the
-bottom ends in the `pred2` order. The components of this graph are
-bipartite, and we want new variables eliminate edges from these graphs.
+Each entry of `pairs` is the edge-set of a graph where `pred1` and
+`pred2` orders disagree. The components of this graph are bipartite, and
+we want new variables eliminate edges from these graphs.
 
 In our case the supports of the bipartite components are `{({1,2},
 {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that
@@ -366,19 +379,28 @@ model1s <- glm(
   y ~ x1 + x2 + s_456 + s_12 + s_3 + s_7,
   data = d,
   family = binomial())
+
+model1s$coefficients
 ```
 
+    ## (Intercept)          x1          x2       s_456        s_12         s_3 
+    ##   -20.56607   -41.13214    41.13214    61.00506          NA          NA 
+    ##         s_7 
+    ##          NA
+
 ``` r
-predict(model1s, newdata = d, type = 'response')
+d$pred1s <- predict(model1s, newdata = d, type = 'response')
 ```
 
     ## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
     ## prediction from a rank-deficient fit may be misleading
 
-    ##            1            2            3            4            5            6 
-    ## 1.170226e-09 1.170226e-09 1.000000e+00 3.333333e-01 3.333333e-01 3.333333e-01 
-    ##            7 
-    ## 1.170226e-09
+``` r
+d$pred1s
+```
+
+    ## [1] 1.170226e-09 1.170226e-09 1.000000e+00 3.333333e-01 3.333333e-01
+    ## [6] 3.333333e-01 1.170226e-09
 
 ``` r
 model2s <- glm(
@@ -386,19 +408,44 @@ model2s <- glm(
   data = d,
   weights = w2,
   family = binomial())
+
+model2s$coefficients
 ```
 
+    ## (Intercept)          x1          x2       s_456        s_12         s_3 
+    ##   -19.90240   -40.43890    40.43890    60.56444          NA          NA 
+    ##         s_7 
+    ##          NA
+
 ``` r
-predict(model2s, newdata = d, type = 'response')
+d$pred2s <- predict(model2s, newdata = d, type = 'response')
 ```
 
     ## Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type == :
     ## prediction from a rank-deficient fit may be misleading
 
-    ##            1            2            3            4            5            6 
-    ## 2.272475e-09 2.272475e-09 1.000000e+00 5.555556e-01 5.555556e-01 5.555556e-01 
-    ##            7 
-    ## 2.272475e-09
+``` r
+d$pred2s
+```
+
+    ## [1] 2.272475e-09 2.272475e-09 1.000000e+00 5.555556e-01 5.555556e-01
+    ## [6] 5.555556e-01 2.272475e-09
+
+``` r
+list(
+  find_order_reversals(d$pred1s, d$pred2s),
+  find_order_reversals(d$pred2s, d$pred1s))
+```
+
+    ## [[1]]
+    ##     
+    ## [1,]
+    ## [2,]
+    ## 
+    ## [[2]]
+    ##     
+    ## [1,]
+    ## [2,]
 
 Notice the two predictions, while different, now have the same
 order-statistics. So instead of worrying which of the original two
@@ -428,7 +475,12 @@ model1c <- glm(
   y ~ cat,
   data = d,
   family = binomial())
+
+model1c$coefficients
 ```
+
+    ##   (Intercept)        cat0 1        cat1 0        cat1 1 
+    ## -2.056607e+01  4.113214e+01  1.987292e+01 -5.786086e-11
 
 ``` r
 d$pred1c <- predict(model1c, newdata = d, type = 'response')
@@ -444,7 +496,12 @@ model2c <- glm(
   data = d,
   weights = w2,
   family = binomial())
+
+model2c$coefficients
 ```
+
+    ##   (Intercept)        cat0 1        cat1 0        cat1 1 
+    ## -1.990240e+01  4.043890e+01  2.012554e+01 -1.077021e-08
 
 ``` r
 d$pred2c <- predict(model2c, newdata = d, type = 'response')
