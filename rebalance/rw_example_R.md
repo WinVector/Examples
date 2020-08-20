@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 11:56:39 2020
+Thu Aug 20 12:25:19 2020
 
 ## Introduction
 
@@ -514,11 +514,11 @@ d$pred2c
 ## Shifting
 
 Matloff *Statistical Regression and Classification*, CRC Press, 2017,
-section 5.8.2.2 “The Issue of ’Unbalanced (and Balanced) Data, Remedies”
-suggests shifting prediction scores instead of moving thresholds to deal
-changes in priors. This is good advice and emphasizes staying with
-scores, instead of binding in thresholds to form classification rules
-too early.
+section 5.8.2.2 “The Issue of ‘Unbalanced’ (and Balanced) Data,
+Remedies” suggests shifting prediction scores instead of moving
+thresholds to deal changes in priors. This is good advice and emphasizes
+staying with scores, instead of binding in thresholds to form
+classification rules too early.
 
 The monotone models are very well suited for this transform, as for them
 any such transform is order equivilent to re-training with different
