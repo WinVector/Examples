@@ -186,7 +186,7 @@ pairs
 
 `pairs` is the edge-set of a graph where the top ends of edges are greater than the bottom ends in the `pred1` order and also less than the bottom ends in the `pred2` order. The components of this graph are bipartite, and we want new variables eliminate edges from these graphs.
 
-In our case the supports of the bipartite components are `{({1,2}, {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that identify these support sets, as this would give the model the degrees of freedom needed to re-score these sets independtly and remove the compromises forcing the non-monotone change.
+In our case the supports of the bipartite components are `{({1,2}, {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that identify these support sets, as this would give the model the degrees of freedom needed to re-score these sets independently and remove the compromises forcing the non-monotone change.
 
 ```{r}
 d$s_456 <- d$x1 - d$x1 * d$x2

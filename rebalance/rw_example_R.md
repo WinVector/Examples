@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 09:27:34 2020
+Thu Aug 20 09:48:08 2020
 
 ## Introduction
 
@@ -330,7 +330,7 @@ bipartite, and we want new variables eliminate edges from these graphs.
 In our case the supports of the bipartite components are `{({1,2},
 {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that
 identify these support sets, as this would give the model the degrees of
-freedom needed to re-score these sets independtly and remove the
+freedom needed to re-score these sets independently and remove the
 compromises forcing the non-monotone change.
 
 ``` r
