@@ -1,7 +1,7 @@
 Some Examples Where re-Weighting Data Doesn’t do Much
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Wed Aug 19 12:23:22 2020
+Thu Aug 20 09:27:39 2020
 
 ## Introduction
 
@@ -79,6 +79,8 @@ representation in the data set arbitrarily) can change everything about
 the model, as this has enough power to select completely different sets
 of training data under different re-weightings. The “outcome
 proportional” re-weighting, is are more limited set of transformations.
+Essentially they are exactly the re-weightings that are adjustments of
+outcome priors.
 
 [Our thesis
 is](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/):

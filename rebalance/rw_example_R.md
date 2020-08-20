@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 09:00:56 2020
+Thu Aug 20 09:27:34 2020
 
 ## Introduction
 
@@ -28,7 +28,9 @@ be introduced).
 
 ## Example
 
-Let’s work our example in [`R`](https://www.r-project.org).
+Let’s work our example in [`R`](https://www.r-project.org). Some of our
+terminology is defined in our [companion
+note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md).
 
 ``` r
 # first attach packages
@@ -248,6 +250,41 @@ PRPlot(
 
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
+## A Critique
+
+An important property of logistic regression is [the balance
+properties](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/):
+for any variable `v` we have `sum(d[[v]] * d$y) == sum(d[[v]] *
+d$prediction)`. Fitting with the balance priors (essentially the wrong
+priors loses this property).
+
+``` r
+sum(d$x1 * d$y)
+```
+
+    ## [1] 1
+
+``` r
+sum(d$x1 * d$pred1)  # matches sum(d$x1 * d$y)
+```
+
+    ## [1] 1
+
+``` r
+sum(d$x1 * d$pred2)  # does not match
+```
+
+    ## [1] 1.910379
+
+And this is not fixed by trying to adjust back to the true (unbalanced)
+priors.
+
+``` r
+sum(d$x1 * d$pred2) * (  sum(d$y) / sum(d$pred2) )  # still does not match
+```
+
+    ## [1] 1.140845
+
 ## Moving Forward
 
 It is not obvious that re-scaling is always going to be a bad transform.
@@ -267,6 +304,8 @@ interaction forcing the modeling to make different compromises at
 different data prevalences. With a richer feature set the model can make
 different decisions for subsets of rows, yielding a better model with
 fewer compromises.
+
+### Adding Interactions
 
 The non-monotone set can actually suggest interactions to add.
 
@@ -372,7 +411,7 @@ The point is: with individual variables that contain finer detail about
 the data fewer trade-offs are required, not leaving in the possibility
 of a non-monotone. Likely higher complexity models such as polynomial
 regression, kernelized methods, tree based methods, ensemble methods,
-and neural nets introduce enough interactions to not fundementally need
+and neural nets introduce enough interactions to not fundamentally need
 the re-balance (though any one particular implementation may fall
 short).
 
@@ -392,13 +431,12 @@ model1c <- glm(
 ```
 
 ``` r
-predict(model1c, newdata = d, type = 'response')
+d$pred1c <- predict(model1c, newdata = d, type = 'response')
+d$pred1c
 ```
 
-    ##            1            2            3            4            5            6 
-    ## 1.170226e-09 1.170226e-09 1.000000e+00 3.333333e-01 3.333333e-01 3.333333e-01 
-    ##            7 
-    ## 1.170226e-09
+    ## [1] 1.170226e-09 1.170226e-09 1.000000e+00 3.333333e-01 3.333333e-01
+    ## [6] 3.333333e-01 1.170226e-09
 
 ``` r
 model2c <- glm(
@@ -409,14 +447,28 @@ model2c <- glm(
 ```
 
 ``` r
-predict(model2c, newdata = d, type = 'response')
+d$pred2c <- predict(model2c, newdata = d, type = 'response')
+d$pred2c
 ```
 
-    ##            1            2            3            4            5            6 
-    ## 2.272475e-09 2.272475e-09 1.000000e+00 5.555556e-01 5.555556e-01 5.555556e-01 
-    ##            7 
-    ## 2.272475e-09
+    ## [1] 2.272475e-09 2.272475e-09 1.000000e+00 5.555556e-01 5.555556e-01
+    ## [6] 5.555556e-01 2.272475e-09
 
-TODO: mention how fitting with a different prevalance or replacing out
-priors both don’t give the balance conditions of a standard logistic
-regression.
+## Shifting
+
+Matloff *Statistical Regression and Classification*, CRC Press, 2017,
+section 5.8.2.2 “The Issue of ’Unbalanced (and Balanced) Data, Remedies”
+suggests shifting prediction scores instead of moving thresholds to deal
+changes in priors. This is good advice and emphasizes staying with
+scores, instead of binding in thresholds to form classification rules
+too early.
+
+The monotone models are very well suited for this transform, as for them
+any such transform is order equivilent to re-training with different
+priors.
+
+## Conclusion
+
+We have shown some ways to refine the logistic regression model so it is
+prediction order-invariant to data prevalence. This sort of model should
+be prefered.
