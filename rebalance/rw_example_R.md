@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 12:25:19 2020
+Thu Aug 20 21:00:59 2020
 
 ## Introduction
 
@@ -35,8 +35,15 @@ note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
 ``` r
 # first attach packages
 library(wrapr)
+```
+
+    ## Warning: package 'wrapr' was built under R version 4.0.2
+
+``` r
 library(WVPlots)
 ```
+
+    ## Warning: package 'WVPlots' was built under R version 4.0.2
 
 ``` r
 # build our example data
@@ -202,7 +209,7 @@ knitr::kable(d)
 ### The Difference
 
 Notice rows 1 and 2 are predicted to have larger probability (prediction
-\~ 0.23) in model1 than rows 4 and 5 (prediction \~ 0.18). This relation
+~ 0.23) in model1 than rows 4 and 5 (prediction ~ 0.18). This relation
 is reversed in model2. So the models have essentially different order,
 and therefore are not monotone transforms of each other.
 
@@ -337,10 +344,10 @@ pairs
     ## [2,]
 
 Each entry of `pairs` is the edge-set of a graph where `pred1` and
-`pred2` orders disagree. The components of this graph are bipartite, and
-we want new variables eliminate edges from these graphs.
+`pred2` orders disagree. We want new variables eliminate edges from
+these graphs.
 
-In our case the supports of the bipartite components are `{({1,2},
+In our case the ordered supports of the components are `{({1,2},
 {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that
 identify these support sets, as this would give the model the degrees of
 freedom needed to re-score these sets independently and remove the
