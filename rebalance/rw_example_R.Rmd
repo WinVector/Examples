@@ -286,6 +286,36 @@ d$pred2c <- predict(model2c, newdata = d, type = 'response')
 d$pred2c
 ```
 
+## Dominance
+
+The point being: a sufficiently saturated model should eventualy dominate 
+other models. Assuming we have enough training data, the extra features 
+allow us to take more favorable sensitivity/specficity trade-off and make
+the initial training priors something we can more easilly substitute out.
+
+```{r}
+ROCPlotPairList(
+  d,
+  xvar_names = qc(pred1, pred2, pred1s, pred2s, pred1c, pred2c),
+  truthVar = 'y',
+  truthTarget = 1,
+  title = 'all models')
+```
+
+Notice the models `pred1c`, `pred1s`, `pred2c`, and `pred2s` are are identical and dominant in terms of order statistics and senstivity/specficity trade-offs.
+
+```{r}
+ROCPlotPairList(
+  d,
+  xvar_names = qc(pred1s, pred2s, pred1c, pred2c),
+  truthVar = 'y',
+  truthTarget = 1,
+  title = 'dominant model family')
+```
+
+This emphasizes we would be happy with any one of these models, and could use them by either post-hoc adjusting the scores or thresholds.
+
+
 ## Shifting
 
 Matloff *Statistical Regression and Classification*, CRC Press, 2017, section  5.8.2.2 "The Issue of 'Unbalanced' (and Balanced) Data, Remedies" suggests shifting prediction scores instead of moving thresholds to deal changes in priors. This is good advice and emphasizes staying with scores, instead of binding in thresholds to form classification rules too early.
@@ -295,4 +325,5 @@ The monotone models are very well suited for this transform, as for them any suc
 ## Conclusion
 
 We have shown some ways to refine the logistic regression model so it is prediction order-invariant to data prevalence. This sort of model should be prefered.
+
 

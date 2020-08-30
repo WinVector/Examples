@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 21:00:59 2020
+Sat Aug 29 22:01:56 2020
 
 ## Introduction
 
@@ -35,15 +35,8 @@ note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
 ``` r
 # first attach packages
 library(wrapr)
-```
-
-    ## Warning: package 'wrapr' was built under R version 4.0.2
-
-``` r
 library(WVPlots)
 ```
-
-    ## Warning: package 'WVPlots' was built under R version 4.0.2
 
 ``` r
 # build our example data
@@ -209,7 +202,7 @@ knitr::kable(d)
 ### The Difference
 
 Notice rows 1 and 2 are predicted to have larger probability (prediction
-~ 0.23) in model1 than rows 4 and 5 (prediction ~ 0.18). This relation
+\~ 0.23) in model1 than rows 4 and 5 (prediction \~ 0.18). This relation
 is reversed in model2. So the models have essentially different order,
 and therefore are not monotone transforms of each other.
 
@@ -517,6 +510,43 @@ d$pred2c
 
     ## [1] 2.272475e-09 2.272475e-09 1.000000e+00 5.555556e-01 5.555556e-01
     ## [6] 5.555556e-01 2.272475e-09
+
+## Dominance
+
+The point being: a sufficiently saturated model should eventualy
+dominate other models. Assuming we have enough training data, the extra
+features allow us to take more favorable sensitivity/specficity
+trade-off and make the initial training priors something we can more
+easilly substitute out.
+
+``` r
+ROCPlotPairList(
+  d,
+  xvar_names = qc(pred1, pred2, pred1s, pred2s, pred1c, pred2c),
+  truthVar = 'y',
+  truthTarget = 1,
+  title = 'all models')
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+
+Notice the models `pred1c`, `pred1s`, `pred2c`, and `pred2s` are are
+identical and dominant in terms of order statistics and
+senstivity/specficity trade-offs.
+
+``` r
+ROCPlotPairList(
+  d,
+  xvar_names = qc(pred1s, pred2s, pred1c, pred2c),
+  truthVar = 'y',
+  truthTarget = 1,
+  title = 'dominant model family')
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+
+This emphasizes we would be happy with any one of these models, and
+could use them by either post-hoc adjusting the scores or thresholds.
 
 ## Shifting
 
