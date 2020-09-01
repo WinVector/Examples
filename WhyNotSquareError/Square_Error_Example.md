@@ -10,10 +10,12 @@ sigmoid <- function(x) {
   1/(1 + exp(-x))
 }
 
+
 d <- data.frame(
-  x = c(0, 0, 0, 1, 1, 1),
-  y = c(0, 0, 1, 0, 1, 1)
+  x = c(-2, -2, -2, 0, 0, 10, 10),
+  y = c(1, 1, 1, 0, 1, 1, 1)
 )
+
 
 f_sq <- function(b, d) {
   sum( (d$y - sigmoid(b * d$x))^2 )
@@ -56,5 +58,7 @@ ggplot(data = plt_frame, aes(x = b, y = f_deviance)) +
   geom_line() +
   ggtitle("deviance sigmoid error")
 ```
+
+    ## Warning: Removed 133 row(s) containing missing values (geom_path).
 
 ![](Square_Error_Example_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
