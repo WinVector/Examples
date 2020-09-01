@@ -113,11 +113,14 @@ difficulty making it to the optimal `b` much closer to `0`.
 
 Note: it appears a variant of the square error for probabilities is
 called the [Brier score](https://en.wikipedia.org/wiki/Brier_score) and
-used in some fields. Our opinion is the deviance and cross-entropy are
-in fact better losses, well taught (see [Cover/Thomas *Elements of
+used in some fields. “Field Y does X” is a very interesting answer to
+“Why not do X?”I’ve found students are very interested in hearing such
+examples.
+
+I still prefer the deviance and
+[cross-entropy](https://en.wikipedia.org/wiki/Cross_entropy) as I feel
+they are better losses, and well taught (see [Cover/Thomas *Elements of
 Information
-Theory*](http://staff.ustc.edu.cn/~cgong821/Wiley.Interscience.Elements.of.Information.Theory.Jul.2006.eBook-DDU.pdf)),
-and should be preferred. Square error may be a “good enough” measure for
-some applications, but I doubt
-[cross-entropy](https://en.wikipedia.org/wiki/Cross_entropy) is in fact
-worse for these applications.
+Theory*](http://staff.ustc.edu.cn/~cgong821/Wiley.Interscience.Elements.of.Information.Theory.Jul.2006.eBook-DDU.pdf)).
+Square error may be a “good enough” measure for many applications, but I
+doubt deviance would be worse.
