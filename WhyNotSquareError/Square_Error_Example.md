@@ -119,5 +119,5 @@ Information
 Theory*](http://staff.ustc.edu.cn/~cgong821/Wiley.Interscience.Elements.of.Information.Theory.Jul.2006.eBook-DDU.pdf)),
 and should be preferred. Square error may be a “good enough” measure for
 some applications, but I doubt
-[cross-entropy](https://en.wikipedia.org/wiki/Cross_entropy) is worse
-for these applications.
+[cross-entropy](https://en.wikipedia.org/wiki/Cross_entropy) is in fact
+worse for these applications.
