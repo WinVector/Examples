@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Sat Aug 29 22:01:56 2020
+Mon Sep 7 09:19:14 2020
 
 ## Introduction
 
@@ -34,6 +34,13 @@ note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
 
 ``` r
 # first attach packages
+library(ggplot2)
+```
+
+    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
+    ## when loading 'dplyr'
+
+``` r
 library(wrapr)
 library(WVPlots)
 ```
@@ -532,7 +539,7 @@ ROCPlotPairList(
 
 Notice the models `pred1c`, `pred1s`, `pred2c`, and `pred2s` are are
 identical and dominant in terms of order statistics and
-senstivity/specficity trade-offs.
+sensitivity/specficity trade-offs.
 
 ``` r
 ROCPlotPairList(
@@ -566,3 +573,81 @@ priors.
 We have shown some ways to refine the logistic regression model so it is
 prediction order-invariant to data prevalence. This sort of model should
 be prefered.
+
+## Appendix
+
+### Plotting prediction trajectory
+
+Here we look at the trajectories of coefficients and predictions as a
+function of data re-weighting.
+
+``` r
+dt <- data.frame(
+  x1 = c(0, 0, 1, 1), 
+  x2 = c(0, 1, 0, 1))
+names <- vapply(colnames(dt), function(v) paste0(v, '=', dt[[v]]), character(nrow(dt)))
+names <- vapply(seq_len(nrow(names)), function(i) paste(names[i,], collapse = ', '), character(1))
+wseq <- seq(0.01, 0.99, length.out = 100)
+
+evalsp <- lapply(
+  wseq,
+  function(wi) {
+    mt <-  suppressWarnings(
+      glm(
+        y ~ x1 + x2,
+        data = d,
+        weights = wi*d$y + (1-wi)*(1-d$y),
+        family = binomial())
+    )
+    data.frame(
+      wt = wi,
+      row_set = names,
+      prediction = predict(mt, newdata = dt, type = 'response'),
+      link = predict(mt, newdata = dt, type = 'link'))
+  }
+)
+evalsp <- do.call(rbind, evalsp)
+
+ggplot(data = evalsp, mapping = aes(x = wt, y = prediction, color = row_set)) +
+  geom_line() +
+  ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+
+``` r
+ggplot(data = evalsp, mapping = aes(x = wt, y = link, color = row_set)) +
+  geom_line() +
+  ggtitle("trajectory of row-set link as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-2.png)<!-- -->
+
+``` r
+evalsc <- lapply(
+  wseq,
+  function(wi) {
+    mt <-  suppressWarnings(
+      glm(
+        y ~ x1 + x2,
+        data = d,
+        weights = wi*d$y + (1-wi)*(1-d$y),
+        family = binomial())
+    )
+    data.frame(
+      wt = wi,
+      coef_name = names(mt$coefficients),
+      coef_value = mt$coefficients)
+  }
+)
+evalsc <- do.call(rbind, evalsc)
+
+ggplot(data = evalsc, mapping = aes(x = wt, y = coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-3.png)<!-- -->
