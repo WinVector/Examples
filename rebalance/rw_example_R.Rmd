@@ -334,6 +334,8 @@ We have shown some ways to refine the logistic regression model so it is predict
 Here we look at the trajectories of coefficients and predictions as a function of data re-weighting.
 
 ```{r}
+logit <- function(x) log(x/(1-x))
+
 dt <- data.frame(
   x1 = c(0, 0, 1, 1), 
   x2 = c(0, 1, 0, 1))
@@ -370,6 +372,18 @@ ggplot(data = evalsp, mapping = aes(x = wt, y = link, color = row_set)) +
   ggtitle("trajectory of row-set link as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 
+evalsp$logit_wt <- logit(evalsp$wt)
+
+ggplot(data = evalsp, mapping = aes(x = logit_wt, y = prediction, color = row_set)) +
+  geom_line() +
+  ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+
+ggplot(data = evalsp, mapping = aes(x = logit_wt, y = link, color = row_set)) +
+  geom_line() +
+  ggtitle("trajectory of row-set link as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+
 evalsc <- lapply(
   wseq,
   function(wi) {
@@ -392,6 +406,14 @@ ggplot(data = evalsc, mapping = aes(x = wt, y = coef_value, color = coef_name)) 
   geom_line() +
   ggtitle("trajectory of coefficients as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
+
+evalsc$logit_wt <- logit(evalsc$wt)
+
+ggplot(data = evalsc, mapping = aes(x = logit_wt, y = coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+
 ```
 
 

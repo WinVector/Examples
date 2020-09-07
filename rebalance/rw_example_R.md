@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Mon Sep 7 09:19:14 2020
+Mon Sep 7 09:31:00 2020
 
 ## Introduction
 
@@ -582,6 +582,8 @@ Here we look at the trajectories of coefficients and predictions as a
 function of data re-weighting.
 
 ``` r
+logit <- function(x) log(x/(1-x))
+
 dt <- data.frame(
   x1 = c(0, 0, 1, 1), 
   x2 = c(0, 1, 0, 1))
@@ -626,6 +628,26 @@ ggplot(data = evalsp, mapping = aes(x = wt, y = link, color = row_set)) +
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-2.png)<!-- -->
 
 ``` r
+evalsp$logit_wt <- logit(evalsp$wt)
+
+ggplot(data = evalsp, mapping = aes(x = logit_wt, y = prediction, color = row_set)) +
+  geom_line() +
+  ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-3.png)<!-- -->
+
+``` r
+ggplot(data = evalsp, mapping = aes(x = logit_wt, y = link, color = row_set)) +
+  geom_line() +
+  ggtitle("trajectory of row-set link as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-4.png)<!-- -->
+
+``` r
 evalsc <- lapply(
   wseq,
   function(wi) {
@@ -650,4 +672,15 @@ ggplot(data = evalsc, mapping = aes(x = wt, y = coef_value, color = coef_name)) 
   scale_color_brewer(palette = "Dark2")
 ```
 
-![](rw_example_R_files/figure-gfm/unnamed-chunk-34-3.png)<!-- -->
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-5.png)<!-- -->
+
+``` r
+evalsc$logit_wt <- logit(evalsc$wt)
+
+ggplot(data = evalsc, mapping = aes(x = logit_wt, y = coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-6.png)<!-- -->
