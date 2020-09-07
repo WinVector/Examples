@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Mon Sep 7 09:31:00 2020
+Mon Sep 7 10:44:51 2020
 
 ## Introduction
 
@@ -594,15 +594,17 @@ wseq <- seq(0.01, 0.99, length.out = 100)
 evalsp <- lapply(
   wseq,
   function(wi) {
+    weights = wi*d$y + (1-wi)*(1-d$y)
     mt <-  suppressWarnings(
       glm(
         y ~ x1 + x2,
         data = d,
-        weights = wi*d$y + (1-wi)*(1-d$y),
+        weights = weights,
         family = binomial())
     )
     data.frame(
       wt = wi,
+      apparent_prevalence = sum(weights * d$y)/sum(weights),
       row_set = names,
       prediction = predict(mt, newdata = dt, type = 'response'),
       link = predict(mt, newdata = dt, type = 'link'))
@@ -610,7 +612,9 @@ evalsp <- lapply(
 )
 evalsp <- do.call(rbind, evalsp)
 
-ggplot(data = evalsp, mapping = aes(x = wt, y = prediction, color = row_set)) +
+ggplot(
+  data = evalsp, 
+  mapping = aes(x = apparent_prevalence, y = prediction, color = row_set)) +
   geom_line() +
   ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
@@ -619,7 +623,7 @@ ggplot(data = evalsp, mapping = aes(x = wt, y = prediction, color = row_set)) +
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ``` r
-ggplot(data = evalsp, mapping = aes(x = wt, y = link, color = row_set)) +
+ggplot(data = evalsp, mapping = aes(x = apparent_prevalence, y = link, color = row_set)) +
   geom_line() +
   ggtitle("trajectory of row-set link as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
@@ -628,9 +632,9 @@ ggplot(data = evalsp, mapping = aes(x = wt, y = link, color = row_set)) +
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-2.png)<!-- -->
 
 ``` r
-evalsp$logit_wt <- logit(evalsp$wt)
+evalsp$logit_prevalence <- logit(evalsp$apparent_prevalence)
 
-ggplot(data = evalsp, mapping = aes(x = logit_wt, y = prediction, color = row_set)) +
+ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = prediction, color = row_set)) +
   geom_line() +
   ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
@@ -639,7 +643,7 @@ ggplot(data = evalsp, mapping = aes(x = logit_wt, y = prediction, color = row_se
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-3.png)<!-- -->
 
 ``` r
-ggplot(data = evalsp, mapping = aes(x = logit_wt, y = link, color = row_set)) +
+ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = link, color = row_set)) +
   geom_line() +
   ggtitle("trajectory of row-set link as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
@@ -651,22 +655,24 @@ ggplot(data = evalsp, mapping = aes(x = logit_wt, y = link, color = row_set)) +
 evalsc <- lapply(
   wseq,
   function(wi) {
+    weights = wi*d$y + (1-wi)*(1-d$y)
     mt <-  suppressWarnings(
       glm(
         y ~ x1 + x2,
         data = d,
-        weights = wi*d$y + (1-wi)*(1-d$y),
+        weights = weights,
         family = binomial())
     )
     data.frame(
       wt = wi,
+      apparent_prevalence = sum(weights * d$y)/sum(weights),
       coef_name = names(mt$coefficients),
       coef_value = mt$coefficients)
   }
 )
 evalsc <- do.call(rbind, evalsc)
 
-ggplot(data = evalsc, mapping = aes(x = wt, y = coef_value, color = coef_name)) +
+ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = coef_value, color = coef_name)) +
   geom_line() +
   ggtitle("trajectory of coefficients as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
@@ -675,9 +681,9 @@ ggplot(data = evalsc, mapping = aes(x = wt, y = coef_value, color = coef_name)) 
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-5.png)<!-- -->
 
 ``` r
-evalsc$logit_wt <- logit(evalsc$wt)
+evalsc$logit_prevalence <- logit(evalsc$apparent_prevalence)
 
-ggplot(data = evalsc, mapping = aes(x = logit_wt, y = coef_value, color = coef_name)) +
+ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = coef_value, color = coef_name)) +
   geom_line() +
   ggtitle("trajectory of coefficients as a function of truth prevalence") +
   scale_color_brewer(palette = "Dark2")
