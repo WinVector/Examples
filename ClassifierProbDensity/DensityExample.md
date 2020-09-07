@@ -12,24 +12,47 @@ library(WVPlots)
 
 ``` r
 d_uniform <- data.frame(x = runif(1000)) 
-d_uniform$probablistic_outcome <- d_uniform$x >= runif(nrow(d_uniform))
+d_uniform$probabilistic_outcome <- d_uniform$x >= runif(nrow(d_uniform))
 
-DoubleDensityPlot(d_uniform, 'x', 'probablistic_outcome', truth_target = TRUE, title = 'well callibrated probability model, uniform density')
+ROCPlot(
+  d_uniform, 
+  'x', 
+  'probabilistic_outcome', 
+  truthTarget = TRUE, 
+  title = 'well calibrated probability model, uniform density')
 ```
 
 ![](DensityExample_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
 ``` r
-ShadowHist(d_uniform, 'x', 'probablistic_outcome', title = 'well callibrated probability model, uniform density')
+ThresholdPlot(
+   d_uniform, 
+  'x', 
+  'probabilistic_outcome', truth_target = TRUE, 
+  title = 'well calibrated probability model, uniform density')
 ```
 
 ![](DensityExample_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
 
 ``` r
-ROCPlot(d_uniform, 'x', 'probablistic_outcome', truthTarget = TRUE, title = 'well callibrated probability model, uniform density')
+DoubleDensityPlot(
+  d_uniform, 
+  'x', 
+  'probabilistic_outcome', truth_target = TRUE, 
+  title = 'well calibrated probability model, uniform density')
 ```
 
 ![](DensityExample_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
+
+``` r
+ShadowHist(
+  d_uniform, 
+  'x', 
+  'probabilistic_outcome', 
+  title = 'well calibrated probability model, uniform density')
+```
+
+![](DensityExample_files/figure-gfm/unnamed-chunk-2-4.png)<!-- -->
 
 ``` r
 d_uniform$deterministic_outcome <- d_uniform$x >= 0.5
@@ -56,23 +79,23 @@ ROCPlot(d_uniform, 'x', 'deterministic_outcome', truthTarget = TRUE,
 
 ``` r
 d_beta <- data.frame(x = rbeta(1000, shape1 = 0.5, shape2 = 0.5)) 
-d_beta$probablistic_outcome <- d_beta$x >= runif(nrow(d_beta))
+d_beta$probabilistic_outcome <- d_beta$x >= runif(nrow(d_beta))
 
-DoubleDensityPlot(d_beta, 'x', 'probablistic_outcome', truth_target = TRUE, 
-                  title = 'well callibrated probability model, beta density')
+DoubleDensityPlot(d_beta, 'x', 'probabilistic_outcome', truth_target = TRUE, 
+                  title = 'well calibrated probability model, beta density')
 ```
 
 ![](DensityExample_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
-ShadowHist(d_beta, 'x', 'probablistic_outcome', title = 'well callibrated probability model, beta density')
+ShadowHist(d_beta, 'x', 'probabilistic_outcome', title = 'well calibrated probability model, beta density')
 ```
 
 ![](DensityExample_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
 ``` r
-ROCPlot(d_beta, 'x', 'probablistic_outcome', truthTarget = TRUE, 
-        title = 'well callibrated probability model, beta density')
+ROCPlot(d_beta, 'x', 'probabilistic_outcome', truthTarget = TRUE, 
+        title = 'well calibrated probability model, beta density')
 ```
 
 ![](DensityExample_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
