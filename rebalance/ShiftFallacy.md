@@ -222,6 +222,11 @@ re-balancing (though if they are internally using classification rule
 metrics, some hyper-parameters or internal procedures may need to be
 adjusted).
 
-Prevalence re-balancing is working around mere operational issues, that
-should be directly corrected; it is not working around core mathematical
-or statistical issues.
+Prevalence re-balancing is working around mere operational issues: such
+as using [classifiation
+rules](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/)
+(instead of probability models), using sub-optimal metrics (such as
+[accuracy, instead of AUC or
+deviance](https://win-vector.com/2016/07/22/on-accuracy/)). These
+operational issues should be directly corrected instead of worked
+around.
