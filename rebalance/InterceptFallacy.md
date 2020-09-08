@@ -76,7 +76,4 @@ x2 = 0` (0).
 The non-intercept coefficients *do* have an interpretation as the
 expected change in log-odds ratio implied by a given variable (assuming
 all other variables are held constant, which may *not* be a property of
-the data\!). Also, the values non-intercept coefficients *added* to the
-intercept predict the conditioned value of `y` with respect to each
-variable (for details, please see
-[here](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/)).
+the data\!).
