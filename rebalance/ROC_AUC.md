@@ -74,17 +74,17 @@ beta_example <- function(n, shape1_pos, shape2_pos, shape1_neg, shape2_neg) {
 ``` r
 d <- beta_example(
   10000,
-  shape1_pos = 2, 
-  shape2_pos = 1,
+  shape1_pos = 6, 
+  shape2_pos = 6,
   shape1_neg = 1, 
-  shape2_neg = 5)
+  shape2_neg = 2)
   
 DoubleDensityPlot(
   d,
   xvar = 'score',
   truthVar = 'y',
   truth_target = TRUE,
-  title = "Example where scores are beta-distributed")
+  title = "Asymmetric example where scores are beta-distributed")
 ```
 
 ![](ROC_AUC_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
@@ -94,26 +94,48 @@ ROCPlot(
   d, 
   xvar = 'score', 
   truthVar = 'y', truthTarget = TRUE, 
-  title = "Example where scores are beta-distributed")
+  title = "Asymmetric example where scores are beta-distributed")
 ```
 
 ![](ROC_AUC_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 d1 <- beta_example(
-  100000,
-  shape1_pos = 2, 
-  shape2_pos = 1,
+  10000,
+  shape1_pos = 6, 
+  shape2_pos = 6,
   shape1_neg = 1, 
   shape2_neg = 2)
 
+DoubleDensityPlot(
+  d1,
+  xvar = 'score',
+  truthVar = 'y',
+  truth_target = TRUE,
+  title = "Example where scores are beta-distributed (d1)")
+```
+
+![](ROC_AUC_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
 d2 <- beta_example(
-  100000,
+  10000,
   shape1_pos = 2, 
   shape2_pos = 1,
-  shape1_neg = 2, 
-  shape2_neg = 3)
+  shape1_neg = 6, 
+  shape2_neg = 6)
 
+DoubleDensityPlot(
+  d2,
+  xvar = 'score',
+  truthVar = 'y',
+  truth_target = TRUE,
+  title = "Example where scores are beta-distributed (d2)")
+```
+
+![](ROC_AUC_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+
+``` r
 ROCPlotPair2(
   nm1 = 'd1',
   frame1 = d1,
@@ -128,4 +150,32 @@ ROCPlotPair2(
   title = 'comparison')
 ```
 
-![](ROC_AUC_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](ROC_AUC_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
+
+``` r
+d <- beta_example(
+  10000,
+  shape1_pos = 2, 
+  shape2_pos = 1,
+  shape1_neg = 1, 
+  shape2_neg = 2)
+  
+DoubleDensityPlot(
+  d,
+  xvar = 'score',
+  truthVar = 'y',
+  truth_target = TRUE,
+  title = "Symmetric example where scores are beta-distributed")
+```
+
+![](ROC_AUC_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+ROCPlot(
+  d, 
+  xvar = 'score', 
+  truthVar = 'y', truthTarget = TRUE, 
+  title = "Symmetric example where scores are beta-distributed")
+```
+
+![](ROC_AUC_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
