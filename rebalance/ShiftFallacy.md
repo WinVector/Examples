@@ -167,16 +167,19 @@ mean(d$y)
     ## [1] 0.2857143
 
 So let’s adjust the balanced predictions back to the correct expected
-value.
+value (essentially [Platt
+scaling](https://en.wikipedia.org/wiki/Platt_scaling)).
 
 ``` r
 d$balanced_pred <- predict(m_shift, newdata = d, type = 'link')
+
 m_scale <- glm(
   y ~ balanced_pred,
   data = d,
   family = binomial())
 
 corrected_balanced_pred <- predict(m_scale, newdata = d, type = 'response')
+
 mean(corrected_balanced_pred)
 ```
 
@@ -217,16 +220,17 @@ just the intercept term changes when we re-balance data.
 
 Take logistic regression as the entry level probability model for
 classification problems. If it doesn’t need data re-balancing then other
-any tool claiming to be better than it should also not need artificial
-re-balancing (though if they are internally using classification rule
-metrics, some hyper-parameters or internal procedures may need to be
-adjusted).
+any tool claiming to be *universally better* than it *should* also not
+need artificial re-balancing (though if they are internally using
+classification rule metrics, some hyper-parameters or internal
+procedures may need to be adjusted).
 
-Prevalence re-balancing is working around mere operational issues: such
-as using [classifiation
+Prevalence re-balancing *is* working around mere operational issues:
+such as using [classifiation
 rules](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/)
 (instead of probability models), using sub-optimal metrics (such as
 [accuracy, instead of AUC or
-deviance](https://win-vector.com/2016/07/22/on-accuracy/)). These
-operational issues should be directly corrected instead of worked
-around.
+deviance](https://win-vector.com/2016/07/22/on-accuracy/)). However,
+there operational issues are better directly corrected than worked
+around. A lot of the complexity we see in modern machine learning
+pipelines is patches patching unwanted effects of previous patches.
