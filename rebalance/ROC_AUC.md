@@ -58,9 +58,6 @@ library(wrapr)
 library(WVPlots)
 ```
 
-    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
-    ## when loading 'dplyr'
-
 ``` r
 extreme_example <- function(n, sensitivity, specificity) {
   d <- data.frame(
@@ -246,3 +243,23 @@ wrong, but not wrong often enough to scare people into more hygienic
 practices.
 
 We think data science can and should be correct.
+
+## Appendix
+
+Another shape
+
+``` r
+sq_example <- rbind(
+  data.frame(score = seq(0, 2/3, length.out = 100),
+             y = FALSE),
+  data.frame(score = seq(1/3, 1, length.out = 100),
+             y = TRUE))
+
+ROCPlot(
+  sq_example, 
+  xvar = 'score', 
+  truthVar = 'y', truthTarget = TRUE, 
+  title = 'square example')
+```
+
+![](ROC_AUC_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
