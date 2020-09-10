@@ -229,8 +229,7 @@ Prevalence re-balancing *is* working around mere operational issues:
 such as using [classifiation
 rules](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/)
 (instead of probability models), using sub-optimal metrics (such as
-[accuracy, instead of AUC or
-deviance](https://win-vector.com/2016/07/22/on-accuracy/)). However,
+[accuracy](https://win-vector.com/2016/07/22/on-accuracy/)). However,
 there operational issues are better directly corrected than worked
 around. A lot of the complexity we see in modern machine learning
 pipelines is patches patching unwanted effects of previous patches.
