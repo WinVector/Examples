@@ -207,7 +207,7 @@ by a need to move model scores to near `0.5` when using `0.5` as a
 default *classification rule* threshold (which we argue against in
 [“Don’t Use Classification Rules for Classification
 Problems”](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/)).
-This is a problem that is more easilly avoided by insisting on a
+This is a problem that is more easily avoided by insisting on a
 probability model over a classification rule.
 
 ## Conclusion
