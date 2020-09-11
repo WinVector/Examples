@@ -12,8 +12,8 @@ mk_curve <- function(a, b) {
   d <- data.frame(
     t = seq(0, 1, length.out = 101)
   )
-  d$y <- 1 - pbeta(1 - d$t, shape1 = b, shape2 = a)
-  d$x <- 1 - pbeta(1 - d$t, shape1 = a, shape2 = b)
+  d$x <- 1 - pbeta(d$t, shape1 = a, shape2 = b)
+  d$y <- 1 - pbeta(d$t, shape1 = b, shape2 = a)
   d$a <- a
   d$b <- b
   d$what <- paste0('a=', a, ', b=', b)
