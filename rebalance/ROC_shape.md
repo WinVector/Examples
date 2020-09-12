@@ -7,23 +7,23 @@ The [`ROC plot` (receiver operating characteristic
 plot)](https://en.wikipedia.org/wiki/Receiver_operating_characteristic)
 we exhibited in the note [“0.83 is a Special
 AUC”](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/) look
-*very* familiar to expereinced data scientits.
+*very* familiar to experienced data scientists.
 
 [![](https://winvector.files.wordpress.com/2020/09/unknown-5.png)](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/)
 
 This left-bow shape is *very* common in data science projects. In fact,
-we will whow that it is an archetypical shape one should look for in
+we will show that it is an archetypal shape one should look for in
 projects.
 
 In this note we will show this is not the only shape, but that the above
-shape is archetypical. This means the other shapes may be pathologies
+shape is archetypal. This means the other shapes may be anthologies
 indicating more work is needed in a project.
 
 ## Non-Standard Shapes
 
 Let’s work some example ROC shapes in [`R`](https://www.r-project.org).
 
-In each case we will produce an artifical data frame that could be
+In each case we will produce an artificial data frame that could be
 predictions of a model aligned with actual outcomes. For each of these
 we will plot the ROC plot. Because of this procedure each of these ROC
 shapes *could* in fact occur in a data science project.
@@ -36,7 +36,7 @@ library(wrapr)
 library(WVPlots)
 ```
 
-This is a simulated classifer that returns only two scores: 0.25 and
+This is a simulated classifier that returns only two scores: 0.25 and
 0.75. The simulated classifier is useful, it returns the large score
 more often for the true class.
 
@@ -94,14 +94,14 @@ ROCPlot(
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 The 2-segment or very polygonal ROC plot is something to look out for.
-In Python scklearn it may mean you made the mistage of calling
+In Python sklearn it may mean you made the mistake of calling
 `.predict()` when you meant to call `.predict_proba()`.
 
 Notice the following to `ROC` plots are not nested- each is better than
 the other in complementary regions.
 
-These simulated 2-score modeling results also give us conveneint
-examples of ROC plots that have radicly different behavior.
+These simulated 2-score modeling results also give us convenient
+examples of ROC plots that have radically different behavior.
 
 ``` r
 ROCPlot(
@@ -157,7 +157,7 @@ ROCPlot(
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 We now move to some more natural examples. In this case we are
-simulating the results of classication score that is
+simulating the results of classification score that is
 [beta-distributed](https://en.wikipedia.org/wiki/Beta_distribution) when
 conditioned on the depending variable or outcome. This is a very
 plausible and common situation.
@@ -222,15 +222,15 @@ example](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/) and
 it commonly occurs in real world examples (for instance
 [here](https://github.com/WinVector/PDSwR2/blob/main/KDD2009/KDD2009vtreat.md);
 both in the training and test graphs). We will later argue there are
-reasons this shape is the normal or arctypical shape of an ROC plot.
+reasons this shape is the normal or archetypal shape of an ROC plot.
 
 However, the above shape family is not the only possibility. Even these
-nice “scores are conditionaly beta-distributed” case we can have
-assymetric and even non-convex examples.
+nice “scores are conditionally beta-distributed” case we can have
+asymmetric and even non-convex examples.
 
 One way things can go wrong is: one of the conditional distributions
 could be very diffuse, meaning predictions are high variance or
-unerlaible for that outcome class. We give such an example below.
+unreliable for that outcome class. We give such an example below.
 
 ``` r
 d1 <- beta_example(
@@ -250,7 +250,7 @@ DoubleDensityPlot(
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
-Here is a similar exaple with which class is diffuse reversed.
+Here is a similar example with which class is diffuse reversed.
 
 ``` r
 d2 <- beta_example(
@@ -271,7 +271,7 @@ DoubleDensityPlot(
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 When we plot both of these ROC plots on the same graph we see they are
-assymetric, neither is dominant or better, and they also are not convex.
+asymmetric, neither is dominant or better, and they also are not convex.
 
 ``` r
 ROCPlotPair2(
@@ -292,8 +292,8 @@ ROCPlotPair2(
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 The point to remember is: there is a diversity of possible `ROC` plot
-shapes, even in fairly restritive circumstances. In the next section we
-move away from odd ROC shapes to the arctypical one we expect in data
+shapes, even in fairly restrictive circumstances. In the next section we
+move away from odd ROC shapes to the archetypal one we expect in data
 science projects.
 
 ## The Expected AUC shape
@@ -301,11 +301,11 @@ science projects.
 If we limit ourselves to the special case where each of the model-scores
 is beta-distributed conditioned on the outcome, with the *additional*
 constraint that the parameters are reversed then we get a very
-interesting family of curves we call the arctypical ROC shapes. By
+interesting family of curves we call the archetypal ROC shapes. By
 “parameters reversed” we mean if the negative-example scores are
-distributed with beta-distribution shape parameters (a,b) (a, b \>= 1),
-then the positive-example scores are distributed with beata-distribution
-parameters (b,a). That is: the densities are mirrored.
+distributed with beta-distribution shape parameters (a,b) (b \>= a \>=
+1), then the positive-example scores are distributed with
+beta-distribution parameters (b,a). That is: the densities are mirrored.
 
 In this case we have the following strong claim.
 
@@ -318,7 +318,7 @@ where s is:
 
   s = log(1 - I(1/2; b, a)) / log(0.5)
   
-whire I(t; a, b) is the incomplete beta function.
+where I(t; a, b) is the incomplete beta function.
 </pre>
 
 Let’s try that. First we try an arbitrary curve meeting our mirror
@@ -378,7 +378,8 @@ poly_curve <- mk_curve_polynomial(s)
 ggplot(
   data = poly_curve,
   mapping = aes(x = x, y = y)) +
-  geom_line()
+  geom_line() + 
+  theme(aspect.ratio=1)
 ```
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -402,25 +403,26 @@ ggplot() +
     data = poly_curve,
     mapping = aes(x = x, y = y),
     color = "DarkBlue") +
+  theme(aspect.ratio=1) +
   ggtitle("Orange points from ROC plot, line from matching polynomial shape")
 ```
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 Notice how the line stacks on the curve (we believe the slight variation
-are plotting/iterpolation artifacts).
+are plotting/interpolation artifacts).
 
 We won’t completely prove the above claims here.
 
 In general the AUC curves for these mirrored forms are given
-parametricaly as:
+parametrically as:
 
 <pre>
 x(t) = 1 - I(t; a, b)
 y(t) = 1 - x(1 - t)
 </pre>
 
-This is already enough to show mirror symetry around the line between
+This is already enough to show mirror symmetry around the line between
 (0,1) and (1,0) as that reflection carries (x,y) to (1-y, 1-x).
 
 For a=1 then the AUC curve is then:
@@ -430,7 +432,7 @@ x(t) = (1 - t)^b
 y(t) = 1 - t^b
 </pre>
 
-We eliminate the classifier threshold t, to get a non-paramaterized
+We eliminate the classifier threshold t, to get a non-parameterized
 version of this curve:
 
 <pre>
@@ -438,8 +440,8 @@ y = 1 - (1 - x^(1/b))^b
 </pre>
 
 This *is* the curve for the a=1 case. The claimed s is just given by
-solving for a curve with paramets (a,b) for what value is of s to we
-have the following two expression equal.
+solving for a curve with shape parameters (a,b) for what value is of s
+to we have the following two expression equal.
 
 <pre>
 (1 - 0.5)^s  == 1 - I(t; a, b)
@@ -448,25 +450,56 @@ have the following two expression equal.
 The expressions are just saying where each curve places its x-value on
 the line joining (0,1) to (1,0).
 
-So we have proven everything in the a=1 special case. All that remaints
-would be to show this genaralizes for arbitrary a\>=1 (which we will not
+So we have proven everything in the a=1 special case. All that remains
+would be to show this generalizes for arbitrary a\>=1 (which we will not
 do here).
 
 ## Conclusion
 
 It is our claim, that while ROC plots can be diverse (and we have given
-examples here) that the ROC plots produced from mirror-symetric
+examples here) that the ROC plots produced from mirror-symmetric
 conditional beta distributions are (ideally) all graphs of the form:
 
 <pre>
 y = 1 - (1 - x^(1/b))^b
 </pre>
 
-for s\>=0.
+for s\>=1.
 
 This single parameter family of curves are all symmetric, convex, and
-comparable (for any pair one is conatained in the other)- which are
-*very* nice properties not genarally true of the ROC plot. It is our
-furhter, unproven, claim that you expect this shape in sufficiently rich
+comparable (for any pair one is contained in the other)- which are
+*very* nice properties not generally true of the ROC plot. It is our
+further, unproven, claim that you expect this shape in sufficiently rich
 (enough variables, powerful enough models, and enough examples) modeling
-situations.
+situations. As the mirrored conditional beta family is nominally
+parameterized by two parameters, the fact that the non-parameterized
+version of these plots is indexed by a single parameter means we are
+exploiting a underlying symmetry or identity in these plot families.
+
+The ROC plot family looks like the following.
+
+``` r
+plots <- lapply(
+  seq(1, 6, length.out = 12),
+  mk_curve_polynomial
+)
+plots <- do.call(rbind, plots)
+
+ggplot(
+  data = plots,
+  mapping = aes(x = x, y = y, color = what)) +
+  geom_line() +
+  theme(aspect.ratio=1,
+        legend.position = 'none') + 
+  scale_color_brewer(palette = "Dark2") +
+  ggtitle("man archtypical ROC plots")
+```
+
+    ## Warning in RColorBrewer::brewer.pal(n, pal): n too large, allowed maximum for palette Dark2 is 8
+    ## Returning the palette you asked for with that many colors
+
+    ## Warning: Removed 404 row(s) containing missing values (geom_path).
+
+![](ROC_shape_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+And there we have it: why so many ROC plots look so similar.
