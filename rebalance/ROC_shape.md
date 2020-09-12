@@ -32,6 +32,12 @@ First we attach our packages and define our first example function.
 
 ``` r
 library(ggplot2)
+```
+
+    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
+    ## when loading 'dplyr'
+
+``` r
 library(wrapr)
 library(WVPlots)
 ```
@@ -303,7 +309,7 @@ is beta-distributed conditioned on the outcome, with the *additional*
 constraint that the parameters are reversed then we get a very
 interesting family of curves we call the archetypal ROC shapes. By
 “parameters reversed” we mean if the negative-example scores are
-distributed with beta-distribution shape parameters (a,b) (b \>= a \>=
+distributed with beta-distribution shape parameters (a,b) (a \>= b \>=
 1), then the positive-example scores are distributed with
 beta-distribution parameters (b,a). That is: the densities are mirrored.
 
@@ -492,7 +498,7 @@ ggplot(
   theme(aspect.ratio=1,
         legend.position = 'none') + 
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("man archtypical ROC plots")
+  ggtitle("many archtypical ROC plots")
 ```
 
     ## Warning in RColorBrewer::brewer.pal(n, pal): n too large, allowed maximum for palette Dark2 is 8

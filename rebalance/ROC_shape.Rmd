@@ -239,7 +239,7 @@ The point to remember is: there is a diversity of possible `ROC` plot shapes, ev
 
 ## The Expected AUC shape
 
-If we limit ourselves to the special case where each of the model-scores is beta-distributed conditioned on the outcome, with the *additional* constraint that the parameters are reversed then we get a very interesting family of curves we call the archetypal ROC shapes.  By "parameters reversed" we mean if the negative-example scores are distributed with beta-distribution shape parameters (a,b) (b >= a >= 1), then the positive-example scores are distributed with beta-distribution parameters (b,a). That is: the densities are mirrored.
+If we limit ourselves to the special case where each of the model-scores is beta-distributed conditioned on the outcome, with the *additional* constraint that the parameters are reversed then we get a very interesting family of curves we call the archetypal ROC shapes.  By "parameters reversed" we mean if the negative-example scores are distributed with beta-distribution shape parameters (a,b) (a >= b >= 1), then the positive-example scores are distributed with beta-distribution parameters (b,a). That is: the densities are mirrored.
 
 In this case we have the following strong claim.
 
@@ -395,7 +395,7 @@ ggplot(
   theme(aspect.ratio=1,
         legend.position = 'none') + 
   scale_color_brewer(palette = "Dark2") +
-  ggtitle("man archtypical ROC plots")
+  ggtitle("many archtypical ROC plots")
 ```
 
 And there we have it: why so many ROC plots look so similar.
