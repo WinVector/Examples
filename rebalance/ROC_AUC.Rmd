@@ -126,7 +126,7 @@ ROCPlot(
   title = 'Extreme example')
 ```
 
-And even the nice "scores are beta-distributed" case we can have assymetric examples.
+And even the nice "scores are beta-distributed" case we can have assymetric and even non-convex examples.
 
 
 ```{r}

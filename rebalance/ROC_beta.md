@@ -59,10 +59,16 @@ plot_curve_pair(6, 14, 3, 7)
 ![](ROC_beta_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
 
 ``` r
-plot_curve_pair(1, 3, 2, 5)
+plot_curve_pair(1, 3, 2, 6)
 ```
 
 ![](ROC_beta_files/figure-gfm/unnamed-chunk-2-4.png)<!-- -->
+
+``` r
+plot_curve_pair(1, 3, 2, 5)
+```
+
+![](ROC_beta_files/figure-gfm/unnamed-chunk-2-5.png)<!-- -->
 
 ``` r
 d <- data.frame(

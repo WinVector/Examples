@@ -58,6 +58,9 @@ library(wrapr)
 library(WVPlots)
 ```
 
+    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
+    ## when loading 'dplyr'
+
 ``` r
 extreme_example <- function(n, sensitivity, specificity) {
   d <- data.frame(
@@ -179,7 +182,7 @@ ROCPlot(
 ![](ROC_AUC_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 And even the nice “scores are beta-distributed” case we can have
-assymetric examples.
+assymetric and even non-convex examples.
 
 ``` r
 d1 <- beta_example(
