@@ -377,7 +377,7 @@ mk_curve_polynomial <- function(s, left = 0, right = 1) {
     x = seq(left, right, length.out = 101)
   )
   d$y <- 1 - (1 - d$x^(1/s))^s
-  d$what <- paste0('y - 1 - (1-x^(1/', s,'))^', s)
+  d$what <- paste0('y = 1 - (1-x^(1/', s,'))^', s)
   d
 }
 
@@ -426,8 +426,9 @@ In general the AUC curves for these mirrored forms are given
 parametrically as:
 
 <pre>
-x(t) = 1 - I(t; a, b)
-y(t) = 1 - x(1 - t)
+x(t) = 1 - I(t; b, a)
+y(t) = 1 - I(t; a, b)
+     = 1 - x(1 - t)
 </pre>
 
 This is already enough to show mirror symmetry around the line between
