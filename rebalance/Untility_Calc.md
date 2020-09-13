@@ -188,6 +188,9 @@ str(d_utility[best_idx, ])
     ##  $ false_negative_count: num 2279
     ##  $ average_utility     : num 386
 
+Using the idea curve for optimization has the advantage that we are
+working with a smooted estimate that depends on all of the data.
+
 The model says, for this population, and these costs, our best trade-off
 is to run at specificity 0.85 and sensitivity 0.43. This means we call
 just under half of the at-risk customers while wasting interventions on

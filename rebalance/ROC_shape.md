@@ -32,6 +32,12 @@ First we attach our packages and define our first example function.
 
 ``` r
 library(ggplot2)
+```
+
+    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
+    ## when loading 'dplyr'
+
+``` r
 library(wrapr)
 library(WVPlots)
 ```
@@ -495,7 +501,7 @@ library(RColorBrewer)
 
 colorCount = length(unique(plots$what))
 getPalette = colorRampPalette(brewer.pal(8, "Dark2"))
- 
+  
 ggplot(
   data = plots,
   mapping = aes(x = x, y = y, color = what)) +
@@ -508,4 +514,6 @@ ggplot(
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
-And there we have it: why so many ROC plots look so similar.
+And there we have it: why so many ROC plots look so similar. Some notes
+on using these ideal curves to pick trade-offs can be found
+[here](https://github.com/WinVector/Examples/blob/main/rebalance/Untility_Calc.md).

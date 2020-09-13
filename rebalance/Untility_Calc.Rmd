@@ -115,6 +115,8 @@ best_idx = which.max(d_utility$average_utility)[[1]]
 str(d_utility[best_idx, ])
 ```
 
+Using the idea curve for optimization has the advantage that we are working with a smooted estimate that depends on all of the data.
+
 The model says, for this population, and these costs, our best trade-off is to run at specificity 0.85 and sensitivity 0.43. This means we call just under half of the at-risk customers while wasting interventions on only 15 percent of the not at-risk customers. Due to the rareness of cancellation this means our precision is in fact only 1721/(1721 + 2279), or only 43 percent (again the sensitivity).  So half the interventions are wasted, as the model can't tell us which half is wasted! The optimal solution is trading-off cost of interaction with possible loss of revenue. With different rates, revenue, and costs we would have a different optimum trade-off.
 
 
