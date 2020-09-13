@@ -396,7 +396,7 @@ library(RColorBrewer)
 
 colorCount = length(unique(plots$what))
 getPalette = colorRampPalette(brewer.pal(8, "Dark2"))
- 
+  
 ggplot(
   data = plots,
   mapping = aes(x = x, y = y, color = what)) +
