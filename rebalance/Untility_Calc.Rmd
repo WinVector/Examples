@@ -4,7 +4,7 @@ output: github_document
 ---
 
 
-Here we show how to use the ideal ROC curve demonstrated [here](https://github.com/WinVector/Examples/blob/main/rebalance/ROC_shape.md) to pick an optimal utility threshold.
+Here we show how to use the ideal ROC curve demonstrated [here](https://github.com/WinVector/Examples/blob/main/rebalance/ROC_shape.md) to pick an optimal utility threshold. The announcement discussion is <a href="https://win-vector.com/2020/09/13/why-working-with-auc-is-more-powerful-than-one-might-think/">here</a>.
 
 We can use this parametric idealization to simplify choosing thresholds. 
 
