@@ -16,6 +16,8 @@ and all is done.
 
 A numeric example in [`R`](https://www.r-project.org) can be found
 [here](https://github.com/WinVector/Examples/blob/main/rebalance/CurveExample.md).
+Math-overflow link
+[here](https://mathoverflow.net/questions/371568/need-help-converting-a-curve-parameterized-in-terms-of-incomplete-beta-functions).
 
 It seems like this may take more than polynomial algebra. Maybe set up
 an ODE on the derivatives of `x(t)` and `y(t)`, but I haven’t seen a
