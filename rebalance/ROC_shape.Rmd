@@ -239,7 +239,7 @@ The point to remember is: there is a diversity of possible `ROC` plot shapes, ev
 
 ## The Expected AUC shape
 
-If we limit ourselves to the special case where each of the model-scores is beta-distributed conditioned on the outcome, with the *additional* constraint that the parameters are reversed then we get a very interesting family of curves we call the archetypal ROC shapes.  By "parameters reversed" we mean if the negative-example scores are distributed with beta-distribution shape parameters (a,b) (a >= b >= 1), then the positive-example scores are distributed with beta-distribution parameters (b,a). That is: the densities are mirrored.
+If we limit ourselves to the special case where each of the model-scores is beta-distributed conditioned on the outcome, with the *additional* constraint that the parameters are reversed then we get a very interesting family of curves we call the archetypal ROC shapes.  By "parameters reversed" we mean if the negative-example scores are distributed with beta-distribution shape parameters (a,b), then the positive-example scores are distributed with beta-distribution parameters (b,a). That is: the densities are mirrored. For convenience will limit ourselves to a > b >= 1.
 
 In this case we have the following strong claim.
 
@@ -304,7 +304,8 @@ ggplot(
   data = poly_curve,
   mapping = aes(x = x, y = y)) +
   geom_line() + 
-  theme(aspect.ratio=1)
+  theme(aspect.ratio=1) + 
+  ggtitle(poly_curve$what[[1]])
 ```
 
 We can empirically confirm this is the same curve as follows.
@@ -353,10 +354,10 @@ y(t) = 1 - t^b
 We eliminate the classifier threshold t, to get a non-parameterized version of this curve:
 
 <pre>
-y = 1 - (1 - x^(1/b))^b
+(1 - y)^(1/b) + x^(1/b) = 1 
 </pre>
 
-This *is* the curve for the a=1 case. The claimed s is just given by solving for a curve with shape parameters (a,b) for what value is of s to we have the following two expression equal.
+This *is* the curve for the a=1 case. The claimed s is just given by solving for a curve with shape parameters (a,b) for what value is of s to we have the following two expression equal as shown below.
 
 <pre>
 (1 - 0.5)^s  == 1 - I(t; a, b)
@@ -394,7 +395,6 @@ ggplot(
   geom_line() +
   theme(aspect.ratio=1,
         legend.position = 'none') + 
-  scale_color_brewer(palette = "Dark2") +
   ggtitle("many archtypical ROC plots")
 ```
 

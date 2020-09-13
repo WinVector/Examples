@@ -309,9 +309,10 @@ is beta-distributed conditioned on the outcome, with the *additional*
 constraint that the parameters are reversed then we get a very
 interesting family of curves we call the archetypal ROC shapes. By
 “parameters reversed” we mean if the negative-example scores are
-distributed with beta-distribution shape parameters (a,b) (a \>= b \>=
-1), then the positive-example scores are distributed with
-beta-distribution parameters (b,a). That is: the densities are mirrored.
+distributed with beta-distribution shape parameters (a,b), then the
+positive-example scores are distributed with beta-distribution
+parameters (b,a). That is: the densities are mirrored. For convenience
+will limit ourselves to a \> b \>= 1.
 
 In this case we have the following strong claim.
 
@@ -385,7 +386,8 @@ ggplot(
   data = poly_curve,
   mapping = aes(x = x, y = y)) +
   geom_line() + 
-  theme(aspect.ratio=1)
+  theme(aspect.ratio=1) + 
+  ggtitle(poly_curve$what[[1]])
 ```
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -442,12 +444,12 @@ We eliminate the classifier threshold t, to get a non-parameterized
 version of this curve:
 
 <pre>
-y = 1 - (1 - x^(1/b))^b
+(1 - y)^(1/b) + x^(1/b) = 1 
 </pre>
 
 This *is* the curve for the a=1 case. The claimed s is just given by
 solving for a curve with shape parameters (a,b) for what value is of s
-to we have the following two expression equal.
+to we have the following two expression equal as shown below.
 
 <pre>
 (1 - 0.5)^s  == 1 - I(t; a, b)
@@ -497,14 +499,8 @@ ggplot(
   geom_line() +
   theme(aspect.ratio=1,
         legend.position = 'none') + 
-  scale_color_brewer(palette = "Dark2") +
   ggtitle("many archtypical ROC plots")
 ```
-
-    ## Warning in RColorBrewer::brewer.pal(n, pal): n too large, allowed maximum for palette Dark2 is 8
-    ## Returning the palette you asked for with that many colors
-
-    ## Warning: Removed 404 row(s) containing missing values (geom_path).
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
