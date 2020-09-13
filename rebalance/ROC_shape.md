@@ -456,7 +456,8 @@ to we have the following two expression equal as shown below.
 </pre>
 
 The expressions are just saying where each curve places its x-value on
-the line joining (0,1) to (1,0).
+the line joining (0,1) to (1,0). Solving we get s = log(1 - I(1/2; b,
+a)) / log(0.5).
 
 So we have proven everything in the a=1 special case. All that remains
 would be to show this generalizes for arbitrary a\>=1 (which we will not
@@ -469,7 +470,7 @@ examples here) that the ROC plots produced from mirror-symmetric
 conditional beta distributions are (ideally) all graphs of the form:
 
 <pre>
-y = 1 - (1 - x^(1/b))^b
+(1 - y)^(1/s) + x^(1/s) = 1 
 </pre>
 
 for s\>=1.

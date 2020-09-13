@@ -363,7 +363,7 @@ This *is* the curve for the a=1 case. The claimed s is just given by solving for
 (1 - 0.5)^s  == 1 - I(t; a, b)
 </pre>
 
-The expressions are just saying where each curve places its x-value on the line joining (0,1) to (1,0).
+The expressions are just saying where each curve places its x-value on the line joining (0,1) to (1,0). Solving we get s = log(1 - I(1/2; b, a)) / log(0.5).
 
 So we have proven everything in the a=1 special case. All that remains would be to show this generalizes for arbitrary a>=1 (which we will not do here).
 
@@ -372,7 +372,7 @@ So we have proven everything in the a=1 special case. All that remains would be 
 It is our claim, that while ROC plots can be diverse (and we have given examples here) that the ROC plots produced from mirror-symmetric conditional beta distributions are (ideally) all graphs of the form:
 
 <pre>
-y = 1 - (1 - x^(1/b))^b
+(1 - y)^(1/s) + x^(1/s) = 1 
 </pre>
 
 for s>=1.
