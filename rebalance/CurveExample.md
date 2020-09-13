@@ -5,14 +5,13 @@ The following equations arise in studying ROC curves.
 
 If `x(t) = 1 - I(t; b, a)`; `y(t) = 1 - I(t; a, b)` (`I` being the
 regularized incomplete beta function) then `(1 - y)^{1/s} + x^{1/s} = 1`
-where `s = \log(1 - p_{\beta}(0.5, b, a)) / \log(0.5)`. I can show the
-case where `a=1`, as in this case the incomplete beta function is a
-simple polynomial. However, as we see many more cases also appear to be
-true. All I would need to complete a proof is to show `x(t) = 1 -
-I(t; 1, s)`; `y(t) = 1 - I(t; s, 1)` is the same curve as `x(t) = 1 -
-I(t; b, a)`; `y(t) = 1 - I(t; a, b)` or the same as `(1 - y)^{1/s} +
-x^{1/s} = 1` (obviously parameterized at a different rate), and all is
-done.
+where `s = \log(1 -I(0.5; b, a)) / \log(0.5)`. I can show the case where
+`a=1`, as in this case the incomplete beta function is a simple
+polynomial. However, as we see many more cases also appear to be true.
+All I would need to complete a proof is to show `x(t) = 1 - I(t; 1, s)`;
+`y(t) = 1 - I(t; s, 1)` is the same curve as `x(t) = 1 - I(t; b, a)`;
+`y(t) = 1 - I(t; a, b)` or the same as `(1 - y)^{1/s} + x^{1/s} = 1`
+(obviously parameterized at a different rate), and all is done.
 
 A numeric example in [`R`](https://www.r-project.org) can be found
 [here](https://github.com/WinVector/Examples/blob/main/rebalance/CurveExample.md).
