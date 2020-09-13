@@ -5,7 +5,7 @@ output: github_document
 
 ## Introduction
 
-The [`ROC plot` (receiver operating characteristic plot)](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) we exhibited in the note ["0.83 is a Special AUC"](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/) look *very* familiar to experienced data scientists.
+The [`ROC plot` (receiver operating characteristic plot)](https://en.wikipedia.org/wiki/Receiver_operating_characteristic) we exhibited in the note ["0.83 is a Special AUC"](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/) looked *very* familiar to experienced data scientists.
 
 [![](https://winvector.files.wordpress.com/2020/09/unknown-5.png)](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/)
 
