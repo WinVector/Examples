@@ -32,12 +32,6 @@ First we attach our packages and define our first example function.
 
 ``` r
 library(ggplot2)
-```
-
-    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
-    ## when loading 'dplyr'
-
-``` r
 library(wrapr)
 library(WVPlots)
 ```
@@ -495,12 +489,20 @@ plots <- lapply(
 )
 plots <- do.call(rbind, plots)
 
+# interpolate the Dark2 scale to get more colors
+# 8 is the max number of colors without interpolation
+library(RColorBrewer)
+
+colorCount = length(unique(plots$what))
+getPalette = colorRampPalette(brewer.pal(8, "Dark2"))
+ 
 ggplot(
   data = plots,
   mapping = aes(x = x, y = y, color = what)) +
   geom_line() +
+  scale_color_manual(values = getPalette(colorCount)) + 
   theme(aspect.ratio=1,
-        legend.position = 'none') + 
+        legend.position = 'none') +
   ggtitle("many archtypical ROC plots")
 ```
 

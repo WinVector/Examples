@@ -390,13 +390,22 @@ plots <- lapply(
 )
 plots <- do.call(rbind, plots)
 
+# interpolate the Dark2 scale to get more colors
+# 8 is the max number of colors without interpolation
+library(RColorBrewer)
+
+colorCount = length(unique(plots$what))
+getPalette = colorRampPalette(brewer.pal(8, "Dark2"))
+ 
 ggplot(
   data = plots,
   mapping = aes(x = x, y = y, color = what)) +
   geom_line() +
+  scale_color_manual(values = getPalette(colorCount)) + 
   theme(aspect.ratio=1,
-        legend.position = 'none') + 
+        legend.position = 'none') +
   ggtitle("many archtypical ROC plots")
+
 ```
 
 And there we have it: why so many ROC plots look so similar.
