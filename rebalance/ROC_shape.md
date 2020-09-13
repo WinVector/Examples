@@ -325,7 +325,7 @@ where s is:
 
   s = log(1 - I(1/2; b, a)) / log(0.5)
   
-where I(t; a, b) is the incomplete beta function.
+where I(t; a, b) is the normalized incomplete beta function.
 </pre>
 
 Let’s try that. First we try an arbitrary curve meeting our mirror
