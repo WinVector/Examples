@@ -16,7 +16,7 @@ And we are told (just using nominal figures here):
 <li>Our customer population is n = 100,000</li>
 <li>Time discounted customer lifetime value v = $400</li>
 <li>The cancellation prevalence is p = 0.04</li>
-<li>The cost of an intervention (calling the customer, offering a discount) is s = $100, and moves the retention probability to f = 0.5</li>
+<li>The cost of an intervention (calling the customer, offering a discount) is s = $10, and moves the retention probability to f = 0.5 for customers who where leaving and has no effect for other customers.</li>
 </ul>
 
 Then we want to pick an intervention threshold that maximizes our utility under the above model and specifications. The idea is: there is an optimal sensitivity and specificity trade-off determined by the above parameters. Obviously we want sensitivity = 1 and specificity = 1, but we have to accept the base trade-off that our model's supplies.  What sensitivity/specificity trade-offs are available for our model is exactly the content of the ROC curve.

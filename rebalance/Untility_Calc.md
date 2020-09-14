@@ -38,7 +38,8 @@ The cancellation prevalence is p = 0.04
 <li>
 
 The cost of an intervention (calling the customer, offering a discount)
-is s = $100, and moves the retention probability to f = 0.5
+is s = $10, and moves the retention probability to f = 0.5 for customers
+who where leaving and has no effect for other customers.
 
 </li>
 
