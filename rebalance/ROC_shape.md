@@ -527,4 +527,4 @@ ggplot(
 
 And there we have it: why so many ROC plots look so similar. Some notes
 on using these ideal curves to pick trade-offs can be found
-[here](https://github.com/WinVector/Examples/blob/main/rebalance/Untility_Calc.md).
+[here](https://github.com/WinVector/Examples/blob/main/rebalance/Utility_Calc.md).
