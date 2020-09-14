@@ -1,4 +1,4 @@
-The Typical Shape of the ROC plot
+On The Shape of ROC plots
 ================
 
 ## Introduction
@@ -21,7 +21,7 @@ indicating more work is needed in a project. The concise summary of this
 note can be found
 <a href="https://win-vector.com/2020/09/13/why-working-with-auc-is-more-powerful-than-one-might-think/">here</a>.
 
-## Non-Standard Shapes
+## Wild ROC Shapes
 
 Let’s work some example ROC shapes in [`R`](https://www.r-project.org).
 
@@ -304,7 +304,7 @@ shapes, even in fairly restrictive circumstances. In the next section we
 move away from odd ROC shapes to the archetypal one we expect in data
 science projects.
 
-## The Expected AUC shape
+## The nice AUC shape family
 
 If we limit ourselves to the special case where each of the model-scores
 is beta-distributed conditioned on the outcome, with the *additional*
@@ -476,10 +476,16 @@ examples here) that the ROC plots produced from mirror-symmetric
 conditional beta distributions are (ideally) all graphs of the form:
 
 <pre>
-(1 - y)^(1/s) + x^(1/s) = 1 
+   (1 - y)^(1/s) + x^(1/s) = 1 
 </pre>
 
 for s\>=1.
+
+Or (in terms of the quantities being studied instead of the graph):
+
+<pre>
+   (1 - sensitivity)^s + (1 - specificity)^s = 1 
+</pre>
 
 This single parameter family of curves are all symmetric, convex, and
 comparable (for any pair one is contained in the other)- which are

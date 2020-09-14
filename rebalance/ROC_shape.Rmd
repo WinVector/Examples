@@ -1,5 +1,5 @@
 ---
-title: "The Typical Shape of the ROC plot"
+title: "On The Shape of ROC plots"
 output: github_document
 ---
 
@@ -13,8 +13,7 @@ This left-bow shape is *very* common in data science projects. In fact, we will 
 
 In this note we will show this is not the only shape, but that the above shape is archetypal. This means the other shapes may be anthologies indicating more work is needed in a project. The concise summary of this note can be found <a href="https://win-vector.com/2020/09/13/why-working-with-auc-is-more-powerful-than-one-might-think/">here</a>.
 
-## Non-Standard Shapes
-
+## Wild ROC Shapes
 
 Let's work some example ROC shapes in [`R`](https://www.r-project.org).
 
@@ -237,7 +236,7 @@ ROCPlotPair2(
 
 The point to remember is: there is a diversity of possible `ROC` plot shapes, even in fairly restrictive circumstances. In the next section we move away from odd ROC shapes to the archetypal one we expect in data science projects.
 
-## The Expected AUC shape
+## The nice AUC shape family
 
 If we limit ourselves to the special case where each of the model-scores is beta-distributed conditioned on the outcome, with the *additional* constraint that the parameters are reversed then we get a very interesting family of curves we call the archetypal ROC shapes.  By "parameters reversed" we mean if the negative-example scores are distributed with beta-distribution shape parameters (a,b), then the positive-example scores are distributed with beta-distribution parameters (b,a). That is: the densities are mirrored. For convenience will limit ourselves to a > b >= 1.
 
@@ -373,10 +372,17 @@ So we have proven everything in the a=1 special case. All that remains would be 
 It is our claim, that while ROC plots can be diverse (and we have given examples here) that the ROC plots produced from mirror-symmetric conditional beta distributions are (ideally) all graphs of the form:
 
 <pre>
-(1 - y)^(1/s) + x^(1/s) = 1 
+   (1 - y)^(1/s) + x^(1/s) = 1 
 </pre>
 
 for s>=1.
+
+Or (in terms of the quantities being studied instead of the graph):
+
+<pre>
+   (1 - sensitivity)^s + (1 - specificity)^s = 1 
+</pre>
+
 
 This single parameter family of curves are all symmetric, convex, and comparable (for any pair one is contained in the other)- which are *very* nice properties not generally true of the ROC plot. It is our further, unproven, claim that you expect this shape in sufficiently rich (enough variables, powerful enough models, and enough examples) modeling situations. As the mirrored conditional beta family is nominally parameterized by two parameters, the fact that the non-parameterized version of these plots is indexed by a single parameter means we are exploiting a underlying symmetry or identity in these plot families.
 
