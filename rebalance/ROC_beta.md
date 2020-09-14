@@ -1,9 +1,15 @@
 ROC\_beta
 ================
 
+This quick note is an aside related to [The Typical Shape of the ROC
+plot](https://github.com/WinVector/Examples/blob/main/rebalance/ROC_shape.md).
+
 ``` r
 library(ggplot2)
 ```
+
+    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
+    ## when loading 'dplyr'
 
 ``` r
 mk_curve_beta <- function(a, b, left = 0, right = 1) {
@@ -54,3 +60,18 @@ plot_curve_list(do.call(rbind, list(c1, c2)))
 ```
 
 ![](ROC_beta_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+c1 <- mk_curve_beta(2.3, 5.2)
+target_x <- c1$x[c1$t==0.5][[1]]
+# solve for (1-0.5)^b == target_x
+b_soln <- log(target_x) / log(0.5)
+c2 <- mk_curve_polynomial(b_soln)
+plot_curve_list(do.call(rbind, list(c1, c2)))
+```
+
+![](ROC_beta_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+There may be plotting artifacts as the two curves are parameterized at
+much different rates. So at some places we are comparing one curve to
+the linear interpolation of the other.

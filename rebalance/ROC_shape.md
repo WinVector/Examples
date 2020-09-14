@@ -17,7 +17,9 @@ projects.
 
 In this note we will show this is not the only shape, but that the above
 shape is archetypal. This means the other shapes may be anthologies
-indicating more work is needed in a project.
+indicating more work is needed in a project. The concise summary of this
+note can be found
+<a href="https://win-vector.com/2020/09/13/why-working-with-auc-is-more-powerful-than-one-might-think/">here</a>.
 
 ## Non-Standard Shapes
 
@@ -417,8 +419,11 @@ ggplot() +
 
 ![](ROC_shape_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
-Notice how the line stacks on the curve (we believe the slight variation
-are plotting/interpolation artifacts).
+Notice how close the line stacks on the curve (we believe the slight
+variation are due to the fact the ROC plot is from a finite sample, and
+going to have empirical artifacts; the much closer correspondence of the
+beta CDFs to the polynomials is shown
+[here](https://github.com/WinVector/Examples/blob/main/rebalance/ROC_beta.md)).
 
 We won’t completely prove the above claims here.
 
