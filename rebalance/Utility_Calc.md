@@ -19,12 +19,6 @@ And we are told (just using nominal figures here):
 
 <li>
 
-Our customer population is n = 100,000
-
-</li>
-
-<li>
-
 Time discounted customer lifetime value v = $400
 
 </li>
@@ -99,59 +93,6 @@ So our utility function is defined as thus, using the `q = 0.61` example
 from [here]().
 
 ``` r
-q = 0.61
-
-n = 100000
-v = 400
-p = 0.04
-s = 10
-f = 0.5
-
-fn <- function(specificity) {
-  # our model
-  sensitivity = 1 - (1 -  (1-specificity)^q^(1/q))
-  
-  # standard definitions
-  false_positive_rate = 1 - specificity
-  false_negative_rate = 1 - sensitivity
-  true_positive_rate = sensitivity
-  true_negative_rate = specificity
-  
-  # to counts
-  positive_count = n * p
-  negative_count = n - positive_count
-  false_positive_count = false_positive_rate * negative_count
-  true_positive_count = true_positive_rate * positive_count
-  true_negative_count = true_negative_rate * negative_count
-  false_negative_count = false_negative_rate * positive_count
-  
-  # total utility
-  utility = true_negative_count * v + 
-   false_positive_count * (v-s) + 
-   false_negative_count * 0 + 
-   true_positive_count * (f*v - s)
-  
-  # re-normalize
-  average_utility = utility / n
-  data.frame(
-    specificity = specificity,
-    sensitivity = sensitivity,
-    false_positive_rate = false_positive_rate,
-    false_negative_rate = false_negative_rate,
-    true_positive_rate = true_positive_rate,
-    true_negative_rate = true_negative_rate,
-    false_positive_count = false_positive_count,
-    true_positive_count = true_positive_count,
-    true_negative_count = true_negative_count,
-    false_negative_count = false_negative_count,
-    average_utility = average_utility
-  )
-}
-```
-
-We can plot and optimize this easily.
-
-``` r
 library(ggplot2)
 ```
 
@@ -159,15 +100,46 @@ library(ggplot2)
     ## when loading 'dplyr'
 
 ``` r
+library(sigr) # requires version at least 1.1.0
+```
+
+``` r
+q = 0.61
+
+v = 400
+p = 0.04
+s = 10
+f = 0.5
+
+fn <- function(specificity) {
+  roc_curve <- data.frame(
+    Specificity = specificity,
+    Sensitivity = 1 - (1 -  (1-specificity)^q^(1/q)) # our model
+  )
+  roc_curve <- sigr::add_ROC_derived_columns(roc_curve, p)
+  
+  # average utility
+  roc_curve$average_utility = roc_curve$true_negative_prevalence * v + 
+   roc_curve$false_positive_prevalence * (v-s) + 
+   roc_curve$false_negative_prevalence * 0 + 
+   roc_curve$true_positive_prevalence * (f*v - s)
+  
+  roc_curve
+}
+```
+
+We can plot and optimize this easily.
+
+``` r
 d_utility <- fn(seq(0, 1, length.out = 101))
 
 ggplot(
   data = d_utility,
-  mapping = aes(x = specificity, y = average_utility)) +
+  mapping = aes(x = Specificity, y = average_utility)) +
   geom_line()
 ```
 
-![](Utility_Calc_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](Utility_Calc_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 The optimal trade-off is given here:
 
@@ -177,17 +149,17 @@ str(d_utility[best_idx, ])
 ```
 
     ## 'data.frame':    1 obs. of  11 variables:
-    ##  $ specificity         : num 0.85
-    ##  $ sensitivity         : num 0.43
-    ##  $ false_positive_rate : num 0.15
-    ##  $ false_negative_rate : num 0.57
-    ##  $ true_positive_rate  : num 0.43
-    ##  $ true_negative_rate  : num 0.85
-    ##  $ false_positive_count: num 14400
-    ##  $ true_positive_count : num 1721
-    ##  $ true_negative_count : num 81600
-    ##  $ false_negative_count: num 2279
-    ##  $ average_utility     : num 386
+    ##  $ Specificity              : num 0.85
+    ##  $ Sensitivity              : num 0.43
+    ##  $ FalsePositiveRate        : num 0.15
+    ##  $ TruePositiveRate         : num 0.43
+    ##  $ TrueNegativeRate         : num 0.85
+    ##  $ FalseNegativeRate        : num 0.57
+    ##  $ false_positive_prevalence: num 0.144
+    ##  $ true_positive_prevalence : num 0.0172
+    ##  $ true_negative_prevalence : num 0.816
+    ##  $ false_negative_prevalence: num 0.0228
+    ##  $ average_utility          : num 386
 
 Using the idea curve for optimization has the advantage that we are
 working with a smooted estimate that depends on all of the data.

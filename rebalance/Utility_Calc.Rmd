@@ -13,7 +13,6 @@ Suppose we are told our problem is predicting account cancellation. Our model pr
 And we are told (just using nominal figures here):
 
 <ul>
-<li>Our customer population is n = 100,000</li>
 <li>Time discounted customer lifetime value v = $400</li>
 <li>The cancellation prevalence is p = 0.04</li>
 <li>The cost of an intervention (calling the customer, offering a discount) is s = $10, and moves the retention probability to f = 0.5 for customers who where leaving and has no effect for other customers.</li>
@@ -42,53 +41,32 @@ true_negative_count * v +
 So our utility function is defined as thus, using the `q = 0.61` example from [here]().
 
 ```{r}
+library(ggplot2)
+library(sigr) # requires version at least 1.1.0
+```
+
+```{r}
 q = 0.61
 
-n = 100000
 v = 400
 p = 0.04
 s = 10
 f = 0.5
 
 fn <- function(specificity) {
-  # our model
-  sensitivity = 1 - (1 -  (1-specificity)^q^(1/q))
-  
-  # standard definitions
-  false_positive_rate = 1 - specificity
-  false_negative_rate = 1 - sensitivity
-  true_positive_rate = sensitivity
-  true_negative_rate = specificity
-  
-  # to counts
-  positive_count = n * p
-  negative_count = n - positive_count
-  false_positive_count = false_positive_rate * negative_count
-  true_positive_count = true_positive_rate * positive_count
-  true_negative_count = true_negative_rate * negative_count
-  false_negative_count = false_negative_rate * positive_count
-  
-  # total utility
-  utility = true_negative_count * v + 
-   false_positive_count * (v-s) + 
-   false_negative_count * 0 + 
-   true_positive_count * (f*v - s)
-  
-  # re-normalize
-  average_utility = utility / n
-  data.frame(
-    specificity = specificity,
-    sensitivity = sensitivity,
-    false_positive_rate = false_positive_rate,
-    false_negative_rate = false_negative_rate,
-    true_positive_rate = true_positive_rate,
-    true_negative_rate = true_negative_rate,
-    false_positive_count = false_positive_count,
-    true_positive_count = true_positive_count,
-    true_negative_count = true_negative_count,
-    false_negative_count = false_negative_count,
-    average_utility = average_utility
+  roc_curve <- data.frame(
+    Specificity = specificity,
+    Sensitivity = 1 - (1 -  (1-specificity)^q^(1/q)) # our model
   )
+  roc_curve <- sigr::add_ROC_derived_columns(roc_curve, p)
+  
+  # average utility
+  roc_curve$average_utility = roc_curve$true_negative_prevalence * v + 
+   roc_curve$false_positive_prevalence * (v-s) + 
+   roc_curve$false_negative_prevalence * 0 + 
+   roc_curve$true_positive_prevalence * (f*v - s)
+  
+  roc_curve
 }
 ```
 
@@ -96,15 +74,11 @@ We can plot and optimize this easily.
 
 
 ```{r}
-
-library(ggplot2)
-
-
 d_utility <- fn(seq(0, 1, length.out = 101))
 
 ggplot(
   data = d_utility,
-  mapping = aes(x = specificity, y = average_utility)) +
+  mapping = aes(x = Specificity, y = average_utility)) +
   geom_line()
 ```
 
