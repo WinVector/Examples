@@ -1,5 +1,5 @@
 ---
-title: "On The Shape of ROC plots"
+title: "On The Shapes of ROC plots"
 output: github_document
 ---
 

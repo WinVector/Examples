@@ -1,4 +1,4 @@
-On The Shape of ROC plots
+On The Shapes of ROC plots
 ================
 
 ## Introduction
