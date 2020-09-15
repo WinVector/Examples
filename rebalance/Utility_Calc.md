@@ -114,7 +114,7 @@ f = 0.5
 fn <- function(specificity) {
   roc_curve <- data.frame(
     Specificity = specificity,
-    Sensitivity = 1 - (1 -  (1-specificity)^q^(1/q)) # our model
+    Sensitivity = 1 - (1 -  (1-specificity)^q)^(1/q) # our model
   )
   roc_curve <- sigr::add_ROC_derived_columns(roc_curve, p)
   
@@ -149,28 +149,23 @@ str(d_utility[best_idx, ])
 ```
 
     ## 'data.frame':    1 obs. of  11 variables:
-    ##  $ Specificity              : num 0.85
-    ##  $ Sensitivity              : num 0.43
-    ##  $ FalsePositiveRate        : num 0.15
-    ##  $ TruePositiveRate         : num 0.43
-    ##  $ TrueNegativeRate         : num 0.85
-    ##  $ FalseNegativeRate        : num 0.57
-    ##  $ false_positive_prevalence: num 0.144
-    ##  $ true_positive_prevalence : num 0.0172
-    ##  $ true_negative_prevalence : num 0.816
-    ##  $ false_negative_prevalence: num 0.0228
+    ##  $ Specificity              : num 0.77
+    ##  $ Sensitivity              : num 0.577
+    ##  $ FalsePositiveRate        : num 0.23
+    ##  $ TruePositiveRate         : num 0.577
+    ##  $ TrueNegativeRate         : num 0.77
+    ##  $ FalseNegativeRate        : num 0.423
+    ##  $ false_positive_prevalence: num 0.221
+    ##  $ true_positive_prevalence : num 0.0231
+    ##  $ true_negative_prevalence : num 0.739
+    ##  $ false_negative_prevalence: num 0.0169
     ##  $ average_utility          : num 386
 
 Using the idea curve for optimization has the advantage that we are
 working with a smooted estimate that depends on all of the data.
 
 The model says, for this population, and these costs, our best trade-off
-is to run at specificity 0.85 and sensitivity 0.43. This means we call
-just under half of the at-risk customers while wasting interventions on
-only 15 percent of the not at-risk customers. Due to the rareness of
-cancellation this means our precision is in fact only 1721/(1721 +
-2279), or only 43 percent (again the sensitivity). So half the
-interventions are wasted, as the model can’t tell us which half is
-wasted\! The optimal solution is trading-off cost of interaction with
-possible loss of revenue. With different rates, revenue, and costs we
-would have a different optimum trade-off.
+is to run at specificity 0.77 and sensitivity 0.58. This optimal
+solution is trading-off cost of interaction with possible loss of
+revenue. With different rates, revenue, and costs we would have a
+different optimum trade-off.
