@@ -416,5 +416,12 @@ ggplot(
 
 And there we have it: why so many ROC plots look so similar. Some notes on using these ideal curves to pick trade-offs can be found [here](https://github.com/WinVector/Examples/blob/main/rebalance/Utility_Calc.md).
 
+A futher conjection is the general asymetric form for beta-distribution derived ROC curves may just be:
+
+<pre>
+   (1 - sensitivity)^s + (1 - specificity)^t = 1 
+</pre>
+
+where s and t can be different, reflecting the shape paraemters of the beta distribution of the scores of positive examples may be different than the beta distribution of the scores of negative examples.
 
 
