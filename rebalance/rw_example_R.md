@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Mon Sep 7 10:44:51 2020
+Sat Oct 10 10:48:26 2020
 
 ## Introduction
 
@@ -35,12 +35,6 @@ note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
 ``` r
 # first attach packages
 library(ggplot2)
-```
-
-    ## Warning: replacing previous import 'vctrs::data_frame' by 'tibble::data_frame'
-    ## when loading 'dplyr'
-
-``` r
 library(wrapr)
 library(WVPlots)
 ```
@@ -462,12 +456,11 @@ interaction variables we have a model structure, that with enough
 training data, should dominate both original models.
 
 The point is: with individual variables that contain finer detail about
-the data fewer trade-offs are required, not leaving in the possibility
-of a non-monotone. Likely higher complexity models such as polynomial
-regression, kernelized methods, tree based methods, ensemble methods,
-and neural nets introduce enough interactions to not fundamentally need
-the re-balance (though any one particular implementation may fall
-short).
+the data fewer trade-offs are required. Likely higher complexity models
+such as polynomial regression, kernelized methods, tree based methods,
+ensemble methods, and neural nets introduce enough interactions to not
+fundamentally need the re-balance (though any one particular
+implementation may fall short).
 
 This can be achieved all at once by introducing the obvious categorical
 variable that the partition implied by the combinations of the original
@@ -567,6 +560,36 @@ classification rules too early.
 The monotone models are very well suited for this transform, as for them
 any such transform is order equivilent to re-training with different
 priors.
+
+## Homotopy Model Bundles
+
+We suggest the solution to using a model in possibly unknown future
+prevalance situations is to implement the trajectory plotting ideas
+shown in the appendix of this note. We introduce a new model object we
+are going to call a *homotopy model bundle*.
+
+<blockquote>
+
+A *homotopy model bundle* is defined as follows.
+
+A classification score model is a map `m: X -> [0, 1]` that maps
+elements the space of explanitory variables to probility estimates. Call
+the space of all such functions
+
+A classification model homotopy bundle is a map ’h: X \* \[0, 1\] -\>
+\[0, 1\]\` or a map from the cross-product of the space of explanatory
+variables and posited prevelance to probability estimates.
+
+</blockquote>
+
+So in principle a homotopy model bundle is an infinite family of models,
+one for each posited prevance in the interal `[0, 1]`. In practice the
+homotopy model bundle may have a more concise realization.
+
+One thing we have shown: even for logistic regression there are
+situations where the model homotopy bundle is *not* of the form `f(m(X),
+p)` where `f()` is a monotone function of the original model prediction
+`m(X)` and a new assumed prevalance `p`.
 
 ## Conclusion
 

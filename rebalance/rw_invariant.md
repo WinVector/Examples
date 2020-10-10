@@ -1,7 +1,7 @@
 Some Examples Where re-Weighting Data Doesn’t do Much
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Thu Aug 20 09:27:39 2020
+Sat Oct 10 10:34:47 2020
 
 ## Introduction
 
