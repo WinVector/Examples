@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Sat Oct 10 10:48:26 2020
+Sat Oct 10 11:45:44 2020
 
 ## Introduction
 
@@ -587,9 +587,9 @@ one for each posited prevance in the interal `[0, 1]`. In practice the
 homotopy model bundle may have a more concise realization.
 
 One thing we have shown: even for logistic regression there are
-situations where the model homotopy bundle is *not* of the form `f(m(X),
-p)` where `f()` is a monotone function of the original model prediction
-`m(X)` and a new assumed prevalance `p`.
+situations where the model homotopy bundle is *not* of the form
+`f(p)(m(X))` where `f()` is a family of functions, and`f(p)` is a
+monotone function of the original model prediction `m(X)` .
 
 ## Conclusion
 
