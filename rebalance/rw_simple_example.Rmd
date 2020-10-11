@@ -3,6 +3,8 @@ title: "rw_simple_example"
 output: github_document
 ---
 
+Support code for the article ["Tailored Models are Not The Same as Simple Corrections"](https://win-vector.com/2020/10/11/tailored-models-are-not-the-same-as-simple-corrections/).
+
 
 ```{r}
 # attach our packages
@@ -56,7 +58,7 @@ d$pred_m_0.29[interesting_rows]
 d$pred_m_0.50[interesting_rows]
 ```
 
-This means no monotone correction that looks only at the predictions can account for the difference between these two prevalence tailored models.
+This means no monotone correction that looks only at the predictions can make the same adaptations as these two prevalence tailored models. And that is our demonstration. 
 
 As a side note, notice each model is unbiased in the simple sense it matches the expected value of the outcome *with respect to the data weighting it was trained on*. This is part of the advantage of [tailored models](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/).
 

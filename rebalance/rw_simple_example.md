@@ -1,6 +1,10 @@
 rw\_simple\_example
 ================
 
+Support code for the article [“Tailored Models are Not The Same as
+Simple
+Corrections”](https://win-vector.com/2020/10/11/tailored-models-are-not-the-same-as-simple-corrections/).
+
 ``` r
 # attach our packages
 library(wrapr)
@@ -83,7 +87,8 @@ d$pred_m_0.50[interesting_rows]
     ## [1] 0.3655679 0.3930810
 
 This means no monotone correction that looks only at the predictions can
-account for the difference between these two prevalence tailored models.
+make the same adaptations as these two prevalence tailored models. And
+that is our demonstration.
 
 As a side note, notice each model is unbiased in the simple sense it
 matches the expected value of the outcome *with respect to the data
