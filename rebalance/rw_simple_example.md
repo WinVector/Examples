@@ -82,7 +82,7 @@ d$pred_m_0.50[interesting_rows]
 
     ## [1] 0.3655679 0.3930810
 
-This mean no monotone correction that looks only at the predictions can
+This means no monotone correction that looks only at the predictions can
 account for the difference between these two prevalence tailored models.
 
 As a side note, notice each model is unbiased in the simple sense it
