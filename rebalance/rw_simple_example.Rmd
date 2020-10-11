@@ -1,0 +1,69 @@
+---
+title: "rw_simple_example"
+output: github_document
+---
+
+
+```{r}
+# attach our packages
+library(wrapr)
+
+# build our example data
+# modeling y as a function of x1 and x2 (plus intercept)
+d <- wrapr::build_frame(
+  "x1"  , "x2", "y", "w2" |
+    0   , 0   , 0  , 2    |
+    0   , 0   , 0  , 2    |
+    0   , 1   , 1  , 5    |
+    1   , 0   , 0  , 2    |
+    1   , 0   , 0  , 2    |
+    1   , 0   , 1  , 5    |
+    1   , 1   , 0  , 2    )
+
+# display table
+knitr::kable(d)
+```
+
+```{r}
+# fit a model at prevalence 0.2857143
+m_0.29 <- glm(
+  y ~ x1 + x2,
+  data = d,
+  family = binomial())
+# add in predictions
+d$pred_m_0.29 <- predict(
+  m_0.29, newdata = d, type = 'response')
+
+# fit a model at prevalence 0.5
+m_0.50 <- glm(
+  y ~ x1 + x2,
+  data = d,
+  weights = w2,
+  family = binomial())
+# add in predictions
+d$pred_m_0.50 <- predict(
+  m_0.50, newdata = d, type = 'response')
+
+# display table
+knitr::kable(d)
+```
+
+Now notice the relative order of the predictions in rows 1 and 5 are reversed in model `m_0.50` relative to the order given by model `m_0.29`.
+
+```{r}
+interesting_rows <- c(1, 5)
+d$pred_m_0.29[interesting_rows]
+d$pred_m_0.50[interesting_rows]
+```
+
+This mean no monotone correction that looks only at the predictions can account for the difference between these two prevalence tailored models.
+
+As a side note, notice each model is unbiased in the simple sense it matches the expected value of the outcome *with respect to the data weighting it was trained on*. This is part of the advantage of [tailored models](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/).
+
+```{r}
+mean(d$y) - mean(d$pred_m_0.29)
+
+(sum(d$w2 * d$y) / sum(d$w2))  -  (sum(d$w2 * d$pred_m_0.50) / sum(d$w2))
+```
+
+
