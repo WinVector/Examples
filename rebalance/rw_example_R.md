@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Sat Oct 10 11:45:44 2020
+Sat Oct 10 18:15:03 2020
 
 ## Introduction
 
@@ -708,8 +708,29 @@ evalsc$logit_prevalence <- logit(evalsc$apparent_prevalence)
 
 ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = coef_value, color = coef_name)) +
   geom_line() +
-  ggtitle("trajectory of coefficients as a function of truth prevalence") +
+  ggtitle("trajectory of coefficients as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 ```
 
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-6.png)<!-- -->
+
+``` r
+sigmoid <- function(x) { 1 / (1 + exp(-x)) }
+evalsc$sigmoid_coef_value <- sigmoid(evalsc$coef_value)
+
+ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = sigmoid_coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of sigmoid of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-7.png)<!-- -->
+
+``` r
+ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = sigmoid_coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of sigmoid of coefficients as a function of logit truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-8.png)<!-- -->

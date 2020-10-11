@@ -433,7 +433,20 @@ evalsc$logit_prevalence <- logit(evalsc$apparent_prevalence)
 
 ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = coef_value, color = coef_name)) +
   geom_line() +
-  ggtitle("trajectory of coefficients as a function of truth prevalence") +
+  ggtitle("trajectory of coefficients as a function of logit truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+
+sigmoid <- function(x) { 1 / (1 + exp(-x)) }
+evalsc$sigmoid_coef_value <- sigmoid(evalsc$coef_value)
+
+ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = sigmoid_coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of sigmoid of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+
+ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = sigmoid_coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of sigmoid of coefficients as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 
 ```
