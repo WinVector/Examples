@@ -8,7 +8,7 @@ library(numbers)
 
 ``` r
 bal_size <- 8
-n_imb_rep <- 100
+n_imb_rep <- 80
 d <- data.frame(
   prediction = c(
     rep((bal_size - 1)/bal_size, bal_size),
@@ -38,7 +38,7 @@ colMeans(subset(subset(d, select= -orig_row_id)))
 ```
 
     ## prediction      truth 
-    ##  0.3362445  0.3362445
+    ##  0.3369565  0.3369565
 
 ``` r
 d %.>%
@@ -63,7 +63,7 @@ prevalence <- mean(d$truth)
 prevalence
 ```
 
-    ## [1] 0.3362445
+    ## [1] 0.3369565
 
 ``` r
 epsilon <- 1.0e-9
@@ -83,6 +83,12 @@ count_table <- aggregate(
   FUN = length)
 
 multiple <- Reduce(LCM, count_table$count)
+multiple
+```
+
+    ## [1] 15128
+
+``` r
 count_table$n_reps <- multiple / count_table$count
 
 knitr::kable(count_table)
@@ -90,8 +96,8 @@ knitr::kable(count_table)
 
 | truth | count | n\_reps |
 | :---- | ----: | ------: |
-| FALSE |   608 |      77 |
-| TRUE  |   308 |     152 |
+| FALSE |   488 |      31 |
+| TRUE  |   248 |      61 |
 
 ``` r
 # replicate each row group by the target number of times
@@ -139,7 +145,7 @@ stopifnot(abs(prevalence_2  - mean(d_2$prediction)) > 1e-2)
 mean(d_2$prediction)
 ```
 
-    ## [1] 0.3584218
+    ## [1] 0.3594494
 
 <https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/>
 
@@ -157,7 +163,7 @@ delta <- -logit(prevalence) + logit(prevalence_2)
 delta
 ```
 
-    ## [1] 0.6800751
+    ## [1] 0.6768867
 
 Add our p-adjusted prediction and show the intereseting rows.
 
@@ -171,17 +177,17 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 
 | prediction |     truth | p\_adjusted\_prediction |
 | ---------: | --------: | ----------------------: |
-|      0.125 | 0.2199711 |               0.2199711 |
-|      0.250 | 0.2830540 |               0.3968668 |
-|      0.500 | 0.7979003 |               0.6637555 |
-|      0.875 | 0.9325153 |               0.9325153 |
+|      0.125 | 0.2194245 |               0.2194245 |
+|      0.250 | 0.2824074 |               0.3961039 |
+|      0.500 | 0.7973856 |               0.6630435 |
+|      0.875 | 0.9323144 |               0.9323144 |
 
 ``` r
 stopifnot(abs(prevalence_2  - mean(d_2$p_adjusted_prediction)) > 1e-2)
 mean(d_2$p_adjusted_prediction)
 ```
 
-    ## [1] 0.510689
+    ## [1] 0.5105872
 
 ``` r
 f <- function(d) {
@@ -194,7 +200,7 @@ delta_2
 ```
 
     ## $root
-    ## [1] 0.6336273
+    ## [1] 0.630759
     ## 
     ## $f.root
     ## [1] 0
@@ -206,7 +212,7 @@ delta_2
     ## [1] NA
     ## 
     ## $estim.prec
-    ## [1] 1.074909e-08
+    ## [1] 1.245352e-08
 
 ``` r
 d_2$u_adjusted_prediction <- sigmoid(
@@ -218,10 +224,10 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 
 | prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction |
 | ---------: | --------: | ----------------------: | ----------------------: |
-|      0.125 | 0.2199711 |               0.2199711 |               0.2121051 |
-|      0.250 | 0.2830540 |               0.3968668 |               0.3858039 |
-|      0.500 | 0.7979003 |               0.6637555 |               0.6533115 |
-|      0.875 | 0.9325153 |               0.9325153 |               0.9295330 |
+|      0.125 | 0.2194245 |               0.2194245 |               0.2116261 |
+|      0.250 | 0.2824074 |               0.3961039 |               0.3851245 |
+|      0.500 | 0.7973856 |               0.6630435 |               0.6526615 |
+|      0.875 | 0.9323144 |               0.9323144 |               0.9293449 |
 
 ``` r
 stopifnot(abs(prevalence_2  -  mean(d_2$u_adjusted_prediction)) < epsilon)
@@ -249,10 +255,10 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 
 | prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction | platt\_scaled\_prediction |
 | ---------: | --------: | ----------------------: | ----------------------: | ------------------------: |
-|      0.125 | 0.2199711 |               0.2199711 |               0.2121051 |                 0.0678447 |
-|      0.250 | 0.2830540 |               0.3968668 |               0.3858039 |                 0.2888698 |
-|      0.500 | 0.7979003 |               0.6637555 |               0.6533115 |                 0.7905933 |
-|      0.875 | 0.9325153 |               0.9325153 |               0.9295330 |                 0.9949197 |
+|      0.125 | 0.2194245 |               0.2194245 |               0.2116261 |                 0.0689418 |
+|      0.250 | 0.2824074 |               0.3961039 |               0.3851245 |                 0.2896237 |
+|      0.500 | 0.7973856 |               0.6630435 |               0.6526615 |                 0.7882819 |
+|      0.875 | 0.9323144 |               0.9323144 |               0.9293449 |                 0.9946869 |
 
 ``` r
 stopifnot(abs(prevalence_2  -  mean(d_2$platt_scaled_prediction)) < epsilon)
@@ -279,10 +285,10 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 
 | prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction | platt\_scaled\_prediction | platt\_shifted\_prediction |
 | ---------: | --------: | ----------------------: | ----------------------: | ------------------------: | -------------------------: |
-|      0.125 | 0.2199711 |               0.2199711 |               0.2121051 |                 0.0678447 |                  0.2121051 |
-|      0.250 | 0.2830540 |               0.3968668 |               0.3858039 |                 0.2888698 |                  0.3858039 |
-|      0.500 | 0.7979003 |               0.6637555 |               0.6533115 |                 0.7905933 |                  0.6533115 |
-|      0.875 | 0.9325153 |               0.9325153 |               0.9295330 |                 0.9949197 |                  0.9295330 |
+|      0.125 | 0.2194245 |               0.2194245 |               0.2116261 |                 0.0689418 |                  0.2116261 |
+|      0.250 | 0.2824074 |               0.3961039 |               0.3851245 |                 0.2896237 |                  0.3851245 |
+|      0.500 | 0.7973856 |               0.6630435 |               0.6526615 |                 0.7882819 |                  0.6526615 |
+|      0.875 | 0.9323144 |               0.9323144 |               0.9293449 |                 0.9946869 |                  0.9293449 |
 
 ``` r
 stopifnot(abs(prevalence_2  -  mean(d_2$platt_shifted_prediction)) < epsilon)

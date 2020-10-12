@@ -11,7 +11,7 @@ library(numbers)
 
 ```{r}
 bal_size <- 8
-n_imb_rep <- 100
+n_imb_rep <- 80
 d <- data.frame(
   prediction = c(
     rep((bal_size - 1)/bal_size, bal_size),
@@ -66,6 +66,10 @@ count_table <- aggregate(
   FUN = length)
 
 multiple <- Reduce(LCM, count_table$count)
+multiple
+```
+
+```{r}
 count_table$n_reps <- multiple / count_table$count
 
 knitr::kable(count_table)
