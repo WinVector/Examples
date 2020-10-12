@@ -10,15 +10,37 @@ library(numbers)
 
 
 ```{r}
-d <- wrapr::build_frame(
-   "prediction"  , "truth" |
-     0.875       , TRUE    |
-     0.875       , TRUE    |
-     0.250       , FALSE   )
+bal_size <- 8
+n_imb_rep <- 100
+d <- data.frame(
+  prediction = c(
+    rep((bal_size - 1)/bal_size, bal_size),
+    rep(c(1/2, 1/2, 1/2, 1/4, 1/4, 1/4, 1/4, 1/4, 1/4), n_imb_rep),
+    rep(1/bal_size, bal_size)),
+  truth = c(
+    rep(TRUE, (bal_size - 1)), FALSE,
+    rep(c(TRUE, TRUE, FALSE, TRUE, rep(FALSE, 5)), n_imb_rep),
+    TRUE, rep(FALSE, (bal_size - 1))
+  ))
 d$orig_row_id <- seq_len(nrow(d))
 
-knitr::kable(d)
+knitr::kable(head(d))
 ```
+
+```{r}
+colMeans(subset(subset(d, select= -orig_row_id)))
+```
+
+```{r}
+d %.>%
+  subset(., select = -orig_row_id) %.>%
+  aggregate(
+    . ~ prediction, 
+    data = ., 
+    FUN = mean) %.>%
+  knitr::kable(.)
+```
+
 
 ```{r}
 prevalence <- mean(d$truth)
@@ -31,6 +53,7 @@ epsilon <- 1.0e-9
 stopifnot(abs(prevalence  -  mean(d$prediction)) < epsilon)
 prevalence  -  mean(d$prediction)
 ```
+
 
 
 Build a deterministic re-sampled data set with 50% prevalence.
@@ -64,7 +87,10 @@ d_2 <- merge(d, rep_table, by = 'truth') %.>%
   .[order(.$orig_row_id, .$row_rep), ]
 rownames(d_2) <- NULL
 
-knitr::kable(d_2)
+knitr::kable(head(d_2))
+
+d_2$orig_row_id <- NULL
+d_2$row_rep <- NULL
 ```
 
 
@@ -75,7 +101,7 @@ prevalence_2
 ```
 
 ```{r}
-stopifnot(abs(prevalence_2  - mean(d_2$prediction)) > 1e-3)
+stopifnot(abs(prevalence_2  - mean(d_2$prediction)) > 1e-2)
 mean(d_2$prediction)
 ```
 
@@ -95,16 +121,6 @@ delta <- -logit(prevalence) + logit(prevalence_2)
 delta
 ```
 
-Show only rows with different original scores.
-
-```{r}
-d_2$orig_row_id <- NULL
-d_2$row_rep <- NULL
-
-indices <- match(sort(unique(d_2$prediction)), d_2$prediction)
-
-indices
-```
 
 Add our p-adjusted prediction and show the intereseting rows.
 
@@ -112,13 +128,12 @@ Add our p-adjusted prediction and show the intereseting rows.
 d_2$p_adjusted_prediction <- sigmoid(
   logit(d_2$prediction) + delta)
 
-d_2 %.>%
-  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
 ```{r}
-stopifnot(abs(prevalence_2  - mean(d_2$p_adjusted_prediction)) > 1e-3)
+stopifnot(abs(prevalence_2  - mean(d_2$p_adjusted_prediction)) > 1e-2)
 mean(d_2$p_adjusted_prediction)
 ```
 
@@ -138,8 +153,7 @@ delta_2
 d_2$u_adjusted_prediction <- sigmoid(
   logit(d_2$prediction) + delta_2$root)
 
-d_2 %.>%
-  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
@@ -161,8 +175,7 @@ d_2$platt_scaled_prediction <- predict(
   newdata = d_2,
   type = 'response')
 
-d_2 %.>%
-  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
@@ -183,8 +196,7 @@ d_2$platt_shifted_prediction <- predict(
   newdata = d_2,
   type = 'response')
 
-d_2 %.>%
-  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
