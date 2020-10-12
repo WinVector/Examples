@@ -1,0 +1,197 @@
+---
+title: "Prevalence Adjustment"
+output: github_document
+---
+
+```{r}
+library(wrapr)
+library(numbers)
+```
+
+
+```{r}
+d <- wrapr::build_frame(
+   "prediction"  , "truth" |
+     0.875       , TRUE    |
+     0.875       , TRUE    |
+     0.250       , FALSE   )
+d$orig_row_id <- seq_len(nrow(d))
+
+knitr::kable(d)
+```
+
+```{r}
+prevalence <- mean(d$truth)
+
+prevalence
+```
+
+```{r}
+epsilon <- 1.0e-9
+stopifnot(abs(prevalence  -  mean(d$prediction)) < epsilon)
+prevalence  -  mean(d$prediction)
+```
+
+
+Build a deterministic re-sampled data set with 50% prevalence.
+
+```{r}
+# get how many times to replicate each row group
+count_table <- aggregate(
+  count ~ truth, 
+  data = transform(d, count = 1), 
+  FUN = length)
+
+multiple <- Reduce(LCM, count_table$count)
+count_table$n_reps <- multiple / count_table$count
+
+knitr::kable(count_table)
+```
+
+```{r}
+# replicate each row group by the target number of times
+rep_table <- count_table %.>%
+ lapply(
+  seq_len(nrow(.)),
+  function(i) {
+    data.frame(
+      truth = .$truth[[i]],
+      row_rep = seq_len(.$n_reps[[i]]))
+  }) %.>%
+  do.call(rbind, .)
+
+d_2 <- merge(d, rep_table, by = 'truth') %.>%
+  .[order(.$orig_row_id, .$row_rep), ]
+rownames(d_2) <- NULL
+
+knitr::kable(d_2)
+```
+
+
+```{r}
+prevalence_2 <- mean(d_2$truth)
+
+prevalence_2
+```
+
+```{r}
+stopifnot(abs(prevalence_2  - mean(d_2$prediction)) > 1e-3)
+mean(d_2$prediction)
+```
+
+https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/
+
+```{r}
+sigmoid <- function(x) {
+  1 / (1 + exp(-x))
+}
+
+logit <- function(x) {
+  log( x / (1 - x) )
+}
+
+delta <- -logit(prevalence) + logit(prevalence_2)
+
+delta
+```
+
+Show only rows with different original scores.
+
+```{r}
+d_2$orig_row_id <- NULL
+d_2$row_rep <- NULL
+
+indices <- match(sort(unique(d_2$prediction)), d_2$prediction)
+
+indices
+```
+
+Add our p-adjusted prediction and show the intereseting rows.
+
+```{r}
+d_2$p_adjusted_prediction <- sigmoid(
+  logit(d_2$prediction) + delta)
+
+d_2 %.>%
+  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+  knitr::kable(.)
+```
+
+```{r}
+stopifnot(abs(prevalence_2  - mean(d_2$p_adjusted_prediction)) > 1e-3)
+mean(d_2$p_adjusted_prediction)
+```
+
+
+```{r}
+f <- function(d) {
+  mean(d_2$truth) - mean(sigmoid(logit(d_2$prediction) + d))
+}
+
+delta_2 <- uniroot(f, c(-2, 2), tol = .Machine$double.eps)
+
+delta_2
+```
+
+
+```{r}
+d_2$u_adjusted_prediction <- sigmoid(
+  logit(d_2$prediction) + delta_2$root)
+
+d_2 %.>%
+  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+  knitr::kable(.)
+```
+
+```{r}
+stopifnot(abs(prevalence_2  -  mean(d_2$u_adjusted_prediction)) < epsilon)
+mean(d_2$u_adjusted_prediction)
+```
+
+Platt scaling https://en.wikipedia.org/wiki/Platt_scaling
+
+```{r}
+platt_scaler <- glm(
+  truth ~ logit(prediction), 
+  data = d_2, 
+  family = binomial())
+
+d_2$platt_scaled_prediction <- predict(
+  platt_scaler,
+  newdata = d_2,
+  type = 'response')
+
+d_2 %.>%
+  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+  knitr::kable(.)
+```
+
+```{r}
+stopifnot(abs(prevalence_2  -  mean(d_2$platt_scaled_prediction)) < epsilon)
+mean(d_2$platt_scaled_prediction)
+```
+
+```{r}
+platt_shifter <- glm(
+  truth ~ 1, 
+  offset = logit(prediction),
+  data = d_2, 
+  family = binomial())
+
+d_2$platt_shifted_prediction <- predict(
+  platt_shifter,
+  newdata = d_2,
+  type = 'response')
+
+d_2 %.>%
+  subset(., seq_len(nrow(.)) %in% indices, select = -truth) %.>%
+  knitr::kable(.)
+```
+
+```{r}
+stopifnot(abs(prevalence_2  -  mean(d_2$platt_shifted_prediction)) < epsilon)
+mean(d_2$platt_shifted_prediction)
+```
+
+
+
