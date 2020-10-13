@@ -291,8 +291,8 @@ corrected value is in this case closer.
 If the original model was unbiased (which it was), and the adjustment is
 correct (which it is), how can the result be biased (which it is)?
 
-The answer is: the adjustment is unbiased for perfect models, which are
-not the kind we see in practice. A perfect model has absolutely no
+The answer is: the adjustment is unbiased for *perfect* models, which
+are not the kind we see in practice. A perfect model has absolutely no
 structure in the residuals. That is a perfect model has `P[outcome==TRUE
 | prediction = p] = p` for *all* <code>p</code>. This wasn’t the case
 for our example model. Here are the expected values of truth on the
@@ -315,27 +315,29 @@ d %.>%
 |      0.500 | 0.6666667 |
 |      0.875 | 0.8750000 |
 
-Notice that on the original data set when the prediction is `0.125` the
-expected value of the outcome is `0.125`. The correction then moves
-these predictions by exactly the same amount the data re-weighting moves
-the frequency of the matching rows: from `0.125` to `0.219`, so the
-adjusted predictions match the adjusted frequencies. If all predictions
-had this perfect match, all row-groups would get matching totals and the
-model would be globally unbiased.
+Notice that prediction groups that were perfect in the original
+(`0.125`, and `0.875`) do match the truth expectation in the re-sampled
+data set. The idea is in this case the resampling is the exact same
+adjustment as the shift, so things that matched before adjustment match
+after adjustment.
 
-However, the model didn’t exactly match frequencies on all prediction
-ranges. It had on its original data set undesirable structure in the
-residuals. On these row-groups where the prediction doesn’t match the
-frequency on the original data set, the scaling of the correction isn’t
-the same as the scaling due to re-sampling and value move around. Unless
-additional balance conditions are met, the expected value of the new
-predictor is not the expected value of the new outcome.
+For prediction groups that were not perfect in the original (`0.250` and
+`0.500`) the re-scaling of data moves the answer proportional the actual
+prevelance seen and the shifting of the prediction operates at the
+different rate predicted by the model. The sigmoid has different shapes
+in different regions, so the two estimates move at different rates. As
+we have seen, groups that compensated for each other in the original may
+fall out of sync and not compensate for each other after transform. The
+`0.250` prediction group was over-predicting in the original data frame,
+and the `0.500` groups was under-predicting in the original data frame.
+At the exact counts in the original data frame these two erros canceled,
+after transform the cancellation was maintained.
 
 The point is: the idea that the Bayes’ correction gets the expected
 value right is something we have to check. The obvious way to establish
-it would be to insist the mode obey very strong additional
+it would be to insist the mode obey *very* strong additional
 per-prediction range balance conditions. These conditions are typically
-not all met in production unless one has taken extra care to [calibrate
+not all met in production, unless one has taken extra care to [calibrate
 the model](https://en.wikipedia.org/wiki/Platt_scaling) (perhaps through
 isotonic regression, but even this will fail if the model has
 order-reversals; binning the predictions and using a nested model can
