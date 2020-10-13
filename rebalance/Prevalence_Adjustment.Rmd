@@ -5,9 +5,9 @@ output: github_document
 
 ## Introduction
 
-I would like to show how the *point-wise shift model homotopy as <code>P</code>* is not unbiased and not the same as the *unbiased shift model homotopy defined as <code>U</code>*. We define a [probability model homotopy](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/) as a set of related models addressed by an index variable [here](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/). In the context of this note it is enough to think of a model homotopy as family of models related correction scheme we intend to apply when the model is applied to new data.
+I would like to show how the *point-wise shift model homotopy as <code>P</code>* is not unbiased and not the same as the *unbiased shift model homotopy defined as <code>U</code>*. We define a [probability model homotopy](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/) as a set of related models indexed by a variable [here](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/). In the context of this note it is enough to think of a model homotopy as a correction scheme we intend to apply when a model is applied to new data.
 
-In our introductory note we mentioned a few common corrections.
+In our introductory note we mentioned two related link shift corrections.
 
   * The <code>P</code>-correction, which is essentially a point-wise application of Bayes' Law.
   * The <code>U</code>-correction, which is designed to get prevalence right.
@@ -48,7 +48,8 @@ knitr::kable(head(d))
 The column `prediction` is behaving like an unbiased probability model predicting `truth`. In particular `prediction` and `truth` have the same expected value on this data set.
 
 ```{r}
-colMeans(subset(subset(d, select= -orig_row_id)))
+colMeans(subset(d, select= -orig_row_id)) %.>%
+  knitr::kable(.)
 ```
 
 ```{r}
@@ -64,6 +65,8 @@ prevalence  -  mean(d$prediction)
 ```
 
 ## Bayes' Correction (<code>P</code>)
+
+### Derivation 
 
 Now the idea is the <code>P</code> correction is as follows. By Bayes' Law we have:
 
@@ -106,13 +109,11 @@ The idea is:
   
 So it is tempting to take only the `log(P[evidence | outcome==TRUE] / P[evidence | outcome==FALSE])` term from our model, and training data and plug in an estimate of the prevalence of the population we intend to work with. For example we showed in ["A Gruesome Example of Bayes’ Law"](https://win-vector.com/2020/09/11/a-gruesome-example-of-bayes-law/) how to take an conditional evidence odds-ratio built on a population with a prevalence near 50%, and apply it to a population with low disease prevalence. Without this correction the predictions would be very far off!
 
-The Bayes/<code>P</code> correction is developed as follows.
+This is what we formally call the <code>P</code> [model homotopy](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/). The homotopy notation lets us give the method a name other than "correction" if we so need. The potential downside of discussing the <code>P</code> model homotopy only as a "correction" is running afoul of the following sophistry: "that wrong corrections are not corrections, so there is no such thing as wrong corrections." So what you are trying to study slips out of your hands.
 
-```{r}
-sigmoid <- function(x) {
-  1 / (1 + exp(-x))
-}
-```
+### A Concrete Example
+
+Back to a concrete example.
 
 Suppose we intend to apply this model, built on a population with `r format(prevalence, digits=2)` prevalence on a new population with 50% prevalence. Let's suppose our 50% prevalence is just a deterministic even re-sampling of our data (a very easy case!.
 
@@ -178,23 +179,29 @@ delta <- -logit(prevalence) + logit(prevalence_2)
 delta
 ```
 
-
 ```{r}
+sigmoid <- function(x) {
+  1 / (1 + exp(-x))
+}
+
 d_2$p_adjusted_prediction <- sigmoid(
   logit(d_2$prediction) + delta)
 ```
 
-And here is a summary of what we have. The `prediction` column is original model's predictions, the `truth` column is now the expected value of the truth indicator on the new re-sampled data set and the `p_adjusted_prediction` is our new Bayes adjusted prediction.
+### The Result
+
+Here is a summary of what we have. The `prediction` column is the original model's predictions, the `truth` column is now the expected value of the truth indicator on the new re-sampled data set and the `p_adjusted_prediction` is our new Bayes adjusted prediction.
 
 ```{r}
 aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
-And we have our problem, both the original and adjusted prediction remain biased.
+And we have our problem. Both the original and adjusted prediction remain biased.
 
 ```{r}
-colMeans(d_2)
+colMeans(d_2) %.>%
+  knitr::kable(.)
 ```
 
 ```{r}
@@ -202,14 +209,13 @@ stopifnot(abs(prevalence_2  - mean(d_2$p_adjusted_prediction)) > 1e-2)
 mean(d_2$p_adjusted_prediction)
 ```
 
-
-Neither of them equals the actual prevalence of 0.5, though the corrected value is in this case closer.
+Neither model estimate equals the actual new data prevalence of 0.5, though the corrected value is in this case closer.
 
 ### Why the adjusted model is still biased
 
 If the original model was unbiased (which it was), and the adjustment is correct (which it is), how can the result be biased (which it is)?
 
-The answer is: the adjustment is unbiased for *perfect* models, which are not the kind we see in practice. A perfect model has absolutely no structure in the residuals. That is a perfect model has `P[outcome==TRUE | prediction = p] = p` for *all* <code>p</code>. This wasn't the case
+The answer is: the adjustment is unbiased for *perfect* models, which are not the kind we always see in practice. A perfect model has absolutely no structure in the residuals. That is a perfect model has `P[outcome==TRUE | prediction = p] = p` for *all* <code>p</code>. This wasn't the case
 for our example model. Here are the expected values of truth on the original un-weighted data set conditioned on the predicted probability.
 
 ```{r}
@@ -222,12 +228,13 @@ d %.>%
   knitr::kable(.)
 ```
 
-Notice that prediction groups that were perfect in the original (`0.125`, and `0.875`) do match the truth expectation in the re-sampled data set. The idea is in this case the resampling is the exact same adjustment as the shift, so things that matched before adjustment match after adjustment.
+Notice that prediction groups that were perfect in the original (`0.125`, and `0.875`) do match the truth expectation in the re-sampled data set. In this case the re-sampling is the exact same adjustment as the shift, so things that matched before adjustment match after adjustment.
 
-For prediction groups that were not perfect in the original (`0.250` and `0.500`) the re-scaling of data moves the answer proportional the actual prevelance seen and the shifting of the prediction operates at the different rate predicted by the model. The sigmoid has different shapes in different regions, so the two estimates move at different rates. As we have seen, groups that compensated for each other in the original may fall out of sync and not compensate for each other after transform. The `0.250` prediction group was over-predicting in the original data frame, and the `0.500` groups was under-predicting in the original data frame. At the exact counts in the original data frame these two erros canceled, after transform the cancellation was maintained.
+For prediction groups that were not perfect in the original (`0.250` and `0.500`) the re-scaling of data moves the answer at a rate determined by the actual prevalence seen and correction moves at a rate determined by the prediction. As these differ, the two estimates move different amounts. Cancellations such as between the `0.250` prediction group over-predicting in the original data frame, and the `0.500` group under-predicting in the original data frame are not necessarily preserved during the transform.
 
-The point is: the idea that the Bayes' correction gets the expected value right is something we have to check. The obvious way to establish it would be to insist the mode obey *very* strong additional per-prediction range balance conditions. These conditions are typically not all met in production, unless one has taken extra care to [calibrate the model](https://en.wikipedia.org/wiki/Platt_scaling) (perhaps through isotonic regression, but even this will fail if the model has order-reversals; binning the predictions and using a nested model can fix the issue in general).
+If Bayes' correction gets the expected value right is something we have to check, not a property of the transform in all cases. The obvious way to establish unbiasedness would be to insist the mode obey the *very* strong additional per-prediction range balance conditions we mentioned before. These conditions are typically not all met in production, unless one has taken extra care to [calibrate the model](https://en.wikipedia.org/wiki/Platt_scaling) (perhaps through isotonic regression, but even this will fail if the model has order-reversals; binning the predictions and using a nested model *can* fix the issue in general).
 
+So roughly: the <code>P</code>-correction is biased because it is fine-detail correct. The <code>P</code> correction tries to respect the predicted rates of each prediction group in its adjustment, and does not impose a global compromise between the predicts to repair the global average. However, the <code>U</code>-correction does work for a global compromise, so it gets averages right by compromising the predictions in each group.
 
 ## The unbiased <code>U</code> correction.
 
@@ -264,6 +271,8 @@ mean(d_2$u_adjusted_prediction)
 
 We can also try [Platt scaling](https://en.wikipedia.org/wiki/Platt_scaling) and a Platt-shift (no scaling, just a new intercept term).
 
+### Standard Platt Scaling
+
 As we expect from [knowledge of logistic regression](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/), we see Platt scaling is unbiased in that it gets the global average right.
 
 ```{r}
@@ -286,6 +295,10 @@ stopifnot(abs(prevalence_2  -  mean(d_2$Platt_scaled_prediction)) < epsilon)
 mean(d_2$Platt_scaled_prediction)
 ```
 
+The Platt scaling is unbiased, but it achieves this by trading off systematic over and under prediction among the scoring groups. We didn't give the method enough degrees of freedom to make substantial corrections. A good note on re-calibrating classifiers can be found [here](https://win-vector.com/2019/07/16/an-ad-hoc-method-for-calibrating-uncalibrated-models-2/).
+
+### Platt Shifting
+
 Platt shifting work similarly, with one fewer degree of freedom.
 
 ```{r}
@@ -300,7 +313,9 @@ d_2$Platt_shifted_prediction <- predict(
   newdata = d_2,
   type = 'response')
 
-aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
+d_2 %.>%
+  subset(., select = c(prediction,	truth, u_adjusted_prediction, Platt_shifted_prediction)) %.>%
+  aggregate(. ~ prediction, data = ., FUN = mean) %.>%
   knitr::kable(.)
 ```
 
@@ -310,11 +325,11 @@ stopifnot(abs(prevalence_2  -  mean(d_2$Platt_shifted_prediction)) < epsilon)
 mean(d_2$Platt_shifted_prediction)
 ```
 
-And we see Platt-shifting is exactly the <code>U</code> correction.
+We see Platt-shifting is exactly the <code>U</code> correction.
 
 ## Conclusion
 
-Throughout this note we used "correction" instead of "model homotopy" to keep things conversational. There is a downside to this as when using the term "correction" it is awkward to discuss incorrect corrections, as one runs into the specious argument that wrong corrections are not corrections, so there is no such thing as wrong corrections. With "model homotopy" we separate what the homotopy is, from what was intended, and from how it is implemented. We can slow down and look at proposals using this notation.
+The point of this note was: Bayesian corrections are not necessarily unbiased. This should not be too surprising as insisting on un-biasedness is part of the frequentest foundation, not the Bayesian. What we have observed is: rhetoric chains of the form "this is the right correction", "a perfect correction would have this additional property", and "therefore this correction would also have this property" can fall apart.
 
-The point of this note was: Bayesian corrections are not necessarily unbiased. This should not be too surprising as insisting on un-biasedness is a largely frequentest foundation. We have demonstrated, rhetoric chains of the form "this is the right correction", "a perfect correction would have this additional property", "therefore this correction would also have this property" can fall apart.
+This brings me to what I love about this blog. I can publicly work simple tutorial examples in a way there really is no room for in the formal literature. 
 
