@@ -1,10 +1,41 @@
-Prevalence Adjustment
+The Perils of Prevalence Adjustment
 ================
+
+## Introduction
+
+I would like to show how the *point-wise shift model homotopy as
+<code>P</code>* is not unbiased and not the same as the *unbiased shift
+model homotopy defined as <code>U</code>*. We define a [probability
+model
+homotopy](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/)
+as a set of related models addressed by an index variable
+[here](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/).
+In the context of this note it is enough to think of a model homotopy as
+family of models related correction scheme we intend to apply when the
+model is applied to new data.
+
+In our introductory note we mentioned a few common corrections.
+
+  - The <code>P</code>-correction, which is essentially a point-wise
+    application of Bayes’ Law.
+  - The <code>U</code>-correction, which is designed to get prevalence
+    right.
+
+Our point is, these are not the same correction. Thus the
+<code>P</code>-correction is not always unbiased.
+
+### Example Setup
+
+Let’s demonstrate this in [<code>R</code>](https://www.r-project.org).
+
+First we attach our packages.
 
 ``` r
 library(wrapr)
 library(numbers)
 ```
+
+Now let’s build our simulated model performance data.
 
 ``` r
 bal_size <- 8
@@ -33,29 +64,16 @@ knitr::kable(head(d))
 |      0.875 | TRUE  |             5 |
 |      0.875 | TRUE  |             6 |
 
+The column `prediction` is behaving like an unbiased probability model
+predicting `truth`. In particular `prediction` and `truth` have the same
+expected value on this data set.
+
 ``` r
 colMeans(subset(subset(d, select= -orig_row_id)))
 ```
 
     ## prediction      truth 
     ##  0.3369565  0.3369565
-
-``` r
-d %.>%
-  subset(., select = -orig_row_id) %.>%
-  aggregate(
-    . ~ prediction, 
-    data = ., 
-    FUN = mean) %.>%
-  knitr::kable(.)
-```
-
-| prediction |     truth |
-| ---------: | --------: |
-|      0.125 | 0.1250000 |
-|      0.250 | 0.1666667 |
-|      0.500 | 0.6666667 |
-|      0.875 | 0.8750000 |
 
 ``` r
 prevalence <- mean(d$truth)
@@ -73,7 +91,72 @@ prevalence  -  mean(d$prediction)
 
     ## [1] 0
 
-Build a deterministic re-sampled data set with 50% prevalence.
+## Bayes’ Correction (<code>P</code>)
+
+Now the idea is the <code>P</code> correction is as follows. By Bayes’
+Law we have:
+
+``` 
+  P[outcome==TRUE | evidence] = 
+     P[outcome==TRUE] P[evidence | outcome==TRUE] / P[evidence]
+     
+  (1 - P[outcome==TRUE | evidence]) = 
+     (1 - P[outcome==TRUE]) P[evidence | outcome==FALSE] / P[evidence]
+```
+
+So in terms of odds-ratios we have:
+
+``` 
+ P[outcome==TRUE | evidence] / (1 - P[outcome==TRUE | evidence]) = 
+    (P[outcome==TRUE] / (1 - P[outcome==TRUE])) *
+    (P[evidence | outcome==TRUE] / P[evidence | outcome==FALSE])
+```
+
+Taking logs of both-sides allows us to re-write this in terms of
+`logit`.
+
+``` r
+logit <- function(x) {
+  log( x / (1 - x) )
+}
+```
+
+Which gives us
+
+``` 
+  logit(P[outcome==TRUE | evidence]) = 
+     logit(P[outcome==TRUE]) + log(P[evidence | outcome==TRUE] / P[evidence | outcome==FALSE])
+```
+
+The idea is:
+
+  - `log(P[evidence | outcome==TRUE] / P[evidence | outcome==FALSE])` is
+    independent of the outcome prevalence of the data set it was
+    estimated on.
+  - `logit(P[outcome==TRUE])` is a function of a prevalence.
+
+So it is tempting to take only the `log(P[evidence | outcome==TRUE] /
+P[evidence | outcome==FALSE])` term from our model, and training data
+and plug in an estimate of the prevalence of the population we intend to
+work with. For example we showed in [“A Gruesome Example of Bayes’
+Law”](https://win-vector.com/2020/09/11/a-gruesome-example-of-bayes-law/)
+how to take an conditional evidence odds-ratio built on a population
+with a prevalence near 50%, and apply it to a population with low
+disease prevalence. Without this correction the predictions would be
+very far off\!
+
+The Bayes/<code>P</code> correction is developed as follows.
+
+``` r
+sigmoid <- function(x) {
+  1 / (1 + exp(-x))
+}
+```
+
+Suppose we intend to apply this model, built on a population with 0.34
+prevalence on a new population with 50% prevalence. Let’s suppose our
+50% prevalence is just a deterministic even re-sampling of our data (a
+very easy case\!.
 
 ``` r
 # get how many times to replicate each row group
@@ -140,6 +223,9 @@ prevalence_2
 
     ## [1] 0.5
 
+Now notice our original uncorrected model does not match the prevalence
+on this new population. It is off and behaving in a biased manner.
+
 ``` r
 stopifnot(abs(prevalence_2  - mean(d_2$prediction)) > 1e-2)
 mean(d_2$prediction)
@@ -147,17 +233,10 @@ mean(d_2$prediction)
 
     ## [1] 0.3594494
 
-<https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/>
+The Bayes/<code>P</code> correction is given by shifting the model in
+logit/link-space by the following factor.
 
 ``` r
-sigmoid <- function(x) {
-  1 / (1 + exp(-x))
-}
-
-logit <- function(x) {
-  log( x / (1 - x) )
-}
-
 delta <- -logit(prevalence) + logit(prevalence_2)
 
 delta
@@ -165,12 +244,17 @@ delta
 
     ## [1] 0.6768867
 
-Add our p-adjusted prediction and show the intereseting rows.
-
 ``` r
 d_2$p_adjusted_prediction <- sigmoid(
   logit(d_2$prediction) + delta)
+```
 
+And here is a summary of what we have. The `prediction` column is
+original model’s predictions, the `truth` column is now the expected
+value of the truth indicator on the new re-sampled data set and the
+`p_adjusted_prediction` is our new Bayes adjusted prediction.
+
+``` r
 aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
@@ -182,12 +266,87 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 |      0.500 | 0.7973856 |               0.6630435 |
 |      0.875 | 0.9323144 |               0.9323144 |
 
+And we have our problem, both the original and adjusted prediction
+remain biased.
+
+``` r
+colMeans(d_2)
+```
+
+    ##                 truth            prediction p_adjusted_prediction 
+    ##             0.5000000             0.3594494             0.5105872
+
 ``` r
 stopifnot(abs(prevalence_2  - mean(d_2$p_adjusted_prediction)) > 1e-2)
 mean(d_2$p_adjusted_prediction)
 ```
 
     ## [1] 0.5105872
+
+Neither of them equals the actual prevalence of 0.5, though the
+corrected value is in this case closer.
+
+### Why the adjusted model is still biased
+
+If the original model was unbiased (which it was), and the adjustment is
+correct (which it is), how can the result be biased (which it is)?
+
+The answer is: the adjustment is unbiased for perfect models, which are
+not the kind we see in practice. A perfect model has absolutely no
+structure in the residuals. That is a perfect model has `P[outcome==TRUE
+| prediction = p] = p` for *all* <code>p</code>. This wasn’t the case
+for our example model. Here are the expected values of truth on the
+original un-weighted data set conditioned on the predicted probability.
+
+``` r
+d %.>%
+  subset(., select = -orig_row_id) %.>%
+  aggregate(
+    . ~ prediction, 
+    data = ., 
+    FUN = mean) %.>%
+  knitr::kable(.)
+```
+
+| prediction |     truth |
+| ---------: | --------: |
+|      0.125 | 0.1250000 |
+|      0.250 | 0.1666667 |
+|      0.500 | 0.6666667 |
+|      0.875 | 0.8750000 |
+
+Notice that on the original data set when the prediction is `0.125` the
+expected value of the outcome is `0.125`. The correction then moves
+these predictions by exactly the same amount the data re-weighting moves
+the frequency of the matching rows: from `0.125` to `0.219`, so the
+adjusted predictions match the adjusted frequencies. If all predictions
+had this perfect match, all row-groups would get matching totals and the
+model would be globally unbiased.
+
+However, the model didn’t exactly match frequencies on all prediction
+ranges. It had on its original data set undesirable structure in the
+residuals. On these row-groups where the prediction doesn’t match the
+frequency on the original data set, the scaling of the correction isn’t
+the same as the scaling due to re-sampling and value move around. Unless
+additional balance conditions are met, the expected value of the new
+predictor is not the expected value of the new outcome.
+
+The point is: the idea that the Bayes’ correction gets the expected
+value right is something we have to check. The obvious way to establish
+it would be to insist the mode obey very strong additional
+per-prediction range balance conditions. These conditions are typically
+not all met in production unless one has taken extra care to [calibrate
+the model](https://en.wikipedia.org/wiki/Platt_scaling) (perhaps through
+isotonic regression, but even this will fail if the model has
+order-reversals; binning the predictions and using a nested model can
+fix the issue in general).
+
+## The unbiased <code>U</code> correction.
+
+Let’s explore a correction whose only goal is to get the global average
+right. We hope it does more, but this is all it is really designed to
+do. What we do is apply a shift in link space similar to the last
+section, but we search for a shift that gets expected values right.
 
 ``` r
 f <- function(d) {
@@ -214,6 +373,8 @@ delta_2
     ## $estim.prec
     ## [1] 1.245352e-08
 
+This lands a new set of adjusted predictions.
+
 ``` r
 d_2$u_adjusted_prediction <- sigmoid(
   logit(d_2$prediction) + delta_2$root)
@@ -229,6 +390,8 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 |      0.500 | 0.7973856 |               0.6630435 |               0.6526615 |
 |      0.875 | 0.9323144 |               0.9323144 |               0.9293449 |
 
+And these predictions are, as we hoped mean `0.5`.
+
 ``` r
 stopifnot(abs(prevalence_2  -  mean(d_2$u_adjusted_prediction)) < epsilon)
 mean(d_2$u_adjusted_prediction)
@@ -236,7 +399,16 @@ mean(d_2$u_adjusted_prediction)
 
     ## [1] 0.5
 
-Platt scaling <https://en.wikipedia.org/wiki/Platt_scaling>
+## Platt Scaling
+
+We can also try [Platt
+scaling](https://en.wikipedia.org/wiki/Platt_scaling) and a Platt-shift
+(no scaling, just a new intercept term).
+
+As we expect from [knowledge of logistic
+regression](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/),
+we see Platt scaling is unbiased in that it gets the global average
+right.
 
 ``` r
 platt_scaler <- glm(
@@ -267,6 +439,8 @@ mean(d_2$platt_scaled_prediction)
 
     ## [1] 0.5
 
+Platt shifting work similarly, with one fewer degree of freedom.
+
 ``` r
 platt_shifter <- glm(
   truth ~ 1, 
@@ -296,3 +470,23 @@ mean(d_2$platt_shifted_prediction)
 ```
 
     ## [1] 0.5
+
+And we see Platt-shifting is exactly the <code>U</code> correction.
+
+## Conclusion
+
+Throughout this note we used “correction” instead of “model homotopy” to
+keep things conversational. There is a downside to this as when using
+the term “correction” it is awkward to discuss incorrect corrections, as
+one runs into the specious argument that wrong corrections are not
+corrections, so there is no such thing as wrong corrections. With “model
+homotopy” we separate what the homotopy is, from what was intended, and
+from how it is implemented. We can slow down and look at proposals using
+this notation.
+
+The point of this note was: Bayesian corrections are not necessarily
+unbiased. This should not be too surprising as insisting on
+un-biasedness is a largely frequentest foundation. We have demonstrated,
+rhetoric chains of the form “this is the right correction”, “a perfect
+correction would have this additional property”, “therefore this
+correction would also have this property” can fall apart.
