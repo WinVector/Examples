@@ -411,13 +411,13 @@ we see Platt scaling is unbiased in that it gets the global average
 right.
 
 ``` r
-platt_scaler <- glm(
+Platt_scaler <- glm(
   truth ~ logit(prediction), 
   data = d_2, 
   family = binomial())
 
-d_2$platt_scaled_prediction <- predict(
-  platt_scaler,
+d_2$Platt_scaled_prediction <- predict(
+  Platt_scaler,
   newdata = d_2,
   type = 'response')
 
@@ -425,7 +425,7 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
-| prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction | platt\_scaled\_prediction |
+| prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction | Platt\_scaled\_prediction |
 | ---------: | --------: | ----------------------: | ----------------------: | ------------------------: |
 |      0.125 | 0.2194245 |               0.2194245 |               0.2116261 |                 0.0689418 |
 |      0.250 | 0.2824074 |               0.3961039 |               0.3851245 |                 0.2896237 |
@@ -433,8 +433,8 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 |      0.875 | 0.9323144 |               0.9323144 |               0.9293449 |                 0.9946869 |
 
 ``` r
-stopifnot(abs(prevalence_2  -  mean(d_2$platt_scaled_prediction)) < epsilon)
-mean(d_2$platt_scaled_prediction)
+stopifnot(abs(prevalence_2  -  mean(d_2$Platt_scaled_prediction)) < epsilon)
+mean(d_2$Platt_scaled_prediction)
 ```
 
     ## [1] 0.5
@@ -442,14 +442,14 @@ mean(d_2$platt_scaled_prediction)
 Platt shifting work similarly, with one fewer degree of freedom.
 
 ``` r
-platt_shifter <- glm(
+Platt_shifter <- glm(
   truth ~ 1, 
   offset = logit(prediction),
   data = d_2, 
   family = binomial())
 
-d_2$platt_shifted_prediction <- predict(
-  platt_shifter,
+d_2$Platt_shifted_prediction <- predict(
+  Platt_shifter,
   newdata = d_2,
   type = 'response')
 
@@ -457,7 +457,7 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
   knitr::kable(.)
 ```
 
-| prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction | platt\_scaled\_prediction | platt\_shifted\_prediction |
+| prediction |     truth | p\_adjusted\_prediction | u\_adjusted\_prediction | Platt\_scaled\_prediction | Platt\_shifted\_prediction |
 | ---------: | --------: | ----------------------: | ----------------------: | ------------------------: | -------------------------: |
 |      0.125 | 0.2194245 |               0.2194245 |               0.2116261 |                 0.0689418 |                  0.2116261 |
 |      0.250 | 0.2824074 |               0.3961039 |               0.3851245 |                 0.2896237 |                  0.3851245 |
@@ -465,8 +465,8 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 |      0.875 | 0.9323144 |               0.9323144 |               0.9293449 |                 0.9946869 |                  0.9293449 |
 
 ``` r
-stopifnot(abs(prevalence_2  -  mean(d_2$platt_shifted_prediction)) < epsilon)
-mean(d_2$platt_shifted_prediction)
+stopifnot(abs(prevalence_2  -  mean(d_2$Platt_shifted_prediction)) < epsilon)
+mean(d_2$Platt_shifted_prediction)
 ```
 
     ## [1] 0.5

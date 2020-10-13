@@ -267,13 +267,13 @@ We can also try [Platt scaling](https://en.wikipedia.org/wiki/Platt_scaling) and
 As we expect from [knowledge of logistic regression](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/), we see Platt scaling is unbiased in that it gets the global average right.
 
 ```{r}
-platt_scaler <- glm(
+Platt_scaler <- glm(
   truth ~ logit(prediction), 
   data = d_2, 
   family = binomial())
 
-d_2$platt_scaled_prediction <- predict(
-  platt_scaler,
+d_2$Platt_scaled_prediction <- predict(
+  Platt_scaler,
   newdata = d_2,
   type = 'response')
 
@@ -282,21 +282,21 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 ```
 
 ```{r}
-stopifnot(abs(prevalence_2  -  mean(d_2$platt_scaled_prediction)) < epsilon)
-mean(d_2$platt_scaled_prediction)
+stopifnot(abs(prevalence_2  -  mean(d_2$Platt_scaled_prediction)) < epsilon)
+mean(d_2$Platt_scaled_prediction)
 ```
 
 Platt shifting work similarly, with one fewer degree of freedom.
 
 ```{r}
-platt_shifter <- glm(
+Platt_shifter <- glm(
   truth ~ 1, 
   offset = logit(prediction),
   data = d_2, 
   family = binomial())
 
-d_2$platt_shifted_prediction <- predict(
-  platt_shifter,
+d_2$Platt_shifted_prediction <- predict(
+  Platt_shifter,
   newdata = d_2,
   type = 'response')
 
@@ -306,8 +306,8 @@ aggregate(. ~ prediction, data = d_2, FUN = mean) %.>%
 
 
 ```{r}
-stopifnot(abs(prevalence_2  -  mean(d_2$platt_shifted_prediction)) < epsilon)
-mean(d_2$platt_shifted_prediction)
+stopifnot(abs(prevalence_2  -  mean(d_2$Platt_shifted_prediction)) < epsilon)
+mean(d_2$Platt_shifted_prediction)
 ```
 
 And we see Platt-shifting is exactly the <code>U</code> correction.
