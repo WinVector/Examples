@@ -1,4 +1,4 @@
-ROC\_patch
+ROC Surgery
 ================
 John Mount, Win Vector LLC
 
@@ -21,7 +21,8 @@ Let’s work an example where we have multiple modes with similar AUCs,
 and we want to combine them into a model that meets our business goals.
 Please keep in mind, *insisting* on using the ROC/AUC instead of
 business utility metrics may be detriment; for how to work effectively
-see [Nina Zumel’s article “Squeezing the Most Utility from Your
+directly with utitly please see [Nina Zumel’s article “Squeezing the
+Most Utility from Your
 Models”](https://win-vector.com/2020/10/05/squeezing-the-most-utility-from-your-models/).
 But, for fun, let’s work through how to work on the ROC graph, how to
 patch it or perform graph surgery on it.
@@ -134,7 +135,8 @@ ROCPlot(
   xvar = 'original_model',
   truthVar = 'y',
   truthTarget = TRUE,
-  title = "Example where scores are beta-distributed (d1)")
+  title = "Example where scores are beta-distributed (d1)",
+  add_convex_hull = TRUE)
 ```
 
 ![](ROC_patch_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
@@ -154,7 +156,7 @@ Also note: this ROC plot (and many others in this note) is non-convex
 Theory and ROC Analysis*, Academic Press, 1975). It doesn’t make sense
 to operate with any classification rule that isn’t on the surface of the
 convex hull of the ROC plot. In this case, it means that attempting to
-ask this model for a false positive rate below `0.1` is a mistake- you
+ask this model for a false positive rate below `0.3` is a mistake- you
 would do better guessing (the guess actually being picking two
 classification rules outside the non-convex dip and flipping a weighted
 coin as to which classification rule to use on each example, i.e. a

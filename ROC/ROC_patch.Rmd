@@ -1,5 +1,5 @@
 ---
-title: "ROC_patch"
+title: "ROC Surgery"
 output: github_document
 author: "John Mount, Win Vector LLC"
 ---
@@ -10,7 +10,7 @@ Suppose we are working on a classification application where we need a classific
 
 Further suppose our initial modeling effort "seemed good to the data scientist." They got an okay value for the abstract scoring model metric they were using: the [AUC (area under the curve)](https://en.wikipedia.org/wiki/Receiver_operating_characteristic#Area_under_the_curve). Notice this metric does not incorporate our stated goal! 
 
-Let's work an example where we have multiple modes with similar AUCs, and we want to combine them into a model that meets our business goals. Please keep in mind, *insisting* on using the ROC/AUC instead of business utility metrics may be detriment; for how to work effectively see [Nina Zumel's article "Squeezing the Most Utility from Your Models"](https://win-vector.com/2020/10/05/squeezing-the-most-utility-from-your-models/). But, for fun, let's work through how to work on the ROC graph, how to patch it or perform graph surgery on it.
+Let's work an example where we have multiple modes with similar AUCs, and we want to combine them into a model that meets our business goals. Please keep in mind, *insisting* on using the ROC/AUC instead of business utility metrics may be detriment; for how to work effectively directly with utitly please see [Nina Zumel's article "Squeezing the Most Utility from Your Models"](https://win-vector.com/2020/10/05/squeezing-the-most-utility-from-your-models/). But, for fun, let's work through how to work on the ROC graph, how to patch it or perform graph surgery on it.
 
 ## An Example
 
@@ -97,12 +97,13 @@ ROCPlot(
   xvar = 'original_model',
   truthVar = 'y',
   truthTarget = TRUE,
-  title = "Example where scores are beta-distributed (d1)")
+  title = "Example where scores are beta-distributed (d1)",
+  add_convex_hull = TRUE)
 ```
 
 A high specificity application uses the model score in some region on the very left of the graph. But the model has almost no sensitivity there. Taking the items the model is most excited about brings only so many non-valuable accounts that the model is worse than random guessing until we get far enough right that the curve crosses the drawn diagonal. This is at a specificity of around 0.1, so we would have to interact with about 10% of the non-valuable accounts to start getting a benefit from this model. This may be more accounts than we can work with, as we probably asked for a high specificity model for serious reasons.
 
-Also note: this ROC plot (and many others in this note) is non-convex (or "improper" in the terminology of James P. Egan, *Signal Detection Theory and ROC Analysis*, Academic Press, 1975). It doesn't make sense to operate with any classification rule that isn't on the surface of the convex hull of the ROC plot. In this case, it means that attempting to ask this model for a false positive rate below `0.1` is a mistake- you would do better guessing (the guess actually being picking two classification rules outside the non-convex dip and flipping a weighted coin as to which classification rule to use on each example, i.e. a "mixed strategy" will dominate the classification rules in this region). This is a problem as we want to operate at a low false positive rate due to the low prevalence of the positive class!
+Also note: this ROC plot (and many others in this note) is non-convex (or "improper" in the terminology of James P. Egan, *Signal Detection Theory and ROC Analysis*, Academic Press, 1975). It doesn't make sense to operate with any classification rule that isn't on the surface of the convex hull of the ROC plot. In this case, it means that attempting to ask this model for a false positive rate below `0.3` is a mistake- you would do better guessing (the guess actually being picking two classification rules outside the non-convex dip and flipping a weighted coin as to which classification rule to use on each example, i.e. a "mixed strategy" will dominate the classification rules in this region). This is a problem as we want to operate at a low false positive rate due to the low prevalence of the positive class!
 
 ## The Solution in Practice
 
