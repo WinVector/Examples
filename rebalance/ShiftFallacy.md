@@ -19,9 +19,13 @@ we are closer to both being false.
 The shift fallacy is as follows. We fit two models `m` and `m_shift`
 with data-weights `one` (the all ones vector) and `a * (one - y) + b *
 y` (`y` being the dependent variable). We are re-sampling according to
-outcome, a technique popular with some for un-balanced classification
-problems. Then it is (falsely) believed the two models differ only in
-the intercept term.
+outcome, a (not always advisable) technique popular with some for
+un-balanced classification problems (note: we think this technique is
+popular due to [the common error of using classification rules for
+classification
+problems](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/))
+. Then the fallacy is to (falsely) believed the two models differ only
+in the intercept term.
 
 This is easy to disprove in [R](https://www.r-project.org).
 
@@ -141,8 +145,8 @@ deviance(
 
     ## [1] 9.004022
 
-Part of that is the balanced model is scaled wrong. It’s average
-prediction is, by design, inflated.
+Part of this issue is that the balanced model is scaled wrong. It’s
+average prediction is, by design, inflated.
 
 ``` r
 mean(predict(m_shift, newdata = d, type = 'response'))
@@ -213,7 +217,7 @@ probability model over a classification rule.
 ## Conclusion
 
 Some tools, such as logistic regression, work best on training data that
-accurately represents the distributiona facts of problem, and do not
+accurately represents the distributions facts of problem, and do not
 require artificially balanced training data. Also, re-balancing training
 data is a bit more involved than one might think, as we see more than
 just the intercept term changes when we re-balance data.
@@ -226,10 +230,15 @@ classification rule metrics, some hyper-parameters or internal
 procedures may need to be adjusted).
 
 Prevalence re-balancing *is* working around mere operational issues:
-such as using [classifiation
+such as using [classification
 rules](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/)
 (instead of probability models), using sub-optimal metrics (such as
 [accuracy](https://win-vector.com/2016/07/22/on-accuracy/)). However,
 there operational issues are better directly corrected than worked
 around. A lot of the complexity we see in modern machine learning
 pipelines is patches patching unwanted effects of previous patches.
+
+(The source for this article can be found
+[here](https://github.com/WinVector/Examples/blob/main/rebalance/ShiftFallacy.Rmd),
+and a rendering of it
+[here](https://github.com/WinVector/Examples/blob/main/rebalance/ShiftFallacy.md).)
