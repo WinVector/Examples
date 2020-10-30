@@ -3,6 +3,9 @@ title: "Non Calibrated Model"
 output: github_document
 ---
 
+This is the source for the article shared [here](https://win-vector.com/2020/10/28/an-example-of-a-calibrated-model-that-is-not-fully-calibrated/).
+
+
 In [our last note](https://win-vector.com/2020/10/27/the-double-density-plot-contains-a-lot-of-useful-information/) we mentioned the possibility of "fully calibrated models." This note is an example of a probability model that is calibrated in the traditional sense, but
 not fully calibrated in a finer grained sense.
 

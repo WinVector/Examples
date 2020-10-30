@@ -1,7 +1,11 @@
 A Single Parameter Family Characterizing Probability Model Performance
 ================
 
-## Introduction
+This is the source for the article shared
+[here](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/).
+
+Introduction
+------------
 
 We’ve been writing on the distribution density shapes expected for
 probability models in [ROC (receiver operator characteristic)
@@ -25,12 +29,13 @@ conditions](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic
 
 We will call a probability model [fully
 calibrated](https://win-vector.com/2020/10/28/an-example-of-a-calibrated-model-that-is-not-fully-calibrated/)
-if we have <code>E\[outcome | prediction\] = prediction</code> for all
+if we have <code>E\[outcome \| prediction\] = prediction</code> for all
 observed values of <code>prediction</code>. We
 [note](https://win-vector.com/2020/10/28/an-example-of-a-calibrated-model-that-is-not-fully-calibrated/),
 not all calibrated models are fully calibrated.
 
-## Our Example
+Our Example
+-----------
 
 Any fully calibrated probability model’s performance can be
 characterized as follows.
@@ -116,7 +121,8 @@ a / (a + b)
 
     ## [1] 0.2
 
-## Demonstrating the Relations
+Demonstrating the Relations
+---------------------------
 
 ### Basic Summaries and Densities
 
@@ -251,7 +257,7 @@ knitr::kable(means)
 ```
 
 |      mean | class\_prevalence | class           |
-| --------: | ----------------: | :-------------- |
+|----------:|------------------:|:----------------|
 | 0.3000000 |               0.2 | positive\_class |
 | 0.1750018 |               0.8 | negative\_class |
 
@@ -309,7 +315,8 @@ ggplot() +
 
 ![](TunedDist_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
-## As an ROC Plot
+As an ROC Plot
+--------------
 
 And we can, of course, represent the model performance as an ROC plot.
 
@@ -369,16 +376,17 @@ The above lack of symmetry means we probably have a different single
 parameter family of ROC curves for each prevalence, as the 0.5
 prevelance case does have a symmetric ROC curve family.
 
-## Some Limiting Cases
+Some Limiting Cases
+-------------------
 
 For a given prevalence situation the prediction densities of all fully
 calibrated models that have an unconditional beta distribution are given
 by shape parameters:
 
-  - `(c a, c b)` for the unconditional distribution of predictions.
-  - `(c a + 1, c b)` for the distribution of the prediction on positive
+-   `(c a, c b)` for the unconditional distribution of predictions.
+-   `(c a + 1, c b)` for the distribution of the prediction on positive
     examples.
-  - `(c a, c b + 1)` for the distribution of the prediction on negative
+-   `(c a, c b + 1)` for the distribution of the prediction on negative
     examples.
 
 Where `(a, b)` are positive numbers such that `prevalence = a / (a + b)`
@@ -401,7 +409,8 @@ If `a = b`, then the [previously discussed uniform distribution
 example](https://win-vector.com/2020/09/06/0-83-is-a-special-auc/) is
 part of the model family.
 
-## Conclusion
+Conclusion
+----------
 
 For a given problem prevalence, the set of fully calibrated model
 performance densities that have an unconditional Beta distribution form

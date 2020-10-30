@@ -1,6 +1,9 @@
 Your Lopsided Model *is* Out to Get You
 ================
 
+This is the source for the article shared
+[here](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/).
+
 For classification problems I argue one of the biggest steps you can
 take to improve the quality and utility of your models is to [prefer
 models that return scores or return probabilities instead of
@@ -14,7 +17,8 @@ In this note we will show the problems of unbalanced or lopsided
 classification models, and suggest how to use this variance criticism as
 a tool for improvement.
 
-## Introduction
+Introduction
+------------
 
 I believe that many experienced data scientists have run into the
 following problem. You build a scoring model or probability scoring
@@ -118,15 +122,15 @@ examples %.>%
 ```
 
 | ground\_truth | mean\_goodness\_score |
-| :------------ | --------------------: |
-| fraud         |           \-1.2822164 |
-| good          |           \-0.0113797 |
+|:--------------|----------------------:|
+| fraud         |            -1.2822164 |
+| good          |            -0.0113797 |
 
 The above might be all one checks for in a linear discriminant
 framework. Obviously, we should look at a lot more.
 
 And now let’s exhibit the problem: the item with highest goodness score
-is an example of fraud\!
+is an example of fraud!
 
 ``` r
 examples %.>%
@@ -134,9 +138,9 @@ examples %.>%
   knitr::kable(.)
 ```
 
-|    | goodness\_score | ground\_truth |
-| :- | --------------: | :------------ |
-| 64 |        4.903264 | fraud         |
+|     | goodness\_score | ground\_truth |
+|:----|----------------:|:--------------|
+| 64  |        4.903264 | fraud         |
 
 This is very embarrassing. The example with the highest “good” score is
 fraud. And “fraud” is the rare class.
@@ -147,7 +151,7 @@ table(ground_truth = examples$ground_truth) %.>%
 ```
 
 | ground\_truth | Freq |
-| :------------ | ---: |
+|:--------------|-----:|
 | fraud         |  100 |
 | good          | 9900 |
 
@@ -188,7 +192,7 @@ examples %.>%
 ```
 
 | ground\_truth | sd\_goodness\_score |
-| :------------ | ------------------: |
+|:--------------|--------------------:|
 | fraud         |           2.2385836 |
 | good          |           0.9955967 |
 
@@ -196,7 +200,7 @@ Obviously emprical standard deviations will never exactly match, but
 these are pretty far off.
 
 We will show that this means the fraudulent transactions dominate both
-the lowest and highest regions of model score\! This isn’t just a
+the lowest and highest regions of model score! This isn’t just a
 small-data problem. This (simulated) classifier has a flaw that few data
 scientists still check for: the model prediction has different variances
 for different values of the ground truth. This is a model pathology that
@@ -262,7 +266,8 @@ ROCPlot(
 In this case we see the model is not to be trusted in the region of
 `1-Specificity` less than 0.3 or of `Sensitivity` below `0.7`.
 
-## The Cause
+The Cause
+---------
 
 Now that we see the problem I want to show that this isn’t a small-data
 chance-driven fluke. This is an issue arising from the mis-matched
@@ -452,7 +457,8 @@ So the inspection of conditional variances may be more important when
 using [objectives other than deviance or
 cross-entropy](https://win-vector.com/2020/08/31/why-not-square-error-for-classification/).
 
-## The Intermediate Conclusion
+The Intermediate Conclusion
+---------------------------
 
 Models getting the highest or lowest scoring examples systematically
 wrong is *not* always due to chance. In fact this flaw can be forced
@@ -461,7 +467,8 @@ standard-deviations or variances when conditioned on ground truth. Not
 checking these conditional standard deviations is a bad, but likely a
 common practice.
 
-## The Fix
+The Fix
+-------
 
 To mitigate the above pathology we can add the following procedure to
 our modeling practice:
@@ -492,7 +499,8 @@ non-fraudulent transactions, and fewer describing froud. Our quickest
 avenue for model improvement would be to sample some examples of fraud
 and look for common features to add to our model.
 
-## The Actual Conclusion
+The Actual Conclusion
+---------------------
 
 The double density plot contains a lot of diagnostic information. For
 example: seeing different standard deviations or variances is a warning

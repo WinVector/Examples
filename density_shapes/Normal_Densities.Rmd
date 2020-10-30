@@ -3,6 +3,10 @@ title: "Your Lopsided Model *is* Out to Get You"
 output: github_document
 ---
 
+This is the source for the article shared [here](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/).
+
+
+
 For classification problems I argue one of the biggest steps you can take to improve the quality and utility of your models is to [prefer models that return scores or return probabilities instead of classification rules](https://win-vector.com/2020/08/07/dont-use-classification-rules-for-classification-problems/). Doing this also opens a second large opportunity for improvement: working with your domain experts to find new variables to lower the variance in prediction on your weakest outcome category.
 
 In this note we will show the problems of unbalanced or lopsided classification models, and suggest how to use this variance criticism as a tool for improvement.

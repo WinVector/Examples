@@ -1,6 +1,9 @@
 Non Calibrated Model
 ================
 
+This is the source for the article shared
+[here](https://win-vector.com/2020/10/28/an-example-of-a-calibrated-model-that-is-not-fully-calibrated/).
+
 In [our last
 note](https://win-vector.com/2020/10/27/the-double-density-plot-contains-a-lot-of-useful-information/)
 we mentioned the possibility of “fully calibrated models.” This note is
@@ -31,17 +34,17 @@ d <- build_frame(
 knitr::kable(d)
 ```
 
-| x1 | x2 | y     |
-| -: | -: | :---- |
-|  1 |  1 | TRUE  |
-|  1 |  0 | FALSE |
-|  1 |  0 | TRUE  |
-|  1 |  1 | FALSE |
-|  0 |  0 | TRUE  |
-|  0 |  1 | TRUE  |
-|  0 |  1 | FALSE |
-|  0 |  0 | FALSE |
-|  0 |  0 | TRUE  |
+|  x1 |  x2 | y     |
+|----:|----:|:------|
+|   1 |   1 | TRUE  |
+|   1 |   0 | FALSE |
+|   1 |   0 | TRUE  |
+|   1 |   1 | FALSE |
+|   0 |   0 | TRUE  |
+|   0 |   1 | TRUE  |
+|   0 |   1 | FALSE |
+|   0 |   0 | FALSE |
+|   0 |   0 | TRUE  |
 
 Now, we fit our logistic regression model.
 
@@ -83,17 +86,17 @@ d$prediction <- predict(model,
 knitr::kable(d)
 ```
 
-| x1 | x2 | y     | prediction |
-| -: | -: | :---- | ---------: |
-|  1 |  1 | TRUE  |  0.4537010 |
-|  1 |  0 | FALSE |  0.5462990 |
-|  1 |  0 | TRUE  |  0.5462990 |
-|  1 |  1 | FALSE |  0.4537010 |
-|  0 |  0 | TRUE  |  0.6358007 |
-|  0 |  1 | TRUE  |  0.5462990 |
-|  0 |  1 | FALSE |  0.5462990 |
-|  0 |  0 | FALSE |  0.6358007 |
-|  0 |  0 | TRUE  |  0.6358007 |
+|  x1 |  x2 | y     | prediction |
+|----:|----:|:------|-----------:|
+|   1 |   1 | TRUE  |  0.4537010 |
+|   1 |   0 | FALSE |  0.5462990 |
+|   1 |   0 | TRUE  |  0.5462990 |
+|   1 |   1 | FALSE |  0.4537010 |
+|   0 |   0 | TRUE  |  0.6358007 |
+|   0 |   1 | TRUE  |  0.5462990 |
+|   0 |   1 | FALSE |  0.5462990 |
+|   0 |   0 | FALSE |  0.6358007 |
+|   0 |   0 | TRUE  |  0.6358007 |
 
 We can see this model is calibrated or unbiased in the sense
 `E[prediction] = E[outcome]`.
@@ -104,7 +107,7 @@ colMeans(d[, qc(y, prediction)]) %.>%
 ```
 
 |            |         x |
-| :--------- | --------: |
+|:-----------|----------:|
 | y          | 0.5555556 |
 | prediction | 0.5555556 |
 
@@ -135,7 +138,7 @@ knitr::kable(cal)
 ```
 
 | prediction |         y |
-| ---------: | --------: |
+|-----------:|----------:|
 |  0.4537010 | 0.5000000 |
 |  0.5462990 | 0.5000000 |
 |  0.6358007 | 0.6666667 |
@@ -152,17 +155,17 @@ d$calibrated <- cal_map[as.character(d$prediction)]
 knitr::kable(d)
 ```
 
-| x1 | x2 | y     | prediction | calibrated |
-| -: | -: | :---- | ---------: | ---------: |
-|  1 |  1 | TRUE  |  0.4537010 |  0.5000000 |
-|  1 |  0 | FALSE |  0.5462990 |  0.5000000 |
-|  1 |  0 | TRUE  |  0.5462990 |  0.5000000 |
-|  1 |  1 | FALSE |  0.4537010 |  0.5000000 |
-|  0 |  0 | TRUE  |  0.6358007 |  0.6666667 |
-|  0 |  1 | TRUE  |  0.5462990 |  0.5000000 |
-|  0 |  1 | FALSE |  0.5462990 |  0.5000000 |
-|  0 |  0 | FALSE |  0.6358007 |  0.6666667 |
-|  0 |  0 | TRUE  |  0.6358007 |  0.6666667 |
+|  x1 |  x2 | y     | prediction | calibrated |
+|----:|----:|:------|-----------:|-----------:|
+|   1 |   1 | TRUE  |  0.4537010 |  0.5000000 |
+|   1 |   0 | FALSE |  0.5462990 |  0.5000000 |
+|   1 |   0 | TRUE  |  0.5462990 |  0.5000000 |
+|   1 |   1 | FALSE |  0.4537010 |  0.5000000 |
+|   0 |   0 | TRUE  |  0.6358007 |  0.6666667 |
+|   0 |   1 | TRUE  |  0.5462990 |  0.5000000 |
+|   0 |   1 | FALSE |  0.5462990 |  0.5000000 |
+|   0 |   0 | FALSE |  0.6358007 |  0.6666667 |
+|   0 |   0 | TRUE  |  0.6358007 |  0.6666667 |
 
 This new calibrated prediction is also calibrated in the standard sense.
 
@@ -172,7 +175,7 @@ colMeans(d[, qc(y, prediction, calibrated)]) %.>%
 ```
 
 |            |         x |
-| :--------- | --------: |
+|:-----------|----------:|
 | y          | 0.5555556 |
 | prediction | 0.5555556 |
 | calibrated | 0.5555556 |

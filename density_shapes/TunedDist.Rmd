@@ -3,6 +3,9 @@ title: "A Single Parameter Family Characterizing Probability Model Performance"
 output: github_document
 ---
 
+This is the source for the article shared [here](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/).
+
+
 ## Introduction 
 
 We've been writing on the distribution density shapes expected for probability models in [ROC (receiver operator characteristic) plots](https://win-vector.com/tag/roc-curves/), [double density plots](https://win-vector.com/2020/10/27/the-double-density-plot-contains-a-lot-of-useful-information/), and [normal/logit-normal densities](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/) frameworks. I thought I would re-approach the issue with a specific family of examples.
