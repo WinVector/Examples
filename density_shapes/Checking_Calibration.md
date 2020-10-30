@@ -1,22 +1,25 @@
----
-title: "Checking Probabilty Model Calibration"
-output: github_document
----
+Checking Probabilty Model Calibration
+================
 
-This is a quick note showing if it is obvious which conditional distributions are fully calibrated in the sense we have been writing about [here](https://win-vector.com/tag/calibrated-models/).
+This is a quick note showing if it is obvious which conditional
+distributions are fully calibrated in the sense we have been writing
+about [here](https://win-vector.com/tag/calibrated-models/).
 
 To start, we attach packages.
 
-```{r message=FALSE, warning=FALSE}
+``` r
 library(ggplot2)
 library(WVPlots)
 library(sigr)
 library(cdata)
 ```
 
-Generate example data. Our first example is the fully calibrated Beta distributed data demonstrated in ["A Single Parameter Family Characterizing Probability Model Performance"](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/).
+Generate example data. Our first example is the fully calibrated Beta
+distributed data demonstrated in [“A Single Parameter Family
+Characterizing Probability Model
+Performance”](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/).
 
-```{r}
+``` r
 # build conditioned densities
 
 mk_beta_example <- function(a, b) {
@@ -32,7 +35,7 @@ d_beta <- mk_beta_example(a = 2, b = 3)
 
 Define the analysis sequence.
 
-```{r}
+``` r
 characterize_dists <- function(d, subtitle = NULL, make_plots = TRUE) {
   # Infer implied prevalence.
   # meanpos * prevalence + meanneg * (1 - prevalence) = prevalence
@@ -87,10 +90,12 @@ characterize_dists <- function(d, subtitle = NULL, make_plots = TRUE) {
 }
 ```
 
-Let's look at the results. We are using the ideas of ["The Double Density Plot Contains a Lot of Useful Information"](https://win-vector.com/2020/10/27/the-double-density-plot-contains-a-lot-of-useful-information/) to infer prevalence.
+Let’s look at the results. We are using the ideas of [“The Double
+Density Plot Contains a Lot of Useful
+Information”](https://win-vector.com/2020/10/27/the-double-density-plot-contains-a-lot-of-useful-information/)
+to infer prevalence.
 
-
-```{r}
+``` r
 unpack[
   dplot_beta = dplot,
   rplot_beta = rplot
@@ -98,25 +103,44 @@ unpack[
 
 
 print(dplot_beta)
+```
+
+![](Checking_Calibration_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
 print(rplot_beta)
 ```
 
-Notice the `(a+1, b)` `(a, b+1)` distributions have different variances. However these variances are related, and required to have this relation to get the full calibration conditions for this example.
+![](Checking_Calibration_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
-```{r}
+Notice the `(a+1, b)` `(a, b+1)` distributions have different variances.
+However these variances are related, and required to have this relation
+to get the full calibration conditions for this example.
+
+``` r
 # ref: https://en.wikipedia.org/wiki/Beta_distribution
 beta_var <- function(a, b) {
   a * b / ((a + b)^2 * (a + b + 1))
 }
 
 beta_var(2 + 1, 3)
+```
+
+    ## [1] 0.03571429
+
+``` r
 beta_var(2, 3 + 1)
 ```
 
+    ## [1] 0.03174603
 
-Let's look at this for a "sigmoid of normal" (similar to ["Your Lopsided Model is Out to Get You"](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/), but we are making the positive class rare, taking the calibration implied prevalence, and looking if we further achieve full calibration).
+Let’s look at this for a “sigmoid of normal” (similar to [“Your Lopsided
+Model is Out to Get
+You”](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/),
+but we are making the positive class rare, taking the calibration
+implied prevalence, and looking if we further achieve full calibration).
 
-```{r}
+``` r
 # build conditioned densities
 
 mk_normal_example <- function(mean_pos, sd_pos, mean_neg, sd_neg) {
@@ -133,8 +157,7 @@ d_normal <- mk_normal_example(
   mean_neg = -1.5, sd_neg = 1)
 ```
 
-
-```{r}
+``` r
 unpack[
   dplot_normal = dplot,
   rplot_normal = rplot,
@@ -143,16 +166,31 @@ unpack[
 
 
 print(dplot_normal)
-print(rplot_normal)
+```
 
+![](Checking_Calibration_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+print(rplot_normal)
+```
+
+![](Checking_Calibration_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+
+``` r
 mean((d_aug$model_prediction - d_aug$positivity_rate)^2)
 ```
 
-Notice the "sigmoid of normal" system is not fully calibrated. Likely we need to at least enforce up a relation between the variances in the probability space (instead of in the normal-logit space) to see something like full calibration.
+    ## [1] 0.001849245
 
-We can try and see if there is an obvious adjustment of variances that balances everything at once.
+Notice the “sigmoid of normal” system is not fully calibrated. Likely we
+need to at least enforce up a relation between the variances in the
+probability space (instead of in the normal-logit space) to see
+something like full calibration.
 
-```{r}
+We can try and see if there is an obvious adjustment of variances that
+balances everything at once.
+
+``` r
 perturbed_normal_example <- function(x) {
   mk_normal_example(
     mean_pos = 0, sd_pos = 1 - x, 
@@ -169,7 +207,15 @@ f <- function(x) {
 soln <- optimize(f, interval = c(-0.5, 0.5))
 
 print(soln)
+```
 
+    ## $minimum
+    ## [1] 0.05053756
+    ## 
+    ## $objective
+    ## [1] 0.001289792
+
+``` r
 d_normal2 <- perturbed_normal_example(soln$minimum)
 
 unpack[
@@ -180,8 +226,21 @@ unpack[
 
 
 print(dplot_normal2)
+```
+
+![](Checking_Calibration_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
 print(rplot_normal2)
+```
+
+![](Checking_Calibration_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+
+``` r
 mean((d_aug2$model_prediction - d_aug2$positivity_rate)^2)
 ```
 
-While we see some improvement in loss, we don't see an obvious complete match.
+    ## [1] 0.001289792
+
+While we see some improvement in loss, we don’t see an obvious complete
+match.
