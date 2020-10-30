@@ -414,5 +414,5 @@ score. (Please see
 though this is not the model characterization family we anticipated
 there; also a different characterization than [normal or logit normal
 scoring](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/);
-some notes on the assymetries in this formulation can be found
+some notes on the asymmetries in this formulation can be found
 [here](https://github.com/WinVector/Examples/blob/main/density_shapes/Asymmetry.md).)
