@@ -1,0 +1,118 @@
+---
+title: "Non Calibrated Model"
+output: github_document
+---
+
+In [our last note](https://win-vector.com/2020/10/27/the-double-density-plot-contains-a-lot-of-useful-information/) we mentioned the possibility of "fully calibrated models." This note is an example of a probability model that is calibrated in the traditional sense, but
+not fully calibrated in a finer grained sense.
+
+First let's attach our packages and generate our example data in [`R`](https://www.r-project.org).
+
+```{r, message=FALSE, warning=FALSE}
+library(wrapr)
+```
+
+```{r}
+d <- build_frame(
+   "x1"  , "x2", "y"   |
+     1   , 1   , TRUE  |
+     1   , 0   , FALSE |
+     1   , 0   , TRUE  |
+     1   , 1   , FALSE |
+     0   , 0   , TRUE  |
+     0   , 1   , TRUE  |
+     0   , 1   , FALSE |
+     0   , 0   , FALSE |
+     0   , 0   , TRUE  )
+# cat(wrapr::draw_frame(d))
+
+knitr::kable(d)
+```
+
+Now, we fit our logistic regression model.
+
+```{r}
+model <- glm(y ~ x1 + x2, 
+             data = d, 
+             family = binomial())
+summary(model)
+```
+
+We land our model predictions as a new column.
+
+```{r}
+d$prediction <- predict(model, 
+                        newdata = d, 
+                        type = 'response')
+knitr::kable(d)
+```
+
+We can see this model is calibrated or unbiased in the sense `E[prediction] = E[outcome]`.
+
+```{r}
+colMeans(d[, qc(y, prediction)]) %.>%
+  knitr::kable(.)
+```
+
+And it is even [calibrated in the sense we expect for logistic regression](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/), `E[prediction * x] = E[outcome * x]` (where `x` is any explanatory variable).
+
+```{r}
+for(v in qc(x1, x2)) {
+  print(paste0(
+    v, ' diff: ', 
+    mean(d[[v]] * d$prediction) - mean(d[[v]] * d$y)))
+}
+```
+
+However, we can see this model is not "fully calibrated" in an additional sense requiring that `E[outcome | prediction] = prediction` for all observed values of `prediction`.
+
+```{r}
+cal <- aggregate(y ~ prediction, data = d, FUN = mean)
+
+knitr::kable(cal)
+```
+
+We can re-calibrate such a model (in practice you would want to do this on out of sample data using isotonic regression, or using [cross-frame methods](https://win-vector.com/2020/03/10/cross-methods-are-a-leak-variance-trade-off/) to avoid nested model bias).
+
+```{r}
+cal_map <- cal$prediction := cal$y
+d$calibrated <- cal_map[as.character(d$prediction)]
+
+knitr::kable(d)
+```
+
+This new calibrated prediction is also calibrated in the standard sense.
+
+```{r}
+colMeans(d[, qc(y, prediction, calibrated)]) %.>%
+  knitr::kable(.)
+```
+
+And, at least in this case, still obeys the explanatory roll-up conditions.
+
+```{r}
+for(v in qc(x1, x2)) {
+  print(paste0(
+    v, ' diff: ', 
+    mean(d[[v]] * d$calibrated) - mean(d[[v]] * d$y)))
+}
+```
+
+The new calibrated predictions are even of lower deviance than the original predictions.
+
+```{r}
+deviance <- function(prediction, truth) {
+  sum(-2 * (truth * log(prediction) + 
+              (1 - truth) * log(1 - prediction)))
+}
+```
+
+```{r}
+deviance(prediction = d$prediction, truth = d$y)
+```
+
+```{r}
+deviance(prediction = d$calibrated, truth = d$y)
+```
+
+The reason the original logistic model could not make the calibrated predictions is: the calibrated predictions are not a linear function of the explanatory variables in link space.
