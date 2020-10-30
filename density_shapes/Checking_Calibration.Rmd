@@ -1,0 +1,73 @@
+---
+title: "Checking Calibration"
+output: github_document
+---
+
+Attach packages.
+
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+library(WVPlots)
+library(sigr)
+library(cdata)
+```
+
+Generate example data.
+
+```{r}
+# build conditioned densities
+
+eval_points <- seq(0, 1, by = 0.01)
+d <- data.frame(
+    model_prediction = eval_points,
+    positive_density = dbeta(eval_points, shape1 = 3, shape2 = 2),
+    negative_density = dbeta(eval_points, shape1 = 2, shape2 = 3))
+```
+
+Infer implied prevalence.
+
+```{r}
+# meanpos * prevalence + meanneg * (1 - prevalence) = prevalence
+# so prevalence = meanneg / (meanneg + 1 - meanpos)
+meanpos <- sum(d$positive_density * d$model_prediction) / sum(d$positive_density)
+meanneg <- sum(d$negative_density * d$model_prediction) / sum(d$negative_density)
+prevalence <- meanneg / (meanneg + 1 - meanpos)
+prevalence
+```
+
+Plot densities.
+
+```{r}
+dplt <- cdata::pivot_to_blocks(
+  d,
+  nameForNewKeyColumn = 'distribution',
+  nameForNewValueColumn = 'density',
+  columnsToTakeFrom = qc(positive_density, negative_density))
+
+ggplot(
+  data = dplt,
+  mapping = aes(
+    x = model_prediction,
+    y = density,
+    color = distribution)) + 
+  geom_line() +
+  geom_vline(xintercept = prevalence, linetype = 2) +
+  ggtitle("conditional densities",
+          subtitle = "prevalence as a vertical line")
+```
+
+Show prediction ratios. For a [fully calibrated model](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/) we expect the data to be on the line `y=x`.
+
+```{r}
+d$positivity_rate <- prevalence * d$positive_density / 
+  (prevalence * d$positive_density + (1 - prevalence)*d$negative_density)
+
+ggplot(
+  data = d,
+  mapping = aes(
+    x = model_prediction,
+    y = positivity_rate)) + 
+  geom_line() +
+  ggtitle("positivity rate as a function of model prediction")
+```
+
