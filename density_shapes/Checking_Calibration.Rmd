@@ -1,5 +1,5 @@
 ---
-title: "Checking Calibration"
+title: "Checking Probabilty Model Calibration"
 output: github_document
 ---
 
@@ -115,16 +115,18 @@ Let's look at this for a "sigmoid of normal" (similar to ["Your Lopsided Model i
 ```{r}
 # build conditioned densities
 
-mk_normal_example <- function(mean_pos, mean_neg, common_sd) {
+mk_normal_example <- function(mean_pos, sd_pos, mean_neg, sd_neg) {
   eval_points <- seq(-10, 10, by = 0.01)
   sigmoid <- function(x) { 1 / (1 + exp(-x)) }
   data.frame(
     model_prediction = sigmoid(eval_points),
-    positive_density = dnorm(eval_points, mean = mean_pos, sd = common_sd),
-    negative_density = dnorm(eval_points, mean = mean_neg, sd = common_sd))
+    positive_density = dnorm(eval_points, mean = mean_pos, sd = sd_pos),
+    negative_density = dnorm(eval_points, mean = mean_neg, sd = sd_neg))
 }
 
-d_normal <- mk_normal_example(mean_pos = 0, mean_neg = -1.5, common_sd = 1)
+d_normal <- mk_normal_example(
+  mean_pos = 0, sd_pos = 1, 
+  mean_neg = -1.5, sd_neg = 1)
 ```
 
 
