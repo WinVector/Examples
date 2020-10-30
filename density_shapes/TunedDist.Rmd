@@ -280,7 +280,7 @@ ggplot(
   ggtitle("theoretical ROC curve and reflection")
 ```
 
-The above lack of symmetiry means we probably have a different single parameter family of ROC curves for each prevelance, as the 0.5 prevelance case does have a symmetric ROC curve family.
+The above lack of symmetry means we probably have a different single parameter family of ROC curves for each prevalence, as the 0.5 prevelance case does have a symmetric ROC curve family.
 
 ## Some Limiting Cases
 
@@ -302,6 +302,6 @@ If `a = b`, then the [previously discussed uniform distribution example](https:/
 
 ## Conclusion
 
-For a given problem prevalence, the set of fully calibrated model performance densities that have an unconditional Beta distribution form a single parameter family. When model performance is characterized by a single parameter of this nature, then using a signle derived parameter such as AUC (area under the curve) becomes a proper model comparison procedure in that dominant model quality is ordered the same way as the score. (Please see [ref](https://win-vector.com/2020/09/13/why-working-with-auc-is-more-powerful-than-one-might-think/), though this is not the model characterization family we anticipated there; also a different characterization than [normal or logit normal scoring](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/).)
+For a given problem prevalence, the set of fully calibrated model performance densities that have an unconditional Beta distribution form a single parameter family. When model performance is characterized by a single parameter of this nature, then using a single derived parameter such as AUC (area under the curve) becomes a proper model comparison procedure in that dominant model quality is ordered the same way as the score. (Please see [ref](https://win-vector.com/2020/09/13/why-working-with-auc-is-more-powerful-than-one-might-think/), though this is not the model characterization family we anticipated there; also a different characterization than [normal or logit normal scoring](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/); some notes on the assymetries in this formulation can be found [here](https://github.com/WinVector/Examples/blob/main/density_shapes/Asymmetry.md).)
 
 
