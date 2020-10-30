@@ -182,10 +182,10 @@ mean((d_aug$model_prediction - d_aug$positivity_rate)^2)
 
     ## [1] 0.001849245
 
-Notice the “sigmoid of normal” system is not fully calibrated. Likely we
-need to at least enforce up a relation between the variances in the
-probability space (instead of in the normal-logit space) to see
-something like full calibration.
+Notice the “sigmoid of normal” system is not fully calibrated. Our work
+on [double-crossings of
+normals](https://win-vector.com/2020/10/26/your-lopsided-model-is-out-to-get-you/),
+makes us suspect this can’t be fixed by a variance adjustments.
 
 We can try and see if there is an obvious adjustment of variances that
 balances everything at once.

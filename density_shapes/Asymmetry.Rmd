@@ -5,6 +5,8 @@ output: github_document
 
 This is the source for a link shared in [here](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/).
 
+The consequence of this is pretty large. We think the observable skew of the [Beta distribution characterization of a fully calibrated model](https://win-vector.com/2020/10/29/a-single-parameter-family-characterizing-probability-model-performance/) is a function of the data prevalence This means one can read off the prevalence from the observed skew, and the ROC plot does not in fact fully integrate out the prevalence in this case.
+
 
 ```{r}
 library(ggplot2)
