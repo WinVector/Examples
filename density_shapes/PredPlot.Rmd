@@ -17,7 +17,8 @@ library(WVPlots)
 unpack[
   train_p,
   test_p
-] <- readRDS('predictions.RDS') # from https://github.com/WinVector/vtreat/tree/main/Examples/KDD2009
+] <- readRDS('predictions.RDS') 
+# from https://github.com/WinVector/vtreat/tree/main/Examples/KDD2009
 ```
 
 
@@ -35,318 +36,270 @@ mk_frame <- function(a, b, eval_points = seq(0, 1, 1e-5)) {
 ```
 
 ```{r}
-mk_plot <- function(data) {
-  ggplot(
-    data = data,
-    mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate, 
-      color = what)) +
-    geom_line() + 
-    geom_abline(intercept = 0, slope = 1) +
-    coord_fixed() +
-    scale_color_brewer(palette = "Dark2") +
-    ggtitle(paste0(
-      "theoretical ROC curve(s)"))
-}
-```
-
-```{r}
-ggplot(
-  data = train_p,
-  mapping = aes(x = xgboost, y = as.numeric(churn))) +
-  coord_fixed() +
-  xlim(c(0, 1)) + ylim(c(0, 1)) +
-  geom_smooth() + 
-  ggtitle("expected outcome as a function of model prediction on train")
-```
-
-
-```{r}
-ggplot(
-  data = test_p,
-  mapping = aes(x = xgboost, y = as.numeric(churn))) +
-  coord_fixed() +
-  xlim(c(0, 1)) + ylim(c(0, 1)) +
-  geom_smooth() + 
-  ggtitle("expected outcome as a function of model prediction on test")
-```
-
-
-```{r}
-DoubleDensityPlot(
-  train_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  title = "double density on train")
-```
-
-```{r}
-aggregate(xgboost ~ churn, data = train_p, FUN = mean)
-```
-
-
-```{r}
-DoubleDensityPlot(
-  test_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  title = "double density on test")
-```
-
-```{r}
-(test_means <- aggregate(xgboost ~ churn, data = test_p, FUN = mean))
-```
-
-```{r}
-(a <- 1 / (test_means$xgboost[test_means$churn == TRUE] / 
-            test_means$xgboost[test_means$churn == FALSE] - 1))
-(b <- a / test_means$xgboost[test_means$churn == FALSE] - (a + 1))
-
-a / (a + b)
-```
-
-```{r}
-d_pos <- density(test_p$xgboost[test_p$churn])
-d_neg <- density(test_p$xgboost[!test_p$churn])
-
-evals <- seq(0, 1, by = 0.01)
-tf <- rbind(
-  data.frame( 
-    model_score = evals,
-    density = dbeta(evals, shape1 = a + 1, shape2 = b),
-    what = 'positive theoretical',
-    stringsAsFactors = FALSE),
-  data.frame( 
-    model_score = evals,
-    density = dbeta(evals, shape1 = a, shape2 = b + 1),
-    what = 'negative theoretical',
-    stringsAsFactors = FALSE),
-  data.frame( 
-    model_score = d_pos$x,
-    density = d_pos$y,
-    what = 'positive empirical',
-    stringsAsFactors = FALSE),
-  data.frame( 
-    model_score = d_neg$x,
-    density = d_neg$y,
-    what = 'negative empirical',
-    stringsAsFactors = FALSE))
+work_example <- function(mf, mn) {
+  print(mn)
+  print(paste0('prevalence: ', mean(mf$churn)))
   
-
-
-ggplot() +
-  geom_ribbon(
-    data = tf[!(tf$what %in% c('positive empirical', 'negative empirical')), ],
-    mapping = aes(x = model_score, ymin = 0, ymax = density, fill = what), alpha = 0.5) +
-  geom_line(
-    data = tf[tf$what %in% c('positive empirical', 'negative empirical'), ],
-    mapping = aes(x = model_score, y = density, color = what)) 
-```
-
-
-```{r}
-ROCPlot(
-  train_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  truthTarget = TRUE,
-  title = 'model on train',
-  add_convex_hull = TRUE)
-```
-
-```{r}
-ROCPlot(
-  test_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  truthTarget = TRUE,
-  title = 'model on test',
-  add_convex_hull = TRUE)
-```
-
-```{r}
-pf <- mk_frame(a, b)
-ROCPlot(
-  test_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  truthTarget = TRUE,
-  title = 'model on test, with mean-fit ROC curve') + 
-  geom_line(
-    data = pf,
-    mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate),
-    linetype = 3,
-    color = "DarkGreen")
-```
-
-Use the method of "A Single Parameter Family Characterizing Probability Model Performance" to identify the ROC curve from the restricted family.
-
-First get `a, b` shape family. We are considering curves of the form `(a = c * a1, b = c * b1)` for positive `c`.
-
-```{r}
-(prevalence <- mean(test_p$churn))
-```
-
-```{r}
-(a1 <- 1)
-(b1 <- a1 * (1 - prevalence) / prevalence)
-a1 / (a1 + b1)
-```
-
-Now get the ideal AUC seen.
-
-```{r}
-calc_area <- function(x, y) {
-  n <- nrow(data)
-  dx <- abs(x[-length(x)] - x[-1])
-  my <- (y[-length(x)] + y[-1])/2
-  sum(dx*my)
-}
-```
-
-```{r}
-roc_curve <- sigr::build_ROC_curve(
-  modelPredictions = test_p$xgboost, 
-  yValues = test_p$churn)
-
-idxs <- sort(unique(chull(
-  x = c(1 - roc_curve$Specificity, 1),
-  y = c(roc_curve$Sensitivity, 0))))
-idxs <- idxs[-length(idxs)]
-convex_hull <- roc_curve[idxs, ]
-target_area <- calc_area(
-  x = 1 - convex_hull$Specificity, 
-  y = convex_hull$Sensitivity)
-
-target_area
-```
-
-
-
-```{r}
-pf <- mk_frame(a1, b1)
-mk_plot(pf)
-calc_area(
-  x = pf$false_positive_rate,
-  y = pf$true_positive_rate)
-```
-
-```{r}
-f <- function(x) {
-  a <- x[[1]]
+  mk_plot <- function(data) {
+    ggplot(
+      data = data,
+      mapping = aes(
+        x = false_positive_rate, 
+        y = true_positive_rate, 
+        color = what)) +
+      geom_line() + 
+      geom_abline(intercept = 0, slope = 1) +
+      coord_fixed() +
+      scale_color_brewer(palette = "Dark2") +
+      ggtitle(paste0(
+        "theoretical ROC curve(s) on ", mn))
+  }
+  
+  print(ggplot(
+    data = mf,
+    mapping = aes(x = xgboost, y = as.numeric(churn))) +
+    coord_fixed() +
+    xlim(c(0, 1)) + ylim(c(0, 1)) +
+    geom_smooth() + 
+    ggtitle(paste0("expected outcome as a function of model prediction on ", mn)))
+  
+  print(DoubleDensityPlot(
+    mf,
+    xvar = 'xgboost',
+    truthVar = 'churn',
+    title = paste0("double density on ", mn)))
+  
+  conditional_means <- aggregate(xgboost ~ churn, data = mf, FUN = mean)
+  print(paste0("conditional means: ", conditional_means))
+  
+  a <- 1 / (conditional_means$xgboost[conditional_means$churn == TRUE] / 
+              conditional_means$xgboost[conditional_means$churn == FALSE] - 1)
+  b <- a / conditional_means$xgboost[conditional_means$churn == FALSE] - (a + 1)
+  print(paste0("a= ", a, ", b= ", b, ", a/(a+b)= ", a/(a+b)))
+  
+  d_pos <- density(mf$xgboost[mf$churn])
+  d_neg <- density(mf$xgboost[!mf$churn])
+  
+  evals <- seq(0, 1, by = 0.01)
+  tf <- rbind(
+    data.frame( 
+      model_score = evals,
+      density = dbeta(evals, shape1 = a + 1, shape2 = b),
+      what = 'positive theoretical',
+      stringsAsFactors = FALSE),
+    data.frame( 
+      model_score = evals,
+      density = dbeta(evals, shape1 = a, shape2 = b + 1),
+      what = 'negative theoretical',
+      stringsAsFactors = FALSE),
+    data.frame( 
+      model_score = d_pos$x,
+      density = d_pos$y,
+      what = 'positive empirical',
+      stringsAsFactors = FALSE),
+    data.frame( 
+      model_score = d_neg$x,
+      density = d_neg$y,
+      what = 'negative empirical',
+      stringsAsFactors = FALSE))
+  
+  print(ggplot() +
+    geom_ribbon(
+      data = tf[!(tf$what %in% c('positive empirical', 'negative empirical')), ],
+      mapping = aes(x = model_score, ymin = 0, ymax = density, fill = what), alpha = 0.5) +
+    geom_line(
+      data = tf[tf$what %in% c('positive empirical', 'negative empirical'), ],
+      mapping = aes(x = model_score, y = density, color = what)) +
+    ggtitle(paste0("Empirical and theoretical densities on ", mn)))
+  
+  print(ROCPlot(
+    mf,
+    xvar = 'xgboost',
+    truthVar = 'churn',
+    truthTarget = TRUE,
+    title = paste0('model on ', mn),
+    add_convex_hull = TRUE))
+  
+  pf <- mk_frame(a, b)
+  print(ROCPlot(
+    mf,
+    xvar = 'xgboost',
+    truthVar = 'churn',
+    truthTarget = TRUE,
+    title = paste0('model on ', mn, ', with mean-fit ROC curve')) + 
+    geom_line(
+      data = pf,
+      mapping = aes(
+        x = false_positive_rate, 
+        y = true_positive_rate),
+      linetype = 3,
+      color = "DarkGreen"))
+  
+  # Use the method of "A Single Parameter Family Characterizing Probability Model Performance" to identify the ROC curve from the restricted family.
+  # 
+  # First get `a, b` shape family. We are considering curves of the form `(a = c * a1, b = c * b1)` for positive `c`.
+  
+  prevalence <- mean(mf$churn)
+  print(paste0("prevalence: ", prevalence))
+  
+  a1 <- 1
+  b1 <- a1 * (1 - prevalence) / prevalence
+  print(paste0("a1= ", a1, ", b1= ", b1, ", a1/(a1+b1)= ", a1/(a1+b1)))
+  
+  # Now get the ideal AUC seen.
+  calc_area <- function(x, y) {
+    n <- nrow(data)
+    dx <- abs(x[-length(x)] - x[-1])
+    my <- (y[-length(x)] + y[-1])/2
+    sum(dx*my)
+  }
+  
+  roc_curve <- sigr::build_ROC_curve(
+    modelPredictions = mf$xgboost, 
+    yValues = mf$churn)
+  
+  idxs <- sort(unique(chull(
+    x = c(1 - roc_curve$Specificity, 1),
+    y = c(roc_curve$Sensitivity, 0))))
+  idxs <- idxs[-length(idxs)]
+  convex_hull <- roc_curve[idxs, ]
+  target_area <- calc_area(
+    x = 1 - convex_hull$Specificity, 
+    y = convex_hull$Sensitivity)
+  
+  print(paste0('target_area: ', target_area))
+  
+  pf <- mk_frame(a1, b1)
+  
+  print(mk_plot(pf))
+  
+  print(calc_area(
+    x = pf$false_positive_rate,
+    y = pf$true_positive_rate))
+  
+  f <- function(x) {
+    a <- x[[1]]
+    b <- a * (1 - prevalence) / prevalence
+    of <- mk_frame(a = a, b = b)
+    fn <- suppressWarnings(approxfun(
+      x = of$false_positive_rate, 
+      y = of$true_positive_rate))
+    evals <- fn(1 - roc_curve$Specificity)
+    sum((roc_curve$Sensitivity - evals)^2)
+  }
+  soln <- optimize(f, c(0, 100))
+  print(soln)
+  
+  a <- soln$minimum
   b <- a * (1 - prevalence) / prevalence
-  of <- mk_frame(a = a, b = b)
-  fn <- suppressWarnings(approxfun(
-    x = of$false_positive_rate, 
-    y = of$true_positive_rate))
-  evals <- fn(1 - roc_curve$Specificity)
-  sum((roc_curve$Sensitivity - evals)^2)
+  print(paste0("a= ", a, ", b= ", b, ", a/(a+b)= ", a/(a+b)))
+  
+  pf <- mk_frame(a, b)
+  idx <- which.min(abs(prevalence - pf$model_score))
+  print(pf[idx, ])
+  
+  print(mk_plot(pf) + 
+    geom_point(
+      data = pf[idx, ],
+      mapping = aes(
+        x = false_positive_rate, 
+        y = true_positive_rate)) +
+    geom_abline(
+      intercept = pf$true_positive_rate[[idx]] - pf$false_positive_rate[[idx]],
+      slope = 1))
+  
+  
+  print(calc_area(
+    x = pf$false_positive_rate,
+    y = pf$true_positive_rate))
+  
+  print(ROCPlot(
+    mf,
+    xvar = 'xgboost',
+    truthVar = 'churn',
+    truthTarget = TRUE,
+    title = paste0('model on ', mn, ', compared to theoretical')) + 
+    geom_line(
+      data = pf,
+      mapping = aes(
+        x = false_positive_rate, 
+        y = true_positive_rate),
+      linetype = 3,
+      color = "DarkGreen"))
+  
+  # Fit both parameters, by shape.
+  
+  f2 <- function(x) {
+    a <- x[[1]]
+    b <- x[[2]]
+    of <- mk_frame(a = a, b = b)
+    fn <- suppressWarnings(approxfun(
+      x = of$false_positive_rate, 
+      y = of$true_positive_rate))
+    evals <- fn(1 - roc_curve$Specificity)
+    sum((roc_curve$Sensitivity - evals)^2)
+  }
+  
+  print(f2(c(a, b)))
+  
+  soln2 <- optim(
+    par = c(a, b),
+    fn = f2,
+    method = 'L-BFGS-B',
+    lower = c(0, 0))
+  print(soln2)
+  
+  a2 <- soln2$par[[1]]
+  b2 <- soln2$par[[2]]
+  print(paste0("a2= ", a2, ", b2= ", b2, ", a2/(a2+b2)= ", a2/(a2+b2)))
+  
+  pf2 <- mk_frame(a2, b2)
+  idx2 <- which.min(abs(a2/(a2 + b2) - pf2$model_score))
+  print(pf2[idx2, ])
+  
+  print(mk_plot(pf2) + 
+    geom_point(
+      data = pf2[idx2, ],
+      mapping = aes(
+        x = false_positive_rate, 
+        y = true_positive_rate)) +
+    geom_abline(
+      intercept = pf2$true_positive_rate[[idx]] - pf2$false_positive_rate[[idx]],
+      slope = 1))
+  
+  
+  print(calc_area(
+    x = pf2$false_positive_rate,
+    y = pf2$true_positive_rate))
+  
+  print(ROCPlot(
+    mf,
+    xvar = 'xgboost',
+    truthVar = 'churn',
+    truthTarget = TRUE,
+    title = paste0('model on ', mn, ', compared to theoretical2')) + 
+    geom_line(
+      data = pf2,
+      mapping = aes(
+        x = false_positive_rate, 
+        y = true_positive_rate),
+      linetype = 3,
+      color = "DarkGreen"))
+  
+  invisible(NULL)
 }
-(soln <- optimize(f, c(0, 100)))
 ```
 
+
+
+## Train
+
 ```{r}
-(a <- soln$minimum)
-(b <- a * (1 - prevalence) / prevalence)
-
-print(a/(a + b))
-
-pf <- mk_frame(a, b)
-idx <- which.min(abs(prevalence - pf$model_score))
-print(pf[idx, ])
-
-mk_plot(pf) + 
-  geom_point(
-    data = pf[idx, ],
-     mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate)) +
-  geom_abline(
-    intercept = pf$true_positive_rate[[idx]] - pf$false_positive_rate[[idx]],
-    slope = 1)
-              
-
-calc_area(
-  x = pf$false_positive_rate,
-  y = pf$true_positive_rate)
+work_example(train_p, 'train')
 ```
 
-```{r}
-ROCPlot(
-  test_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  truthTarget = TRUE,
-  title = 'model on test, compared to theoretical') + 
-  geom_line(
-    data = pf,
-    mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate),
-    linetype = 3,
-    color = "DarkGreen")
-```
-
-Fit both parameters, by shape.
+## Test 
 
 ```{r}
-f2 <- function(x) {
-  a <- x[[1]]
-  b <- x[[2]]
-  of <- mk_frame(a = a, b = b)
-  fn <- suppressWarnings(approxfun(
-    x = of$false_positive_rate, 
-    y = of$true_positive_rate))
-  evals <- fn(1 - roc_curve$Specificity)
-  sum((roc_curve$Sensitivity - evals)^2)
-}
-
-print(f2(c(a, b)))
-
-(soln2 <- optim(
-  par = c(a, b),
-  fn = f2,
-  method = 'L-BFGS-B',
-  lower = c(0, 0)))
-
-(a2 <- soln2$par[[1]])
-(b2 <- soln2$par[[2]])
-
-print(a2/(a2 + b2))
-
-pf2 <- mk_frame(a2, b2)
-idx2 <- which.min(abs(a2/(a2 + b2) - pf2$model_score))
-print(pf2[idx2, ])
-
-mk_plot(pf2) + 
-  geom_point(
-    data = pf2[idx2, ],
-     mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate)) +
-  geom_abline(
-    intercept = pf2$true_positive_rate[[idx]] - pf2$false_positive_rate[[idx]],
-    slope = 1)
-              
-
-calc_area(
-  x = pf2$false_positive_rate,
-  y = pf2$true_positive_rate)
-
-ROCPlot(
-  test_p,
-  xvar = 'xgboost',
-  truthVar = 'churn',
-  truthTarget = TRUE,
-  title = 'model on test, compared to theoretical2') + 
-  geom_line(
-    data = pf2,
-    mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate),
-    linetype = 3,
-    color = "DarkGreen")
+work_example(test_p, 'test')
 ```
