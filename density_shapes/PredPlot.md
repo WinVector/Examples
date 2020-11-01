@@ -21,6 +21,175 @@ unpack[
 ```
 
 ``` r
+mk_frame <- function(a, b, eval_points = seq(0, 1, 1e-5)) {
+  data.frame(
+    what = paste0("a=", format(a, digits = 3), ', b=', format(b, digits = 3)),
+    a = a,
+    b = b,
+    model_score = eval_points,
+    false_positive_rate = 1 - pbeta(eval_points, shape1 = a, shape2 = b + 1),
+    true_positive_rate = 1 - pbeta(eval_points, shape1 = a + 1, shape2 = b),
+    stringsAsFactors = FALSE)
+}
+```
+
+``` r
+mk_plot <- function(data) {
+  ggplot(
+    data = data,
+    mapping = aes(
+      x = false_positive_rate, 
+      y = true_positive_rate, 
+      color = what)) +
+    geom_line() + 
+    geom_abline(intercept = 0, slope = 1) +
+    coord_fixed() +
+    scale_color_brewer(palette = "Dark2") +
+    ggtitle(paste0(
+      "theoretical ROC curve(s)"))
+}
+```
+
+``` r
+ggplot(
+  data = train_p,
+  mapping = aes(x = xgboost, y = as.numeric(churn))) +
+  coord_fixed() +
+  xlim(c(0, 1)) + ylim(c(0, 1)) +
+  geom_smooth() + 
+  ggtitle("expected outcome as a function of model prediction on train")
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 19 rows containing missing values (geom_smooth).
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
+ggplot(
+  data = test_p,
+  mapping = aes(x = xgboost, y = as.numeric(churn))) +
+  coord_fixed() +
+  xlim(c(0, 1)) + ylim(c(0, 1)) +
+  geom_smooth() + 
+  ggtitle("expected outcome as a function of model prediction on test")
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 1 rows containing missing values (geom_smooth).
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+DoubleDensityPlot(
+  train_p,
+  xvar = 'xgboost',
+  truthVar = 'churn',
+  title = "double density on train")
+```
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+aggregate(xgboost ~ churn, data = train_p, FUN = mean)
+```
+
+    ##   churn    xgboost
+    ## 1 FALSE 0.06586979
+    ## 2  TRUE 0.17843997
+
+``` r
+DoubleDensityPlot(
+  test_p,
+  xvar = 'xgboost',
+  truthVar = 'churn',
+  title = "double density on test")
+```
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+(test_means <- aggregate(xgboost ~ churn, data = test_p, FUN = mean))
+```
+
+    ##   churn    xgboost
+    ## 1 FALSE 0.06734609
+    ## 2  TRUE 0.14806206
+
+``` r
+(a <- 1 / (test_means$xgboost[test_means$churn == TRUE] / 
+            test_means$xgboost[test_means$churn == FALSE] - 1))
+```
+
+    ## [1] 0.8343589
+
+``` r
+(b <- a / test_means$xgboost[test_means$churn == FALSE] - (a + 1))
+```
+
+    ## [1] 10.55476
+
+``` r
+a / (a + b)
+```
+
+    ## [1] 0.07325929
+
+``` r
+d_pos <- density(test_p$xgboost[test_p$churn])
+d_neg <- density(test_p$xgboost[!test_p$churn])
+
+evals <- seq(0, 1, by = 0.01)
+tf <- rbind(
+  data.frame( 
+    model_score = evals,
+    density = dbeta(evals, shape1 = a + 1, shape2 = b),
+    what = 'positive theoretical',
+    stringsAsFactors = FALSE),
+  data.frame( 
+    model_score = evals,
+    density = dbeta(evals, shape1 = a, shape2 = b + 1),
+    what = 'negative theoretical',
+    stringsAsFactors = FALSE),
+  data.frame( 
+    model_score = d_pos$x,
+    density = d_pos$y,
+    what = 'positive empirical',
+    stringsAsFactors = FALSE),
+  data.frame( 
+    model_score = d_neg$x,
+    density = d_neg$y,
+    what = 'negative empirical',
+    stringsAsFactors = FALSE))
+  
+
+
+ggplot() +
+  geom_ribbon(
+    data = tf[!(tf$what %in% c('positive empirical', 'negative empirical')), ],
+    mapping = aes(x = model_score, ymin = 0, ymax = density, fill = what), alpha = 0.5) +
+  geom_line(
+    data = tf[tf$what %in% c('positive empirical', 'negative empirical'), ],
+    mapping = aes(x = model_score, y = density, color = what)) 
+```
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+ROCPlot(
+  train_p,
+  xvar = 'xgboost',
+  truthVar = 'churn',
+  truthTarget = TRUE,
+  title = 'model on train',
+  add_convex_hull = TRUE)
+```
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
 ROCPlot(
   test_p,
   xvar = 'xgboost',
@@ -30,7 +199,26 @@ ROCPlot(
   add_convex_hull = TRUE)
 ```
 
-![](PredPlot_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](PredPlot_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+pf <- mk_frame(a, b)
+ROCPlot(
+  test_p,
+  xvar = 'xgboost',
+  truthVar = 'churn',
+  truthTarget = TRUE,
+  title = 'model on test, with mean-fit ROC curve') + 
+  geom_line(
+    data = pf,
+    mapping = aes(
+      x = false_positive_rate, 
+      y = true_positive_rate),
+    linetype = 3,
+    color = "DarkGreen")
+```
+
+![](PredPlot_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 Use the method of “A Single Parameter Family Characterizing Probability
 Model Performance” to identify the ROC curve from the restricted family.
@@ -93,41 +281,11 @@ target_area
     ## [1] 0.7501787
 
 ``` r
-mk_frame <- function(a, b, eval_points = seq(0, 1, 1e-5)) {
-  data.frame(
-    what = paste0("a=", format(a, digits = 3), ', b=', format(b, digits = 3)),
-    a = a,
-    b = b,
-    model_score = eval_points,
-    false_positive_rate = 1 - pbeta(eval_points, shape1 = a, shape2 = b + 1),
-    true_positive_rate = 1 - pbeta(eval_points, shape1 = a + 1, shape2 = b),
-    stringsAsFactors = FALSE)
-}
-
-
-
-mk_plot <- function(data) {
-  ggplot(
-    data = data,
-    mapping = aes(
-      x = false_positive_rate, 
-      y = true_positive_rate, 
-      color = what)) +
-    geom_line() + 
-    geom_abline(intercept = 0, slope = 1) +
-    coord_fixed() +
-    scale_color_brewer(palette = "Dark2") +
-    ggtitle(paste0(
-      "theoretical ROC curve(s)"))
-}
-```
-
-``` r
 pf <- mk_frame(a1, b1)
 mk_plot(pf)
 ```
 
-![](PredPlot_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](PredPlot_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 calc_area(
@@ -198,7 +356,7 @@ mk_plot(pf) +
     slope = 1)
 ```
 
-![](PredPlot_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](PredPlot_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ``` r
 calc_area(
@@ -224,7 +382,7 @@ ROCPlot(
     color = "DarkGreen")
 ```
 
-![](PredPlot_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](PredPlot_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 Fit both parameters, by shape.
 
@@ -310,7 +468,7 @@ mk_plot(pf2) +
     slope = 1)
 ```
 
-![](PredPlot_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](PredPlot_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ``` r
 calc_area(
@@ -336,4 +494,4 @@ ROCPlot(
     color = "DarkGreen")
 ```
 
-![](PredPlot_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+![](PredPlot_files/figure-gfm/unnamed-chunk-24-2.png)<!-- -->
