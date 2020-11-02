@@ -22,15 +22,42 @@ unpack[
 ```
 
 ``` r
-mk_frame <- function(a, b, eval_points = seq(0, 1, 1e-5)) {
+mk_frame_idea_ab <- function(a, b, eval_points = seq(0, 1, 1e-5)) {
   data.frame(
     what = paste0("a=", format(a, digits = 3), ', b=', format(b, digits = 3)),
-    a = a,
-    b = b,
     model_score = eval_points,
     false_positive_rate = 1 - pbeta(eval_points, shape1 = a, shape2 = b + 1),
     true_positive_rate = 1 - pbeta(eval_points, shape1 = a + 1, shape2 = b),
     stringsAsFactors = FALSE)
+}
+
+
+mk_frame_idea_a1b1a2b2 <- function(a1, b1, a2, b2, eval_points = seq(0, 1, 1e-5)) {
+  data.frame(
+    what = paste0("a1=", format(a1, digits = 3), 
+                  ', b1=', format(b1, digits = 3),
+                  "a2=", format(a2, digits = 3), 
+                  ', b2=', format(b2, digits = 3)),
+    model_score = eval_points,
+    false_positive_rate = 1 - pbeta(eval_points, shape1 = a1, shape2 = b1),
+    true_positive_rate = 1 - pbeta(eval_points, shape1 = a2, shape2 = b2),
+    stringsAsFactors = FALSE)
+}
+
+
+mk_plot <- function(data, mn) {
+  ggplot(
+    data = data,
+    mapping = aes(
+      x = false_positive_rate, 
+      y = true_positive_rate, 
+      color = what)) +
+    geom_line() + 
+    geom_abline(intercept = 0, slope = 1) +
+    coord_fixed() +
+    scale_color_brewer(palette = "Dark2") +
+    ggtitle(paste0(
+      "theoretical ROC curve(s) on ", mn))
 }
 ```
 
@@ -39,28 +66,13 @@ work_example <- function(mf, mn) {
   print(mn)
   print(paste0('prevalence: ', mean(mf$churn)))
   
-  mk_plot <- function(data) {
-    ggplot(
-      data = data,
-      mapping = aes(
-        x = false_positive_rate, 
-        y = true_positive_rate, 
-        color = what)) +
-      geom_line() + 
-      geom_abline(intercept = 0, slope = 1) +
-      coord_fixed() +
-      scale_color_brewer(palette = "Dark2") +
-      ggtitle(paste0(
-        "theoretical ROC curve(s) on ", mn))
-  }
-  
   print(ggplot(
     data = mf,
     mapping = aes(x = xgboost, y = as.numeric(churn))) +
-    coord_fixed() +
-    xlim(c(0, 1)) + ylim(c(0, 1)) +
-    geom_smooth() + 
-    ggtitle(paste0("expected outcome as a function of model prediction on ", mn)))
+      coord_fixed() +
+      xlim(c(0, 1)) + ylim(c(0, 1)) +
+      geom_smooth() + 
+      ggtitle(paste0("expected outcome as a function of model prediction on ", mn)))
   
   print(DoubleDensityPlot(
     mf,
@@ -103,13 +115,13 @@ work_example <- function(mf, mn) {
       stringsAsFactors = FALSE))
   
   print(ggplot() +
-    geom_ribbon(
-      data = tf[!(tf$what %in% c('positive empirical', 'negative empirical')), ],
-      mapping = aes(x = model_score, ymin = 0, ymax = density, fill = what), alpha = 0.5) +
-    geom_line(
-      data = tf[tf$what %in% c('positive empirical', 'negative empirical'), ],
-      mapping = aes(x = model_score, y = density, color = what)) +
-    ggtitle(paste0("Empirical and theoretical densities on ", mn)))
+          geom_ribbon(
+            data = tf[!(tf$what %in% c('positive empirical', 'negative empirical')), ],
+            mapping = aes(x = model_score, ymin = 0, ymax = density, fill = what), alpha = 0.5) +
+          geom_line(
+            data = tf[tf$what %in% c('positive empirical', 'negative empirical'), ],
+            mapping = aes(x = model_score, y = density, color = what)) +
+          ggtitle(paste0("Empirical and theoretical densities on ", mn)))
   
   print(ROCPlot(
     mf,
@@ -119,20 +131,20 @@ work_example <- function(mf, mn) {
     title = paste0('model on ', mn),
     add_convex_hull = TRUE))
   
-  pf <- mk_frame(a, b)
+  pf <- mk_frame_idea_ab(a, b)
   print(ROCPlot(
     mf,
     xvar = 'xgboost',
     truthVar = 'churn',
     truthTarget = TRUE,
     title = paste0('model on ', mn, ', with mean-fit ROC curve')) + 
-    geom_line(
-      data = pf,
-      mapping = aes(
-        x = false_positive_rate, 
-        y = true_positive_rate),
-      linetype = 3,
-      color = "DarkGreen"))
+      geom_line(
+        data = pf,
+        mapping = aes(
+          x = false_positive_rate, 
+          y = true_positive_rate),
+        linetype = 3,
+        color = "DarkGreen"))
   
   # Use the method of "A Single Parameter Family Characterizing Probability Model Performance" to identify the ROC curve from the restricted family.
   # 
@@ -168,9 +180,9 @@ work_example <- function(mf, mn) {
   
   print(paste0('target_area: ', target_area))
   
-  pf <- mk_frame(a1, b1)
+  pf <- mk_frame_idea_ab(a1, b1)
   
-  print(mk_plot(pf))
+  print(mk_plot(pf, mn))
   
   print(calc_area(
     x = pf$false_positive_rate,
@@ -179,7 +191,7 @@ work_example <- function(mf, mn) {
   f <- function(x) {
     a <- x[[1]]
     b <- a * (1 - prevalence) / prevalence
-    of <- mk_frame(a = a, b = b)
+    of <- mk_frame_idea_ab(a = a, b = b)
     fn <- suppressWarnings(approxfun(
       x = of$false_positive_rate, 
       y = of$true_positive_rate))
@@ -193,19 +205,19 @@ work_example <- function(mf, mn) {
   b <- a * (1 - prevalence) / prevalence
   print(paste0("a= ", a, ", b= ", b, ", a/(a+b)= ", a/(a+b)))
   
-  pf <- mk_frame(a, b)
+  pf <- mk_frame_idea_ab(a, b)
   idx <- which.min(abs(prevalence - pf$model_score))
   print(pf[idx, ])
   
-  print(mk_plot(pf) + 
-    geom_point(
-      data = pf[idx, ],
-      mapping = aes(
-        x = false_positive_rate, 
-        y = true_positive_rate)) +
-    geom_abline(
-      intercept = pf$true_positive_rate[[idx]] - pf$false_positive_rate[[idx]],
-      slope = 1))
+  print(mk_plot(pf, mn) + 
+          geom_point(
+            data = pf[idx, ],
+            mapping = aes(
+              x = false_positive_rate, 
+              y = true_positive_rate)) +
+          geom_abline(
+            intercept = pf$true_positive_rate[[idx]] - pf$false_positive_rate[[idx]],
+            slope = 1))
   
   
   print(calc_area(
@@ -218,20 +230,20 @@ work_example <- function(mf, mn) {
     truthVar = 'churn',
     truthTarget = TRUE,
     title = paste0('model on ', mn, ', compared to theoretical')) + 
-    geom_line(
-      data = pf,
-      mapping = aes(
-        x = false_positive_rate, 
-        y = true_positive_rate),
-      linetype = 3,
-      color = "DarkGreen"))
+      geom_line(
+        data = pf,
+        mapping = aes(
+          x = false_positive_rate, 
+          y = true_positive_rate),
+        linetype = 3,
+        color = "DarkGreen"))
   
   # Fit both parameters, by shape.
   
   f2 <- function(x) {
     a <- x[[1]]
     b <- x[[2]]
-    of <- mk_frame(a = a, b = b)
+    of <- mk_frame_idea_ab(a = a, b = b)
     fn <- suppressWarnings(approxfun(
       x = of$false_positive_rate, 
       y = of$true_positive_rate))
@@ -252,19 +264,19 @@ work_example <- function(mf, mn) {
   b2 <- soln2$par[[2]]
   print(paste0("a2= ", a2, ", b2= ", b2, ", a2/(a2+b2)= ", a2/(a2+b2)))
   
-  pf2 <- mk_frame(a2, b2)
+  pf2 <- mk_frame_idea_ab(a2, b2)
   idx2 <- which.min(abs(a2/(a2 + b2) - pf2$model_score))
   print(pf2[idx2, ])
   
-  print(mk_plot(pf2) + 
-    geom_point(
-      data = pf2[idx2, ],
-      mapping = aes(
-        x = false_positive_rate, 
-        y = true_positive_rate)) +
-    geom_abline(
-      intercept = pf2$true_positive_rate[[idx]] - pf2$false_positive_rate[[idx]],
-      slope = 1))
+  print(mk_plot(pf2, mn) + 
+          geom_point(
+            data = pf2[idx2, ],
+            mapping = aes(
+              x = false_positive_rate, 
+              y = true_positive_rate)) +
+          geom_abline(
+            intercept = pf2$true_positive_rate[[idx]] - pf2$false_positive_rate[[idx]],
+            slope = 1))
   
   
   print(calc_area(
@@ -277,13 +289,13 @@ work_example <- function(mf, mn) {
     truthVar = 'churn',
     truthTarget = TRUE,
     title = paste0('model on ', mn, ', compared to theoretical2')) + 
-    geom_line(
-      data = pf2,
-      mapping = aes(
-        x = false_positive_rate, 
-        y = true_positive_rate),
-      linetype = 3,
-      color = "DarkGreen"))
+      geom_line(
+        data = pf2,
+        mapping = aes(
+          x = false_positive_rate, 
+          y = true_positive_rate),
+        linetype = 3,
+        color = "DarkGreen"))
   
   invisible(NULL)
 }
@@ -325,10 +337,8 @@ work_example(train_p, 'train')
     ## [1] 37.91684
     ## 
     ## [1] "a= 0.562544814509275, b= 7.08534541295821, a/(a+b)= 0.0735555555555556"
-    ##                 what         a        b model_score false_positive_rate
-    ## 7357 a=0.563, b=7.09 0.5625448 7.085345     0.07356           0.3093546
-    ##      true_positive_rate
-    ## 7357          0.7902399
+    ##                 what model_score false_positive_rate true_positive_rate
+    ## 7357 a=0.563, b=7.09     0.07356           0.3093546          0.7902399
 
 ![](PredPlot_files/figure-gfm/unnamed-chunk-5-7.png)<!-- -->
 
@@ -354,10 +364,8 @@ work_example(train_p, 'train')
     ## [1] "CONVERGENCE: REL_REDUCTION_OF_F <= FACTR*EPSMCH"
     ## 
     ## [1] "a2= 1.34224660685369, b2= 1.12008690658619, a2/(a2+b2)= 0.545111618522615"
-    ##                 what        a        b model_score false_positive_rate
-    ## 54512 a=1.34, b=1.12 1.342247 1.120087     0.54511           0.2639962
-    ##       true_positive_rate
-    ## 54512          0.7259015
+    ##                 what model_score false_positive_rate true_positive_rate
+    ## 54512 a=1.34, b=1.12     0.54511           0.2639962          0.7259015
 
 ![](PredPlot_files/figure-gfm/unnamed-chunk-5-9.png)<!-- -->
 
@@ -401,10 +409,8 @@ work_example(test_p, 'test')
     ## [1] 4.403791
     ## 
     ## [1] "a= 1.15924365035961, b= 14.8524089789167, a/(a+b)= 0.0724"
-    ##                what        a        b model_score false_positive_rate
-    ## 7241 a=1.16, b=14.9 1.159244 14.85241      0.0724           0.3641095
-    ##      true_positive_rate
-    ## 7241          0.7225412
+    ##                what model_score false_positive_rate true_positive_rate
+    ## 7241 a=1.16, b=14.9      0.0724           0.3641095          0.7225412
 
 ![](PredPlot_files/figure-gfm/unnamed-chunk-6-7.png)<!-- -->
 
@@ -430,10 +436,8 @@ work_example(test_p, 'test')
     ## [1] "CONVERGENCE: REL_REDUCTION_OF_F <= FACTR*EPSMCH"
     ## 
     ## [1] "a2= 4.22417422194232, b2= 1.59135880319764, a2/(a2+b2)= 0.726360628283193"
-    ##                 what        a        b model_score false_positive_rate
-    ## 72637 a=4.22, b=1.59 4.224174 1.591359     0.72636           0.3024059
-    ##       true_positive_rate
-    ## 72637          0.6528713
+    ##                 what model_score false_positive_rate true_positive_rate
+    ## 72637 a=4.22, b=1.59     0.72636           0.3024059          0.6528713
 
 ![](PredPlot_files/figure-gfm/unnamed-chunk-6-9.png)<!-- -->
 
