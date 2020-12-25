@@ -10,6 +10,8 @@ function.
     <https://github.com/WinVector/Examples/blob/main/Mercer_kernel/Mercer_Kernel.md>.
 -   How to check if a 3 by 3 matrix is positive (semi) definite
     <https://github.com/WinVector/Examples/blob/main/Mercer_kernel/Dets.ipynb>.
+-   Why dot product is a Mercer Kernel
+    <https://github.com/WinVector/Examples/blob/main/Mercer_kernel/dot.md>.
 
 I’ve written before on Kernel methods (in the context of support vector
 machines).
