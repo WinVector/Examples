@@ -3,6 +3,8 @@ title: "Mercer_Kernel"
 output: github_document
 ---
 
+Notes in support of [https://win-vector.com/2020/12/25/abs-and-relu-are-not-mercer-kernels/](https://win-vector.com/2020/12/25/abs-and-relu-are-not-mercer-kernels/).
+
 John Mount
 December 2020
 

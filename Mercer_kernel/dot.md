@@ -1,4 +1,6 @@
 
+Notes in support of [https://win-vector.com/2020/12/25/abs-and-relu-are-not-mercer-kernels/](https://win-vector.com/2020/12/25/abs-and-relu-are-not-mercer-kernels/).
+
 Why dot-product is in fact a Mercer Kernel.
 
 Here are some new notes on what is and what is not a Mercer Kernel style
