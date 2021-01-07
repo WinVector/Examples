@@ -1,0 +1,202 @@
+<h1 id="smoothing-isnt-always-safe">Smoothing isn't Always Safe</h1>
+<h1 id="introduction">Introduction</h1>
+<p>Here is a quick data-scientist / data-analyst question: what is the overall trend or shape in the following noisy data? For our specific example: How do we relate <code>value</code> as a noisy function (or relation) of <code>m</code>? This example arose in producing our tutorial <a href="https://win-vector.com/2021/01/04/the-nature-of-overfitting/">"The Nature of Overfitting"</a>.</p>
+<p>One would think this would be safe and easy to asses in <a href="https://www.r-project.org"><code>R</code></a> using <a href="https://CRAN.R-project.org/package=ggplot2"><code>ggplot2::geom_smooth()</code></a>, but now we are not so sure.</p>
+<h1 id="our-example">Our Example</h1>
+<p>Let's first load our data and characterize it a bit</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1">d &lt;-<span class="st"> </span><span class="kw">read.csv</span>(</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">  <span class="st">&#39;sus_shape.csv&#39;</span>, </a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">  <span class="dt">strip.white =</span> <span class="ot">TRUE</span>, </a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">  <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="kw">head</span>(d)</a></code></pre></div>
+<pre><code>##   m      value
+## 1 3 -12.968296
+## 2 3  -5.522812
+## 3 3  -6.893872
+## 4 3  -5.522812
+## 5 3 -11.338718
+## 6 3 -10.208145</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">summary</span>(d)</a></code></pre></div>
+<pre><code>##        m              value        
+##  Min.   :   3.0   Min.   :-18.773  
+##  1st Qu.:  86.0   1st Qu.: -1.304  
+##  Median : 195.0   Median : -1.276  
+##  Mean   : 288.8   Mean   : -1.508  
+##  3rd Qu.: 436.0   3rd Qu.: -1.266  
+##  Max.   :1000.0   Max.   : -1.260</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">nrow</span>(d)</a></code></pre></div>
+<pre><code>## [1] 15545</code></pre>
+<p>Now let's try and look at this data. First we try a scatter plot with a low alpha, which gives us something similar to a density presentation.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">library</span>(ggplot2)</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb7-4" data-line-number="4">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb7-5" data-line-number="5">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="st">  </span><span class="kw">geom_point</span>(</a>
+<a class="sourceLine" id="cb7-7" data-line-number="7">    <span class="dt">alpha =</span> <span class="fl">0.005</span>, </a>
+<a class="sourceLine" id="cb7-8" data-line-number="8">    <span class="dt">color =</span> <span class="st">&#39;Blue&#39;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;point plot of data&quot;</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-4-1.png" /><!-- --></p>
+<p>Each <code>m</code> value has many different <code>value</code> measurements (representing repetitions of a noisy experiment). Frankly the above is not that legible, so we need tools to try and summarize it in the region we are interested in (<code>value</code> near <code>-1.25</code>).</p>
+<h1 id="trying-default-smoothing">Trying Default Smoothing</h1>
+<p>Let's run a default smoothing line through this data to try to get the overall relation.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_smooth</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;suspect shape in smoothing (default)&quot;</span>)</a></code></pre></div>
+<pre><code>## `geom_smooth()` using method = &#39;gam&#39; and formula &#39;y ~ s(x, bs = &quot;cs&quot;)&#39;</code></pre>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-5-1.png" /><!-- --></p>
+<p>This graph appears to imply some sort of oscillation or structure in the relation between mean <code>value</code> and <code>m</code>. We are pretty sure there is no such structure, and this is an artifact of the smoothing method. This defect is why we did not use <code>ggplot2::geom_smooth()</code> in our note on training set size.</p>
+<p>We <em>did</em> see a warning, but we believe this is just telling us which default values were used, and not indicating the above pathology was detected.</p>
+<p>At this point we are in a pickle. We had theoretical reasons to believe the data is a monotone increasing in <code>m</code> trend, with mean-zero noise that decreases with larger <code>m</code>. The graph doesn't look like that. So our understanding or theory could be wrong, or the graph didn't faithfully represent the data. The graph had been intended as a <em>very</em> small step in larger work. Re-examining the intricacies of what is the default behavior of this graphing software was <em>not</em> our intended task. We had been doing some actual research on the data.</p>
+<p>Now have a second problem: is this unexpected structure in our data, or a graphing artifact? The point is: when something appears to work one can, with some risk, move on quickly; when something appears to not work in a surprising way, you end up with a lot of additional required investigation. This investigation is the content of this note, like it or not. Also in some loud <code>R</code> circles, one has no choice but to try "the default <code>ggplot2::geom_smooth()</code> graph", otherwise one is pilloried for "not knowing it."</p>
+<p>We can try switching the smoothing method to see what another smoothing method says. Let's try <code>loess</code>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb10-3" data-line-number="3">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">&#39;loess&#39;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;suspect shape in smoothing (loess)&quot;</span>)</a></code></pre></div>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-6-1.png" /><!-- --></p>
+<p>Now we have a different shape. At most one of these (and in fact neither) is representative of the data. There is, again, a warning. It appears, again, to be a coding style guide- and not detection of the issue at hand.</p>
+<h1 id="looking-again">Looking Again</h1>
+<p>Let's try a simple grouped box plot. We will group <code>m</code> into ranges to get more aggregation.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1">d<span class="op">$</span>m_grouped &lt;-<span class="st"> </span><span class="kw">formatC</span>(</a>
+<a class="sourceLine" id="cb12-2" data-line-number="2">  <span class="kw">round</span>(d<span class="op">$</span>m<span class="op">/</span><span class="dv">50</span>)<span class="op">*</span><span class="dv">50</span>, </a>
+<a class="sourceLine" id="cb12-3" data-line-number="3">  <span class="dt">width =</span> <span class="dv">4</span>, </a>
+<a class="sourceLine" id="cb12-4" data-line-number="4">  <span class="dt">format =</span> <span class="st">&quot;d&quot;</span>, </a>
+<a class="sourceLine" id="cb12-5" data-line-number="5">  <span class="dt">flag =</span> <span class="st">&quot;0&quot;</span>)</a>
+<a class="sourceLine" id="cb12-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb12-7" data-line-number="7"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb12-8" data-line-number="8">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb12-9" data-line-number="9">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m_grouped, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb12-10" data-line-number="10"><span class="st">  </span><span class="kw">geom_boxplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb12-11" data-line-number="11"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, </a>
+<a class="sourceLine" id="cb12-12" data-line-number="12">                                   <span class="dt">vjust =</span> <span class="fl">0.5</span>, </a>
+<a class="sourceLine" id="cb12-13" data-line-number="13">                                   <span class="dt">hjust=</span><span class="dv">1</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb12-14" data-line-number="14"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;m-grouped bar chart, no obvious plotting artifacts.&quot;</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-7-1.png" /><!-- --></p>
+<p>For legibility, we repeat these graphs zooming in to the area under disagreement. We are using <code>coord_cartesian()</code> to zoom in, so as to try and not change the underlying graphing calculation.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1">zoom &lt;-<span class="st"> </span><span class="kw">coord_cartesian</span>(<span class="dt">xlim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">500</span>), <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">1.5</span>, <span class="dv">-1</span>)) </a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_smooth</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="st">  </span>zoom <span class="op">+</span></a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;suspect shape in smoothing (default, zoomed)&quot;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb14-7" data-line-number="7"><span class="st">  </span><span class="kw">geom_hline</span>(</a>
+<a class="sourceLine" id="cb14-8" data-line-number="8">    <span class="dt">yintercept =</span> <span class="kw">max</span>(d<span class="op">$</span>value), </a>
+<a class="sourceLine" id="cb14-9" data-line-number="9">    <span class="dt">color =</span> <span class="st">&#39;red&#39;</span>, </a>
+<a class="sourceLine" id="cb14-10" data-line-number="10">    <span class="dt">linetype =</span> <span class="dv">2</span>)</a></code></pre></div>
+<pre><code>## `geom_smooth()` using method = &#39;gam&#39; and formula &#39;y ~ s(x, bs = &quot;cs&quot;)&#39;</code></pre>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-9-1.png" /><!-- --></p>
+<p>This crossing above <code>-1.0</code> is very suspicious, as we have <code>max(d$value)</code> = -1.2600449. We have annotated this with the horizontal red dashed line.</p>
+<p>And the entirety of the <code>loess</code> hump is also a plotting artifact, also completely out of the observed data range.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb16-2" data-line-number="2">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb16-3" data-line-number="3">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb16-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_smooth</span>(<span class="dt">method =</span> <span class="st">&#39;loess&#39;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb16-5" data-line-number="5"><span class="st">  </span>zoom <span class="op">+</span></a>
+<a class="sourceLine" id="cb16-6" data-line-number="6"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;suspect shape in smoothing (loess, zoomed)&quot;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb16-7" data-line-number="7"><span class="st">  </span><span class="kw">geom_hline</span>(</a>
+<a class="sourceLine" id="cb16-8" data-line-number="8">    <span class="dt">yintercept =</span> <span class="kw">max</span>(d<span class="op">$</span>value), </a>
+<a class="sourceLine" id="cb16-9" data-line-number="9">    <span class="dt">color =</span> <span class="st">&#39;red&#39;</span>, </a>
+<a class="sourceLine" id="cb16-10" data-line-number="10">    <span class="dt">linetype =</span> <span class="dv">2</span>)</a></code></pre></div>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-10-1.png" /><!-- --></p>
+<p>The zoomed-in version of the box plot shows the noisy monotone asymptotic shape we expected for the original experiment that produced this data.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb18-2" data-line-number="2">  <span class="dt">data =</span> d[d<span class="op">$</span>m <span class="op">&lt;=</span><span class="st"> </span><span class="dv">500</span>, ],</a>
+<a class="sourceLine" id="cb18-3" data-line-number="3">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m_grouped, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb18-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_boxplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb18-5" data-line-number="5"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">1.5</span>, <span class="fl">-1.2</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb18-6" data-line-number="6"><span class="st">  </span><span class="kw">theme</span>(</a>
+<a class="sourceLine" id="cb18-7" data-line-number="7">    <span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(</a>
+<a class="sourceLine" id="cb18-8" data-line-number="8">      <span class="dt">angle =</span> <span class="dv">90</span>, </a>
+<a class="sourceLine" id="cb18-9" data-line-number="9">      <span class="dt">vjust =</span> <span class="fl">0.5</span>, </a>
+<a class="sourceLine" id="cb18-10" data-line-number="10">      <span class="dt">hjust=</span><span class="dv">1</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb18-11" data-line-number="11"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;m-grouped bar chart, no obvious plotting artifacts, zoomed&quot;</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-11-1.png" /><!-- --></p>
+<p>The point plot, when zoomed, qualitatively agrees with the boxplot.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb19-2" data-line-number="2">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m, <span class="dt">y =</span> value)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">alpha =</span> <span class="fl">0.05</span>, <span class="dt">color =</span> <span class="st">&#39;Blue&#39;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-5" data-line-number="5"><span class="st">  </span><span class="kw">coord_cartesian</span>(</a>
+<a class="sourceLine" id="cb19-6" data-line-number="6">    <span class="dt">xlim =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">500</span>), </a>
+<a class="sourceLine" id="cb19-7" data-line-number="7">    <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">1.5</span>, <span class="fl">-1.25</span>))  <span class="op">+</span></a>
+<a class="sourceLine" id="cb19-8" data-line-number="8"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;point plot of data, zoomed&quot;</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-12-1.png" /><!-- --></p>
+<h1 id="directly-calling-loesslowess">Directly calling <code>loess</code>/<code>lowess</code></h1>
+<p><code>ggplot2</code> is documented as using <code>loess</code>, which in turn is documented as a newer adapter for <code>lowess</code> "with different defaults" then <code>loess</code>. However, the documented exposed controls on these two methods seem fairly disjoint.</p>
+<p>That being said <code>loess</code> (without a 'w', as in "Uruguay") called directly with default arguments shows the same chimeric artifact.</p>
+<p><img src="https://winvector.files.wordpress.com/2021/01/7cb18.jpg"></p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" data-line-number="1">zoom2 &lt;-<span class="st"> </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">1.5</span>, <span class="dv">-1</span>)) </a></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1">d<span class="op">$</span>loess &lt;-<span class="st"> </span><span class="kw">loess</span>(value <span class="op">~</span><span class="st"> </span>m, <span class="dt">data =</span> d)<span class="op">$</span>fitted</a>
+<a class="sourceLine" id="cb21-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb21-3" data-line-number="3"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb21-4" data-line-number="4">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb21-5" data-line-number="5">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-6" data-line-number="6"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y =</span> loess)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-7" data-line-number="7"><span class="st">  </span><span class="kw">geom_point</span>(</a>
+<a class="sourceLine" id="cb21-8" data-line-number="8">    <span class="kw">aes</span>(<span class="dt">y =</span> value), </a>
+<a class="sourceLine" id="cb21-9" data-line-number="9">    <span class="dt">alpha =</span> <span class="fl">0.01</span>, </a>
+<a class="sourceLine" id="cb21-10" data-line-number="10">    <span class="dt">color =</span> <span class="st">&#39;Blue&#39;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-11" data-line-number="11"><span class="st">  </span>zoom2 <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_hline</span>(</a>
+<a class="sourceLine" id="cb21-13" data-line-number="13">    <span class="dt">yintercept =</span> <span class="kw">max</span>(d<span class="op">$</span>value), </a>
+<a class="sourceLine" id="cb21-14" data-line-number="14">    <span class="dt">color =</span> <span class="st">&#39;red&#39;</span>, </a>
+<a class="sourceLine" id="cb21-15" data-line-number="15">    <span class="dt">linetype =</span> <span class="dv">2</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb21-16" data-line-number="16"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&#39;direct loess (no w) call&#39;</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-14-1.png" /><!-- --></p>
+<p>Playing with arguments can suppress the artifact, but we still saw weird (but smaller) effects even with the suggested <code>degree = 1</code> alternate setting.</p>
+<p>Directly calling <code>lowess</code> (with a 'w', as in "answer") gives a more reasonable result out of the box.</p>
+<p><img src="https://winvector.files.wordpress.com/2021/01/images-1.jpeg"></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1">d<span class="op">$</span>lowess &lt;-<span class="st"> </span><span class="kw">lowess</span>(d<span class="op">$</span>m, d<span class="op">$</span>value)<span class="op">$</span>y</a>
+<a class="sourceLine" id="cb22-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb22-3" data-line-number="3"><span class="kw">ggplot</span>(</a>
+<a class="sourceLine" id="cb22-4" data-line-number="4">  <span class="dt">data =</span> d,</a>
+<a class="sourceLine" id="cb22-5" data-line-number="5">  <span class="dt">mapping =</span> <span class="kw">aes</span>(<span class="dt">x =</span> m)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-6" data-line-number="6"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">y =</span> lowess)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-7" data-line-number="7"><span class="st">  </span><span class="kw">geom_point</span>(</a>
+<a class="sourceLine" id="cb22-8" data-line-number="8">    <span class="kw">aes</span>(<span class="dt">y =</span> value), </a>
+<a class="sourceLine" id="cb22-9" data-line-number="9">    <span class="dt">alpha =</span> <span class="fl">0.01</span>, </a>
+<a class="sourceLine" id="cb22-10" data-line-number="10">    <span class="dt">color =</span> <span class="st">&#39;Blue&#39;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_hline</span>(</a>
+<a class="sourceLine" id="cb22-12" data-line-number="12">    <span class="dt">yintercept =</span> <span class="kw">max</span>(d<span class="op">$</span>value), </a>
+<a class="sourceLine" id="cb22-13" data-line-number="13">    <span class="dt">color =</span> <span class="st">&#39;red&#39;</span>, </a>
+<a class="sourceLine" id="cb22-14" data-line-number="14">    <span class="dt">linetype =</span> <span class="dv">2</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb22-15" data-line-number="15"><span class="st">  </span><span class="kw">coord_cartesian</span>(</a>
+<a class="sourceLine" id="cb22-16" data-line-number="16">    <span class="dt">ylim =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">1.5</span>, <span class="fl">-1.25</span>)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-17" data-line-number="17"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&#39;direct lowess (with w) call&#39;</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-15-1.png" /><!-- --></p>
+<h1 id="simple-windowing">Simple Windowing</h1>
+<p>Simple methods from fields such as signal processing work well. For example, a simple square-window moving average appears to correctly tell the story. These are the methods I use, at the risk of being told I should have used <code>geom_smooth()</code>.</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" data-line-number="1"><span class="co"># requires development version 1.3.2</span></a>
+<a class="sourceLine" id="cb23-2" data-line-number="2"><span class="co"># remotes::install_github(&#39;WinVector/WVPlots&#39;)</span></a>
+<a class="sourceLine" id="cb23-3" data-line-number="3"><span class="kw">library</span>(WVPlots)  </a></code></pre></div>
+<pre><code>## Loading required package: wrapr</code></pre>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="kw">ConditionalSmoothedScatterPlot</span>(</a>
+<a class="sourceLine" id="cb25-2" data-line-number="2">  d,</a>
+<a class="sourceLine" id="cb25-3" data-line-number="3">  <span class="dt">xvar =</span> <span class="st">&#39;m&#39;</span>, </a>
+<a class="sourceLine" id="cb25-4" data-line-number="4">  <span class="dt">yvar =</span> <span class="st">&#39;value&#39;</span>, </a>
+<a class="sourceLine" id="cb25-5" data-line-number="5">  <span class="dt">point_color =</span> <span class="st">&quot;Blue&quot;</span>,</a>
+<a class="sourceLine" id="cb25-6" data-line-number="6">  <span class="dt">point_alpha =</span> <span class="fl">0.01</span>,</a>
+<a class="sourceLine" id="cb25-7" data-line-number="7">  <span class="dt">k =</span> <span class="dv">51</span>,</a>
+<a class="sourceLine" id="cb25-8" data-line-number="8">  <span class="dt">groupvar =</span> <span class="ot">NULL</span>, </a>
+<a class="sourceLine" id="cb25-9" data-line-number="9">  <span class="dt">title =</span> <span class="st">&#39;Width 51 square window on data (zoomed)&#39;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb25-10" data-line-number="10"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">ylim =</span> <span class="kw">c</span>(<span class="op">-</span><span class="fl">1.5</span>, <span class="fl">-1.25</span>)) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-11" data-line-number="11"><span class="st">  </span><span class="kw">geom_hline</span>(</a>
+<a class="sourceLine" id="cb25-12" data-line-number="12">    <span class="dt">yintercept =</span> <span class="kw">max</span>(d<span class="op">$</span>value), </a>
+<a class="sourceLine" id="cb25-13" data-line-number="13">    <span class="dt">color =</span> <span class="st">&#39;red&#39;</span>, </a>
+<a class="sourceLine" id="cb25-14" data-line-number="14">    <span class="dt">linetype =</span> <span class="dv">2</span>)</a></code></pre></div>
+<p><img src="Sus_Shape_files/figure-gfm/unnamed-chunk-16-1.png" /><!-- --></p>
+<p>The fact that the hard window yields a jagged curve gives an indication of the amount of noise in each region of the graph.</p>
+<h1 id="conclusion">Conclusion</h1>
+<p>Large data sets are inherently illegible. So we rely on summaries and aggregations to examine them. When these fail we may not always be in a position to notice the distortion, and this can lead to problems.</p>
+<p>Many of the above default summary presentations were deeply flawed and showed chimerical artifacts not in the data being summarized. Starting a research project to understand the nature of the above humps and oscillations would be fruitless, as they are not in the data, but instead artifacts of the plotting and analysis software.</p>
+<p>As a consultant this is disturbing: I end up spending time on debugging the tools, and not on the client's task.</p>
+<p>The above were not flaws in <code>ggplot2</code> itself, but in the use of the <code>gam</code> and <code>loess</code> smoothers, which are likely introducing the artifacts by trying to enforce certain curvature conditions not in the data. We are essentially looking at something akin to Gibbs' phenomenon or ringing. This could trip up the data scientist or the data analyst without a background in signal analysis.</p>
+<p>This sort of problem reveals the lie in the typical "data scientist &gt;&gt; statistician &gt;&gt; data analyst" or "statistics are always correct in <code>R</code>, and never correct in <code>Python</code>" snobberies. In fact a data analyst would get the summary shapes right, as presentation of this sort is one of their specialties.</p>
