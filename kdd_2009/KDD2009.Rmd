@@ -32,7 +32,7 @@ d <- read.table(paste(dir, 'orange_small_train.data.gz', sep = '/'),  	# Note: 1
                                                 
 churn <- read.table(paste(dir, 'orange_small_train_churn.labels.txt', sep = '/'),
    header = FALSE, sep = '\t') 	# Note: 3 
-d$churn <- churn$V1 	# Note: 4 
+d$churn <- ifelse(churn$V1 > 0, 1, 0) 	# Note: 4 
 
 set.seed(729375) 	# Note: 5 
 rgroup <- base::sample(c('train', 'test'), 	# Note: 6 
