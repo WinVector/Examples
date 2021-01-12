@@ -358,21 +358,22 @@ yet the tree based method said `x1` *is* an important variable. This
 argues against `x1` having a simple intrinsic value independent of
 modeling method.
 
-There *is* a intrinsic metric available via information theory, which we
-will quickly discuss in the next section.
+There *is* a intrinsic metric available via algorithmic information
+theory, which we will quickly discuss in the next section.
 
-Information Theory
-------------------
+Algorithmic Information Theory
+------------------------------
 
 A way to eliminate context in variable evaluation: assume one can
 enumerate out all possible contexts. I.e. a set of variables is useful
 if there is *any* possible model that can use them effectively. This
-essentially gets you to information theory. Unfortunately this also is
-not actionable as you typically don’t have enough power to compute the
-value of variable in this way. Also even if an external system informed
-you of the intrinsic information content of the variables, you may not
-be able to use such advice, unless this oracle also supplied witnessing
-transformations and fit models.
+essentially gets you to algorithmic information theory (the essentially
+un-realizable Solomonoff–Kolmogorov–Chaitin complexity variation).
+Unfortunately this also is not actionable as you typically don’t have
+enough power to compute the value of variable in this way. Also even if
+an external system informed you of the intrinsic information content of
+the variables, you may not be able to use such advice, unless this
+oracle also supplied witnessing transformations and fit models.
 
 Conclusion
 ----------
