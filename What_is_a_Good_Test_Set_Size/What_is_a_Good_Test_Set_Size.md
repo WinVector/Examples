@@ -349,7 +349,7 @@ Let’s define:
 -   **fit model ideal loss**: the loss of the model fit on our fixed
     training data when evaluated on the entire (unobserved) population
     all samples are being drawn from.
--   “ideal model ideal loss” the loss of a model fit using our
+-   **ideal model ideal loss** the loss of a model fit using our
     procedures on the entire (unobserved) population all samples are
     being drawn from, and then evaluated on this same population.
 
