@@ -11,7 +11,8 @@ or black. For a single deck version of this game, one can vary ones bets
 to exploit knowledge of which cards remain in the deck.
 
 A video of me playing the game can be found
-[here](https://youtu.be/6xhjbgREGDA).
+[here](https://youtu.be/6xhjbgREGDA), and the blog announcement is
+[here](https://win-vector.com/2021/02/25/kelly-thorp-betting/).
 
 Let’s show how we develop such a betting stategy.
 
