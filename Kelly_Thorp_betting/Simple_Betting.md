@@ -13,9 +13,6 @@ to exploit knowledge of which cards remain in the deck.
 A video of me playing the game can be found
 [here](https://youtu.be/6xhjbgREGDA).
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/6xhjbgREGDA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
-</iframe>
-
 Let’s show how we develop such a betting stategy.
 
 First we import packages and initialize state.
