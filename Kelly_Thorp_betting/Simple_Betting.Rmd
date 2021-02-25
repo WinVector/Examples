@@ -1,0 +1,331 @@
+---
+title: "simple_betting"
+output: github_document
+---
+
+I would like to write about [Thorp](https://en.wikipedia.org/wiki/Edward_O._Thorp) style card counting using the [Kelly betting criterion](https://en.wikipedia.org/wiki/Kelly_criterion).
+
+The example I will explore is: betting if the next card in a deck is red or black. For a single deck version of this game,
+one can vary ones bets to exploit knowledge of which cards remain in the deck.
+
+A video of me playing the game can be found [here](https://youtu.be/6xhjbgREGDA).
+
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6xhjbgREGDA" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+Let's show how we develop such a betting stategy.
+
+First we import packages and initialize state.
+
+```{r}
+library(cdata)
+library(ggplot2)
+library(rqdatatable)
+
+set.seed(2021)
+```
+
+We define our betting function. This function takes `na`, the number of `A`-cards remaining, `nb` the number of `B`-cards
+remaining, and `stake` our remaining dollars. It returns the Kelly bet, which in this case is `2 (pa - 1/2)` where `pa` is the
+probability of drawing an `A`-card, which in turn equals `na / (na + nb)`.
+
+```{r}
+bet_Kelly <- function(na, nb, stake) {
+  sign <- 1
+  if(na < nb) {
+    sign <- -1
+    tmp <- na
+    na <- nb
+    nb <- tmp
+  }
+  ideal_bet_fraction <- 0
+  bet <- 0
+  if((stake > 1) && (na != nb) && ((na + nb) > 0)) {
+     ideal_bet_fraction <- 2 * (na / (na + nb) - 1/2)
+     bet <- min(stake - 1, round(stake * ideal_bet_fraction))
+  }
+  return(list(bet = sign * bet, ideal_bet_fraction = sign * ideal_bet_fraction))
+}
+```
+
+With this function we can
+write down our betting card:
+the percent of stake bets as a function of remaining `a`s and `b`s.
+
+```{r}
+n_seq <- seq(0, 26, by = 2)
+strategy_table <- matrix(data = NA, nrow = length(n_seq), ncol = length(n_seq))
+for(nai in seq_len(length(n_seq))) {
+  na <- n_seq[nai]
+  for(nbi in seq_len(length(n_seq))) {
+    nb <- n_seq[nbi]
+    strategy_table[nai, nbi] = bet_Kelly(na, nb, 100)$bet
+  }
+}
+rownames(strategy_table) <- paste0('na~', n_seq)
+colnames(strategy_table) <- paste0('nb~', n_seq)
+knitr::kable(strategy_table)
+```
+
+Let's see this strategy in (simulated) action.
+
+We define evaluation functions that draw the cards and simulate the play.
+
+```{r}
+simulate_draws <-  function(cards, steps = cards, replace = FALSE) {
+  d <- data.frame(
+    step = seq_len(steps + 1) - 1,
+    na = floor(cards/2)
+  )
+  d$nb <- cards - d$na
+  d$draw_is_a <- NA
+  for(i in seq_len(steps)) {
+    if(!replace) {
+      d$draw_is_a[i] <- runif(n = 1) <= d$na[i] / (d$na[i] + d$nb[i])
+    } else {
+      d$draw_is_a[i] <- runif(n = 1) <= 0.5
+    }
+    if(d$draw_is_a[i]) {
+      d$na[i+1] <- d$na[i] - 1
+      d$nb[i+1] <- d$nb[i]
+    } else {
+      d$na[i+1] <- d$na[i]
+      d$nb[i+1] <- d$nb[i] - 1
+    }
+  }
+  return(d)
+}
+
+simulate_play <- function(
+  d,
+  stake,
+  bet_fn) {
+  d$stake <- stake
+  d$bet <- NA
+  d$ideal_bet_fraction <- NA
+  for(i in seq_len(nrow(d)-1)) {
+    beti <- bet_fn(na = d$na[i], nb = d$nb[i], stake = d$stake[i])
+    d$bet[i] <- beti$bet
+    d$ideal_bet_fraction[i] <- beti$ideal_bet_fraction
+    if(d$bet[i] != 0) {
+      if(abs(d$bet[i]) > d$stake[i]) {
+        stop("bet more than stake")
+      }
+      d$stake[i+1] <- d$stake[i] + 
+        sign(d$bet[i]) * ifelse(d$draw_is_a[i], 1, -1) * abs(d$bet[i])
+    } else {
+      d$stake[i+1] <- d$stake[i]
+    }
+  }
+  return(d)
+}
+```
+
+We show a couple of example plays.
+
+```{r}
+simulate_draws(cards = 52) %.>%
+  simulate_play(., stake = 100, bet_fn = bet_Kelly) %.>%
+  knitr::kable(.)
+```
+
+```{r}
+simulate_draws(cards = 52) %.>%
+  simulate_play(., stake = 100, bet_fn = bet_Kelly) %.>%
+  knitr::kable(.)
+```
+
+
+Our Thorp-style count based approximate betting rule can be found by estimating
+what fraction of a stake simulates the exact Kelly rule on average. I chose
+to use a linear model via `lm()` to get the approximation.
+
+
+```{r}
+# collect runs
+simulations <- lapply(
+  seq_len(1000),
+  function(i) {
+    v <- simulate_draws(cards = 52) %.>%
+    simulate_play(., stake = 100, bet_fn = bet_Kelly)
+    return(v)
+  })
+
+# buld observed delta count to bet tables
+obs <- lapply(
+  simulations,
+  function(s) {
+    return(data.frame(na = s$na, nb = s$nb, delta = s$na - s$nb, bet = s$bet))
+  })
+obs <- do.call(rbind, obs)
+model <- lm(bet ~ 0 + delta, data = obs)
+mult <- round(model$coefficients[[1]])
+mult
+```
+
+The result is: bet about `r mult` percent of your stake for each count of imbalance (explained in the
+[video](https://youtu.be/6xhjbgREGDA)). In the video we use a lower 5 percent target stake bet. Under-betting
+is less dangerous than over-betting, and the under-betting strategy "half Kelly" is actually quite common in 
+finance.
+
+We instantiate the simplified betting rule, and some over and under betting variations.
+
+```{r}
+bet_simple <- function(stake_mult) {
+  force(stake_mult)
+  return(
+    function(na, nb, stake) {
+      sign <- 1
+      if(na < nb) {
+        sign <- -1
+        tmp <- na
+        na <- nb
+        nb <- tmp
+      }
+      ideal_bet_fraction <- 0
+      bet <- 0
+      if((stake > 1) && (na != nb) && ((na + nb) > 0)) {
+         ideal_bet_fraction <- stake_mult * (na - nb) / 100
+         bet <- min(stake - 1, round(stake * ideal_bet_fraction))
+      }
+      return(list(bet = sign * bet, ideal_bet_fraction = sign * ideal_bet_fraction))
+    })
+}
+
+bet_simple_est_mult <- bet_simple(mult)
+bet_simple_10 <- bet_simple(10)
+bet_bet_simple_10 <- bet_simple(5)
+```
+
+We show a couple of example plays.
+
+```{r}
+simulate_draws(cards = 52) %.>%
+  simulate_play(., stake = 100, bet_fn = bet_simple_est_mult) %.>%
+  knitr::kable(.)
+```
+
+```{r}
+simulate_draws(cards = 52) %.>%
+  simulate_play(., stake = 100, bet_fn = bet_simple_est_mult) %.>%
+  knitr::kable(.)
+```
+
+And we define some over and under Kelly betting functions.
+
+```{r}
+lambda_Kelly <- function(lambda) {
+  force(lambda)
+  return(
+    function(na, nb, stake) {
+      bk <- bet_Kelly(na = na, nb = nb, stake = stake)
+      return(list(
+        bet = sign(bk$bet) * min(stake - 1, round(lambda * abs(bk$bet))),
+        ideal_bet_fraction = bk$ideal_bet_fraction))
+    })
+}
+```
+
+We now simulate all the betting strategies on the same card draws.
+
+```{r}
+fns = list(
+  # bet_Kelly = bet_Kelly,
+  bet_simple_est_mult = bet_simple_est_mult,
+  bet_simple_10 = bet_simple(10),
+  bet_simple_5 = bet_simple(5),
+  f_0.50_Kelly = lambda_Kelly(0.5),
+  f_0.75_Kelly = lambda_Kelly(0.75),
+  f_1.00_Kelly = lambda_Kelly(1.0),
+  f_1.50_Kelly = lambda_Kelly(1.5),
+  f_2.00_Kelly = lambda_Kelly(2.0)
+)
+
+runs <- lapply(
+  seq_len(1000),
+  function(i) {
+    d <- simulate_draws(cards = 52)
+    sims <- lapply(
+      fns,
+      function(f) {
+        simulate_play(d, stake = 100, bet_fn = f)
+      })
+    return(as.data.frame(lapply(
+      sims,
+      function(d) {
+        d$stake[nrow(d)]
+      })))
+  })
+runs <- do.call(rbind, runs)
+
+summary(runs)
+```
+
+WE plot the distribution of results.
+
+```{r}
+cols <- colnames(runs)
+
+runs %.>%
+  project_se(
+    .,
+    paste0('Sharpe_ratio_', cols, ' := mean(', cols, ') / sd(', cols, ')'),
+    grouping = c()) %.>%
+  knitr::kable(.)
+
+# prepare data to plot
+# some of the ideas are here:
+# https://win-vector.com/2021/02/20/plotting-multiple-curves-in-python/
+plot_frame <- pivot_to_blocks(
+  runs, 
+  nameForNewKeyColumn = 'strategy', 
+  nameForNewValueColumn = 'value', 
+  columnsToTakeFrom = cols)
+
+ggplot(
+  data = plot_frame,
+  aes(x = value, color = strategy)) +
+  geom_density() + 
+  geom_vline(xintercept = 100, linetype = 2) + 
+  xlim(min(plot_frame$value), quantile(plot_frame$value, 0.99)) +
+  ggtitle("return distribution by betting strategy")
+```
+
+Look at expected log-returns, what Kelly is designed to optimize.
+
+```{r}
+runs_ln <- runs %.>% 
+  extend_se(., 
+            paste0('ln_', cols, ' := log(', cols, ')')) %.>%
+  drop_columns(., cols)
+
+summary(runs_ln)
+```
+
+
+Simulate runs where sampling is with replacement, so no
+profitable strategy is possible.
+
+```{r}
+bad_runs <- lapply(
+  seq_len(1000),
+  function(i) {
+    d <- simulate_draws(cards = 52, replace = TRUE)  # break relation of count to probability
+    sims <- lapply(
+      fns,
+      function(f) {
+        simulate_play(d, stake = 100, bet_fn = f)
+      })
+    return(as.data.frame(lapply(
+      sims,
+      function(d) {
+        d$stake[nrow(d)]
+      })))
+  })
+bad_runs <- do.call(rbind, bad_runs)
+
+summary(bad_runs)
+```
+
+Notice we confirm the strategies do not work in this case.
+
