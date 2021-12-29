@@ -1,0 +1,321 @@
+---
+title: "Exploring the XI Correlation Coefficient"
+author: "Nina Zumel"
+date: "12/27/2021"
+output: github_document
+---
+
+Recently, we've been reading about a new correlation coefficient, $\xi$ ("xi"),
+which was introduced by Professor Sourav Chatterjee in his paper, ["A New Coefficient of Correlation"](https://arxiv.org/abs/1909.10140).
+
+The $\xi$ coefficient has the following properties:
+
+* If $y$ is a function of $x$, then $\xi$ goes to 1 asymptotically as $n$ (the number of data points, or the length of the vectors $x$ and $y$) goes to Infinity.
+
+* If $y$ and $x$ are independent, then $\xi$ goes to 0 asymptotically as $n$ goes to Infinity.
+
+Unlike traditional correlation coefficients, $\xi$ does not assume that the relationship between $x$ and $y$ is linear (or "linear-ish"); in principle, it can be any functional relationship. This sounds useful! Note, however, that $\xi$ is **not** symmetric, and that $\xi$ has no concept of "anti-correlation." The value of $\xi$ can be negative, but this negativity does not have 
+any innate significance (other than being "close to zero," as we will discuss later).
+
+So perhaps, rather than thinking of $\xi$ as a "correlation," we might find it more useful
+to think of it as a measure of *dependence*: specifically, the degree to which $y$ is dependent on $x$.
+
+In this post, we'll run through some informal experiments to try to get a sense of what
+different values of $\xi$ might mean. 
+
+The questions we are interested in are:
+
+* How large does $n$ have to be before we observe the asymptotic estimate?
+* What happens when the relationship between $x$ and $y$ is noisy?
+* Can we put a meaningful interpretation on values of $\xi$ that are not 0 or 1?
+
+We'll do our experiments in R, using the `calculateXI()` function from the 
+[`XICOR`](https://CRAN.R-project.org/package=XICOR) package.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(XICOR)
+library(ggplot2)
+library(wrapr)
+library(dplyr)
+```
+
+
+## The Base Case: Functional relationship between $x$ and $y$
+
+We'll take as our baseline the case $y = \cos(x)$, over two periods.
+We chose this function because it's a simple case that linear correlation 
+coefficients can't handle: there is a clear relationship between $y$ and $x$,
+but it is highly non-monotonic (let alone linear). In fact, for our selected
+range, the linear correlation between $x$ and $\cos(x)$ is zero.
+
+
+```{r}
+
+base_case = function(nrows) {
+  x = seq(from=-2*pi, to=2*pi, length.out=nrows)
+  y = cos(x)
+  data.frame(x=x, y=y)
+}
+
+df = base_case(200)
+
+ggplot(df, aes(x=x, y=y)) + 
+  geom_line() + 
+  ggtitle(paste('Base case: y = cos(x), Pearson correlation =', 
+                format(cor(df$x, df$y), digits=3) ))
+
+```
+
+## The Test Case: Functional but noisy relationship between $x$ and $y$
+
+Now let's add some noise to the base case; the noise is normally distributed with zero mean
+and standard deviation $\epsilon$. We'll look at $\epsilon$ in
+the range from 0.01 (very low amplitude noise) to 1 (high amplitude noise, relative
+to the range of $\cos(x)$). We'll also add the noiseless case, and the completely
+uncorrelated case, where $y$ is normally distributed noise, with no relationship to $x$
+whatsoever.
+
+```{r}
+set.seed(28122021)
+
+noisy_simple_set = function(nrows, eps) {
+  x = seq(from=-2*pi, to=2*pi, length.out=nrows)
+  y = cos(x) + rnorm(nrows, sd=eps)
+  data.frame(x=x, y=y)
+}
+
+nocorr_set = function(nrows) {
+  x = seq(from=-2*pi, to=2*pi, length.out=nrows)
+  y = rnorm(nrows)
+  data.frame(x=x, y=y)
+}
+
+epsvec = c(0, 0.01, 0.1, 0.5, 1)
+outlist = lapply(epsvec, 
+                 function(ep) {
+                   df = noisy_simple_set(200, ep); 
+                   df$eps = as.character(ep)
+                   df
+                 })
+pframe = data.table::rbindlist(outlist)
+
+indf = nocorr_set(200)
+indf$eps = "uncorrelated"
+
+pframe = rbind(pframe, indf)
+
+ggplot(pframe, aes(x=x, y=y)) + 
+  geom_point(size=0.5) +
+  facet_wrap(~eps, labeller=label_both, nrow=2) + 
+  ggtitle('y = cos(x) with varying amounts of noise')
+
+
+```
+
+In addition to varying $\epsilon$, we'll also vary $n$, the number of data points,
+so that we can examine the relationship between $\xi$ and the amount of available data.
+
+We'll also estimate the asymptotic value of $\xi$ (as $n$ gets larger) for each situation.
+
+The R code to replicate these experiments is [here](LINK). We use the function
+`XICOR::calculateXI()` to calculate $\xi$:
+
+```
+# By default, the function sets a random seed
+# for reproducible results. seed=NULL
+# reinitializes the seed. It's not really what
+# I want, but <shrug>.
+
+xi = calculateXI(df$x, df$y, seed=NULL)
+
+```
+Here are the results:
+
+```{r}
+nvec = seq(from = 5, to = 2000, by= 5)
+epsvec = c(0, 0.01, 0.1, 0.5, 1)
+N = length(nvec)
+M = length(epsvec)
+
+xi = function(df, nrows, epsval) {
+  data.frame(n = nrows, eps = epsval, 
+             xi = calculateXI(df$x, df$y, seed=NULL))
+}
+
+# I'm sure there's a better way to do this, but this works
+outlist = vector(mode='list', length=N*M)
+index=0
+for(i in 1:N) {
+  for(j in 1:M) {
+    nrows = nvec[i]
+    eps = epsvec[j]
+    index=index+1
+    
+    df = noisy_simple_set(nrows, eps)
+    outlist[[index]] = xi(df, nrows, eps)
+  }
+}
+
+pframe = data.table::rbindlist(outlist)
+pframe$eps = as.character(pframe$eps)
+
+# the uncorrelated case
+xivec = numeric(N)
+for(i in 1:N) {
+  d = nocorr_set(nvec[i])
+  xivec[i] = calculateXI(d$x, d$y, seed=NULL)
+}
+
+pframe0 = data.frame(n = nvec, xi = xivec)
+pframe0$eps = "uncorrelated"
+
+pframe = rbind(pframe, pframe0)
+
+# drop the initial values (n < 500, say), and 
+# get the trimmed averages
+means = pframe %>%
+  filter(n > 500) %>%
+  group_by(eps) %>%
+  summarize(mxi = mean(xi)) %>%
+  rename(xi = mxi) %>%
+  as.data.frame()
+
+ggplot(pframe, aes(x=n, y=xi, color=eps)) + 
+  geom_line() + 
+  geom_hline(data = means, 
+             aes(yintercept = xi, color=eps),
+             linetype=2) + 
+  scale_color_brewer(palette='Dark2') + 
+  ggtitle('XI as a function of n, y = cos(x) + eps')
+
+knitr::kable(means, digits=3, caption='Approximate asymptotic values of XI')
+
+```
+
+From the noiseless and low noise ($\epsilon = 0.01$) cases, we can see that $\xi$
+asymptotes to a value very near 1 for $n > 500$. In fact, I'd say that $n$ larger
+than about 250 is sufficient to get a good estimate of $\xi$ in the situations 
+that we are looking at. 
+
+As the relationship between $x$ and $y$ gets noisier, $\xi$ gets smaller, but
+still converges to a value bounded away from zero. The general interpretation
+seems to be that the closer $\xi$ is to 1, the stronger the functional relationship
+between $x$ and $y$ --- but the important thing is that $\xi$ be bounded away from zero (and positive).
+
+In the uncorrelated case, $\xi$ converges to a value very near zero.
+
+## The uncorrelated case
+
+Let's take a closer look at the uncorrelated case as $n \to \infty$.
+
+```{r}
+
+ggplot(pframe0, aes(x=n, y=xi)) + 
+  geom_line() + 
+  ggtitle('XI as a function of n, uncorrelated case')
+
+```
+
+The first observation is that $\xi$ is negative about half the time in this experiment. Overall, $\xi$ varies symmetrically, with the bandwidth of the variation decreasing 
+as $n$ increases. This is consistent with Theorem 2.1 of Professor Chatterjee's paper:
+
+> Suppose that $X$ and $Y$ are independent and $Y$ is continuous. Then $\sqrt n\xi_n(X,Y) \to N(0, 2/5)$ in distribution as $n \to \infty$
+
+Prof. Chatterjee goes on to say, "It [the convergence] is roughly valid even for $n$ 
+as small as 20." Looking at the chart above, I might still stick to $n$ larger than about
+250 or so.
+
+## Significance tests
+
+Of course, an actual significance test is more precise than eyeballing a graph.
+The `XICOR::xicor()` function provides a significance 
+test for $\xi$, under the null hypothesis that $x$ and $y$ are independent. 
+
+Let's try it on some large and small noisy data sets.
+
+```{r echo=TRUE}
+
+# function to pretty print the results from xicor()
+# pval is the threshold for rejecting 
+# the null hypothesis
+xitest = function(x, y, pval) {
+  xc = xicor(x, y, pvalue=TRUE)
+  if(xc$pval < pval) 
+    decision = 'REJECT'
+  else
+    decision = "DON'T REJECT"
+  
+  print(paste('xi =', xc$xi, ', p =', xc$pval))
+  print(paste(decision, 'independence of x and y'))
+  
+}
+
+# x and y uncorrelated
+# tiny dataset, bigger dataset
+uc_10 = nocorr_set(10)
+uc_500 = nocorr_set(500)
+
+# y noisily dependent on x
+# tiny dataste, bigger dataset
+noisy_10 = noisy_simple_set(10, eps=1)
+noisy_500 = noisy_simple_set(500, eps=1)
+
+# threshold for rejecting null hypothesis
+p = 0.025
+```
+
+### $x$ and $y$ uncorrelated
+
+Here, we don't want to reject the hypothesis that $x$ and $y$ are independent.
+
+```{r echo=TRUE}
+xitest(uc_10$x, uc_10$y, p)
+xitest(uc_500$x, uc_500$y, p)
+```
+
+### $y$ noisily dependent on $x$
+
+Here, we'd like to reject the hypothesis that $x$ and $y$ are independent.
+
+```{r echo=TRUE}
+xitest(noisy_10$x, noisy_10$y, p)
+xitest(noisy_500$x, noisy_500$y, p)
+```
+
+Notice that the `xicor` significance test didn't successfully identify the dependency between
+$x$ and $y$ in the tiny ($n$ = 10) data set, suggesting $n$ less than 10 may be too small to guarantee convergence to $\xi$'s asymptotic value with any statistical certainty.
+
+## So what does this all mean?
+
+Informally speaking:
+
+* If $n$ is large enough (let's say greater than 250), and $\xi$ is large enough (say, 
+greater than 0.25), then one can probably safely assume that $y$ is dependent on $x$.
+Note that I am picking the values for "large enough" by unscientifically eyeballing the graphs above.
+
+* The closer to 1 that $\xi$ is (for large enough $n$), the stronger the dependency.
+
+* If $n$ and $\xi$ are fairly small, one should use the $\xi$-based test of independence
+to decide.
+
+Overall, the $\xi$ correlation coefficient seems to be an effective and fairly general
+score for determining the directional dependency of two variables. While the paper does
+admit that the $\xi$-based significance test for independence is not as powerful (in
+the statistical sense) as more "linear-ish" methods when the relationship between two variables is smooth and non oscillatory, the method does excel at identifying oscillatory and highly non-monotonic dependencies.
+
+To quote the paper, the relative lack of power in identifying non-oscillatory dependencies
+"is a matter of concern only when the sample size is small," which
+is a situation that tends not to arise in data science and other "large data" applications. Furthermore, the $\xi$ calculations are fairly efficient ($n \log n$, compared to some more powerful methods, which are $n^2$), giving them an advantage in larger-data situations.
+
+There are other aspects of $\xi$ that might be considered disadvantages. 
+The calculation is not symmetric; it measures dependency in one direction only. 
+It also doesn't have a notion of "anti-correlation": it will tell you if
+$y$ is dependent on $x$, but not whether the dependency is direct or inverse.
+
+From a data science perspective, the $\xi$ correlation and associated significance
+test may prove to be useful for tasks like variable selection, an application we hope
+to cover in a future post.
+
+
