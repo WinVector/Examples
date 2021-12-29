@@ -72,8 +72,9 @@ amount of available data.
 We’ll also estimate the asymptotic value of *ξ* (as *n* gets larger) for
 each situation.
 
-The R code to replicate these experiments is [here](LINK). We use the
-function `XICOR::calculateXI()` to calculate *ξ*:
+The R code to replicate these experiments is
+[here](https://github.com/WinVector/Examples/blob/main/XICOR/xicor_explore.Rmd).
+We use the function `XICOR::calculateXI()` to calculate *ξ*:
 
     # By default, the function sets a random seed
     # for reproducible results. seed=NULL
@@ -92,7 +93,7 @@ Here are the results:
 | 0.01         | 0.973 |
 | 0.1          | 0.837 |
 | 0.5          | 0.463 |
-| 1            | 0.206 |
+| 1            | 0.208 |
 | uncorrelated | 0.000 |
 
 Approximate asymptotic values of XI
@@ -121,7 +122,7 @@ this experiment. Overall, *ξ* varies symmetrically, with the bandwidth
 of the variation decreasing as *n* increases. This is consistent with
 Theorem 2.1 of Professor Chatterjee’s paper:
 
-> Suppose that *X* and *Y* are independent and *Y* is continuous.\\ Then
+> Suppose that *X* and *Y* are independent and *Y* is continuous. Then
 > $\\sqrt n\\xi\_n(X,Y) \\to N(0, 2/5)$ in distribution as *n* → ∞
 
 Prof. Chatterjee goes on to say, “It \[the convergence\] is roughly
@@ -175,14 +176,14 @@ independent.
 xitest(uc_10$x, uc_10$y, p)
 ```
 
-    ## [1] "xi = -0.0606060606060606 , p = 0.616526035964085"
+    ## [1] "xi = -0.181818181818182 , p = 0.813027600695373"
     ## [1] "DON'T REJECT independence of x and y"
 
 ``` r
 xitest(uc_500$x, uc_500$y, p)
 ```
 
-    ## [1] "xi = 0.00796803187212758 , p = 0.389082968673701"
+    ## [1] "xi = 0.00708002832011334 , p = 0.40117205304038"
     ## [1] "DON'T REJECT independence of x and y"
 
 ### *y* noisily dependent on *x*
@@ -201,7 +202,7 @@ xitest(noisy_10$x, noisy_10$y, p)
 xitest(noisy_500$x, noisy_500$y, p)
 ```
 
-    ## [1] "xi = 0.168048672194689 , p = 1.41329825620318e-09"
+    ## [1] "xi = 0.231000924003696 , p = 1.11022302462516e-16"
     ## [1] "REJECT independence of x and y"
 
 Notice that the `xicor` significance test didn’t successfully identify

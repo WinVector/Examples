@@ -37,7 +37,6 @@ knitr::opts_chunk$set(echo = FALSE)
 
 library(XICOR)
 library(ggplot2)
-library(wrapr)
 library(dplyr)
 ```
 
@@ -119,7 +118,7 @@ so that we can examine the relationship between $\xi$ and the amount of availabl
 
 We'll also estimate the asymptotic value of $\xi$ (as $n$ gets larger) for each situation.
 
-The R code to replicate these experiments is [here](LINK). We use the function
+The R code to replicate these experiments is [here](https://github.com/WinVector/Examples/blob/main/XICOR/xicor_explore.Rmd). We use the function
 `XICOR::calculateXI()` to calculate $\xi$:
 
 ```
