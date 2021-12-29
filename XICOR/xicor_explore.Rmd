@@ -217,10 +217,11 @@ ggplot(pframe0, aes(x=n, y=xi)) +
 
 ```
 
-The first observation is that $\xi$ is negative about half the time in this experiment. Overall, $\xi$ varies symmetrically, with the bandwidth of the variation decreasing 
+The first observation is that $\xi$ is negative about half the time in this experiment. Overall, $\xi$ varies symmetrically around zero, with the bandwidth of the variation decreasing 
 as $n$ increases. This is consistent with Theorem 2.1 of Professor Chatterjee's paper:
 
-> Suppose that $X$ and $Y$ are independent and $Y$ is continuous. Then $\sqrt n\xi_n(X,Y) \to N(0, 2/5)$ in distribution as $n \to \infty$
+> Suppose that $X$ and $Y$ are independent and $Y$ is continuous. Then 
+&radic;$n$ &xi; &rarr; $N(0, 2/5)$ in distribution as $n \to \infty$
 
 Prof. Chatterjee goes on to say, "It [the convergence] is roughly valid even for $n$ 
 as small as 20." Looking at the chart above, I might still stick to $n$ larger than about
@@ -296,13 +297,13 @@ Note that I am picking the values for "large enough" by unscientifically eyeball
 
 * The closer to 1 that $\xi$ is (for large enough $n$), the stronger the dependency.
 
-* If $n$ and $\xi$ are fairly small, one should use the $\xi$-based test of independence
+* If $n$ or $\xi$ are fairly small, one should use the $\xi$-based test of independence
 to decide.
 
 Overall, the $\xi$ correlation coefficient seems to be an effective and fairly general
 score for determining the directional dependency of two variables. While the paper does
 admit that the $\xi$-based significance test for independence is not as powerful (in
-the statistical sense) as more "linear-ish" methods when the relationship between two variables is smooth and non oscillatory, the method does excel at identifying oscillatory and highly non-monotonic dependencies.
+the statistical sense) as other standard methods when the relationship between two variables is smooth and non oscillatory, the method does excel at identifying oscillatory and highly non-monotonic dependencies.
 
 To quote the paper, the relative lack of power in identifying non-oscillatory dependencies
 "is a matter of concern only when the sample size is small," which
@@ -311,7 +312,7 @@ is a situation that tends not to arise in data science and other "large data" ap
 There are other aspects of $\xi$ that might be considered disadvantages. 
 The calculation is not symmetric; it measures dependency in one direction only. 
 It also doesn't have a notion of "anti-correlation": it will tell you if
-$y$ is dependent on $x$, but not whether the dependency is direct or inverse.
+$y$ is dependent on $x$, but not whether the correlation between them is direct or inverse.
 
 From a data science perspective, the $\xi$ correlation and associated significance
 test may prove to be useful for tasks like variable selection, an application we hope

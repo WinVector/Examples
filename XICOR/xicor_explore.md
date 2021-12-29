@@ -92,7 +92,7 @@ Here are the results:
 | 0            | 0.989 |
 | 0.01         | 0.973 |
 | 0.1          | 0.837 |
-| 0.5          | 0.463 |
+| 0.5          | 0.462 |
 | 1            | 0.208 |
 | uncorrelated | 0.000 |
 
@@ -118,12 +118,12 @@ Let’s take a closer look at the uncorrelated case as *n* → ∞.
 ![](xicor_explore_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 The first observation is that *ξ* is negative about half the time in
-this experiment. Overall, *ξ* varies symmetrically, with the bandwidth
-of the variation decreasing as *n* increases. This is consistent with
-Theorem 2.1 of Professor Chatterjee’s paper:
+this experiment. Overall, *ξ* varies symmetrically around zero, with the
+bandwidth of the variation decreasing as *n* increases. This is
+consistent with Theorem 2.1 of Professor Chatterjee’s paper:
 
 > Suppose that *X* and *Y* are independent and *Y* is continuous. Then
-> $\\sqrt n\\xi\_n(X,Y) \\to N(0, 2/5)$ in distribution as *n* → ∞
+> √*n* ξ → *N*(0, 2/5) in distribution as *n* → ∞
 
 Prof. Chatterjee goes on to say, “It \[the convergence\] is roughly
 valid even for *n* as small as 20.” Looking at the chart above, I might
@@ -176,14 +176,14 @@ independent.
 xitest(uc_10$x, uc_10$y, p)
 ```
 
-    ## [1] "xi = -0.181818181818182 , p = 0.813027600695373"
+    ## [1] "xi = -0.0606060606060606 , p = 0.616526035964085"
     ## [1] "DON'T REJECT independence of x and y"
 
 ``` r
 xitest(uc_500$x, uc_500$y, p)
 ```
 
-    ## [1] "xi = 0.00708002832011334 , p = 0.40117205304038"
+    ## [1] "xi = 0.0194040776163106 , p = 0.246346600669428"
     ## [1] "DON'T REJECT independence of x and y"
 
 ### *y* noisily dependent on *x*
@@ -195,14 +195,14 @@ independent.
 xitest(noisy_10$x, noisy_10$y, p)
 ```
 
-    ## [1] "xi = 0 , p = 0.5"
+    ## [1] "xi = 0.0606060606060607 , p = 0.383473964035915"
     ## [1] "DON'T REJECT independence of x and y"
 
 ``` r
 xitest(noisy_500$x, noisy_500$y, p)
 ```
 
-    ## [1] "xi = 0.231000924003696 , p = 1.11022302462516e-16"
+    ## [1] "xi = 0.255445021780087 , p = 0"
     ## [1] "REJECT independence of x and y"
 
 Notice that the `xicor` significance test didn’t successfully identify
@@ -223,14 +223,14 @@ Informally speaking:
 -   The closer to 1 that *ξ* is (for large enough *n*), the stronger the
     dependency.
 
--   If *n* and *ξ* are fairly small, one should use the *ξ*-based test
-    of independence to decide.
+-   If *n* or *ξ* are fairly small, one should use the *ξ*-based test of
+    independence to decide.
 
 Overall, the *ξ* correlation coefficient seems to be an effective and
 fairly general score for determining the directional dependency of two
 variables. While the paper does admit that the *ξ*-based significance
 test for independence is not as powerful (in the statistical sense) as
-more “linear-ish” methods when the relationship between two variables is
+other standard methods when the relationship between two variables is
 smooth and non oscillatory, the method does excel at identifying
 oscillatory and highly non-monotonic dependencies.
 
@@ -245,8 +245,8 @@ in larger-data situations.
 There are other aspects of *ξ* that might be considered disadvantages.
 The calculation is not symmetric; it measures dependency in one
 direction only. It also doesn’t have a notion of “anti-correlation”: it
-will tell you if *y* is dependent on *x*, but not whether the dependency
-is direct or inverse.
+will tell you if *y* is dependent on *x*, but not whether the
+correlation between them is direct or inverse.
 
 From a data science perspective, the *ξ* correlation and associated
 significance test may prove to be useful for tasks like variable
