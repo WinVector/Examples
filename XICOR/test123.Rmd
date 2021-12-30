@@ -1,0 +1,46 @@
+---
+title: "123 Test"
+author: "Nina Zumel"
+date: "12/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(XICOR)
+library(ggplot2)
+library(dplyr)
+```
+
+Just for fun, what's the $\xi$ coefficient for $x = y = 1:N$?
+
+```{r}
+
+xi1toN = function(n) {
+  x = 1:n
+  y = 1:n
+  xi = calculateXI(x, y)
+}
+
+N = 250
+
+xi_n = vapply(2:N, xi1toN, numeric(1))
+
+pframe = data.frame(n = 2:N, xi = xi_n)
+
+ggplot(pframe, aes(x=n, y=xi)) + 
+  geom_point() + geom_line() + 
+  ggtitle('XI for x = y = 1:n')
+
+
+```
+
+From Equation 1.1 in the paper, the exact formula for $\xi(1...n, 1...n)$, $n$ > 1, is:
+
+$$
+1 - \frac{3}{n + 1}
+$$
+
+which goes to 1 as $n \to \infty$. The graph is pretty much consistent with my informal
+eyeball estimate that one wants $n > 250$ to get a good estimate of the asymptotic value of $\xi$.
