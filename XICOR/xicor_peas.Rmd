@@ -1,0 +1,76 @@
+---
+title: "XICOR on the Peas Data Set"
+author: "Nina Zumel"
+date: "1/24/2022"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Attempt to reproduce the results from Chatterjee's paper
+
+```{r}
+library(XICOR)
+library(ggplot2)
+library(dplyr)
+library(psychTools)
+
+```
+
+```{r}
+
+data(peas)
+
+# xi(X, Y)
+calculateXI(peas$parent, peas$child, seed=NULL)
+# xi(Y, X)
+calculateXI(peas$child, peas$parent, seed=NULL)
+
+```
+
+Default behavior, average 10K simulation.
+
+This is sets the seed to the same constant every time, so it's actually deterministic every run.
+Certainly not to be trusted for a significance calculation.
+
+```{r}
+
+N = 10000
+xiXY = numeric(N)
+xiYX = numeric(N)
+
+for(i in 1:N) {
+  xiXY = calculateXI(peas$parent, peas$child)
+  xiYX = calculateXI(peas$child, peas$parent)
+  
+}
+
+results = data.frame(seed = 'default', 
+                     direction = c('XY', 'YX'),
+                     xi = c(mean(xiXY), mean(xiYX)))
+
+knitr::kable(results)
+
+```
+
+Set the seed parameter to NULL. This seeds the run with the system time, so it's more likely to be correct.
+
+```{r}
+xiXY = numeric(N)
+xiYX = numeric(N)
+
+for(i in 1:N) {
+  xiXY = calculateXI(peas$parent, peas$child, seed=NULL)
+  xiYX = calculateXI(peas$child, peas$parent, seed=NULL)
+  
+}
+
+rerun = data.frame(seed = 'systime', 
+                     direction = c('XY', 'YX'),
+                     xi = c(mean(xiXY), mean(xiYX)))
+
+knitr::kable(rerun)
+
+```
