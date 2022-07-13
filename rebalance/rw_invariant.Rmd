@@ -140,10 +140,10 @@ One advantage of this latest form is: it is easier to try many values of `t` tha
 To show the monotone property we are gong to establish a really neat lemma: 
 
 <blockquote>
-The sign of `b = m$coefficients['x']` is the same the sign of `mean(d$x[d$y]) - mean(d$x[!d$y])`. 
+For a single (numeric) variable model, the sign of `b = m$coefficients['x']` is the same the sign of `mean(d$x[d$y]) - mean(d$x[!d$y])`. 
 </blockquote>
 
-Or: the sign of the logistic regression coefficient is the same is the sign of the difference in conditonal means of the explanatory variable.
+Or: the sign of the logistic regression coefficient is the same is the sign of the difference in conditonal means of the single explanatory variable.
 
 For our example data `mean(d$x[d$y]) - mean(d$x[!d$y])` is very easy to calculate, it is `r mean(d$x[d$y]) - mean(d$x[!d$y])`. So we know that `m$coefficients['x']` must be negative, without having to go to the full effort of estimating it. This also is exactly what we need to characterize single variable logistic regression and show in this case explanatory variable proportional data re-weighting is a mere monotone transform (though as [we mentioned earlier](https://github.com/WinVector/Examples/blob/main/rebalance/rw_example_R.md), this is not always the case when more variables are present).
 
@@ -151,7 +151,9 @@ It takes a little bit of effort to establish this lemma, as it is elementary so 
 
 To establish our lemma pick the value `o` such that `sum((1 - s(o)) y) = sum((s(o) (1 - y))`.  By the intermediate value theorem, there is such a value.  Suppose `(a, b)` is the solution to our logistic regression problem. Now pick `d = (o - a) / b`. We replace our explanatory variable vector `x` with the vector `x' = x + d`.
 
-This replacement means the new solution to the logistic regression problem is `(a + b * d, b)`, or `(o, b)` (as `sigmoid(o + b x')` = `sigmoid(a + b x)`). The point is: shifting the data alters the intercept coefficient, but not the slope-coefficient `b`.  Also shifting the data does not alter `mean(d$x[d$y]) - mean(d$x[!d$y])`. As we are only interested in the relation between `sign(b)` and `sign(mean(d$x[d$y]) - mean(d$x[!d$y]))`, we can without loss of generality assume the problem is already in this form with the intercept coefficient equal to `o`. That is: if we could prove the result in for problems in this form, that would be enough to establish the result in general.
+This replacement means the new solution to the logistic regression problem is `(a + b * d, b)`, or `(o, b)` (as `sigmoid(o + b x')` = `sigmoid(a + b x)`). 
+
+The point is: this change of variables alters the intercept coefficient, but not the slope-coefficient `b`.  Also the change of variables does not alter `mean(d$x[d$y]) - mean(d$x[!d$y])`. As we are only interested in the relation between `sign(b)` and `sign(mean(d$x[d$y]) - mean(d$x[!d$y]))`, we can without loss of generality assume the problem is already in this form with the intercept coefficient equal to `o`. That is: if we could prove the result in for problems in this form, that would be enough to establish the result in general.
 
 Logistic regression coefficients are the unique solution to a loss function called deviance (essentially a scaling of cross-entropy).  In our case the loss function is:
 

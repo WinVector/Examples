@@ -1,7 +1,7 @@
 Some Examples Where re-Weighting Data Doesn’t do Much
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Sat Oct 10 10:34:47 2020
+Tue Jul 12 22:43:33 2022
 
 ## Introduction
 
@@ -170,8 +170,8 @@ knitr::kable(d)
 ```
 
 |   x | y     |
-| --: | :---- |
-| \-5 | TRUE  |
+|----:|:------|
+|  -5 | TRUE  |
 |   0 | FALSE |
 |   1 | TRUE  |
 
@@ -267,14 +267,14 @@ To show the monotone property we are gong to establish a really neat
 lemma:
 
 <blockquote>
-
-The sign of `b = m$coefficients['x']` is the same the sign of
+For a single (numeric) variable model, the sign of
+`b = m$coefficients['x']` is the same the sign of
 `mean(d$x[d$y]) - mean(d$x[!d$y])`.
-
 </blockquote>
 
 Or: the sign of the logistic regression coefficient is the same is the
-sign of the difference in conditonal means of the explanatory variable.
+sign of the difference in conditonal means of the single explanatory
+variable.
 
 For our example data `mean(d$x[d$y]) - mean(d$x[!d$y])` is very easy to
 calculate, it is -2. So we know that `m$coefficients['x']` must be
@@ -290,18 +290,20 @@ elementary so we tend to have to use small steps in the proof. However,
 this effort is to be preferred to claiming the observation is “obvious”
 before moving on.
 
-To establish our lemma pick the value `o` such that `sum((1 - s(o)) y) =
-sum((s(o) (1 - y))`. By the intermediate value theorem, there is such a
-value. Suppose `(a, b)` is the solution to our logistic regression
-problem. Now pick `d = (o - a) / b`. We replace our explanatory variable
-vector `x` with the vector `x' = x + d`.
+To establish our lemma pick the value `o` such that
+`sum((1 - s(o)) y) = sum((s(o) (1 - y))`. By the intermediate value
+theorem, there is such a value. Suppose `(a, b)` is the solution to our
+logistic regression problem. Now pick `d = (o - a) / b`. We replace our
+explanatory variable vector `x` with the vector `x' = x + d`.
 
 This replacement means the new solution to the logistic regression
 problem is `(a + b * d, b)`, or `(o, b)` (as `sigmoid(o + b x')` =
-`sigmoid(a + b x)`). The point is: shifting the data alters the
-intercept coefficient, but not the slope-coefficient `b`. Also shifting
-the data does not alter `mean(d$x[d$y]) - mean(d$x[!d$y])`. As we are
-only interested in the relation between `sign(b)` and
+`sigmoid(a + b x)`).
+
+The point is: this change of variables alters the intercept coefficient,
+but not the slope-coefficient `b`. Also the change of variables does not
+alter `mean(d$x[d$y]) - mean(d$x[!d$y])`. As we are only interested in
+the relation between `sign(b)` and
 `sign(mean(d$x[d$y]) - mean(d$x[!d$y]))`, we can without loss of
 generality assume the problem is already in this form with the intercept
 coefficient equal to `o`. That is: if we could prove the result in for
@@ -336,9 +338,9 @@ to `b` evaluated at `b = 0` is:
            sum((1 - y) * sigmoid(o) * x) )
 ```
 
-By our choice of `o`, this is non-negative scaling of `mean(d$x[d$y]) -
-mean(d$x[!d$y])`. So have established our claim: `sign(mean(d$x[d$y]) -
-mean(d$x[!d$y])) = sign(m$coefficients['x'])`.
+By our choice of `o`, this is non-negative scaling of
+`mean(d$x[d$y]) - mean(d$x[!d$y])`. So have established our claim:
+`sign(mean(d$x[d$y]) - mean(d$x[!d$y])) = sign(m$coefficients['x'])`.
 
 ### Back To The Monotone Property
 
@@ -346,9 +348,9 @@ With our lemma shown, it is possible to see that explanatory variable
 proportional data re-weighting moves predicitons in a monotone fashion.
 Notice re-weighting all of the examples of the positive class by the
 same amount doesn’t change `mean(d$x[d$y]) - mean(d$x[!d$y])`. Therefore
-the sign of `b = m$coefficients['x']` is not changed. As `sigmoid(a + b
-x)` is monotone in `x` for a known-sign `b` we now have: no predictions
-change order under this sort of data re-scaling.
+the sign of `b = m$coefficients['x']` is not changed. As
+`sigmoid(a + b x)` is monotone in `x` for a known-sign `b` we now have:
+no predictions change order under this sort of data re-scaling.
 
 And that is the result: re-weighting all of the positives by the same
 amount can’t re-order predictions for a single variable (plus intercept)
@@ -367,21 +369,14 @@ Suppose all of our explanatory variables only take on the values `0` and
 system is saturated in the sense that:
 
 <ul>
-
 <li>
-
 If `xa` is an explanatory variables then `1 - xa` is also an explanatory
 variable.
-
 </li>
-
 <li>
-
 If `xa` and `xb` are explanatory variables then `xa * xb` is either all
 zero, or already an explanatory variable.
-
 </li>
-
 </ul>
 
 Essentially we are adding enough interactions or derived variables that
@@ -394,15 +389,16 @@ In this case the explanatory variables partition the training data into
 sets that are all identifiable by single variables. In this case it is
 simple to see logistic regression, with some slight regularization in
 place, becomes just a look-up table. Training examples associated with
-one of our disjoint partition sets are scored with a probability of `a /
-(a + b)`, where `a` is the number of positive examples for this set
+one of our disjoint partition sets are scored with a probability of
+`a / (a + b)`, where `a` is the number of positive examples for this set
 during training and `b` is the number of negative examples seen in this
 set during training (assuming we don’t have a separated problem,
-i.e. that `a` and `b` are both greater that zero). Then up-weighting
-the positive examples replaces the prediction with `(a w) / (a w + b)`,
+i.e. that `a` and `b` are both greater that zero). Then up-weighting the
+positive examples replaces the prediction with `(a w) / (a w + b)`,
 where `w` is our positive re-weighting factor. A little algebra is
-enough to show that this transform, while non-linear, is monotone. If `a
-/ (a + b) > c / (c + d)` then `(a w) / (a w + b) > (c w) / (c w + d)`.
+enough to show that this transform, while non-linear, is monotone. If
+`a / (a + b) > c / (c + d)` then
+`(a w) / (a w + b) > (c w) / (c w + d)`.
 
 So in the fully saturated indicators case, re-weighting the data as a
 function of the positive class is also monotone.
