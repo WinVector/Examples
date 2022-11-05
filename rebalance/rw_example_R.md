@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Sat Oct 10 18:15:03 2020
+Sat Nov 5 12:12:08 2022
 
 ## Introduction
 
@@ -20,9 +20,9 @@ which lead us to conclude: if re-balancing does anything better than
 moving your threshold, this is in fact evidence of a missed interaction.
 
 It is our thesis that their is little benefit to re-balancing data and
-if there appears to be such a benefit it means you failded to use
-numeric scores (converted to a classification rule too early) or missed
-an interaction in your data (which can be fixed by a bit more feature
+if there appears to be such a benefit it means you failed to use numeric
+scores (converted to a classification rule too early) or missed an
+interaction in your data (which can be fixed by a bit more feature
 engineering, the non-montone change suggests some interactions that can
 be introduced).
 
@@ -35,6 +35,12 @@ note](https://github.com/WinVector/Examples/blob/main/rebalance/rw_invariant.md)
 ``` r
 # first attach packages
 library(ggplot2)
+```
+
+    ## Warning in register(): Can't find generic `scale_type` in package ggplot2 to
+    ## register S3 method.
+
+``` r
 library(wrapr)
 library(WVPlots)
 ```
@@ -56,15 +62,15 @@ d <- wrapr::build_frame(
 knitr::kable(d)
 ```
 
-| x1 | x2 | y | w2 |
-| -: | -: | -: | -: |
-|  0 |  0 | 0 |  2 |
-|  0 |  0 | 0 |  2 |
-|  0 |  1 | 1 |  5 |
-|  1 |  0 | 0 |  2 |
-|  1 |  0 | 0 |  2 |
-|  1 |  0 | 1 |  5 |
-|  1 |  1 | 0 |  2 |
+|  x1 |  x2 |   y |  w2 |
+|----:|----:|----:|----:|
+|   0 |   0 |   0 |   2 |
+|   0 |   0 |   0 |   2 |
+|   0 |   1 |   1 |   5 |
+|   1 |   0 |   0 |   2 |
+|   1 |   0 |   0 |   2 |
+|   1 |   0 |   1 |   5 |
+|   1 |   1 |   0 |   2 |
 
 ### First Model
 
@@ -115,15 +121,15 @@ d$pred1 <- predict(model1, newdata = d, type = 'response')
 knitr::kable(d)
 ```
 
-| x1 | x2 | y | w2 |     pred1 |
-| -: | -: | -: | -: | --------: |
-|  0 |  0 | 0 |  2 | 0.2304816 |
-|  0 |  0 | 0 |  2 | 0.2304816 |
-|  0 |  1 | 1 |  5 | 0.5390367 |
-|  1 |  0 | 0 |  2 | 0.1796789 |
-|  1 |  0 | 0 |  2 | 0.1796789 |
-|  1 |  0 | 1 |  5 | 0.1796789 |
-|  1 |  1 | 0 |  2 | 0.4609633 |
+|  x1 |  x2 |   y |  w2 |     pred1 |
+|----:|----:|----:|----:|----------:|
+|   0 |   0 |   0 |   2 | 0.2304816 |
+|   0 |   0 |   0 |   2 | 0.2304816 |
+|   0 |   1 |   1 |   5 | 0.5390367 |
+|   1 |   0 |   0 |   2 | 0.1796789 |
+|   1 |   0 |   0 |   2 | 0.1796789 |
+|   1 |   0 |   1 |   5 | 0.1796789 |
+|   1 |   1 |   0 |   2 | 0.4609633 |
 
 However, notice the was not a “balanced” problem or a problem with
 prevalence equal to 0.5.
@@ -190,15 +196,15 @@ d$pred2 <- predict(model2, newdata = d, type = 'response')
 knitr::kable(d)
 ```
 
-| x1 | x2 | y | w2 |     pred1 |     pred2 |
-| -: | -: | -: | -: | --------: | --------: |
-|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |
-|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |
-|  0 |  1 | 1 |  5 | 0.5390367 | 0.7075457 |
-|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |
-|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |
-|  1 |  0 | 1 |  5 | 0.1796789 | 0.3930810 |
-|  1 |  1 | 0 |  2 | 0.4609633 | 0.7311357 |
+|  x1 |  x2 |   y |  w2 |     pred1 |     pred2 |
+|----:|----:|----:|----:|----------:|----------:|
+|   0 |   0 |   0 |   2 | 0.2304816 | 0.3655679 |
+|   0 |   0 |   0 |   2 | 0.2304816 | 0.3655679 |
+|   0 |   1 |   1 |   5 | 0.5390367 | 0.7075457 |
+|   1 |   0 |   0 |   2 | 0.1796789 | 0.3930810 |
+|   1 |   0 |   0 |   2 | 0.1796789 | 0.3930810 |
+|   1 |   0 |   1 |   5 | 0.1796789 | 0.3930810 |
+|   1 |   1 |   0 |   2 | 0.4609633 | 0.7311357 |
 
 ### The Difference
 
@@ -255,9 +261,9 @@ PRPlot(
 
 An important property of logistic regression is [the balance
 properties](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/):
-for any variable `v` we have `sum(d[[v]] * d$y) == sum(d[[v]] *
-d$prediction)`. Fitting with the balance priors (essentially the wrong
-priors loses this property).
+for any variable `v` we have
+`sum(d[[v]] * d$y) == sum(d[[v]] * d$prediction)`. Fitting with the
+balance priors (essentially the wrong priors loses this property).
 
 ``` r
 sum(d$x1 * d$y)
@@ -341,11 +347,11 @@ Each entry of `pairs` is the edge-set of a graph where `pred1` and
 `pred2` orders disagree. We want new variables eliminate edges from
 these graphs.
 
-In our case the ordered supports of the components are `{({1,2},
-{4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that
-identify these support sets, as this would give the model the degrees of
-freedom needed to re-score these sets independently and remove the
-compromises forcing the non-monotone change.
+In our case the ordered supports of the components are
+`{({1,2}, {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables
+that identify these support sets, as this would give the model the
+degrees of freedom needed to re-score these sets independently and
+remove the compromises forcing the non-monotone change.
 
 ``` r
 d$s_456 <- d$x1 - d$x1 * d$x2
@@ -355,15 +361,15 @@ d$s_7 <- d$x1 * d$x2
 knitr::kable(d)
 ```
 
-| x1 | x2 | y | w2 |     pred1 |     pred2 | s\_456 | s\_12 | s\_3 | s\_7 |
-| -: | -: | -: | -: | --------: | --------: | -----: | ----: | ---: | ---: |
-|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |      0 |     1 |    0 |    0 |
-|  0 |  0 | 0 |  2 | 0.2304816 | 0.3655679 |      0 |     1 |    0 |    0 |
-|  0 |  1 | 1 |  5 | 0.5390367 | 0.7075457 |      0 |     0 |    1 |    0 |
-|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |      1 |     0 |    0 |    0 |
-|  1 |  0 | 0 |  2 | 0.1796789 | 0.3930810 |      1 |     0 |    0 |    0 |
-|  1 |  0 | 1 |  5 | 0.1796789 | 0.3930810 |      1 |     0 |    0 |    0 |
-|  1 |  1 | 0 |  2 | 0.4609633 | 0.7311357 |      0 |     0 |    0 |    1 |
+|  x1 |  x2 |   y |  w2 |     pred1 |     pred2 | s_456 | s_12 | s_3 | s_7 |
+|----:|----:|----:|----:|----------:|----------:|------:|-----:|----:|----:|
+|   0 |   0 |   0 |   2 | 0.2304816 | 0.3655679 |     0 |    1 |   0 |   0 |
+|   0 |   0 |   0 |   2 | 0.2304816 | 0.3655679 |     0 |    1 |   0 |   0 |
+|   0 |   1 |   1 |   5 | 0.5390367 | 0.7075457 |     0 |    0 |   1 |   0 |
+|   1 |   0 |   0 |   2 | 0.1796789 | 0.3930810 |     1 |    0 |   0 |   0 |
+|   1 |   0 |   0 |   2 | 0.1796789 | 0.3930810 |     1 |    0 |   0 |   0 |
+|   1 |   0 |   1 |   5 | 0.1796789 | 0.3930810 |     1 |    0 |   0 |   0 |
+|   1 |   1 |   0 |   2 | 0.4609633 | 0.7311357 |     0 |    0 |   0 |   1 |
 
 The idea is: we are working in the set-algebra of the indicator
 variables. Complement is subtraction from one, intersection is
@@ -579,7 +585,6 @@ the space of all such functions
 A classification model homotopy bundle is a map ’h: X \* \[0, 1\] -\>
 \[0, 1\]\` or a map from the cross-product of the space of explanatory
 variables and posited prevelance to probability estimates.
-
 </blockquote>
 
 So in principle a homotopy model bundle is an infinite family of models,
@@ -659,7 +664,7 @@ evalsp$logit_prevalence <- logit(evalsp$apparent_prevalence)
 
 ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = prediction, color = row_set)) +
   geom_line() +
-  ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
+  ggtitle("trajectory of row-set predictions as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 ```
 
@@ -668,7 +673,7 @@ ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = prediction, color 
 ``` r
 ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = link, color = row_set)) +
   geom_line() +
-  ggtitle("trajectory of row-set link as a function of truth prevalence") +
+  ggtitle("trajectory of row-set link as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 ```
 
@@ -727,10 +732,19 @@ ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = sigmoid_coef_va
 ![](rw_example_R_files/figure-gfm/unnamed-chunk-34-7.png)<!-- -->
 
 ``` r
+ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = sigmoid_coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of sigmoid of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
+```
+
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-8.png)<!-- -->
+
+``` r
 ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = sigmoid_coef_value, color = coef_name)) +
   geom_line() +
   ggtitle("trajectory of sigmoid of coefficients as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 ```
 
-![](rw_example_R_files/figure-gfm/unnamed-chunk-34-8.png)<!-- -->
+![](rw_example_R_files/figure-gfm/unnamed-chunk-34-9.png)<!-- -->

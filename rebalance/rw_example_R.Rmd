@@ -11,7 +11,7 @@ Here is an example of how re-weighting data as function of the training outcome 
 
 [Nina Zumel had some interesting comments on the ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/) which lead us to conclude: if re-balancing does anything better than moving your threshold, this is in fact evidence of a missed interaction.
 
-It is our thesis that their is little benefit to re-balancing data and if there appears to be such a benefit it means you failded to use numeric scores (converted to a classification rule too early) or missed an interaction in your data (which can be fixed by a bit more feature engineering, the non-montone change suggests some interactions that can be introduced).
+It is our thesis that their is little benefit to re-balancing data and if there appears to be such a benefit it means you failed to use numeric scores (converted to a classification rule too early) or missed an interaction in your data (which can be fixed by a bit more feature engineering, the non-montone change suggests some interactions that can be introduced).
 
 ## Example 
 
@@ -396,12 +396,12 @@ evalsp$logit_prevalence <- logit(evalsp$apparent_prevalence)
 
 ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = prediction, color = row_set)) +
   geom_line() +
-  ggtitle("trajectory of row-set predictions as a function of truth prevalence") +
+  ggtitle("trajectory of row-set predictions as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 
 ggplot(data = evalsp, mapping = aes(x = logit_prevalence, y = link, color = row_set)) +
   geom_line() +
-  ggtitle("trajectory of row-set link as a function of truth prevalence") +
+  ggtitle("trajectory of row-set link as a function of logit truth prevalence") +
   scale_color_brewer(palette = "Dark2")
 
 evalsc <- lapply(
@@ -438,6 +438,11 @@ ggplot(data = evalsc, mapping = aes(x = logit_prevalence, y = coef_value, color 
 
 sigmoid <- function(x) { 1 / (1 + exp(-x)) }
 evalsc$sigmoid_coef_value <- sigmoid(evalsc$coef_value)
+
+ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = sigmoid_coef_value, color = coef_name)) +
+  geom_line() +
+  ggtitle("trajectory of sigmoid of coefficients as a function of truth prevalence") +
+  scale_color_brewer(palette = "Dark2")
 
 ggplot(data = evalsc, mapping = aes(x = apparent_prevalence, y = sigmoid_coef_value, color = coef_name)) +
   geom_line() +
