@@ -1,0 +1,56 @@
+---
+title: "Fit to Finish Modeling"
+author: "John Mount, Win Vector LLC"
+date: 2022-11-9
+format: 
+  pptx:
+    reference-doc: WV_template.pptx
+---
+
+## Introduction
+
+Dr. John Mount is a Principal Consultant at Win Vector LLC. John has a Ph.D in computer science from Carnegie Mellon University, using probabilistic methods to prove convergence rates of Markov chains in optimization and sampling applications.
+
+- Co-author *Practical Data Science with R*
+- Co-author of several R packages
+  - vtreat
+  - wrapr
+  - cdata
+  - WVPlots
+- Co-auhtor of serval Python data science packages
+  - vtreat
+  - data_algebra
+  - wvpy
+
+::: {.notes}
+He did work on structural diversity of molecules for biotech applications, wrote and executed algorithmic trading strategies for Banc of America securities (a division of Bank of America). He is now concentrating on data science, machine learning, AI and analytics consulting and teaching. His most recent teaching product is a two week private immersion course on data science for engineers.
+:::
+  
+
+![](cc757-newimage-2.png)
+
+## Fit to Finish Modeling
+
+There is a tension between statistics and data science.
+
+  - Statistics emphasizes on model identification and inference.
+  - Data Science emphasizes quality of model predictions.
+
+Either field can be made to look bad by judging it in terms of the other's concerns.
+
+
+
+::: {.notes}
+Machine learning practice, often called data science, emphasizes empirical tuning of predictive models. When these practitioners run into common problems they propose and promote fixes somewhat different than the statistical canon. I'll discuss two issues where data science practice differs from statistical inference: co-linear variables and building classifiers for un-balanced models. For co-linear variables the data science practice is often "regularize and ignore", which I will define and explain why this fire and forget procedure seems to work. This lets us start to explore the consequences of using prediction quality as an exclusive model quality metric. For un-balanced models I argue that the result is the opposite: ignoring the internal probabilistic structure of the problem leads to unnecessarily clumsy work arounds. The goal is to show how to appreciate data science as street fighting statistics.
+:::
+
+## This Talk
+
+In this talk I'll discuss predictive modeling and some classic "bugbears":
+
+  - co-linear variables
+  - unbalanced classification classes
+  - homoskedastic errors
+
+This is a chance to review some "street fighting statistics in R."
+
