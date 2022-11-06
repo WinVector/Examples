@@ -189,6 +189,7 @@ Machine learning or AI-training builds a model that is *superficially indistingu
   * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat).
   * [Nina Zumel: Does Balancing Classes Improve Classifier Performance?](https://win-vector.com/2015/02/27/does-balancing-classes-improve-classifier-performance/)
   * [Nina Zumel: Link Functions versus Data Transforms.](https://win-vector.com/2019/07/07/link-functions-versus-data-transforms/)
+  * [John Mount: Can a classifier that never says "yes" be useful?](https://win-vector.com/2014/03/08/can-a-classifier-that-never-says-yes-be-useful/)
   * [John Mount: When Cross-Validation is More Powerful than Regularization.](https://win-vector.com/2019/11/12/when-cross-validation-is-more-powerful-than-regularization/)
 
 ## Thanks
