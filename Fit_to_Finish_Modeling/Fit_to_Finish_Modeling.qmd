@@ -1,6 +1,6 @@
 ---
 title: "Fit to Finish Modeling"
-author: "John Mount, Win Vector LLC"
+author: "John Mount, [Win Vector LLC](https://www.win-vector.com)"
 date: 2022-11-9
 format: 
   pptx:
@@ -33,7 +33,7 @@ He did work on structural diversity of molecules for biotech applications, wrote
 
 There is a tension between statistics and data science.
 
-  - Statistics emphasizes on model identification and inference.
+  - Statistics emphasizes model identification and inference.
   - Data Science emphasizes quality of model predictions.
 
 Either field can be made to look bad by judging it in terms of the other's concerns.
@@ -44,13 +44,153 @@ Either field can be made to look bad by judging it in terms of the other's conce
 Machine learning practice, often called data science, emphasizes empirical tuning of predictive models. When these practitioners run into common problems they propose and promote fixes somewhat different than the statistical canon. I'll discuss two issues where data science practice differs from statistical inference: co-linear variables and building classifiers for un-balanced models. For co-linear variables the data science practice is often "regularize and ignore", which I will define and explain why this fire and forget procedure seems to work. This lets us start to explore the consequences of using prediction quality as an exclusive model quality metric. For un-balanced models I argue that the result is the opposite: ignoring the internal probabilistic structure of the problem leads to unnecessarily clumsy work arounds. The goal is to show how to appreciate data science as street fighting statistics.
 :::
 
+
+## Problems and Practices
+
+Data scientists and statisticians both have fears and protective wards. Unless you are doing cargo cult science the two have a relation. Some of the relations are illustraged here.
+
+| defensive ritual | fear |
+| ---- | ---- |
+| variable pruning | overfit |
+| variable pruning | co-linear variables |
+| regularization | overfit |
+| regularization | co-linear variables |
+| re-weighting data | unbalanced classification classes |
+| re-weighting data | heteroskedastic errors |
+| re-weighting data | concept drift |
+| non-linear outcome transforms | heteroskedastic errors |
+
 ## This Talk
 
 In this talk I'll discuss predictive modeling and some classic "bugbears":
 
   - co-linear variables
   - unbalanced classification classes
-  - homoskedastic errors
 
 This is a chance to review some "street fighting statistics in R."
+
+All slides and material here: [https://github.com/WinVector/Examples/tree/main/Fit_to_Finish_Modeling](https://github.com/WinVector/Examples/tree/main/Fit_to_Finish_Modeling).
+
+
+## Co-Linear Variables
+
+## Co-Linear Variables, some data
+
+Consider the following famous data set, Galton's height data.
+Galtion didn't start with multi-variate regression, so he
+introduced a variable called "mid_parent".
+
+```{r, echo=TRUE}
+d <- read.table("galton-stata11.tab", header=TRUE)
+d$mid_parent = (d$father + 1.08 * d$mother)
+
+knitr::kable(head(d))
+```
+
+## Held Out Evaluation
+
+In deployment or production most data we see was not available when the model was trained!
+We try to simulate this for our evaluation by using held-out data.
+
+```{r, echo=TRUE}
+# build a per-family test/train split
+families <- unique(d$family)
+train_families <- sample(
+  families, 
+  size = 0.8 * length(families), 
+  replace = FALSE)
+d_train <- d[d$family %in% train_families, ]
+d_test <- d[!(d$family %in% train_families), ]
+```
+
+
+## A Model
+
+Here is a standard model, notice `mid_parent` is supressed as it is co-linear with
+some combination of `father` and `mother`.
+
+```{r, echo=TRUE}
+# standard OLS model
+model_1 <- lm(
+  height ~ father + 
+    mother + mid_parent, 
+  data = d_train)
+knitr::kable(
+  summary(model_1)$coefficients
+  )
+```
+
+
+## Another Model
+
+```{r, echo=TRUE}
+# L2 regularized model
+var_cols <- c(
+  "father", 
+  "mother", 
+  "mid_parent")
+model_2 <- glmnet::glmnet(
+    x = as.matrix(
+      d_train[ , var_cols]),
+    y = d_train[["height"]], 
+    alpha = 0, 
+    lambda = 1e-3) 
+knitr::kable(
+  as.matrix(model_2$beta)
+  )
+```
+
+## How *effectively* different are the models?
+
+Indistinguishable.
+
+```{r, echo=TRUE}
+preds_1 <- predict(model_1, newdata = d_test)
+sqrt(mean((d_test[["height"]] - preds_1)^2))
+preds_2 <- as.numeric(
+  predict(model_2,
+          as.matrix(
+            d_test[ , var_cols])))
+sqrt(mean((d_test[["height"]] - preds_2)^2))
+sqrt(mean((preds_1 - preds_2)^2))
+```
+
+## How *semantically* different are the models?
+
+Very Different.
+
+  * The traditional model has made the decision to suppress `mid_parent`.
+    * This means the model is immune to any harm this variable could inflict in the future. Say for example some day in the future it is calculated or stored wrong in our data source.
+    * Actually a super important decision, perhaps best left to the practicioner to decide which of `father`, `mother`, or `mid_parent` should be dropped.
+  * The L2 regularized (or Ridge Regression or Tikhonov Regularized) model keeps all variables, but tries to enforce small (near zero) coefficients.
+    * This is a "fire and forget strategy."
+    * Works well if the average of the variables is more stable than the individual variables, as it often is.
+
+## The Fit to Finish Dilemma
+
+Machine learning or AI-training builds a model that is *superficially indistinguishable from a correct model*.
+
+  * Often best possible on training data. In the absence of over-fit issues may be nearly best possible on hold out data.
+
+  * The statistics view
+      * May still be the wrong model, with wrong coefficients inferred.
+      * Model identification is important, as the model may be called on an example not similar to the training data.
+  * The data science view
+    * "I am paid to call `predict()`, we are done here."
+      * For many business situations, this is in fact the right answer!
+    * Model identification is pointless, as we can't expect reliable predictions on examples not distributionally similar to the training data.
+
+## Unbalanced Classification Classes
+
+## Summary
+
+## Some of our articles on these topics
+
+  * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat).
+  * [Nina Zumel: Does Balancing Classes Improve Classifier Performance?](https://win-vector.com/2015/02/27/does-balancing-classes-improve-classifier-performance/)
+  * [Nina Zumel: Link Functions versus Data Transforms.](https://win-vector.com/2019/07/07/link-functions-versus-data-transforms/)
+  * [John Mount: When Cross-Validation is More Powerful than Regularization.](https://win-vector.com/2019/11/12/when-cross-validation-is-more-powerful-than-regularization/)
+
+## Thanks
+
 
