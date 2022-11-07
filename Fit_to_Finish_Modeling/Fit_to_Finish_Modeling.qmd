@@ -9,7 +9,7 @@ format:
 
 ## Introduction
 
-Dr. John Mount is a Principal Consultant at Win Vector LLC. John has a Ph.D in computer science from Carnegie Mellon University, using probabilistic methods to prove convergence rates of Markov chains in optimization and sampling applications.
+I am a Principal Consultant at Win Vector LLC. I have a Ph.D in computer science from Carnegie Mellon University, using probabilistic methods to prove convergence rates of Markov chains in optimization and sampling applications.
 
 - Co-author *Practical Data Science with R*
 - Co-author of several R packages
@@ -17,7 +17,7 @@ Dr. John Mount is a Principal Consultant at Win Vector LLC. John has a Ph.D in c
   - wrapr
   - cdata
   - WVPlots
-- Co-auhtor of serval Python data science packages
+- Co-author of several Python data science packages
   - vtreat
   - data_algebra
   - wvpy
@@ -38,22 +38,36 @@ There is a tension between statistics and data science.
 
 Either field can be made to look bad by judging it in terms of the other's concerns.
 
+I will show what it looks like to rush from data to building a model predictive model (supervised machine learning).
 
 
 ::: {.notes}
-Machine learning practice, often called data science, emphasizes empirical tuning of predictive models. When these practitioners run into common problems they propose and promote fixes somewhat different than the statistical canon. I'll discuss two issues where data science practice differs from statistical inference: co-linear variables and building classifiers for un-balanced models. For co-linear variables the data science practice is often "regularize and ignore", which I will define and explain why this fire and forget procedure seems to work. This lets us start to explore the consequences of using prediction quality as an exclusive model quality metric. For un-balanced models I argue that the result is the opposite: ignoring the internal probabilistic structure of the problem leads to unnecessarily clumsy work arounds. The goal is to show how to appreciate data science as street fighting statistics.
+Machine learning practice, often called data science, emphasizes empirical tuning of predictive models. When these practitioners run into common problems they propose and promote fixes somewhat different than the statistical canon. I'll discuss two issues where data science practice differs from statistical inference: co-linear variables and building classifiers for un-balanced models. For co-linear variables the data science practice is often "regularize and ignore", which I will define and explain why this fire and forget procedure seems to work. This lets us start to explore the consequences of using prediction quality as an exclusive model quality metric. For un-balanced models I argue that the result is the opposite: ignoring the internal probabilistic structure of the problem leads to unnecessarily clumsy work-arounds.
 :::
 
+## Supervised Machine Learning
+
+The task data scientist tend to be interested in is "supervised machine learning."
+
+  * You are shown a table with rows of the form `(X, y)`: try to find a function that that `f(X) ~ y`.
+
+Examples:
+
+  * Predicting children's height from parent's height.
+  * Predicting cancer risk.
+  * Predicting the probabilty of clicking on an online advertisement.
+  
+(tends to ignore issues of cause!)
 
 ## Problems and Practices
 
-Data scientists and statisticians both have fears and protective wards. Unless you are doing cargo cult science the two have a relation. Some of the relations are illustraged here.
+Data scientists and statisticians both have fears and protective wards. Unless you are doing cargo cult science the two have a relation. Some of the relations are illustrated here.
 
 | defensive ritual | fear |
 | ---- | ---- |
-| variable pruning | overfit |
+| variable pruning | over-fit |
 | variable pruning | co-linear variables |
-| regularization | overfit |
+| regularization | over-fit |
 | regularization | co-linear variables |
 | re-weighting data | unbalanced classification classes |
 | re-weighting data | heteroskedastic errors |
@@ -77,12 +91,15 @@ All slides and material here: [https://github.com/WinVector/Examples/tree/main/F
 ## Co-Linear Variables, some data
 
 Consider the following famous data set, Galton's height data.
-Galtion didn't start with multi-variate regression, so he
+Galton didn't start with multi-variate regression, so he
 introduced a variable called "mid_parent".
 
 ```{r, echo=TRUE}
-d <- read.table("galton-stata11.tab", header=TRUE)
-d$mid_parent = (d$father + 1.08 * d$mother)
+d <- read.table(
+  "galton-stata11.tab", 
+  header = TRUE)
+d$mid_parent = (
+  d$father + 1.08 * d$mother)
 
 knitr::kable(head(d))
 ```
@@ -106,7 +123,7 @@ d_test <- d[!(d$family %in% train_families), ]
 
 ## A Model
 
-Here is a standard model, notice `mid_parent` is supressed as it is co-linear with
+Here is a standard model, notice `mid_parent` is suppressed as it is co-linear with
 some combination of `father` and `mother`.
 
 ```{r, echo=TRUE}
@@ -161,7 +178,7 @@ Very Different.
 
   * The traditional model has made the decision to suppress `mid_parent`.
     * This means the model is immune to any harm this variable could inflict in the future. Say for example some day in the future it is calculated or stored wrong in our data source.
-    * Actually a super important decision, perhaps best left to the practicioner to decide which of `father`, `mother`, or `mid_parent` should be dropped.
+    * Actually a super important decision, perhaps best left to the practitioner to decide which of `father`, `mother`, or `mid_parent` should be dropped.
   * The L2 regularized (or Ridge Regression or Tikhonov Regularized) model keeps all variables, but tries to enforce small (near zero) coefficients.
     * This is a "fire and forget strategy."
     * Works well if the average of the variables is more stable than the individual variables, as it often is.
@@ -191,7 +208,7 @@ Data scientist over-worry about  unbalanced classes in classification problems.
   
 ## A Classification Example
 
-For our classication example, let's take a BCSC breast cancer data set.
+For our classification example, let's take a BCSC breast cancer data set.
 
 For this model `breast_cancer_history` codes to 0 (no cancer), or 1 (cancer) for all instances with
 known cancer status. Each row is weighted by how many examples like the given row are in a larger ideal
@@ -244,7 +261,7 @@ Let's see what sort of cancer risk the model associates with each of our example
 predict(model, newdata = d, type="response")[1: 3]
 ```
 
-Rember each outcome we are trying to match  is `0` or `1` (and each row in the data set can represent multiple individuals).
+Remember each outcome we are trying to match  is `0` or `1` (and each row in the data set can represent multiple individuals).
 
 ```{r, echo=TRUE}
 table(d[["breast_cancer_history"]])
@@ -259,9 +276,9 @@ sum(predict(model, newdata = d, type="response") * d["count"]) / sum(d["count"])
 sum(d["breast_cancer_history"] * d["count"]) / sum(d["count"])
 ```
 
-## The Falacy
+## The Fallacy
 
-In Python `.predict()` return the class label, which is defined as "1" if the probability is at lest `0.5` and "0" otherwise. There is abosolutely no reason for the prevelance of this label to match the data set.
+In Python `.predict()` return the class label, which is defined as "1" if the probability is at lest `0.5` and "0" otherwise. There is absolutely no reason for the prevalence of this label to match the data set.
 
 ```{r, echo=TRUE}
 sum((predict(model, newdata = d, type="response") >= 0.5) * d["count"]) / sum(d["count"])
@@ -291,7 +308,7 @@ More on the evils of binning when you don't have a reason: [https://discourse.da
 
 ## ROC plot
 
-Don't bother learning the ROC plot until you are comfotable with sensitivity and specificity. All the information in the ROC plot is also in this easy to read plot.
+Don't bother learning the ROC plot until you are comfortable with sensitivity and specificity. All the information in the ROC plot is also in this easy to read plot.
 
 ```{r, echo=TRUE}
 d["prediction"] <- predict(model, newdata = d, type="response")
