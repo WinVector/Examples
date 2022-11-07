@@ -81,7 +81,7 @@ Data scientists and statisticians both have fears and protective wards. Unless y
 | non-linear outcome transforms | heteroskedastic errors |
 | interactions | under-expressive models |
 | machine learning | under-expressive models | 
-| hyper parameter search| unstable modeling techniques |
+| hyper parameter search| unstable or under-specified modeling techniques |
 
 ## This Talk
 
