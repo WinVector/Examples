@@ -23,7 +23,7 @@ Dr. John Mount is a Principal Consultant at Win Vector LLC. John has a Ph.D in c
   - wvpy
 
 ::: {.notes}
-He did work on structural diversity of molecules for biotech applications, wrote and executed algorithmic trading strategies for Banc of America securities (a division of Bank of America). He is now concentrating on data science, machine learning, AI and analytics consulting and teaching. His most recent teaching product is a two week private immersion course on data science for engineers.
+I worked on structural diversity of molecules for biotech applications, wrote and executed algorithmic trading strategies for Banc of America securities (a division of Bank of America). I am now concentrating on data science, machine learning, AI and analytics consulting and teaching. My most recent teaching product is a two week private immersion course on data science for engineers.
 :::
   
 
@@ -182,11 +182,145 @@ Machine learning or AI-training builds a model that is *superficially indistingu
 
 ## Unbalanced Classification Classes
 
+## Tools deforming the hands
+
+Data scientist over-worry about  unbalanced classes in classification problems. 
+
+  * This distinction is a bit stronger in the Python data science community as the Python sklearn `.predict()` interface returns class labels instead of links or probabilities.
+  * The R `predict()` interface doesn't have this issue.
+  
+## A Classification Example
+
+For our classication example, let's take a BCSC breast cancer data set.
+
+For this model `breast_cancer_history` codes to 0 (no cancer), or 1 (cancer) for all instances with
+known cancer status. Each row is weighted by how many examples like the given row are in a larger ideal
+data set.
+
+```{r, echo=TRUE}
+d_orig <- read.csv(
+  "bcsc_risk_factors_summarized1_092020.csv.gz")
+d <- d_orig[d_orig$breast_cancer_history %in% c(0, 1), ]
+sum(d["breast_cancer_history"] * d["count"]) / 
+  sum(d["count"])
+```
+
+The prevalence of cancer, among those instances with known cancer determination, is about 10.3%.
+
+## Preparing the data
+
+All the variables in this model are re-coded categoricals, so we need to force them to be treated as strings.
+
+```{r, echo=TRUE}
+vars <- c(
+  "year", "age_group_5_years", "race_eth", 
+  "first_degree_hx", "age_menarche", "age_first_birth", 
+  "BIRADS_breast_density", "current_hrt", "menopaus", 
+  "bmi_group", "biophx")
+for(v in vars) {
+  d[v] <- as.character(d[[v]])
+}
+```
+
+## Building a classification model
+
+We can fit a logistic regression classification model on this data.
+
+```{r, echo=TRUE}
+env <- environment()  # so glm() can find weights!
+model <- glm(
+  wrapr::mk_formula(
+    "breast_cancer_history", vars, env = env),
+  data = d,
+  family = binomial(link = "logit"),
+  weights = d[["count"]])
+```
+
+## Using the model
+
+Let's see what sort of cancer risk the model associates with each of our example situations.
+
+```{r, echo=TRUE}
+predict(model, newdata = d, type="response")[1: 3]
+```
+
+Rember each outcome we are trying to match  is `0` or `1` (and each row in the data set can represent multiple individuals).
+
+```{r, echo=TRUE}
+table(d[["breast_cancer_history"]])
+```
+
+## Probabilities
+
+By default `predict.glm` returns probabilities or frequencies. We can see these match actual incidence on training data.
+
+```{r, echo=TRUE}
+sum(predict(model, newdata = d, type="response") * d["count"]) / sum(d["count"])
+sum(d["breast_cancer_history"] * d["count"]) / sum(d["count"])
+```
+
+## The Falacy
+
+In Python `.predict()` return the class label, which is defined as "1" if the probability is at lest `0.5` and "0" otherwise. There is abosolutely no reason for the prevelance of this label to match the data set.
+
+```{r, echo=TRUE}
+sum((predict(model, newdata = d, type="response") >= 0.5) * d["count"]) / sum(d["count"])
+```
+
+For very imbalanced outcomes, this prevalence may in fact be zero.
+
+## The VERY WRONG fix
+
+Because of the above problem many practitioners re-weight their training data to have the same number of positive and negative cases.
+
+  * This is fix is unnecessary.
+    * However, it is a popular fix and writing articles how to perform this fix is a popular activity.
+  * The *imagined* need for the fix likely comes from thinking the useful output of a classifier is the class-label, when in fact the estimated probability is *far* more useful.
+  * Always insist on probabilities from classifiers, not "most likely class label."
+    * One can always convert probabilities to labels later, but you can't do the reverse.
+
+More on the evils of binning when you don't have a reason: [https://discourse.datamethods.org/t/categorizing-continuous-variables/3402](https://discourse.datamethods.org/t/categorizing-continuous-variables/3402) (though I have used the technique as "poor man's GAM").
+
+## The Underlying Problem
+
+  * The ideas that classifiers should return categories is pernicious nonsense.
+  * In English "accuracy" is a synonym for "quality."
+  * Accuracy is the most commonly asked for goodness metric for classifiers.
+  * Accuracy is *almost never* the right metric when classes are imbalanced
+  * Learn to use AUC as it tells you how often your classifier's probability orders the outcomes correctly.
+
+## ROC plot
+
+Don't bother learning the ROC plot until you are comfotable with sensitivity and specificity. All the information in the ROC plot is also in this easy to read plot.
+
+```{r, echo=TRUE}
+d["prediction"] <- predict(model, newdata = d, type="response")
+d_expanded <- d[rep(row.names(d), d[["count"]]), ]
+WVPlots::ThresholdPlot(
+  d_expanded, 
+  xvar = "prediction", 
+  truthVar = "breast_cancer_history", 
+  truth_target = 1, 
+  title = "sensitivity and specificity as a function of proposed threshold")
+```
+
+
+## Time to Wrap Up
+
 ## Summary
+
+  * Be wary of apply too many or too few tricks in your statistical or data science practice.
+    * You may need some
+    * You should justify each one you use
+  * Statistics is the formal study of when samples correctly represent the population they are drawn from.
+  * Data Science is the optimistic application of machine learning methods at scale.
+  * Or: statisticians like to call `summary()` and `anova()`, data scientists are content to call `predict()`.
+  * In either case, the fears of the practitioner don't always match the fears of the theorist.
 
 ## Some of our articles on these topics
 
   * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat).
+  * [Nina Zumel: “I don’t think that means what you think it means;” Statistics to English Translation, Part 1: Accuracy Measures](https://win-vector.com/2009/11/03/i-dont-think-that-means-what-you-think-it-means-statistics-to-english-translation-part-1-accuracy-measures/).
   * [Nina Zumel: Does Balancing Classes Improve Classifier Performance?](https://win-vector.com/2015/02/27/does-balancing-classes-improve-classifier-performance/)
   * [Nina Zumel: Link Functions versus Data Transforms.](https://win-vector.com/2019/07/07/link-functions-versus-data-transforms/)
   * [John Mount: Can a classifier that never says "yes" be useful?](https://win-vector.com/2014/03/08/can-a-classifier-that-never-says-yes-be-useful/)
