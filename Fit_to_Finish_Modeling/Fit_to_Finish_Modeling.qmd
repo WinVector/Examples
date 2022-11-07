@@ -38,10 +38,10 @@ There is a tension between statistics and data science.
 
 Either field can be made to look bad by judging it in terms of the other's concerns.
 
-Statisticians are fond of observing "terms are used differently in data science" (code for not reading in other fields).
+Statisticians are fond of observing "terms are used differently in data science" (code for not allowing other fields to have prior art).
 
 I will show what it looks like to rush from data to building a model predictive model (supervised machine learning).
-Also I will demonstrate working fast in idiomatic R.
+Also, I will demonstrate some fo the joy of working fast in idiomatic R.
 
 
 ::: {.notes}
@@ -64,24 +64,28 @@ Examples:
 
 ## Problems and Practices
 
-Data scientists and statisticians both have fears and protective wards. Unless you are doing cargo cult science the two have a relation. Some of the relations are illustrated here.
+Judging a process merely by the results can simplifies things and also obscure important distinctions. This is the risk of "fit to finish" processes that are judged only on their final output. 
 
-| defensive ritual | fear |
+It can seem that data science is memorizing an infinite number of arcane rituals. Many of the tool suppliers *would like it to be that way*.
+
+Instead of this magical thinking, organize procedures by what they purport to fix.
+
+![Gregor Sailer, The Potemkin Village](GregorSailer_ThePotemkinVillage_3_1600_c.jpg)
+
+
+
+
+## Organizes the Fixes by what they Purport to Fix
+
+| defensive ritual(s) | legitimate fear(s) |
 | ---- | ---- |
-| variable pruning | over-fit |
-| pca | over-fit |
-| variable pruning | co-linear variables |
-| regularization | over-fit |
-| out of sample evaluation | over-fit |
-| cross methods | over-fit |
-| regularization | co-linear variables |
-| re-weighting data | unbalanced classification classes |
-| re-weighting data | heteroskedastic errors |
-| re-weighting data | concept drift |
-| non-linear outcome transforms | heteroskedastic errors |
-| interactions | under-expressive models |
-| machine learning | under-expressive models | 
-| hyper parameter search| unstable or under-specified modeling techniques |
+| **regularization**, variable pruning, principal components analysis | over-fit, **co-linear variables** |
+| out of sample evaluation, cross methods, ensemble methods, bagging, maximum entropy methods | over-fit |
+| **re-weighting data** | heteroskedastic errors, concept drift, **unbalanced classification classes** |
+| non-linear outcome transforms, neural nets, tree methods | heteroskedastic errors, non-linear response structure |
+| interactions, machine learning, neural nets, tree methods, boosting, stacking | under-expressive models, don't know structure of relation |
+| hyper parameter search | unstable models, under-specified modeling techniques |
+| Bayesian inference | neglecting prior knowledge and unobserved state |
 
 ## This Talk
 
@@ -208,7 +212,7 @@ Machine learning or AI-training builds a model that is *superficially indistingu
   * The data science view
     * "I am paid to call `predict()`, we are done here."
       * For many business situations, this is in fact the right answer!
-    * Model identification is pointless, as we can't expect reliable predictions on examples not distributionally similar to the training data.
+    * Model identification is pointless when we are not gifted with the right model structure, as we can't expect reliable predictions on examples not distributionally similar to the training data.
 
 ## Unbalanced Classification Classes
 
