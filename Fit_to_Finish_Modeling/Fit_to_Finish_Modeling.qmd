@@ -29,7 +29,7 @@ I worked on structural diversity of molecules for biotech applications, wrote an
 
 ![](cc757-newimage-2.png)
 
-## Fit to Finish Modeling
+## Statistics versus Data Science
 
 There is a tension between statistics and data science.
 
@@ -38,7 +38,10 @@ There is a tension between statistics and data science.
 
 Either field can be made to look bad by judging it in terms of the other's concerns.
 
+Statisticians are fond of observing "terms are used differently in data science" (code for not reading in other fields).
+
 I will show what it looks like to rush from data to building a model predictive model (supervised machine learning).
+Also I will demonstrate working fast in idiomatic R.
 
 
 ::: {.notes}
@@ -68,11 +71,14 @@ Data scientists and statisticians both have fears and protective wards. Unless y
 | variable pruning | over-fit |
 | variable pruning | co-linear variables |
 | regularization | over-fit |
+| out of sample evaluation | over-fit |
+| cross methods | over-fit |
 | regularization | co-linear variables |
 | re-weighting data | unbalanced classification classes |
 | re-weighting data | heteroskedastic errors |
 | re-weighting data | concept drift |
 | non-linear outcome transforms | heteroskedastic errors |
+| interactions | under expressive models |
 
 ## This Talk
 
@@ -205,6 +211,8 @@ Data scientist over-worry about  unbalanced classes in classification problems.
 
   * This distinction is a bit stronger in the Python data science community as the Python sklearn `.predict()` interface returns class labels instead of links or probabilities.
   * The R `predict()` interface doesn't have this issue.
+  * R users are more comfortable with statistical concepts such as uncertainty, probabilities, odds-ratios, and log-odds-ratios.
+  * Some modeling tooling is supporting fixes that repair problems introduced by other fixes (complexity death spiral).
   
 ## A Classification Example
 
@@ -264,7 +272,10 @@ predict(model, newdata = d, type="response")[1: 3]
 Remember each outcome we are trying to match  is `0` or `1` (and each row in the data set can represent multiple individuals).
 
 ```{r, echo=TRUE}
-table(d[["breast_cancer_history"]])
+library(data.table)
+
+data.table(d)[, .(count = sum(count)), by = breast_cancer_history] |>
+  knitr::kable()
 ```
 
 ## Probabilities
@@ -286,7 +297,7 @@ sum((predict(model, newdata = d, type="response") >= 0.5) * d["count"]) / sum(d[
 
 For very imbalanced outcomes, this prevalence may in fact be zero.
 
-## The VERY WRONG fix
+## The pointless fix
 
 Because of the above problem many practitioners re-weight their training data to have the same number of positive and negative cases.
 
