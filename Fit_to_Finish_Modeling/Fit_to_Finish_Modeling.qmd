@@ -69,6 +69,7 @@ Data scientists and statisticians both have fears and protective wards. Unless y
 | defensive ritual | fear |
 | ---- | ---- |
 | variable pruning | over-fit |
+| pca | over-fit |
 | variable pruning | co-linear variables |
 | regularization | over-fit |
 | out of sample evaluation | over-fit |
@@ -78,7 +79,8 @@ Data scientists and statisticians both have fears and protective wards. Unless y
 | re-weighting data | heteroskedastic errors |
 | re-weighting data | concept drift |
 | non-linear outcome transforms | heteroskedastic errors |
-| interactions | under expressive models |
+| interactions | under-expressive models |
+| machine learning | under-expressive models | 
 
 ## This Talk
 
@@ -93,6 +95,10 @@ All slides and material here: [https://github.com/WinVector/Examples/tree/main/F
 
 
 ## Co-Linear Variables
+
+Variables that imitate each other, which to use?
+
+![](spider_man.jpg)
 
 ## Co-Linear Variables, some data
 
@@ -204,6 +210,8 @@ Machine learning or AI-training builds a model that is *superficially indistingu
     * Model identification is pointless, as we can't expect reliable predictions on examples not distributionally similar to the training data.
 
 ## Unbalanced Classification Classes
+
+![](one_not_like_the_other.jpg)
 
 ## Tools deforming the hands
 
@@ -335,6 +343,8 @@ WVPlots::ThresholdPlot(
 
 ## Time to Wrap Up
 
+![](AlwaysHasBeen.jpg)
+
 ## Summary
 
   * Be wary of apply too many or too few tricks in your statistical or data science practice.
@@ -343,7 +353,7 @@ WVPlots::ThresholdPlot(
   * Statistics is the formal study of when samples correctly represent the population they are drawn from.
   * Data Science is the optimistic application of machine learning methods at scale.
   * Or: statisticians like to call `summary()` and `anova()`, data scientists are content to call `predict()`.
-  * In either case, the fears of the practitioner don't always match the fears of the theorist.
+  * In either case, the fears of the practitioner don't always match the fears of the theorist, *and* vice versa.
 
 ## Some of our articles on these topics
 
@@ -354,6 +364,6 @@ WVPlots::ThresholdPlot(
   * [John Mount: Can a classifier that never says "yes" be useful?](https://win-vector.com/2014/03/08/can-a-classifier-that-never-says-yes-be-useful/)
   * [John Mount: When Cross-Validation is More Powerful than Regularization.](https://win-vector.com/2019/11/12/when-cross-validation-is-more-powerful-than-regularization/)
 
-## Thanks
+## Thank You!
 
 
