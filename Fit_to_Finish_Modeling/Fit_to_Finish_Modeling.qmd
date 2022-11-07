@@ -154,6 +154,7 @@ knitr::kable(
   )
 ```
 
+![Picking one variable over another](favoritism-it-sucks-favoritism-21936802.png)
 
 ## Another Model
 
@@ -207,12 +208,11 @@ Machine learning or AI-training builds a model that is *superficially indistingu
   * Often best possible on training data. In the absence of over-fit issues may be nearly best possible on hold out data.
 
   * The statistics view
-      * May still be the wrong model, with wrong coefficients inferred.
-      * Model identification is important, as the model may be called on an example not similar to the training data.
+    * May still be the wrong model, with wrong coefficients inferred.
+    * Model identification is important, as the model may be called on an example not similar to the training data.
   * The data science view
-    * "I am paid to call `predict()`, we are done here."
-      * For many business situations, this is in fact the right answer!
-    * Model identification is pointless when we are not gifted with the right model structure, as we can't expect reliable predictions on examples not distributionally similar to the training data.
+    * "I am paid to call `predict()`, we are done here." (For many business situations, this is in fact the right answer!)
+    * Model identification can be pointless when don't have the right model structure (without that we can't expect reliable predictions distributionaly different examples).
 
 ## Unbalanced Classification Classes
 
@@ -362,10 +362,11 @@ WVPlots::ThresholdPlot(
 
 ## Some of our articles on these topics
 
-  * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat).
   * [Nina Zumel: “I don’t think that means what you think it means;” Statistics to English Translation, Part 1: Accuracy Measures](https://win-vector.com/2009/11/03/i-dont-think-that-means-what-you-think-it-means-statistics-to-english-translation-part-1-accuracy-measures/).
   * [Nina Zumel: Does Balancing Classes Improve Classifier Performance?](https://win-vector.com/2015/02/27/does-balancing-classes-improve-classifier-performance/)
   * [Nina Zumel: Link Functions versus Data Transforms.](https://win-vector.com/2019/07/07/link-functions-versus-data-transforms/)
+  * [Nina Zumel: The Simpler Derivation of Logistic Regression](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/).
+  * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat).
   * [John Mount: Can a classifier that never says "yes" be useful?](https://win-vector.com/2014/03/08/can-a-classifier-that-never-says-yes-be-useful/)
   * [John Mount: When Cross-Validation is More Powerful than Regularization.](https://win-vector.com/2019/11/12/when-cross-validation-is-more-powerful-than-regularization/)
 
