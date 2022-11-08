@@ -1,5 +1,5 @@
 ---
-title: "Fit to Finish Modeling"
+title: "Data Science: Street Fighting Statistics"
 author: "John Mount, [Win Vector LLC](https://www.win-vector.com)"
 date: 2022-11-9
 format: 
@@ -17,7 +17,7 @@ I am a Principal Consultant at Win Vector LLC. I have a Ph.D in computer science
   - wrapr
   - cdata
   - WVPlots
-- Co-author of several Python data science packages
+- Author of several Python data science packages
   - vtreat
   - data_algebra
   - wvpy
@@ -36,12 +36,10 @@ There is a tension between statistics and data science.
   - Statistics emphasizes model identification and inference.
   - Data Science emphasizes quality of model predictions.
 
-Either field can be made to look bad by judging it in terms of the other's concerns.
-
-Statisticians are fond of observing "terms are used differently in data science" (code for not allowing other fields to have prior art).
+*Either* field can be made to look bad by judging it in terms of the other's concerns. Neither field can claim priority in consulting (that would be operations research!).
 
 I will show what it looks like to rush from data to building a model predictive model (supervised machine learning).
-Also, I will demonstrate some fo the joy of working fast in idiomatic R.
+Also, I will demonstrate some of the joy of working fast in idiomatic R.
 
 
 ::: {.notes}
@@ -59,6 +57,9 @@ Examples:
   * Predicting children's height from parent's height.
   * Predicting cancer risk.
   * Predicting the probabilty of clicking on an online advertisement.
+  * Mapping a picture to a description (f(X) ~ y)
+  * Mapping a description to picture (f(y) ~ X)
+  
   
 (tends to ignore issues of cause!)
 
@@ -66,7 +67,7 @@ Examples:
 
 Judging a process merely by the results can simplifies things and also obscure important distinctions. This is the risk of "fit to finish" processes that are judged only on their final output. 
 
-It can seem that data science is memorizing an infinite number of arcane rituals. Many of the tool suppliers *would like it to be that way*.
+It can seem that the practice of data science is memorizing an infinite number of arcane rituals. Many of the tool suppliers *would like it to be that way*.
 
 Instead of this magical thinking, organize procedures by what they purport to fix.
 
@@ -75,7 +76,7 @@ Instead of this magical thinking, organize procedures by what they purport to fi
 
 
 
-## Organizes the Fixes by what they Purport to Fix
+## The Fixes by what they Purport to Fix
 
 | defensive ritual(s) | legitimate fear(s) |
 | ---- | ---- |
@@ -89,7 +90,7 @@ Instead of this magical thinking, organize procedures by what they purport to fi
 
 ## This Talk
 
-In this talk I'll discuss predictive modeling and some classic "bugbears":
+In this talk I'll discuss predictive modeling, and two of the earlier bugbears:
 
   - co-linear variables
   - unbalanced classification classes
@@ -212,7 +213,14 @@ Machine learning or AI-training builds a model that is *superficially indistingu
     * Model identification is important, as the model may be called on an example not similar to the training data.
   * The data science view
     * "I am paid to call `predict()`, we are done here." (For many business situations, this is in fact the right answer!)
-    * Model identification can be pointless when don't have the right model structure (without that we can't expect reliable predictions distributionaly different examples).
+    * Model identification can be pointless when don't have the right model structure, and without that we can't expect reliable predictions for distributionally different examples.
+    
+## Some Commentary
+
+  * The claimed above statistical view hopes to estimate the correct *conditional* distribution `P[y | X]` for *all* `X`.
+  * The claimed above data science view hopes to estimate the correct  *joint* distribution `P[X, y]` for *only* `(X, y)` exchangeable with the training data.
+  
+*Not* the same problem!
 
 ## Unbalanced Classification Classes
 
@@ -317,18 +325,18 @@ Because of the above problem many practitioners re-weight their training data to
   * This is fix is unnecessary.
     * However, it is a popular fix and writing articles how to perform this fix is a popular activity.
   * The *imagined* need for the fix likely comes from thinking the useful output of a classifier is the class-label, when in fact the estimated probability is *far* more useful.
-  * Always insist on probabilities from classifiers, not "most likely class label."
+  * *Always* insist on probabilities from classifiers, not "most likely class label."
     * One can always convert probabilities to labels later, but you can't do the reverse.
 
 More on the evils of binning when you don't have a reason: [https://discourse.datamethods.org/t/categorizing-continuous-variables/3402](https://discourse.datamethods.org/t/categorizing-continuous-variables/3402) (though I have used the technique as "poor man's GAM").
 
 ## The Underlying Problem
 
-  * The ideas that classifiers should return categories is pernicious nonsense.
+  * The view that classifiers should return categories is pernicious nonsense.
   * In English "accuracy" is a synonym for "quality."
   * Accuracy is the most commonly asked for goodness metric for classifiers.
-  * Accuracy is *almost never* the right metric when classes are imbalanced
-  * Learn to use AUC as it tells you how often your classifier's probability orders the outcomes correctly.
+    * Accuracy is *almost never* the right metric when outcome classes are imbalanced
+  * Learn to use ROC/AUC as it tells you how often your classifier's probability orders the outcomes correctly.
 
 ## ROC plot
 
@@ -362,11 +370,14 @@ WVPlots::ThresholdPlot(
 
 ## Some of our articles on these topics
 
+Consider reading one, not all!!!
+
   * [Nina Zumel: “I don’t think that means what you think it means;” Statistics to English Translation, Part 1: Accuracy Measures](https://win-vector.com/2009/11/03/i-dont-think-that-means-what-you-think-it-means-statistics-to-english-translation-part-1-accuracy-measures/).
+  * [Nina Zumel: Squeezing the Most Utility from Your Models](https://win-vector.com/2020/10/05/squeezing-the-most-utility-from-your-models/).
   * [Nina Zumel: Does Balancing Classes Improve Classifier Performance?](https://win-vector.com/2015/02/27/does-balancing-classes-improve-classifier-performance/)
   * [Nina Zumel: Link Functions versus Data Transforms.](https://win-vector.com/2019/07/07/link-functions-versus-data-transforms/)
   * [Nina Zumel: The Simpler Derivation of Logistic Regression](https://win-vector.com/2011/09/14/the-simpler-derivation-of-logistic-regression/).
-  * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat).
+  * [vtreat for R](https://github.com/WinVector/vtreat), [vtreat for Python](https://github.com/WinVector/vtreat) (our own super trick for re-coding high cardinality categorical variables!)
   * [John Mount: Can a classifier that never says "yes" be useful?](https://win-vector.com/2014/03/08/can-a-classifier-that-never-says-yes-be-useful/)
   * [John Mount: When Cross-Validation is More Powerful than Regularization.](https://win-vector.com/2019/11/12/when-cross-validation-is-more-powerful-than-regularization/)
 
