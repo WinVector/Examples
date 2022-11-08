@@ -38,7 +38,7 @@ There is a tension between statistics and data science.
 
 *Either* field can be made to look bad by judging it in terms of the other's concerns. Neither field can claim priority in consulting (that would be operations research!).
 
-I will show what it looks like to rush from data to building a model predictive model (supervised machine learning).
+I will show what it looks like to rush from data to building a predictive model (supervised machine learning).
 Also, I will demonstrate some of the joy of working fast in idiomatic R.
 
 
@@ -48,15 +48,15 @@ Machine learning practice, often called data science, emphasizes empirical tunin
 
 ## Supervised Machine Learning
 
-The task data scientist tend to be interested in is "supervised machine learning."
+The task data scientists tend to be interested in is "supervised machine learning."
 
   * You are shown a table with rows of the form `(X, y)`: try to find a function that that `f(X) ~ y`.
 
 Examples:
 
-  * Predicting children's height from parent's height.
+  * Predicting childrens' heights from parents' heights.
   * Predicting cancer risk.
-  * Predicting the probabilty of clicking on an online advertisement.
+  * Predicting the probability of clicking on an online advertisement.
   * Mapping a picture to a description (f(X) ~ y)
   * Mapping a description to picture (f(y) ~ X)
   
@@ -65,7 +65,7 @@ Examples:
 
 ## Problems and Practices
 
-Judging a process merely by the results can simplifies things and also obscure important distinctions. This is the risk of "fit to finish" processes that are judged only on their final output. 
+Judging a process merely by the results can simplify things, but also obscure important distinctions. This is the risk of "fit to finish" processes that are judged only on their final output. 
 
 It can seem that the practice of data science is memorizing an infinite number of arcane rituals. Many of the tool suppliers *would like it to be that way*.
 
@@ -116,7 +116,7 @@ introduced a variable called "mid_parent".
 d <- read.table(
   "galton-stata11.tab", 
   header = TRUE)
-d$mid_parent = (
+d$mid_parent = 0.5 * (
   d$father + 1.08 * d$mother)
 
 knitr::kable(head(d))
@@ -141,7 +141,7 @@ d_test <- d[!(d$family %in% train_families), ]
 
 ## A Model
 
-Here is a standard model, notice `mid_parent` is suppressed as it is co-linear with
+Here is a standard model. Notice `mid_parent` is suppressed as it is co-linear with
 some combination of `father` and `mother`.
 
 ```{r, echo=TRUE}
@@ -233,7 +233,7 @@ Data scientist over-worry about  unbalanced classes in classification problems.
   * This distinction is a bit stronger in the Python data science community as the Python sklearn `.predict()` interface returns class labels instead of links or probabilities.
   * The R `predict()` interface doesn't have this issue.
   * R users are more comfortable with statistical concepts such as uncertainty, probabilities, odds-ratios, and log-odds-ratios.
-  * Some modeling tooling is supporting fixes that repair problems introduced by other fixes (complexity death spiral).
+  * Some modeling tooling exists to support fixes that repair problems introduced by other fixes (complexity death spiral).
   
 ## A Classification Example
 
@@ -304,13 +304,15 @@ data.table(d)[, .(count = sum(count)), by = breast_cancer_history] |>
 By default `predict.glm` returns probabilities or frequencies. We can see these match actual incidence on training data.
 
 ```{r, echo=TRUE}
-sum(predict(model, newdata = d, type="response") * d["count"]) / sum(d["count"])
+sum(
+  predict(model, newdata = d, type="response") * d["count"]) / 
+  sum(d["count"])
 sum(d["breast_cancer_history"] * d["count"]) / sum(d["count"])
 ```
 
 ## The Fallacy
 
-In Python `.predict()` return the class label, which is defined as "1" if the probability is at lest `0.5` and "0" otherwise. There is absolutely no reason for the prevalence of this label to match the data set.
+In Python `.predict()` returns the class label, which is defined as "1" if the probability is at least `0.5` and "0" otherwise. There is absolutely no reason for the prevalence of this label to match the data set.
 
 ```{r, echo=TRUE}
 sum((predict(model, newdata = d, type="response") >= 0.5) * d["count"]) / sum(d["count"])
@@ -318,11 +320,23 @@ sum((predict(model, newdata = d, type="response") >= 0.5) * d["count"]) / sum(d[
 
 For very imbalanced outcomes, this prevalence may in fact be zero.
 
+::: {.notes}
+
+As a rule of thumb, using the prevalence as the threshold (instead of 0.5), generally returns a predicted prevalence close to the actual, and can 
+make more useful predictions on individuals.
+
+Alternately, you can search for the threshold that matches the prevalence.
+
+Python does have ".predict_proba()"
+
+:::
+
+
 ## The pointless fix
 
 Because of the above problem many practitioners re-weight their training data to have the same number of positive and negative cases.
 
-  * This is fix is unnecessary.
+  * This fix is unnecessary.
     * However, it is a popular fix and writing articles how to perform this fix is a popular activity.
   * The *imagined* need for the fix likely comes from thinking the useful output of a classifier is the class-label, when in fact the estimated probability is *far* more useful.
   * *Always* insist on probabilities from classifiers, not "most likely class label."
@@ -360,7 +374,7 @@ WVPlots::ThresholdPlot(
 
 ## Summary
 
-  * Be wary of apply too many or too few tricks in your statistical or data science practice.
+  * Be wary of applying too many or too few tricks in your statistical or data science practice.
     * You may need some
     * You should justify each one you use
   * Statistics is the formal study of when samples correctly represent the population they are drawn from.
