@@ -97,7 +97,7 @@ In this talk I'll discuss predictive modeling, and two of the earlier bugbears:
 
 This is a chance to review some "street fighting statistics in R."
 
-All slides and material here: [https://github.com/WinVector/Examples/tree/main/Fit_to_Finish_Modeling](https://github.com/WinVector/Examples/tree/main/Fit_to_Finish_Modeling).
+All slides and material here: [https://github.com/WinVector/Examples/tree/main/Street_Fighting_Statistics](https://github.com/WinVector/Examples/tree/main/Street_Fighting_Statistics).
 
 
 ## Co-Linear Variables
