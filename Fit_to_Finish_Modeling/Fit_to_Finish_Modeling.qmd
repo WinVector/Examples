@@ -220,7 +220,7 @@ Machine learning or AI-training builds a model that is *superficially indistingu
   * The claimed above statistical view hopes to estimate the correct *conditional* distribution `P[y | X]` for *all* `X`.
   * The claimed above data science view hopes to estimate the correct  *joint* distribution `P[X, y]` for *only* `(X, y)` exchangeable with the training data.
   
-*Not* the same problem!
+*Not* the same problem (despite Bayes' Law)! Either can be warped into a criticism.
 
 ## Unbalanced Classification Classes
 
