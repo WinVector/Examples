@@ -113,13 +113,9 @@ Galton didn't start with multi-variate regression, so he
 introduced a variable called "mid_parent".
 
 ```{r, echo=TRUE}
-d <- read.table(
-  "galton-stata11.tab", 
-  header = TRUE)
-d$mid_parent = 0.5 * (
-  d$father + 1.08 * d$mother)
-
-knitr::kable(head(d))
+d <- read.table("galton-stata11.tab", header = TRUE)
+d$mid_parent = (d$father + 1.08 * d$mother) / 2
+d |> head() |> knitr::kable()
 ```
 
 ## Held Out Evaluation
@@ -145,14 +141,10 @@ Here is a standard model. Notice `mid_parent` is suppressed as it is co-linear w
 some combination of `father` and `mother`.
 
 ```{r, echo=TRUE}
-# standard OLS model
-model_1 <- lm(
-  height ~ father + 
-    mother + mid_parent, 
+model_1 <- lm(  # standard OLS model
+  height ~ father + mother + mid_parent, 
   data = d_train)
-knitr::kable(
-  summary(model_1)$coefficients
-  )
+summary(model_1)$coefficients |> knitr::kable()
 ```
 
 ![Picking one variable over another](favoritism-it-sucks-favoritism-21936802.png)
@@ -160,20 +152,13 @@ knitr::kable(
 ## Another Model
 
 ```{r, echo=TRUE}
-# L2 regularized model
-var_cols <- c(
-  "father", 
-  "mother", 
-  "mid_parent")
-model_2 <- glmnet::glmnet(
-    x = as.matrix(
-      d_train[ , var_cols]),
+var_cols <- c("father", "mother", "mid_parent")
+model_2 <- glmnet::glmnet(  # L2 regularized model
+    x = as.matrix(d_train[ , var_cols]),
     y = d_train[["height"]], 
     alpha = 0, 
     lambda = 1e-3) 
-knitr::kable(
-  as.matrix(model_2$beta)
-  )
+model_2$beta |> as.matrix() |> knitr::kable()
 ```
 
 ## How *effectively* different are the models?
@@ -273,10 +258,12 @@ for(v in vars) {
 We can fit a logistic regression classification model on this data.
 
 ```{r, echo=TRUE}
-env <- environment()  # so glm() can find weights!
 model <- glm(
   wrapr::mk_formula(
-    "breast_cancer_history", vars, env = env),
+    "breast_cancer_history", 
+    vars, 
+    extra_values = list(d = d)  # to find weights!
+    ),
   data = d,
   family = binomial(link = "logit"),
   weights = d[["count"]])
@@ -295,8 +282,7 @@ Remember each outcome we are trying to match  is `0` or `1` (and each row in the
 ```{r, echo=TRUE}
 library(data.table)
 
-data.table(d)[, .(count = sum(count)), by = breast_cancer_history] |>
-  knitr::kable()
+data.table(d)[, .(count = sum(count)), by = breast_cancer_history] |> knitr::kable()
 ```
 
 ## Probabilities
@@ -304,10 +290,11 @@ data.table(d)[, .(count = sum(count)), by = breast_cancer_history] |>
 By default `predict.glm` returns probabilities or frequencies. We can see these match actual incidence on training data.
 
 ```{r, echo=TRUE}
-sum(
-  predict(model, newdata = d, type="response") * d["count"]) / 
+sum(predict(model, newdata = d, type="response") * d["count"]) / 
   sum(d["count"])
-sum(d["breast_cancer_history"] * d["count"]) / sum(d["count"])
+
+sum(d["breast_cancer_history"] * d["count"]) /
+  sum(d["count"])
 ```
 
 ## The Fallacy
@@ -315,7 +302,11 @@ sum(d["breast_cancer_history"] * d["count"]) / sum(d["count"])
 In Python `.predict()` returns the class label, which is defined as "1" if the probability is at least `0.5` and "0" otherwise. There is absolutely no reason for the prevalence of this label to match the data set.
 
 ```{r, echo=TRUE}
-sum((predict(model, newdata = d, type="response") >= 0.5) * d["count"]) / sum(d["count"])
+sum(
+  (predict(model, newdata = d, type="response") >= 0.5) *
+    d["count"]
+  ) / 
+  sum(d["count"])
 ```
 
 For very imbalanced outcomes, this prevalence may in fact be zero.
