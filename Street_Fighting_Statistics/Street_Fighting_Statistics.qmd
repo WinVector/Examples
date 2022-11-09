@@ -303,10 +303,10 @@ In Python `.predict()` returns the class label, which is defined as "1" if the p
 
 ```{r, echo=TRUE}
 sum(
-  (predict(model, newdata = d, type="response") >= 0.5) *
-    d["count"]
-  ) / 
-  sum(d["count"])
+ (predict(model, newdata = d, type="response") >= 0.5) *
+ d["count"]
+) / 
+ sum(d["count"])
 ```
 
 For very imbalanced outcomes, this prevalence may in fact be zero.
