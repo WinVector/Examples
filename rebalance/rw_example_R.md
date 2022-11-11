@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Sat Nov 5 12:12:08 2022
+Fri Nov 11 07:49:12 2022
 
 ## Introduction
 
