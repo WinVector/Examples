@@ -193,7 +193,7 @@ pairs <- list(
 pairs
 ```
 
-Each entry of `pairs` is the edge-set of a graph where `pred1` and `pred2` orders disagree. We want new variables eliminate edges from these graphs.
+Each entry of `pairs` is the edge-set of a graph where `pred1` and `pred2` orders disagree. We want new variables to eliminate edges from these graphs.
 
 In our case the ordered supports of the components are `{({1,2}, {4, 5, 6}), ({3}, {7})}`. Our idea is to introduce variables that identify these support sets, as this would give the model the degrees of freedom needed to re-score these sets independently and remove the compromises forcing the non-monotone change.
 

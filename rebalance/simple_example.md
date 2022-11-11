@@ -108,7 +108,17 @@ d_simple <- wrapr::build_frame(
     0  , 1   |
     1  , 0   |
     1  , 1   )
+
+knitr::kable(d_simple)
 ```
+
+|   x |   y |
+|----:|----:|
+|   0 |   0 |
+|   0 |   0 |
+|   0 |   1 |
+|   1 |   0 |
+|   1 |   1 |
 
 ``` r
 build_trajectory_graphs(d_simple, title = "simple example", vars = c("x"))
@@ -126,7 +136,19 @@ d_ex <- wrapr::build_frame(
      1   , 0   , 0   |
      1   , 0   , 1   |
      1   , 1   , 0   )
+
+knitr::kable(d_ex)
 ```
+
+|  x1 |  x2 |   y |
+|----:|----:|----:|
+|   0 |   0 |   0 |
+|   0 |   0 |   0 |
+|   0 |   1 |   1 |
+|   1 |   0 |   0 |
+|   1 |   0 |   0 |
+|   1 |   0 |   1 |
+|   1 |   1 |   0 |
 
 ``` r
 build_trajectory_graphs(d_ex, title = "complex example", vars = c("x1", "x2"))

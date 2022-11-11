@@ -1,7 +1,7 @@
 A Simple Example Where re-Weighting Data is Not Monotone
 ================
 John Mount, Nina Zumel; <https://www.win-vector.com>
-Fri Nov 11 07:49:12 2022
+Fri Nov 11 12:36:12 2022
 
 ## Introduction
 
@@ -344,7 +344,7 @@ pairs
     ## [2,]
 
 Each entry of `pairs` is the edge-set of a graph where `pred1` and
-`pred2` orders disagree. We want new variables eliminate edges from
+`pred2` orders disagree. We want new variables to eliminate edges from
 these graphs.
 
 In our case the ordered supports of the components are

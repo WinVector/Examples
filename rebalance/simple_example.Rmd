@@ -97,6 +97,8 @@ d_simple <- wrapr::build_frame(
     0  , 1   |
     1  , 0   |
     1  , 1   )
+
+knitr::kable(d_simple)
 ```
 
 ```{r}
@@ -114,6 +116,8 @@ d_ex <- wrapr::build_frame(
      1   , 0   , 0   |
      1   , 0   , 1   |
      1   , 1   , 0   )
+
+knitr::kable(d_ex)
 ```
 
 
