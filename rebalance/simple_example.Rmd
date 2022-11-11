@@ -96,6 +96,7 @@ d_simple <- wrapr::build_frame(
     0  , 0   |
     0  , 1   |
     1  , 0   |
+    1  , 1   |
     1  , 1   )
 
 knitr::kable(d_simple)
