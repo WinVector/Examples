@@ -104,11 +104,9 @@ build_trajectory_graphs <- function(d, ..., title, vars, outcome_name = "y") {
 d_simple <- wrapr::build_frame(
   "x"  , "y" |
     0  , 0   |
-    0  , 0   |
     0  , 1   |
     1  , 0   |
-    1  , 1   |
-    1  , 1   )
+    2  , 1   )
 
 knitr::kable(d_simple)
 ```
@@ -116,11 +114,9 @@ knitr::kable(d_simple)
 |   x |   y |
 |----:|----:|
 |   0 |   0 |
-|   0 |   0 |
 |   0 |   1 |
 |   1 |   0 |
-|   1 |   1 |
-|   1 |   1 |
+|   2 |   1 |
 
 ``` r
 build_trajectory_graphs(d_simple, title = "simple example", vars = c("x"))
