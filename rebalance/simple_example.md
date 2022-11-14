@@ -3,6 +3,7 @@ simple_example.Rmd
 2022-11-11
 
 ``` r
+library(data.table)
 library(ggplot2)
 ```
 
@@ -104,9 +105,11 @@ build_trajectory_graphs <- function(d, ..., title, vars, outcome_name = "y") {
 d_simple <- wrapr::build_frame(
   "x"  , "y" |
     0  , 0   |
+    0  , 0   |
     0  , 1   |
     1  , 0   |
-    2  , 1   )
+    1  , 1   |
+    1  , 1   )
 
 knitr::kable(d_simple)
 ```
@@ -114,15 +117,59 @@ knitr::kable(d_simple)
 |   x |   y |
 |----:|----:|
 |   0 |   0 |
+|   0 |   0 |
 |   0 |   1 |
 |   1 |   0 |
-|   2 |   1 |
+|   1 |   1 |
+|   1 |   1 |
+
+``` r
+# get row counts
+ds <- data.table(d_simple)
+ds$count <- 1
+ds <- ds[, .(count = sum(count)), by = .(x, y)]
+# get any missing patterns
+zeros <- wrapr::build_frame(
+  "x"  , "y" |
+    0  , 0   |
+    0  , 1   |
+    1  , 0   |
+    1  , 1   )
+zeros$count <- 0
+ds <- rbind(ds, zeros)
+ds <- ds[, .(count = sum(count)), by = .(x, y)]
+# extract weighted counts
+w_x_0_y_0 <- ds[(ds$x == 0) & (ds$y == 0), "count"]$count
+w_x_1_y_0 <- ds[(ds$x == 1) & (ds$y == 0), "count"]$count
+w_x_0_y_1 <- ds[(ds$x == 0) & (ds$y == 1), "count"]$count
+w_x_1_y_1 <- ds[(ds$x == 1) & (ds$y == 1), "count"]$count
+b0 <- log( w_x_0_y_1 / w_x_0_y_0 )
+b1 <- log( (w_x_1_y_1 / w_x_1_y_0) / (w_x_0_y_1 / w_x_0_y_0 ) )
+print(paste(b0, b1))
+```
+
+    ## [1] "-0.693147180559945 1.38629436111989"
+
+``` r
+glm(y ~ x, data = d_simple, family = binomial)
+```
+
+    ## 
+    ## Call:  glm(formula = y ~ x, family = binomial, data = d_simple)
+    ## 
+    ## Coefficients:
+    ## (Intercept)            x  
+    ##     -0.6931       1.3863  
+    ## 
+    ## Degrees of Freedom: 5 Total (i.e. Null);  4 Residual
+    ## Null Deviance:       8.318 
+    ## Residual Deviance: 7.638     AIC: 11.64
 
 ``` r
 build_trajectory_graphs(d_simple, title = "simple example", vars = c("x"))
 ```
 
-![](simple_example_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->![](simple_example_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+![](simple_example_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->![](simple_example_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
 ``` r
 d_ex <- wrapr::build_frame(
@@ -152,4 +199,4 @@ knitr::kable(d_ex)
 build_trajectory_graphs(d_ex, title = "complex example", vars = c("x1", "x2"))
 ```
 
-![](simple_example_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->![](simple_example_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+![](simple_example_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->![](simple_example_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
