@@ -95,7 +95,7 @@ max(abs(
 )
 ```
 
-    ## [1] 6.832974e-15
+    ## [1] 6.943996e-15
 
 The above is easy to derive from the usual trigonometric additive angle
 formulas, and pretty much how trigonometric tables used to be
@@ -192,9 +192,12 @@ m_ideal
     ##       1.9021   -1
     ## s.e.  0.0000    0
     ## 
-    ## sigma^2 estimated as 3.026e-30:  log likelihood = 3584.71,  aic = NA
+    ## sigma^2 estimated as 3.03e-30:  log likelihood = 3585.47,  aic = NA
 
-And we plot the forecast into the future (past the training region).
+Some of the diagnostics look a little concerning, but the fitter did
+identify the system and reproduce the theoretical coefficients.
+
+We can plot the forecast into the future (past the training region).
 
 ``` r
 plot_ts_result <- function(predictions, comparison_column, title) {
@@ -398,6 +401,14 @@ of the norm of the step forward in time operator. This is fine, *until
 one applies the operator again and again to make predictions*. When we
 fit ARIMA models we are actually trying to identify the one step forward
 operator, not a `k`-step forward operator.
+
+I have in the past found auto ARIMA type methods to be fairly brittle
+and [degenerate to predicting a near-constant with rapidly growing error
+bars for problems as simple as modeling the
+tide](https://github.com/WinVector/Examples/blob/main/Tides/TideR_ARIMA.md)
+when “under supervised.” For some fun with forecasting tides, please see
+[Lord Kelvin, Data
+Scientist](https://win-vector.com/2019/08/06/lord-kelvin-data-scientist/).
 
 ## ARIMA forecasting
 
@@ -634,6 +645,6 @@ in fact be justified. One is allowed to not use ARIMA.
 
 Thank you to Dr. Nina Zumel for her comments and improvements.
 
-Note: a package of interest (in Python, not R) is
-[`sktime`](https://github.com/sktime/sktime) which I believe may use
-“convert the problem and use another package to regress” strategies.
+Time series packages of interest include
+[`sktime`](https://github.com/sktime/sktime) (a Python package), and
+[NNS](https://CRAN.R-project.org/package=NNS).
