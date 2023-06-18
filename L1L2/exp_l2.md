@@ -83,13 +83,13 @@ We can also try for a more precise estimate of the “L2/L1 AUC value.”
 res_list <- mclapply(
   seq(100),
   function(...) {
-    estimate_p_n(1000, experiment_reps = 1000000)
+    estimate_p_n(10000, experiment_reps = 1000000)
   },
   mc.cores = detectCores())
 res <- mean(as.numeric(res_list))
 res
 ```
 
-    ## [1] 0.8856102
+    ## [1] 0.8854221
 
 Perhaps this is $\sqrt{\pi} / 2 \approx 0.8862269$?
