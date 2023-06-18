@@ -68,5 +68,8 @@ Some work on how to prove this can be found here: [The L2 Ball's View of the L1 
 We can also try for a more precise estimate of the "L2/L1 AUC value."
 
 ```{r}
-estimate_p_n(1000, experiment_reps = 1000000)
+estimate_p_n(1000, experiment_reps = 10000000)
 ```
+
+Perhaps this is $\sqrt{pi} / 2 \approx 0.8862269$?
+

@@ -79,7 +79,9 @@ Norm](https://github.com/WinVector/Examples/blob/main/L1L2/L1L2.ipynb).
 We can also try for a more precise estimate of the “L2/L1 AUC value.”
 
 ``` r
-estimate_p_n(1000, experiment_reps = 1000000)
+estimate_p_n(1000, experiment_reps = 10000000)
 ```
 
-    ## [1] 0.885436
+    ## [1] 0.8853911
+
+Perhaps this is $\sqrt{pi} / 2 \approx 0.8862269$?
