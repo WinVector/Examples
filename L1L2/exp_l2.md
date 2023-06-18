@@ -23,7 +23,7 @@ set.seed(2023)
 library(parallel)
 
 
-estimate_p_n <- function(dimension, experiment_reps = 10000) {  # noisy empirical estimate
+estimate_p_n <- function(dimension, experiment_reps = 1000000) {  # noisy empirical estimate
   f_l1 <- function(x) { sum(abs(x)) }
   f_l2 <- function(x) { sqrt(sum(x^2)) }  # sqrt() doesn't affect order, so could leave it out.
   # define our experiment
@@ -45,7 +45,7 @@ $p_{100}$ is likely somewhere near the following.
 estimate_p_n(100)
 ```
 
-    ## [1] 0.8875
+    ## [1] 0.886824
 
 $p_{101}$ is likely somewhere near the following.
 
@@ -53,7 +53,7 @@ $p_{101}$ is likely somewhere near the following.
 estimate_p_n(101)
 ```
 
-    ## [1] 0.8797
+    ## [1] 0.886648
 
 A (noisy, empirical graph) of $p_n$ is given as follows.
 
@@ -61,7 +61,10 @@ A (noisy, empirical graph) of $p_n$ is given as follows.
 d <- data.frame(
   dimension = seq(100)
 )
-d$p_dimension <- vapply(d$dimension, estimate_p_n, numeric(1))
+d$p_dimension <- as.numeric(mclapply(
+  d$dimension, 
+  estimate_p_n, 
+  mc.cores = detectCores()))
 ```
 
 ``` r
@@ -70,8 +73,8 @@ plot(d)
 
 ![](exp_l2_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-Some work on how to prove this can be found here: [The L2 Ball’s View of
-the L1
+Some work on how to prove the constant is in the interior of $(1/2, 1)$
+can be found here: [The L2 Ball’s View of the L1
 Norm](https://github.com/WinVector/Examples/blob/main/L1L2/L1L2.ipynb).
 
 We can also try for a more precise estimate of the “L2/L1 AUC value.”
@@ -87,6 +90,6 @@ res <- mean(as.numeric(res_list))
 res
 ```
 
-    ## [1] 0.8855456
+    ## [1] 0.8856102
 
 Perhaps this is $\sqrt{\pi} / 2 \approx 0.8862269$?
