@@ -21,11 +21,10 @@ Let’s look at that empirically.
 ``` r
 set.seed(2023)
 
-experiment_reps <- 10000
 f_l1 <- function(x) { sum(abs(x)) }
 f_l2 <- function(x) { sqrt(sum(x^2)) }  # sqrt() doesn't affect order, so could leave it out.
 
-estimate_p_n <- function(dimension) {  # noisy empirical estimate
+estimate_p_n <- function(dimension, experiment_reps = 10000) {  # noisy empirical estimate
   # define our experiment
   experiment <- function(ignored_argument) { 
     s1 <- rnorm(dimension)
@@ -73,6 +72,14 @@ plot(d)
 
 ![](exp_l2_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-Some work on how to establish this can be found here: [The L2 Ball’s
-View of the L1
+Some work on how to prove this can be found here: [The L2 Ball’s View of
+the L1
 Norm](https://github.com/WinVector/Examples/blob/main/L1L2/L1L2.ipynb).
+
+We can also try for a more precise estimate of the “L2/L1 AUC value.”
+
+``` r
+estimate_p_n(1000, experiment_reps = 1000000)
+```
+
+    ## [1] 0.885436
