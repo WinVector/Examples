@@ -17,22 +17,20 @@ Let's look at that empirically.
 
 ```{r}
 set.seed(2023)
+library(parallel)
 
-f_l1 <- function(x) { sum(abs(x)) }
-f_l2 <- function(x) { sqrt(sum(x^2)) }  # sqrt() doesn't affect order, so could leave it out.
 
 estimate_p_n <- function(dimension, experiment_reps = 10000) {  # noisy empirical estimate
+  f_l1 <- function(x) { sum(abs(x)) }
+  f_l2 <- function(x) { sqrt(sum(x^2)) }  # sqrt() doesn't affect order, so could leave it out.
   # define our experiment
   experiment <- function(ignored_argument) { 
     s1 <- rnorm(dimension)
     s2 <- rnorm(dimension)
-    # abs(f_l2(s1) - f_l2(s2)) <= 1   # this converges to a constant, completing the proof
     (f_l1(s1) > f_l1(s2)) == (f_l2(s1) > f_l2(s2))  # value to return
   }
-  
   # run our experiment many times, collecting results
   vec <- vapply(seq(experiment_reps), experiment, logical(1))
-  
   # compute empirical estimate of p_dimension
   mean(vec)
 }
@@ -68,8 +66,17 @@ Some work on how to prove this can be found here: [The L2 Ball's View of the L1 
 We can also try for a more precise estimate of the "L2/L1 AUC value."
 
 ```{r}
-estimate_p_n(1000, experiment_reps = 10000000)
+res_list <- mclapply(
+  seq(100),
+  function(...) {
+    estimate_p_n(1000, experiment_reps = 1000000)
+  },
+  mc.cores = detectCores())
+res <- mean(as.numeric(res_list))
+res
 ```
 
-Perhaps this is $\sqrt{pi} / 2 \approx 0.8862269$?
+
+
+Perhaps this is $\sqrt{\pi} / 2 \approx 0.8862269$?
 
