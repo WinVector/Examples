@@ -91,5 +91,3 @@ res
 ```
 
     ## [1] 0.8854221
-
-Perhaps this is $\sqrt{\pi} / 2 \approx 0.8862269$?

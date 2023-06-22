@@ -78,8 +78,3 @@ res_list <- mclapply(
 res <- mean(as.numeric(res_list))
 res
 ```
-
-
-
-Perhaps this is $\sqrt{\pi} / 2 \approx 0.8862269$?
-
