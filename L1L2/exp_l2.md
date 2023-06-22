@@ -91,3 +91,5 @@ res
 ```
 
     ## [1] 0.8854221
+
+We have a solution deriving the above constant [here](https://github.com/WinVector/Examples/blob/main/L1L2/L1L2.ipynb).
