@@ -73,11 +73,7 @@ plot(d)
 
 ![](exp_l2_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-Some work on how to prove the constant is in the interior of $(1/2, 1)$
-can be found here: [The L2 Ball’s View of the L1
-Norm](https://github.com/WinVector/Examples/blob/main/L1L2/L1L2.ipynb).
-
-We can also try for a more precise estimate of the “L2/L1 AUC value.”
+We can also try for a more precise empirical estimate of the “L2/L1 AUC value.”
 
 ``` r
 res_list <- mclapply(
