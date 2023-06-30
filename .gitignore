@@ -10,3 +10,5 @@
 log4j.spark.log*
 derby.log
 *.Rproj
+__pycache__
+
