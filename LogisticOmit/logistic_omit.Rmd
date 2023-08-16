@@ -280,6 +280,6 @@ Some care has to be taken in moving inferred logistic coefficients out of their 
 
 What are your opinions to the nature of the effect? 
 
-  * Is it important? 
+  * Is it important in your use of inferred coefficients? 
   * Is it intrinsic to the modeling process, or introduced by attempted interpretation?
 

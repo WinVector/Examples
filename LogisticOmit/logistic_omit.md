@@ -358,6 +358,6 @@ of their surrounding model context.
 
 What are your opinions to the nature of the effect?
 
-- Is it important?
+- Is it important in your use of inferred coefficients?
 - Is it intrinsic to the modeling process, or introduced by attempted
   interpretation?
