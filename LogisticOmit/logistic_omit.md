@@ -394,7 +394,7 @@ outside of context, this differs from the case for linear regression.
 What are your opinions/experience? Some questions I feel are relevant
 include:
 
-- What is the correct value of the `x`-coefficient? in the logistic
+- What is the correct value of the `x`-coefficient in the logistic
   regressions? `3.1415` or `1.8522`?
 - Do you feel these effects are intrinsic to the modeling process, or
   introduced by attempted interpretation?

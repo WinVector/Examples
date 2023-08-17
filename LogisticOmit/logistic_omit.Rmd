@@ -311,7 +311,7 @@ In conclusion: care has to be taken in taking inferred logistic coefficients out
 
 What are your opinions/experience? Some questions I feel are relevant include:
 
-  * What is the correct value of the `x`-coefficient? in the logistic regressions? `3.1415` or `1.8522`?
+  * What is the correct value of the `x`-coefficient in the logistic regressions? `3.1415` or `1.8522`?
   * Do you feel these effects are intrinsic to the modeling process, or introduced by attempted interpretation?
   * Is the above important in your uses of inferred logistic regression coefficients? 
 
