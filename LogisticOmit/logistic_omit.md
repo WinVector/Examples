@@ -1,13 +1,14 @@
-Sneaky Omitted Variable Bias-Like Effects in Logistic Regression
+Omitted Variable Effects in Logistic Regression
 ================
 2023-08-16
 
 ## Introduction
 
-I would like to illustrate a key way which omitted variables behave
-differently in [logistic
-regression](https://en.wikipedia.org/wiki/Logistic_regression) than in
-[linear regression](https://en.wikipedia.org/wiki/Linear_regression).
+I would like to illustrate a way which omitted variables interfere in
+[logistic regression](https://en.wikipedia.org/wiki/Logistic_regression)
+inference. These effects are different than what is seen in [linear
+regression](https://en.wikipedia.org/wiki/Linear_regression), and
+possiblity different than some expectations or intuitions.
 
 ## Our Example Data
 
@@ -43,9 +44,9 @@ d <- merge(
   omitted_frame, 
   by = c())
 d$wt = d$wt.x * d$wt.y
+d$wt <- d$wt / sum(d$wt)
 d$wt.x <- NULL
 d$wt.y <- NULL
-d$wt <- d$wt / sum(d$wt)
 ```
 
 ``` r
@@ -60,8 +61,8 @@ knitr::kable(d)
 |   1 |       1 | 0.25 |
 
 The idea is: `d` is specifying what proportion of an arbitrarily large
-data set (with repeated rows) has each possible set of values. For us,
-`d` is not a sample- it is an entire population. This is just a
+data set (with repeated rows) has each possible combination of values.
+For us, `d` is not a sample- it is an entire population. This is just a
 long-winded way of trying to explain why we have row weights and why we
 are not concerned with observation counts, uncertainly bars, or
 significances/p-values for this example.
@@ -136,21 +137,28 @@ This is nice, and as expected.
 ### Omitting a Varaible
 
 Now we ask: what happens if we omit from the model the variable named
-“`omitted`”? For a linear model, we do not expect [omitted variable
-bias](https://en.wikipedia.org/wiki/Omitted-variable_bias), as the
-variables `x` and `omitted` are fully [statistically
+“`omitted`”? This is a central problem in modeling. We are unlikely to
+know, or be able to measure, all possible explanatory variables in many
+real world settings. We are often omitting variables, as we don’t know
+about them or have access to their values!
+
+For this linear regression model, we do not expect [omitted variable
+bias](https://en.wikipedia.org/wiki/Omitted-variable_bias); the
+variables `x` and `omitted`, by design, are fully [statistically
 independent](https://en.wikipedia.org/wiki/Independence_(probability_theory)).
 
 We can confirm `omitted` is nice, in that it is mean-`0` and has zero
 correlation with `x` under the specified data distribution.
 
 ``` r
+# mean 0 check
 sum(d$omitted * d$wt) / sum(d$wt)
 ```
 
     ## [1] 0
 
 ``` r
+# no correlation check
 knitr::kable(
   cov.wt(
     d[, c('x', 'omitted')],
@@ -240,7 +248,7 @@ suppressWarnings(
     ##   0.5772151   3.1415914   2.7182800
 
 Notice we recover our expected coefficients. We could use these inferred
-coefficients to answer questions about how probability of outcomes
+coefficients to answer questions about how probabilities of outcomes
 varies with changes in variables.
 
 ### Omitting a Variable, Again
@@ -294,17 +302,17 @@ Notice the new `x` coefficient is nowhere near the value we saw before.
 
 The bad way of interpreting our logistic experiment is:
 
-> For a logistic model: an omitted explanatory variable can bias
-> coefficient estimates. This even when the omitted explanatory variable
-> is mean zero, symmetric, and uncorrelated with the other model
-> explanitory variables. This differs from the situation for linear
-> models.
+> For a logistic regression model: an omitted explanatory variable can
+> bias coefficient estimates. This even when the omitted explanatory
+> variable is mean zero, symmetric, and uncorrelated with the other
+> model explanitory variables. This differs from the situation for
+> linear models.
 
 The good way of interpreting logistic experiment is:
 
-> For a logistic model: the correct inference for a given explanatory
-> variable often depends on what other explanatory variables are present
-> in the model.
+> For a logistic regression model: the correct inference for a given
+> explanatory variable often depends on what other explanatory variables
+> are present in the model.
 
 That is: we didn’t get a wrong inference. We just got a different one,
 as we are inferring in a different situation. The fallacy was thinking a
@@ -327,35 +335,48 @@ only by changes in `omitted`, i.e. those that have given value for `x`.
 
 Without the extra variable `omitted` we can’t tell the joined pairs
 apart, and we are forced to use compromise effect estimates. However,
-the amount of interference is different for each value of `x`. This is a
-common observation in logistic regression: you can’t tell if a variable
-and coefficient has large or small effects without knowing the typical
-values of the complementary explanatory variables.
+the amount of interference is different for each value of `x`. For
+`x = -2`, the probability is almost determined, and `ommited` changes
+little. For `x = -1` things are less determined, and `omitted` can have
+a substantial effect. How much probability effect `ommitted` has depends
+on the value of `x`, which obscures results much like a [statistical
+interaction](https://en.wikipedia.org/wiki/Interaction_(statistics))
+would.
+
+This is a common observation in logistic regression: you can’t tell if a
+variable and coefficient have large or small effects without knowing the
+specific values of the complementary explanatory variables.
 
 ## My Interpretation
 
 You get different estimates for variables depending on what other
-variables are present in a logistic model. This looks a lot like omitted
-variable bias, but it is also interpretable as different column-views of
-the data having fundamentally different models. A possible source of
-surprise is: linear models avoid this in the special case of independent
-variables.
+variables are present in a logistic regression model. This looks a lot
+like an interaction, and leads to effects similar to omitted variable
+bias. This is also interpretable as: different column-views of the data
+having fundamentally different models.
+
+A possible source of surprise is: it is well known linear models avoid
+this in the special case of independent variables. It may require more
+conditions to avoid a [Simpson’s
+paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox)-style
+situation in logistic regression modeling than in linear regression
+modeling.
 
 Some care has to be taken in taking inferred logistic coefficients out
-of their surrounding model context.
+of their surrounding context.
 
 ## Discussion Points
 
-What are your opinions to the nature of the effect?
+What are your opinions/experience?
 
-- Is it important in your uses of inferred coefficients?
-- Do you feel it is intrinsic to the modeling process, or introduced by
-  attempted interpretation?
 - What is the correct value of the `x`-coefficient? in the logistic
-  regression? `3.1415927` or `1.85221234`? (One may have to think of
-  this as a “depends on what you are going to use it for”, or a
-  [Simpson’s paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox)
-  unanswerable.)
+  regression? `3.1415` or `1.8522`?
+- Is the above important in your uses of inferred logistic regression
+  coefficients?
+- Do you feel these effects are intrinsic to the modeling process, or
+  introduced by attempted interpretation?
 
-R source for this article can be found
+<hr/>
+
+`R` source for this article can be found
 [here](https://github.com/WinVector/Examples/tree/main/LogisticOmit).
