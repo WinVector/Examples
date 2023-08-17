@@ -13,6 +13,7 @@ I would like to illustrate a way which omitted variables interfere in [logistic 
 Let's start with a data example in [`R`](https://www.r-project.org).
 
 ```{r}
+# example variable frame
 x_frame <- data.frame(
   x = c(-2, 1),
   wt = 1
@@ -22,6 +23,7 @@ x_frame <- data.frame(
 `x_frame` is `data.frame` with a single variable called `x`, and an example weight or row weight called `wt`.
 
 ```{r}
+# example variable frame
 omitted_frame <- data.frame(
   omitted = c(-1, 1),
   wt = 1
@@ -33,6 +35,7 @@ omitted_frame <- data.frame(
 We take the cross-product of there data frames to get every combination of variable values, and their relative proportions (or weights) in the joined data frame.
 
 ```{r}
+# combine frames by cross product, and get new data weights
 d <- merge(
   x_frame, 
   omitted_frame, 
@@ -44,6 +47,7 @@ d$wt.y <- NULL
 ```
 
 ```{r}
+# our data
 knitr::kable(d)
 ```
 
@@ -52,20 +56,24 @@ The idea is: `d` is specifying what proportion of an arbitrarily large data set 
 Let's define a few common constants: Euler's constant, `pi`, and `e`.
 
 ```{r}
+# 0.5772
 (Euler_constant <- -digamma(1))
 ```
 
 ```{r}
+# 3.1415
 pi
 ```
 
 ```{r}
+# 2.7182
 (e <- exp(1))
 ```
 
 Please remember these constants in this order for later.
 
 ```{r}
+# show constants in an order will see again
 c(Euler_constant, pi, e)
 ```
 
@@ -74,17 +82,20 @@ c(Euler_constant, pi, e)
 For our example we call our outcome (or dependent variable) `y_linear`. We say that it is exactly the following linear combination of the `x` and `omitted` variables, plus a constant.
 
 ```{r}
+# assign an example outcome or dependent variable
 d$y_linear <- pi * d$x + e * d$omitted + Euler_constant
 ```
 
 
 ```{r}
+# our data with outcome
 knitr::kable(d)
 ```
 
 As we expect, linear regression can recover the constants of the linear equation from data.
 
 ```{r}
+# inferring coefficients from data
 lm(
   y_linear ~ x + omitted, 
   data = d, 
@@ -123,6 +134,7 @@ knitr::kable(
 And all of this worrying pays off. If we fit a model with the `omitted` variable left out, we still get the original valid estimates of the `x`-coefficient and the intercept.
 
 ```{r}
+# inferring coefficients, with omitted variable
 lm(
   y_linear ~ x, 
   data = d,
@@ -136,12 +148,16 @@ Let's convert this problem to modeling the probability a new outcome variable, c
 
 
 ```{r}
+# converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 
 d$y_probability <- sigmoid(d$y_linear)
 ```
 
 ```{r}
+# encoding effect as a probability model over a binary outcome
+# method used for model replication
+# ref: https://win-vector.com/2019/07/03/replicating-a-linear-model/
 d_plus <- d
 d_plus$y_observed <- TRUE
 d_plus$wt <- d_plus$wt * d_plus$y_probability
@@ -154,12 +170,15 @@ d_logistic$wt <- d_logistic$wt / sum(d_logistic$wt)
 
 
 ```{r}
+# our data with binary outcome
 knitr::kable(d_logistic)
 ```
 
 The point is: this data has our original coefficients encoded in it as the coefficients of the generative process for `y_observed`. We confirm this by fitting a logistic regression.
 
 ```{r}
+# infer coefficients from binary outcome
+# suppressWarnings() only to avoid "fractional weights message"
 suppressWarnings(
   glm(
     y_observed ~ x + omitted, 
@@ -179,11 +198,13 @@ Now, let's try (and fail to) repeat our omitted variable experiment.
 First we confirm `omitted` is mean zero and uncorrelated with our variable `x`, even under the new data set and new row weight distribution.
 
 ```{r}
+# check mean zero
 sum(d_logistic$omitted * d_logistic$wt) / sum(d_logistic$wt)
 ```
 
 
 ```{r}
+# check uncorrelated
 knitr::kable(
   cov.wt(
     d_logistic[, c('x', 'omitted')],
@@ -196,6 +217,8 @@ We pass the check. But, as we will see, this doesn't guarantee non-entangled beh
 
 
 ```{r}
+# infer coefficients from binary outcome, with omitted variable
+# suppressWarnings() only to avoid "fractional weights message"
 suppressWarnings(
   glm(
     y_observed ~ x, 
@@ -224,6 +247,7 @@ Diagrammatically what happened is the following.
 
 
 ```{r, echo=FALSE}
+# build diagram of logistic effect
 library(ggplot2)
 d_logistic$label <- paste0("(x: ", d_logistic$x, ", omitted: ", d_logistic$omitted, ")")
 d_bl <- d_logistic[d_logistic$y_observed & (d_logistic$x == -2), , drop = FALSE]
@@ -279,17 +303,17 @@ This is a common observation in logistic regression: you can't tell if a variabl
 
 You get different estimates for variables depending on what other variables are present in a logistic regression model. This looks a lot like an interaction, and leads to effects similar to omitted variable bias. This is also interpretable as: different column-views of the data having fundamentally different models. 
 
-A possible source of surprise is: it is well known linear models avoid this in the special case of independent variables. It may require more conditions to avoid a [Simpson's paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox)-style situation in logistic regression modeling than in linear regression modeling.
+A possible source of surprise is: appealing to assumed independence is a common way of assuring one is avoiding issues such as [Simpson's paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox) in linear regression modeling. Thus it is possible an "independence implies non-interference" intuition is part of some modeler's toolboxes.
 
-Some care has to be taken in taking inferred logistic coefficients out of their surrounding context.
+In conclusion: care has to be taken in taking inferred logistic coefficients out of their surrounding context. The product of a logistic regression coefficient and matching value is not directly an effect size outside of context, this differs from the case for linear regression.
 
 ## Discussion Points
 
-What are your opinions/experience?
+What are your opinions/experience? Some questions I feel are relevant include:
 
-  * What is the correct value of the `x`-coefficient? in the logistic regression? `3.1415` or `1.8522`?
-  * Is the above important in your uses of inferred logistic regression coefficients? 
+  * What is the correct value of the `x`-coefficient? in the logistic regressions? `3.1415` or `1.8522`?
   * Do you feel these effects are intrinsic to the modeling process, or introduced by attempted interpretation?
+  * Is the above important in your uses of inferred logistic regression coefficients? 
 
 <hr/>
 

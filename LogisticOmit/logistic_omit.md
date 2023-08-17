@@ -15,6 +15,7 @@ possiblity different than some expectations or intuitions.
 Let’s start with a data example in [`R`](https://www.r-project.org).
 
 ``` r
+# example variable frame
 x_frame <- data.frame(
   x = c(-2, 1),
   wt = 1
@@ -25,6 +26,7 @@ x_frame <- data.frame(
 example weight or row weight called `wt`.
 
 ``` r
+# example variable frame
 omitted_frame <- data.frame(
   omitted = c(-1, 1),
   wt = 1
@@ -39,6 +41,7 @@ of variable values, and their relative proportions (or weights) in the
 joined data frame.
 
 ``` r
+# combine frames by cross product, and get new data weights
 d <- merge(
   x_frame, 
   omitted_frame, 
@@ -50,6 +53,7 @@ d$wt.y <- NULL
 ```
 
 ``` r
+# our data
 knitr::kable(d)
 ```
 
@@ -70,18 +74,21 @@ significances/p-values for this example.
 Let’s define a few common constants: Euler’s constant, `pi`, and `e`.
 
 ``` r
+# 0.5772
 (Euler_constant <- -digamma(1))
 ```
 
     ## [1] 0.5772157
 
 ``` r
+# 3.1415
 pi
 ```
 
     ## [1] 3.141593
 
 ``` r
+# 2.7182
 (e <- exp(1))
 ```
 
@@ -90,6 +97,7 @@ pi
 Please remember these constants in this order for later.
 
 ``` r
+# show constants in an order will see again
 c(Euler_constant, pi, e)
 ```
 
@@ -102,10 +110,12 @@ We say that it is exactly the following linear combination of the `x`
 and `omitted` variables, plus a constant.
 
 ``` r
+# assign an example outcome or dependent variable
 d$y_linear <- pi * d$x + e * d$omitted + Euler_constant
 ```
 
 ``` r
+# our data with outcome
 knitr::kable(d)
 ```
 
@@ -120,6 +130,7 @@ As we expect, linear regression can recover the constants of the linear
 equation from data.
 
 ``` r
+# inferring coefficients from data
 lm(
   y_linear ~ x + omitted, 
   data = d, 
@@ -177,6 +188,7 @@ variable left out, we still get the original valid estimates of the
 `x`-coefficient and the intercept.
 
 ``` r
+# inferring coefficients, with omitted variable
 lm(
   y_linear ~ x, 
   data = d,
@@ -198,12 +210,16 @@ example arises isn’t critical, we want to investigate the properties of
 this resulting data. So let’s take a moment and derive our data.
 
 ``` r
+# converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 
 d$y_probability <- sigmoid(d$y_linear)
 ```
 
 ``` r
+# encoding effect as a probability model over a binary outcome
+# method used for model replication
+# ref: https://win-vector.com/2019/07/03/replicating-a-linear-model/
 d_plus <- d
 d_plus$y_observed <- TRUE
 d_plus$wt <- d_plus$wt * d_plus$y_probability
@@ -215,6 +231,7 @@ d_logistic$wt <- d_logistic$wt / sum(d_logistic$wt)
 ```
 
 ``` r
+# our data with binary outcome
 knitr::kable(d_logistic)
 ```
 
@@ -234,6 +251,8 @@ the coefficients of the generative process for `y_observed`. We confirm
 this by fitting a logistic regression.
 
 ``` r
+# infer coefficients from binary outcome
+# suppressWarnings() only to avoid "fractional weights message"
 suppressWarnings(
   glm(
     y_observed ~ x + omitted, 
@@ -260,12 +279,14 @@ variable `x`, even under the new data set and new row weight
 distribution.
 
 ``` r
+# check mean zero
 sum(d_logistic$omitted * d_logistic$wt) / sum(d_logistic$wt)
 ```
 
     ## [1] 2.022037e-17
 
 ``` r
+# check uncorrelated
 knitr::kable(
   cov.wt(
     d_logistic[, c('x', 'omitted')],
@@ -283,6 +304,8 @@ We pass the check. But, as we will see, this doesn’t guarantee
 non-entangled behavior for a logistic regression.
 
 ``` r
+# infer coefficients from binary outcome, with omitted variable
+# suppressWarnings() only to avoid "fractional weights message"
 suppressWarnings(
   glm(
     y_observed ~ x, 
@@ -355,26 +378,28 @@ like an interaction, and leads to effects similar to omitted variable
 bias. This is also interpretable as: different column-views of the data
 having fundamentally different models.
 
-A possible source of surprise is: it is well known linear models avoid
-this in the special case of independent variables. It may require more
-conditions to avoid a [Simpson’s
-paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox)-style
-situation in logistic regression modeling than in linear regression
-modeling.
+A possible source of surprise is: appealing to assumed independence is a
+common way of assuring one is avoiding issues such as [Simpson’s
+paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox) in linear
+regression modeling. Thus it is possible an “independence implies
+non-interference” intuition is part of some modeler’s toolboxes.
 
-Some care has to be taken in taking inferred logistic coefficients out
-of their surrounding context.
+In conclusion: care has to be taken in taking inferred logistic
+coefficients out of their surrounding context. The product of a logistic
+regression coefficient and matching value is not directly an effect size
+outside of context, this differs from the case for linear regression.
 
 ## Discussion Points
 
-What are your opinions/experience?
+What are your opinions/experience? Some questions I feel are relevant
+include:
 
 - What is the correct value of the `x`-coefficient? in the logistic
-  regression? `3.1415` or `1.8522`?
-- Is the above important in your uses of inferred logistic regression
-  coefficients?
+  regressions? `3.1415` or `1.8522`?
 - Do you feel these effects are intrinsic to the modeling process, or
   introduced by attempted interpretation?
+- Is the above important in your uses of inferred logistic regression
+  coefficients?
 
 <hr/>
 
