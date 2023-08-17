@@ -356,3 +356,6 @@ What are your opinions to the nature of the effect?
   this as a “depends on what you are going to use it for”, or a
   [Simpson’s paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox)
   unanswerable.)
+
+R source for this article can be found
+[here](https://github.com/WinVector/Examples/tree/main/LogisticOmit).

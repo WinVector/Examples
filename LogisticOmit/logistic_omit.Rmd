@@ -285,3 +285,5 @@ What are your opinions to the nature of the effect?
   * Do you feel it is intrinsic to the modeling process, or introduced by attempted interpretation?
   * What is the correct value of the `x`-coefficient? in the logistic regression? `3.1415927` or `1.85221234`? (One may have to think of this as a "depends on what you are going to use it for", or a [Simpson's paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox) unanswerable.)
 
+R source for this article can be found [here](https://github.com/WinVector/Examples/tree/main/LogisticOmit).
+
