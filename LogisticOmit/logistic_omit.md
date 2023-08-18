@@ -361,9 +361,9 @@ Without the extra variable `omitted` we can’t tell the joined pairs
 apart, and we are forced to use compromise effect estimates. However,
 the amount of interference is different for each value of `x`. For
 `x = -2`, the probability is almost determined, and `omitted` changes
-little. For `x = -1` things are less determined, and `omitted` can have
-a substantial effect. How much probability effect `omitted` has depends
-on the value of `x`, which obscures results much like a [statistical
+little. For `x = 1` things are less determined, and `omitted` can have a
+substantial effect. How much probability effect `omitted` has depends on
+the value of `x`, which obscures results much like a [statistical
 interaction](https://en.wikipedia.org/wiki/Interaction_(statistics))
 would.
 
@@ -401,7 +401,7 @@ include:
 - Do you feel these effects are intrinsic to the modeling process, or
   introduced by attempted interpretation?
 - Is the above important in your uses of inferred logistic regression
-  coefficients?
+  coefficients? Is this something you guard against in your work?
 
 <hr/>
 
