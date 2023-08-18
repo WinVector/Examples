@@ -1,6 +1,7 @@
 Omitted Variable Effects in Logistic Regression
 ================
-2023-08-16
+John Mount, Win-Vector LLC
+2023-08-18
 
 ## Introduction
 
@@ -8,7 +9,7 @@ I would like to illustrate a way which omitted variables interfere in
 [logistic regression](https://en.wikipedia.org/wiki/Logistic_regression)
 inference. These effects are different than what is seen in [linear
 regression](https://en.wikipedia.org/wiki/Linear_regression), and
-possiblity different than some expectations or intuitions.
+possibly different than some expectations or intuitions.
 
 ## Our Example Data
 
@@ -36,12 +37,12 @@ omitted_frame <- data.frame(
 `omitted_frame` is `data.frame` with a single variable called `omitted`,
 and an example weight called `wt`.
 
-We take the cross-product of there data frames to get every combination
-of variable values, and their relative proportions (or weights) in the
-joined data frame.
+For our first example we take the cross-product of there data frames to
+get every combination of variable values, and their relative proportions
+(or weights) in the joined data frame.
 
 ``` r
-# combine frames by cross product, and get new data weights
+# combine frames by cross product, and get new relative data weights
 d <- merge(
   x_frame, 
   omitted_frame, 
@@ -71,7 +72,7 @@ long-winded way of trying to explain why we have row weights and why we
 are not concerned with observation counts, uncertainly bars, or
 significances/p-values for this example.
 
-Let’s define a few common constants: Euler’s constant, `pi`, and `e`.
+Let’s define a few common constants: `Euler's constant`, `pi`, and `e`.
 
 ``` r
 # 0.5772
@@ -106,12 +107,12 @@ c(Euler_constant, pi, e)
 ## The Linear Case
 
 For our example we call our outcome (or dependent variable) `y_linear`.
-We say that it is exactly the following linear combination of the `x`
-and `omitted` variables, plus a constant.
+We say that it is exactly the following linear combination of a constant
+plus the variables `x` and `omitted`.
 
 ``` r
 # assign an example outcome or dependent variable
-d$y_linear <- pi * d$x + e * d$omitted + Euler_constant
+d$y_linear <- Euler_constant + pi * d$x + e * d$omitted
 ```
 
 ``` r
@@ -154,7 +155,7 @@ real world settings. We are often omitting variables, as we don’t know
 about them or have access to their values!
 
 For this linear regression model, we do not expect [omitted variable
-bias](https://en.wikipedia.org/wiki/Omitted-variable_bias); the
+bias](https://en.wikipedia.org/wiki/Omitted-variable_bias) as the
 variables `x` and `omitted`, by design, are fully [statistically
 independent](https://en.wikipedia.org/wiki/Independence_(probability_theory)).
 
@@ -183,8 +184,8 @@ knitr::kable(
 | x       |   3 | 0.000000 |
 | omitted |   0 | 1.333333 |
 
-And all of this worrying pays off. If we fit a model with the `omitted`
-variable left out, we still get the original valid estimates of the
+All of this worrying pays off. If we fit a model with the `omitted`
+variable left out, we still get the original estimates of the
 `x`-coefficient and the intercept.
 
 ``` r
@@ -202,8 +203,8 @@ lm(
 ## The Logistic Case
 
 Let’s convert this problem to modeling the probability a new outcome
-variable, called `y_observed` takes on the values `TRUE` and `FALSE`. We
-use the encoding strategy from [“replicate linear and logistic
+variable, called `y_observed` that takes on the values `TRUE` and
+`FALSE`. We use the encoding strategy from [“replicate linear
 models”](https://win-vector.com/2019/07/03/replicating-a-linear-model/)
 (which can simplify steps in many data science projects). How this
 example arises isn’t critical, we want to investigate the properties of
@@ -266,24 +267,23 @@ suppressWarnings(
     ## (Intercept)           x     omitted 
     ##   0.5772151   3.1415914   2.7182800
 
-Notice we recover our expected coefficients. We could use these inferred
-coefficients to answer questions about how probabilities of outcomes
-varies with changes in variables.
+Notice we recover the same coefficients as before. We could use these
+inferred coefficients to answer questions about how probabilities of
+outcomes varies with changes in variables in the data.
 
 ### Omitting a Variable, Again
 
-Now, let’s try (and fail to) repeat our omitted variable experiment.
+Now, let’s try to (and fail to) repeat our omitted variable experiment.
 
 First we confirm `omitted` is mean zero and uncorrelated with our
-variable `x`, even under the new data set and new row weight
-distribution.
+variable `x`, even in the new data set and new row weight distribution.
 
 ``` r
 # check mean zero
 sum(d_logistic$omitted * d_logistic$wt) / sum(d_logistic$wt)
 ```
 
-    ## [1] 2.022037e-17
+    ## [1] 1.50162e-17
 
 ``` r
 # check uncorrelated
@@ -323,15 +323,15 @@ Notice the new `x` coefficient is nowhere near the value we saw before.
 
 ### Explaining The Result
 
-The bad way of interpreting our logistic experiment is:
+A stern way of interpreting our logistic experiment is:
 
 > For a logistic regression model: an omitted explanatory variable can
-> bias coefficient estimates. This even when the omitted explanatory
-> variable is mean zero, symmetric, and uncorrelated with the other
-> model explanitory variables. This differs from the situation for
-> linear models.
+> bias other coefficient estimates. This even when the omitted
+> explanatory variable is mean zero, symmetric, and uncorrelated with
+> the other model explanitory variables. This differs from the situation
+> for linear models.
 
-The good way of interpreting logistic experiment is:
+Another way of interpreting our logistic experiment is:
 
 > For a logistic regression model: the correct inference for a given
 > explanatory variable often depends on what other explanatory variables
@@ -347,7 +347,7 @@ Diagrammatically what happened is the following.
 
 ![](logistic_omit_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
-In the above diagram we have the `sigmoid()`, or logistic curve. The
+In the above diagram we portray the `sigmoid()`, or logistic curve. The
 horizontal axis is the linear or “link space” for predictions and the
 vertical axis is the probability or response space for predictions. The
 curve is the transform the logistic regression’s linear or link
@@ -375,8 +375,9 @@ specific values of the complementary explanatory variables.
 You get different estimates for variables depending on what other
 variables are present in a logistic regression model. This looks a lot
 like an interaction, and leads to effects similar to omitted variable
-bias. This is also interpretable as: different column-views of the data
-having fundamentally different models.
+bias. This happens more often than in linear regression models. This is
+also interpretable as: different column-views of the data having
+fundamentally different models.
 
 A possible source of surprise is: appealing to assumed independence is a
 common way of assuring one is avoiding issues such as [Simpson’s
@@ -395,7 +396,7 @@ What are your opinions/experience? Some questions I feel are relevant
 include:
 
 - What is the correct value of the `x`-coefficient in the logistic
-  regressions? `3.1415` or `1.8522`?
+  regressions? `3.1415`, `1.8522`, both, or neither?
 - Do you feel these effects are intrinsic to the modeling process, or
   introduced by attempted interpretation?
 - Is the above important in your uses of inferred logistic regression
