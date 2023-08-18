@@ -329,7 +329,7 @@ A stern way of interpreting our logistic experiment is:
 > For a logistic regression model: an omitted explanatory variable can
 > bias other coefficient estimates. This is true even when the omitted
 > explanatory variable is mean zero, symmetric, and uncorrelated with
-> the other model explanitory variables. This differs from the situation
+> the other model explanatory variables. This differs from the situation
 > for linear models.
 
 Another way of interpreting our logistic experiment is:
@@ -360,9 +360,9 @@ only by changes in `omitted`, i.e. those that have given value for `x`.
 Without the extra variable `omitted` we can’t tell the joined pairs
 apart, and we are forced to use compromise effect estimates. However,
 the amount of interference is different for each value of `x`. For
-`x = -2`, the probability is almost determined, and `ommited` changes
+`x = -2`, the probability is almost determined, and `omitted` changes
 little. For `x = -1` things are less determined, and `omitted` can have
-a substantial effect. How much probability effect `ommited` has depends
+a substantial effect. How much probability effect `omitted` has depends
 on the value of `x`, which obscures results much like a [statistical
 interaction](https://en.wikipedia.org/wiki/Interaction_(statistics))
 would.
