@@ -7,7 +7,8 @@ John Mount, Win-Vector LLC
 
 I would like to illustrate a way which omitted variables interfere in
 [logistic regression](https://en.wikipedia.org/wiki/Logistic_regression)
-inference. These effects are different than what is seen in [linear
+inference (or coefficient estimation). These effects are different than
+what is seen in [linear
 regression](https://en.wikipedia.org/wiki/Linear_regression), and
 possibly different than some expectations or intuitions.
 
@@ -23,7 +24,7 @@ x_frame <- data.frame(
 )
 ```
 
-`x_frame` is `data.frame` with a single variable called `x`, and an
+`x_frame` is a `data.frame` with a single variable called `x`, and an
 example weight or row weight called `wt`.
 
 ``` r
@@ -34,10 +35,10 @@ omitted_frame <- data.frame(
 )
 ```
 
-`omitted_frame` is `data.frame` with a single variable called `omitted`,
-and an example weight called `wt`.
+`omitted_frame` is a `data.frame` with a single variable called
+`omitted`, and an example weight called `wt`.
 
-For our first example we take the cross-product of there data frames to
+For our first example we take the cross-product of these data frames to
 get every combination of variable values, and their relative proportions
 (or weights) in the joined data frame.
 
@@ -69,7 +70,7 @@ The idea is: `d` is specifying what proportion of an arbitrarily large
 data set (with repeated rows) has each possible combination of values.
 For us, `d` is not a sample- it is an entire population. This is just a
 long-winded way of trying to explain why we have row weights and why we
-are not concerned with observation counts, uncertainly bars, or
+are not concerned with observation counts, uncertainty bars, or
 significances/p-values for this example.
 
 Let’s define a few common constants: `Euler's constant`, `pi`, and `e`.
@@ -146,7 +147,7 @@ Notice the recovered coefficients are the three constants we specified.
 
 This is nice, and as expected.
 
-### Omitting a Varaible
+### Omitting a Variable
 
 Now we ask: what happens if we omit from the model the variable named
 “`omitted`”? This is a central problem in modeling. We are unlikely to
@@ -202,9 +203,9 @@ lm(
 
 ## The Logistic Case
 
-Let’s convert this problem to modeling the probability a new outcome
-variable, called `y_observed` that takes on the values `TRUE` and
-`FALSE`. We use the encoding strategy from [“replicate linear
+Let’s convert this problem to modeling the probability distribution of a
+new outcome variable, called `y_observed` that takes on the values
+`TRUE` and `FALSE`. We use the encoding strategy from [“replicate linear
 models”](https://win-vector.com/2019/07/03/replicating-a-linear-model/)
 (which can simplify steps in many data science projects). How this
 example arises isn’t critical, we want to investigate the properties of
@@ -326,7 +327,7 @@ Notice the new `x` coefficient is nowhere near the value we saw before.
 A stern way of interpreting our logistic experiment is:
 
 > For a logistic regression model: an omitted explanatory variable can
-> bias other coefficient estimates. This even when the omitted
+> bias other coefficient estimates. This is true even when the omitted
 > explanatory variable is mean zero, symmetric, and uncorrelated with
 > the other model explanitory variables. This differs from the situation
 > for linear models.
@@ -334,8 +335,8 @@ A stern way of interpreting our logistic experiment is:
 Another way of interpreting our logistic experiment is:
 
 > For a logistic regression model: the correct inference for a given
-> explanatory variable often depends on what other explanatory variables
-> are present in the model.
+> explanatory variable coefficient often depends on what other
+> explanatory variables are present in the model.
 
 That is: we didn’t get a wrong inference. We just got a different one,
 as we are inferring in a different situation. The fallacy was thinking a
@@ -361,7 +362,7 @@ apart, and we are forced to use compromise effect estimates. However,
 the amount of interference is different for each value of `x`. For
 `x = -2`, the probability is almost determined, and `ommited` changes
 little. For `x = -1` things are less determined, and `omitted` can have
-a substantial effect. How much probability effect `ommitted` has depends
+a substantial effect. How much probability effect `ommited` has depends
 on the value of `x`, which obscures results much like a [statistical
 interaction](https://en.wikipedia.org/wiki/Interaction_(statistics))
 would.
