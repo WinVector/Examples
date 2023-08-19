@@ -306,7 +306,7 @@ You get different estimates for variables depending on what other variables are 
 
 A possible source of surprise is: appealing to assumed independence is a common way of assuring one is avoiding issues such as [Simpson's paradox](https://en.wikipedia.org/wiki/Simpson%27s_paradox) in linear regression modeling. Thus it is possible an "independence implies non-interference" intuition is part of some modeler's toolboxes.
 
-In conclusion: care has to be taken in taking inferred logistic coefficients out of their surrounding context. The product of a logistic regression coefficient and matching value is not directly an effect size outside of context, this differs from the case for linear regression.
+In conclusion: care has to be taken in taking inferred logistic coefficients out of their surrounding context. The product of a logistic regression coefficient and matching value is not directly an effect size outside of context, this differs from the case for linear regression. In logistic regression, omitted variables tend to push coefficient estimates towards zero.
 
 ## Discussion Points
 

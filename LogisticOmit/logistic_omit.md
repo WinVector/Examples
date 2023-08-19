@@ -391,7 +391,9 @@ non-interference” intuition is part of some modeler’s toolboxes.
 In conclusion: care has to be taken in taking inferred logistic
 coefficients out of their surrounding context. The product of a logistic
 regression coefficient and matching value is not directly an effect size
-outside of context, this differs from the case for linear regression.
+outside of context, this differs from the case for linear regression. In
+logistic regression, omitted variables tend to push coefficient
+estimates towards zero.
 
 ## Discussion Points
 

@@ -345,7 +345,9 @@ would (though by different mechanisms).
 
 This is a common observation in logistic regression: you can’t tell if a
 variable and coefficient have large or small effects without knowing the
-specific values of the complementary explanatory variables.
+specific values of the complementary explanatory variables. In logistic
+regression, omitted variables tend to push coefficient estimates towards
+zero.
 
 For more details and discussion we suggest [our previous
 article](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/).
