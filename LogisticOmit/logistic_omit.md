@@ -362,10 +362,12 @@ apart, and we are forced to use compromise effect estimates. However,
 the amount of interference is different for each value of `x`. For
 `x = -2`, the probability is almost determined, and `omitted` changes
 little. For `x = 1` things are less determined, and `omitted` can have a
-substantial effect. How much probability effect `omitted` has depends on
-the value of `x`, which obscures results much like a [statistical
+substantial effect. How much observed probability effect `x` has depends
+inversely on how deep and often the value of `omitted` chases one into
+the flat regions of the sigmoid, which obscures results much like a
+[statistical
 interaction](https://en.wikipedia.org/wiki/Interaction_(statistics))
-would.
+would (though by different mechanisms).
 
 This is a common observation in logistic regression: you can’t tell if a
 variable and coefficient have large or small effects without knowing the
@@ -406,4 +408,6 @@ include:
 <hr/>
 
 `R` source for this article can be found
-[here](https://github.com/WinVector/Examples/tree/main/LogisticOmit).
+[here](https://github.com/WinVector/Examples/tree/main/LogisticOmit). An
+even more symmetric example can be found
+[here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/logistic_symmetric.md).

@@ -285,7 +285,7 @@ ggplot(
 
 In the above diagram we portray the `sigmoid()`, or logistic curve. The horizontal axis is the linear or "link space" for predictions and the vertical axis is the probability or response space for predictions. The curve is the transform the logistic regression's linear or link prediction is run through to get probabilities or responses. On this curve we have added as dots the four different combinations of values for `x` and `omitted` in our data set. The dots attached by lines differ only by changes in `omitted`, i.e. those that have given value for `x`.
 
-Without the extra variable `omitted` we can't tell the joined pairs apart, and we are forced to use compromise effect estimates. Or we can't tell that the ommited variable has already eliminated a lot of the probability uncertainty before we try to fit.
+Without the extra variable `omitted` we can't tell the joined pairs apart, and we are forced to use compromise effect estimates. Or we can't tell that the ommited variable has already eliminated a lot of the probability uncertainty before we try to fit. How much observed probability effect `x` has depends inversely on how deep and often the value of `omitted` chases one into the flat regions of the sigmoid, which obscures results much like a [statistical interaction](https://en.wikipedia.org/wiki/Interaction_(statistics)) would (though by different mechanisms).
 
 This is a common observation in logistic regression: you can't tell if a variable and coefficient have large or small effects without knowing the specific values of the complementary explanatory variables.
 

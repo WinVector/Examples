@@ -336,7 +336,12 @@ only by changes in `omitted`, i.e. those that have given value for `x`.
 Without the extra variable `omitted` we can’t tell the joined pairs
 apart, and we are forced to use compromise effect estimates. Or we can’t
 tell that the ommited variable has already eliminated a lot of the
-probability uncertainty before we try to fit.
+probability uncertainty before we try to fit. How much observed
+probability effect `x` has depends inversely on how deep and often the
+value of `omitted` chases one into the flat regions of the sigmoid,
+which obscures results much like a [statistical
+interaction](https://en.wikipedia.org/wiki/Interaction_(statistics))
+would (though by different mechanisms).
 
 This is a common observation in logistic regression: you can’t tell if a
 variable and coefficient have large or small effects without knowing the
