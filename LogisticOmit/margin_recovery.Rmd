@@ -1,5 +1,5 @@
 ---
-title: "margin_transform"
+title: "Overcoming Omitted Variable Bias by Pooling Data"
 output: github_document
 date: "2023-08-24"
 ---
@@ -16,14 +16,17 @@ Our data is then keyed by the values of these explanatory variables and the depe
 
 ```{r}
 # show row labels
-(detailed_names <- expand.grid(
+detailed_names <- expand.grid(
   x1 = c('0', '1'), 
   x2 = c('0', '1'), 
-  y = c(FALSE, TRUE), 
-  stringsAsFactors = FALSE))
+  y = c(FALSE, TRUE),
+  stringsAsFactors = FALSE)
+detailed_names <- detailed_names[order(detailed_names$y, detailed_names$x2, detailed_names$x1), , drop = FALSE]
+
+knitr::kable(detailed_names)
 ```
 
-Let's specify the joint probabilty distribution of our two explanatory variables. We choose them as independent with the following expected values.
+Let's specify the joint probability distribution of our two explanatory variables. We choose them as independent with the following expected values.
 
 ```{r}
 # specify explanatory variable distribution 
@@ -55,7 +58,7 @@ Please remember these coefficients in this order for later.
 c(cval, b1, b2)
 ```
 
-Using the methodology of [Replicating a Linear Model](https://win-vector.com/2019/07/03/replicating-a-linear-model/) we can build a data set that obeys the specified explanatory variable distribution and has specified outcome probabilities. This is just us building a data set matching an assumed known answer.
+Using the methodology of [Replicating a Linear Model](https://win-vector.com/2019/07/03/replicating-a-linear-model/) we can build a data set that obeys the specified explanatory variable distribution and has specified outcome probabilities. This is just us building a data set matching an assumed known answer. Our data distribution is going to be determined by `pX1`, `pX2`, and `P[y == TRUE] ~ sigmoid(cval + b1 * x1 + b2 * x2)`. Our inference task is to recover the parameters `pX1`, `pX2`, `cval`, `b1`, and `b2` from data, even in the situation where observers have omitted variable issues.
 
 ```{r}
 # assign an example outcome or dependent variable
@@ -140,12 +143,13 @@ knitr::kable(margin_transform)
 
 ```{r}
 # apply the linear operator to compute marginalized observations
-margins <- as.numeric(margin_transform %*% detailed_frame$proportion)
 margin_frame <- margin_names
-margin_frame$proportion <- margins
+margin_frame$proportion <- as.numeric(margin_transform %*% detailed_frame$proportion)
 
 knitr::kable(margin_frame)
 ```
+
+The margin frame describes how the detailed experiment is marginalized or censored down to what different experimenters that have access to only some of the explanatory variables see. Finding a good pre-image of data under this transform is how we will solve our problem.
 
 We are going to consider the original detailed data as "unobserved", and parts of the marginalized results as what is observed by two experimenters.
 
@@ -160,6 +164,8 @@ Let's see what happens when each experimenter tries to perform inference on thei
 d1 <- margin_frame[margin_frame$x2 == '*', , drop = FALSE]
 d1$x1 <- as.numeric(d1$x1)
 d1$y <- as.logical(d1$y)
+
+knitr::kable(d1)
 ```
 
 ```{r}
@@ -174,7 +180,7 @@ suppressWarnings(
 )
 ```
 
-Notice experimenter 1 got a way too small extimate of the `x1` coefficient.
+Notice experimenter 1 got a much too small extimate of the `x1` coefficient. From experimenter 1's point of view, the effect of the omitted variable `x2` is making `x1` hard to correctly infer.
 
 ### Experimenter 2's view
 
@@ -183,6 +189,8 @@ Notice experimenter 1 got a way too small extimate of the `x1` coefficient.
 d2 <- margin_frame[margin_frame$x1 == '*', , drop = FALSE]
 d2$x2 <- as.numeric(d2$x2)
 d2$y <- as.logical(d2$y)
+
+knitr::kable(d2)
 ```
 
 
@@ -204,6 +212,8 @@ Experimenter 2 also gets a wrong estimate, but closer as the the omitted `x1` va
 
 From the original data set's point of view: both experimenters have wrong estimates of their respective coefficients. The question then is: if the experimenters pool their effort can they infer the correct coefficients?
 
+From our point of view only `d1` plus `d2` are observable, even after the experimenters choose to collaborate. This is because we are assuming neither of them had access to the original data as each failed to measure one of the explanatory variables.
+
 Each experimenter knows a lot about the data. They known the distribution of their explanatory variable, and even the joint distribution of their explanatory and the dependent and outcome data. Assuming the two explanatory variables are independent, they even know the joint distribution of the explanatory variables. Together they *almost* know the original non-marginalized data distribution. Let's try to solve for an estimate of that distribution given the data available when the experimenters pool their observations.
 
 This isn't the first time we have proposed a "guess at the original data, as it wasn't shared" as we played with this in [Checking claims in published statistics papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistics-papers/). It is a continual source of frustration that researchers are allowed to claim "results" without the backing code and data.
@@ -212,13 +222,58 @@ This isn't the first time we have proposed a "guess at the original data, as it 
 
 What we are going to do is: simulate experimenter 1 and experimenter 2 working together to try and recover a joint estimate of the `x1` and `x2` coefficients. We are going to use their pooled information to guess at plausible pre-images that represent the unobserved joint data set that has simultaneous `x1` and `x2` observations. This is kind of cute: instead of trying to invert the estimate bias, we try and guess at original data wher we know how to perform an unbiased analysis.
 
-We characterize all pre-images of the pooled marginal information. These are all of the form of a pre-image of the observed `margins` vector plus any elements of the marginalization processes' null-space (i.e. changes in data that are not respected by the summation process).
+We characterize all pre-images of the pooled marginal information. These are all of the form of a pre-image of the estimated proportions column plus any elements of the marginalization processes' null-space (i.e. changes in data that are not respected by the summation process).
+
+### The `x1` and `x2` distribution
+
+Neither experimenter observed the following part of the marginal frame:
+
+```{r}
+# show x1 x2 distribution poriton of margin_frame
+dx <- margin_frame[margin_frame$y == '*', , drop = FALSE]
+
+knitr::kable(dx)
+```
+
+However, under their independence assumption they can estimate it from their observations as follows.
+
+```{r}
+# estimate x1 x2 distribution from d1 and d2
+d1a <- aggregate(proportion ~ x1, data = d1, sum)
+d2a <- aggregate(proportion ~ x2, data = d2, sum)
+dxe <- merge(d1a, d2a, by = c())
+dxe["proportion"] <- dxe$proportion.x * dxe$proportion.y
+dxe$proportion.x <- NULL
+dxe$proportion.y <- NULL
+dxe <- dxe[order(dxe$x2, dxe$x1), , drop = FALSE]
+stopifnot(all(dx[, c("x1", "x2")] == dxe[, c("x1", "x2")]))
+
+knitr::kable(dxe)
+```
+
+Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed independence of `x1` and `x2`).
+
+```{r}
+# put together experimenter 1 and 2's joint estimate of marginal proportions
+# from data they have in their sub-experiments.
+estimated_proportions <- c(
+  d1$proportion,
+  d2$proportion,
+  dxe$proportion
+)
+
+estimated_proportions
+```
+
+At this point we have inferred the `pX1` and `pX2` parameters from the observed data.
+
+### Solving For the Joint Distribution
 
 In our case we have an example data distribution (with illegal negative entries!).
 
 ```{r}
 # typical solution (in the linear sense, signs not enforced)
-v <- as.numeric(MASS::ginv(margin_transform) %*% margins)
+v <- as.numeric(MASS::ginv(margin_transform) %*% estimated_proportions)
 
 v
 ```
@@ -280,6 +335,8 @@ stopifnot(all(convex_soln$coefficients > -1e-8))
 stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
 ```
 
+### Inferring the logistic coefficients
+
 And, in this case, it turns out each of our extreme solutions recovers essentially the same logistic regression solution! And this matches the unobserved detailed solution! Likely the one degree of freedom in the solution space matches some of the logistic regression balance conditions, and is therefore a unimportant or indifferent source of variation.
 
 ```{r}
@@ -295,7 +352,7 @@ for (soln_name in soln_names) {
   print(soln_name)
   soln <- as.numeric(detailed_frame[[soln_name]])
   m_rec <- as.numeric(margin_transform %*% soln)
-  max_error <- max(abs(m_rec - margins))
+  max_error <- max(abs(m_rec - estimated_proportions))
   stopifnot(max_error < 1e-8)
   coef <- suppressWarnings(
     glm(
@@ -335,10 +392,12 @@ opt_soln <- optimize(
 z_opt <- opt_soln$maximum
 stopifnot(z_opt >= 0)
 stopifnot(z_opt <= 1)
-detailed_frame["opt_dist"] <- z_opt * detailed_frame$recovered_1 + (1 - z_opt) * detailed_frame$recovered_2
+detailed_frame["maxent_dist"] <- z_opt * detailed_frame$recovered_1 + (1 - z_opt) * detailed_frame$recovered_2
+detailed_frame$recovered_1 <- NULL
+detailed_frame$recovered_2 <- NULL
 ```
 
-Notice that the recovered `opt_dist` is preternaturally close to the unobserved original `proportion`.
+Notice that the recovered `maxent_dist` is preternaturally close to the unobserved original `proportion`.
 
 ```{r}
 knitr::kable(detailed_frame)
@@ -351,7 +410,7 @@ coef <- suppressWarnings(
   glm(
     y ~ x1 + x2,
     data = detailed_frame,
-    weights = detailed_frame[["opt_dist"]],
+    weights = detailed_frame[["maxent_dist"]],
     family = binomial()
   )$coef
 )
@@ -360,10 +419,8 @@ print(coef)
 ```
 
 
-
 ## Conclusion
 
-The point is: by pooling their observations the two researchers can recover a very good estimate of the joint analysis neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data they saw and analyze that. This in fact gives us how to invert the bias introduced by the omitted variable observations.
+The point is: by pooling their observations the two researchers can recover a very good estimate of a joint analysis that neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data that formed the observations that they saw, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variable observations.
 
-In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to guess low-discrepancy pre-images of the data. And, as always, as we are now introducing a lot of unobserved data we could got to Bayesian graphical model methods to sum this out (instead of proposing a specific pointwise heuristic as we did here).
-
+In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to guess low-discrepancy pre-images of the data. And, as always, as we are now introducing a lot of unobserved data we could got to Bayesian graphical model methods to sum this out (instead of proposing a specific point-wise heuristic as we did here).
