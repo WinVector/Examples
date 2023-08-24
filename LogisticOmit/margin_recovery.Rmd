@@ -87,7 +87,8 @@ suppressWarnings(
 ```{r}
 margin_names <- rbind(
   expand.grid(x1 = c('0', '1'), x2 = '*', y = c(FALSE, TRUE), stringsAsFactors = FALSE),
-  expand.grid(x1 = '*', x2 = c('0', '1'), y = c(FALSE, TRUE), stringsAsFactors = FALSE)
+  expand.grid(x1 = '*', x2 = c('0', '1'), y = c(FALSE, TRUE), stringsAsFactors = FALSE),
+  expand.grid(x1 = c('0', '1'), x2 = c('0', '1'), y = '*', stringsAsFactors = FALSE)
 )
 margin_transform <- matrix(data=0, nrow = nrow(margin_names), ncol = nrow(detailed_names))
 colnames(margin_transform) <- paste0("n(", apply(detailed_names, 1, paste, collapse = ","), ")")
@@ -119,24 +120,9 @@ knitr::kable(margin_frame)
 
 
 ```{r}
-design_names <- expand.grid(x1 = c('0', '1'), x2 = c('0', '1'), y = '*', stringsAsFactors = FALSE)
-design_transform <- matrix(data=0, nrow = nrow(design_names), ncol = nrow(detailed_names))
-colnames(design_transform) <- paste0("n(", apply(detailed_names, 1, paste, collapse = ","), ")")
-rownames(design_transform) <- paste0("n(", apply(design_names, 1, paste, collapse = ","), ")")
-for (row_index in seq(nrow(design_transform))) {
-  for (col_index in seq(ncol(design_transform))) {
-    if(sum(detailed_names[col_index, ] == design_names[row_index, ]) == 2) {
-      design_transform[row_index, col_index] = 1
-    }
-  }
-}
-
-knitr::kable(design_transform)
-```
-
-```{r}
 d1 <- margin_frame[margin_frame$x2 == '*', , drop = FALSE]
 d1$x1 <- as.numeric(d1$x1)
+d1$y <- as.logical(d1$y)
 ```
 
 ```{r}
@@ -153,6 +139,7 @@ suppressWarnings(
 ```{r}
 d2 <- margin_frame[margin_frame$x1 == '*', , drop = FALSE]
 d2$x2 <- as.numeric(d2$x2)
+d2$y <- as.logical(d2$y)
 ```
 
 
@@ -187,7 +174,7 @@ ns
 ```
 
 ```{r}
-opt <- lp("min", c(1, 1, 1, 1), cbind(ns, -ns), ">=", -v)
+opt <- lp("min", c(1, 1), cbind(ns, -ns), ">=", -v)
 recovered <- cbind(ns, -ns) %*% opt$solution + v
 recovered <- pmax(recovered, 0)
 recovered <- recovered / sum(recovered)
