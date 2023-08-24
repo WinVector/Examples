@@ -4,13 +4,13 @@ output: github_document
 date: "2023-08-24"
 ---
 
-```{r}
-library(lpSolve)
-```
 
 ```{r}
-# build transfer matrix from joint observations to marginal observations
-(detailed_names <- expand.grid(x1 = c('0', '1'), x2 = c('0', '1'), y = c(FALSE, TRUE), stringsAsFactors = FALSE))
+(detailed_names <- expand.grid(
+  x1 = c('0', '1'), 
+  x2 = c('0', '1'), 
+  y = c(FALSE, TRUE), 
+  stringsAsFactors = FALSE))
 ```
 
 
@@ -85,6 +85,7 @@ suppressWarnings(
 
 
 ```{r}
+# build transfer matrix from joint observations to marginal observations
 margin_names <- rbind(
   expand.grid(x1 = c('0', '1'), x2 = '*', y = c(FALSE, TRUE), stringsAsFactors = FALSE),
   expand.grid(x1 = '*', x2 = c('0', '1'), y = c(FALSE, TRUE), stringsAsFactors = FALSE),
@@ -106,7 +107,7 @@ knitr::kable(margin_transform)
 
 
 ```{r}
-margins <- (margin_transform %*% detailed_frame$proportion)[, 1]
+margins <- as.numeric(margin_transform %*% detailed_frame$proportion)
 
 margins
 ```
@@ -156,46 +157,60 @@ suppressWarnings(
 
 
 ```{r}
-v <- MASS::ginv(margin_transform) %*% margins
+v <- as.numeric(MASS::ginv(margin_transform) %*% margins)
 
 v
-```
-
-```{r}
-# get rank of matrix
-qr(margin_transform)$rank
 ```
 
 
 ```{r}
 ns <- MASS::Null(t(margin_transform))
+stopifnot(ncol(ns) == 1)
+ns <- as.numeric(ns)
 
 ns
 ```
 
 ```{r}
-opt <- lp("min", c(1, 1), cbind(ns, -ns), ">=", -v)
-recovered <- cbind(ns, -ns) %*% opt$solution + v
-recovered <- pmax(recovered, 0)
-recovered <- recovered / sum(recovered)
-detailed_frame$recovered <- recovered
-
-detailed_frame
+proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
+solns <- proposed_solns[vapply(proposed_solns, function(soln) {all(soln * ns + v >= -1e-8)}, logical(1))]
 ```
 
 ```{r}
-(m_rec <- (margin_transform %*% recovered)[ , 1])
+soln_i <- 0
+soln_names <- rep('', length(solns))
+for (soln in solns) {
+  recovered <- as.numeric(soln * ns + v)
+  recovered <- pmax(recovered, 0)  # get rid of any very near zero entries
+  soln_i <- soln_i + 1
+  soln_name <- paste0("recovered_", soln_i)
+  detailed_frame[soln_name] <- recovered
+  soln_names[soln_i] <- soln_name
+}
 ```
 
-
-
 ```{r}
-suppressWarnings(
-  glm(
-    y ~ x1 + x2,
-    data = detailed_frame,
-    weights = detailed_frame$recovered,
-    family = binomial()
-  )$coef
-)
+soln_i <- 0
+coef_list <- as.list(rep(NULL, length(soln_names)))
+for (soln_name in soln_names) {
+  print(soln_name)
+  soln <- as.numeric(detailed_frame[[soln_name]])
+  print("recovered proportions")
+  print(soln)
+  m_rec <- as.numeric(margin_transform %*% soln)
+  max_error <- max(abs(m_rec - margins))
+  stopifnot(max_error < 1e-8)
+  coef <- suppressWarnings(
+    glm(
+      y ~ x1 + x2,
+      data = detailed_frame,
+      weights = detailed_frame[[soln_name]],
+      family = binomial()
+    )$coef
+  )
+  print("recovered solution")
+  print(coef)
+  soln_i <- soln_i + 1
+  coef_list[[soln_i]] <- coef
+}
 ```
