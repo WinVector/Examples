@@ -1,0 +1,214 @@
+---
+title: "margin_transform"
+output: github_document
+date: "2023-08-24"
+---
+
+```{r}
+library(lpSolve)
+```
+
+```{r}
+# build transfer matrix from joint observations to marginal observations
+(detailed_names <- expand.grid(x1 = c('0', '1'), x2 = c('0', '1'), y = c(FALSE, TRUE), stringsAsFactors = FALSE))
+```
+
+
+```{r}
+# 0.5772
+(cval <- -digamma(1))
+```
+
+```{r}
+# 3.1415
+(b1 <- pi)
+```
+
+```{r}
+# 27.182
+(b2 <- - 3 * exp(1))
+```
+
+Please remember these constants in this order for later.
+
+```{r}
+# show constants in an order will see again
+c(cval, b1, b2)
+```
+
+```{r}
+# assign an example outcome or dependent variable
+detailed_frame <- detailed_names
+detailed_frame$x1 <- as.numeric(detailed_frame$x1)
+detailed_frame$x2 <- as.numeric(detailed_frame$x2)
+detailed_frame['y_linear'] <- cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
+```
+
+```{r}
+pX1 = 0.3
+pX2 = 0.8
+```
+
+```{r}
+# converting "links" to probabilities
+sigmoid <- function(x) {1 / (1 + exp(-x))}
+
+detailed_frame$y_probability <- sigmoid(detailed_frame$y_linear)
+detailed_frame$y_linear <- NULL
+detailed_frame$proportion <- detailed_frame$y_probability
+detailed_frame$proportion[detailed_frame$y == FALSE] <- 1 - detailed_frame$proportion[detailed_frame$y == FALSE]
+detailed_frame$y_probability <- NULL
+detailed_frame$proportion <- (
+    detailed_frame$proportion 
+    * (detailed_frame$x1 * pX1 + (1 - detailed_frame$x1) * (1 - pX1))
+    * (detailed_frame$x2 * pX2 + (1 - detailed_frame$x2) * (1 - pX2))
+  )
+detailed_frame$proportion <- detailed_frame$proportion / sum(detailed_frame$proportion)
+```
+
+
+```{r}
+knitr::kable(detailed_frame)
+```
+
+
+```{r}
+suppressWarnings(
+  glm(
+    y ~ x1 + x2,
+    data = detailed_frame,
+    weights = detailed_frame$proportion,
+    family = binomial()
+  )$coef
+)
+```
+
+
+```{r}
+margin_names <- rbind(
+  expand.grid(x1 = c('0', '1'), x2 = '*', y = c(FALSE, TRUE), stringsAsFactors = FALSE),
+  expand.grid(x1 = '*', x2 = c('0', '1'), y = c(FALSE, TRUE), stringsAsFactors = FALSE)
+)
+margin_transform <- matrix(data=0, nrow = nrow(margin_names), ncol = nrow(detailed_names))
+colnames(margin_transform) <- paste0("n(", apply(detailed_names, 1, paste, collapse = ","), ")")
+rownames(margin_transform) <- paste0("n(", apply(margin_names, 1, paste, collapse = ","), ")")
+for (row_index in seq(nrow(margin_transform))) {
+  for (col_index in seq(ncol(margin_transform))) {
+    if(sum(detailed_names[col_index, ] == margin_names[row_index, ]) == 2) {
+      margin_transform[row_index, col_index] = 1
+    }
+  }
+}
+
+knitr::kable(margin_transform)
+```
+
+
+```{r}
+margins <- (margin_transform %*% detailed_frame$proportion)[, 1]
+
+margins
+```
+
+```{r}
+margin_frame <- margin_names
+margin_frame$proportion <- margins
+
+knitr::kable(margin_frame)
+```
+
+
+```{r}
+design_names <- expand.grid(x1 = c('0', '1'), x2 = c('0', '1'), y = '*', stringsAsFactors = FALSE)
+design_transform <- matrix(data=0, nrow = nrow(design_names), ncol = nrow(detailed_names))
+colnames(design_transform) <- paste0("n(", apply(detailed_names, 1, paste, collapse = ","), ")")
+rownames(design_transform) <- paste0("n(", apply(design_names, 1, paste, collapse = ","), ")")
+for (row_index in seq(nrow(design_transform))) {
+  for (col_index in seq(ncol(design_transform))) {
+    if(sum(detailed_names[col_index, ] == design_names[row_index, ]) == 2) {
+      design_transform[row_index, col_index] = 1
+    }
+  }
+}
+
+knitr::kable(design_transform)
+```
+
+```{r}
+d1 <- margin_frame[margin_frame$x2 == '*', , drop = FALSE]
+d1$x1 <- as.numeric(d1$x1)
+```
+
+```{r}
+suppressWarnings(
+  glm(
+    y ~ x1,
+    data = d1,
+    weights = d1$proportion,
+    family = binomial()
+  )$coef
+)
+```
+
+```{r}
+d2 <- margin_frame[margin_frame$x1 == '*', , drop = FALSE]
+d2$x2 <- as.numeric(d2$x2)
+```
+
+
+```{r}
+suppressWarnings(
+  glm(
+    y ~ x2,
+    data = d2,
+    weights = d2$proportion,
+    family = binomial()
+  )$coef
+)
+```
+
+
+```{r}
+v <- MASS::ginv(margin_transform) %*% margins
+
+v
+```
+
+```{r}
+# get rank of matrix
+qr(margin_transform)$rank
+```
+
+
+```{r}
+ns <- MASS::Null(t(margin_transform))
+
+ns
+```
+
+```{r}
+opt <- lp("min", c(1, 1, 1, 1), cbind(ns, -ns), ">=", -v)
+recovered <- cbind(ns, -ns) %*% opt$solution + v
+recovered <- pmax(recovered, 0)
+recovered <- recovered / sum(recovered)
+detailed_frame$recovered <- recovered
+
+detailed_frame
+```
+
+```{r}
+(m_rec <- (margin_transform %*% recovered)[ , 1])
+```
+
+
+
+```{r}
+suppressWarnings(
+  glm(
+    y ~ x1 + x2,
+    data = detailed_frame,
+    weights = detailed_frame$recovered,
+    family = binomial()
+  )$coef
+)
+```
