@@ -147,6 +147,8 @@ margin_frame$proportion <- margins
 knitr::kable(margin_frame)
 ```
 
+We are going to consider the original detailed data as "unobserved", and parts of the marginalized results as what is observed by two experimenters.
+
 ### Experimenter 1's view
 
 Experimenter 1 only knows about the rows named `ln(0/1, *, FALSE/TRUE)`. Experimenter 2 only knows about the rows named `ln(*, 0/1, FALSE/TRUE)`. Neither experimenter knows the `ln(0/1, 0/1, *)` rows, but if they pool their data they can in fact use the independence assumption to recover these rows.
