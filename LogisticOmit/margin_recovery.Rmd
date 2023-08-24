@@ -204,6 +204,8 @@ From the original data set's point of view: both experimenters have wrong estima
 
 Each experimenter knows a lot about the data. They known the distribution of their explanatory variable, and even the joint distribution of their explanatory and the dependent and outcome data. Assuming the two explanatory variables are independent, they even know the joint distribution of the explanatory variables. Together they *almost* know the original non-marginalized data distribution. Let's try to solve for an estimate of that distribution given the data available when the experimenters pool their observations.
 
+This isn't the first time we have proposed a "guess at the original data, as it wasn't shared" as we played with this in [Checking claims in published statistics papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistics-papers/). It is a continual source of frustration that researchers are allowed to claim "results" without the backing code and data.
+
 ## A Solution
 
 What we are going to do is: simulate experimenter 1 and experimenter 2 working together to try and recover a joint estimate of the `x1` and `x2` coefficients. We are going to use their pooled information to guess at plausible pre-images that represent the unobserved joint data set that has simultaneous `x1` and `x2` observations. This is kind of cute: instead of trying to invert the estimate bias, we try and guess at original data wher we know how to perform an unbiased analysis.
