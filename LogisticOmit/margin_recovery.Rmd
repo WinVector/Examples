@@ -316,7 +316,7 @@ for (soln_name in soln_names) {
 
 It is convenient to pick a distinguished or "best guess" solution. In our case here it doesn't matter much, as both our extreme solutions can nearly identical logistic regression inferences. However if we do want to pick a single guess at the data pre-image the usual criterion is pick the maximum entropy one. 
 
-This is just a simple principle: prefer flat distributions until one have evidence against them. This modeling technique is itself very strongly related to logistic regression modeling. Or one can say this is a bit opportunistic, we have an under-conditioned problem se we add an arbitrary convex criterion to pick a solution.
+This is just a simple principle: prefer flat distributions until one have evidence against them. This modeling technique is itself very strongly related to logistic regression modeling. Or one can say this is a bit opportunistic, we have an under-conditioned problem se we add an arbitrary convex criterion to pick a solution. Roughly we don't want to over-sell the maximum entropy pick, as we are already enforcing a lot of our sensible desiderata with the linear constraints.
 
 ```{r}
 # brute force solve for maximum entropy mix
