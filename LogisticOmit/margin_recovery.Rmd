@@ -4,8 +4,18 @@ output: github_document
 date: "2023-08-24"
 ---
 
+## Introduction
+
+Let's continue along the lines discussed in [Omitted Variable Effects in Logistic Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/).
+
+## Our Example
+
+For our example we set up a logistic regression on two explanatory variables `x1` and `x2` . For simplicity we will take the case where `x1` and `x2` take on the values `0` and `1`.
+
+Our data is then keyed by the values of these explanatory variables and the dependent or outcome variable `y`. The keying looks like the following.
 
 ```{r}
+# show row labels
 (detailed_names <- expand.grid(
   x1 = c('0', '1'), 
   x2 = c('0', '1'), 
@@ -13,6 +23,15 @@ date: "2023-08-24"
   stringsAsFactors = FALSE))
 ```
 
+Let's specify the probabilities each variable is `1`, which we are specifying as independent with the following expected values.
+
+```{r}
+# specify explanatory variable distribution 
+pX1 = 0.3
+pX2 = 0.8
+```
+
+Our data set can then be completely described by above explanatory variable distribution *and* the conditional probability of the dependent outcomes. For our logistic regression problem we set up our outcome conditioning coefficients as follows.
 
 ```{r}
 # 0.5772
@@ -29,50 +48,46 @@ date: "2023-08-24"
 (b2 <- - 3 * exp(1))
 ```
 
-Please remember these constants in this order for later.
+Please remember these coefficients in this order for later.
 
 ```{r}
 # show constants in an order will see again
 c(cval, b1, b2)
 ```
 
+Using the methodology of [Replicating a Linear Model](https://win-vector.com/2019/07/03/replicating-a-linear-model/) we can build a data set that obeys the specified explanatory variable distribution and has specified outcome probabilities. This is just us building a data set matching an assumed known answer.
+
 ```{r}
 # assign an example outcome or dependent variable
 detailed_frame <- detailed_names
 detailed_frame$x1 <- as.numeric(detailed_frame$x1)
 detailed_frame$x2 <- as.numeric(detailed_frame$x2)
-detailed_frame['y_linear'] <- cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
-```
-
-```{r}
-pX1 = 0.3
-pX2 = 0.8
-```
-
-```{r}
+# get joint distribution of explanatory variables
+detailed_frame$x_distribution <- (
+  (detailed_frame$x1 * pX1 + (1 - detailed_frame$x1) * (1 - pX1))
+    * (detailed_frame$x2 * pX2 + (1 - detailed_frame$x2) * (1 - pX2))
+)
+# get conditional probability of observed outcome
+y_linear <- cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
 # converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
-
-detailed_frame$y_probability <- sigmoid(detailed_frame$y_linear)
-detailed_frame$y_linear <- NULL
-detailed_frame$proportion <- detailed_frame$y_probability
-detailed_frame$proportion[detailed_frame$y == FALSE] <- 1 - detailed_frame$proportion[detailed_frame$y == FALSE]
-detailed_frame$y_probability <- NULL
-detailed_frame$proportion <- (
-    detailed_frame$proportion 
-    * (detailed_frame$x1 * pX1 + (1 - detailed_frame$x1) * (1 - pX1))
-    * (detailed_frame$x2 * pX2 + (1 - detailed_frame$x2) * (1 - pX2))
-  )
-detailed_frame$proportion <- detailed_frame$proportion / sum(detailed_frame$proportion)
+y_probability <- sigmoid(y_linear)
+detailed_frame$p_observed_outcome <- ifelse(detailed_frame$y, y_probability, 1 - y_probability)
+# compute joint explanatory plus outcome probability of each row
+detailed_frame$proportion <- detailed_frame$x_distribution * detailed_frame$p_observed_outcome
+stopifnot(abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
+
 
 
 ```{r}
 knitr::kable(detailed_frame)
 ```
 
+We can confirm this data set encodes the expected logistic relationship.
 
 ```{r}
+# suppressWarnings() to avoid fractional data weight complaint
 suppressWarnings(
   glm(
     y ~ x1 + x2,
@@ -82,6 +97,14 @@ suppressWarnings(
   )$coef
 )
 ```
+
+Notice we recover the `cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` form.
+
+## The Problem
+
+Now let's get introduce our issue. Suppose we have two experimenters, each of which only observing one of the explanatory variables? As we saw in [Omitted Variable Effects in Logistic Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/) each of these experimenters will in fact estimate coefficients that are biased towards zero, due to the non-collapsibility of the modeling set up. This differs from linear regression where for independent explanatory variables (as we have here) we would expect each experimenter to be able to get an unbiased estimate of the explanatory variable available to them!
+
+To show this let's build a linear operator that computes the marigns the experimenters actually observe.
 
 
 ```{r}
@@ -107,18 +130,19 @@ knitr::kable(margin_transform)
 
 
 ```{r}
+# apply the linear operator to compute marginalized observations
 margins <- as.numeric(margin_transform %*% detailed_frame$proportion)
-
-margins
-```
-
-```{r}
 margin_frame <- margin_names
 margin_frame$proportion <- margins
 
 knitr::kable(margin_frame)
 ```
 
+### Experimenter 1's view
+
+Experimenter 1 only knows about the rows named `ln(0/1, *, FALSE/TRUE)`. Experimenter 2 only knows about the rows named `ln(*, 0/1, FALSE/TRUE)`. Neither experimenter knows the `ln(0/1, 0/1, *)` rows, but if they pool their data they can in fact use the independence assumption to recover these rows.
+
+Let's see what happens when each experimenter tries to perform inference on their fraction of the data.
 
 ```{r}
 d1 <- margin_frame[margin_frame$x2 == '*', , drop = FALSE]
@@ -136,6 +160,10 @@ suppressWarnings(
   )$coef
 )
 ```
+
+Notice experimenter 1 got a way too small extimate of the `x1` coefficient.
+
+### Experimenter 2's view
 
 ```{r}
 d2 <- margin_frame[margin_frame$x1 == '*', , drop = FALSE]
@@ -155,6 +183,15 @@ suppressWarnings(
 )
 ```
 
+Experimenter 2 also gets a wrong estimate, but closer as the the omitted `x1` variable had less influence.
+
+## The Solution
+
+What we are going to do is: simulate experimenter 1 and experimenter 2 working together to try and recover a joint estimate of the `x1` and `x2` coefficients.
+
+First we characterize all pre-images of the pooled marginal information. These are all of the form of a pre-image of the observed `margins` vector plus any elements of the marginalization processes' null-space (i.e. changes in data that are not respected by the summation process).
+
+In our case we have an example data distribution (with illegal negative entries!).
 
 ```{r}
 v <- as.numeric(MASS::ginv(margin_transform) %*% margins)
@@ -162,6 +199,7 @@ v <- as.numeric(MASS::ginv(margin_transform) %*% margins)
 v
 ```
 
+And we have a single element of the null space. 
 
 ```{r}
 ns <- MASS::Null(t(margin_transform))
@@ -170,6 +208,8 @@ ns <- as.numeric(ns)
 
 ns
 ```
+
+So all valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. Let's solve for them.
 
 ```{r}
 proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
@@ -189,14 +229,36 @@ for (soln in solns) {
 }
 ```
 
+Our attempted recovered solutions to the (unknown to either experimenter!) original data distribution details can be seen below.
+
+```{r}
+knitr::kable(detailed_frame)
+```
+
+As we can see these two extreme solutions are in fact actually fairly close. And the original (unobserved) data distribution is in fact a convex combination of these solutions.
+
+```{r}
+# confirm actual proportions in convex hull of solutions
+convex_soln <- lm(
+  p ~ 0 + r1 + r2, 
+  data = data.frame(
+    r1 = detailed_frame$recovered_1, 
+    r2 = detailed_frame$recovered_2, 
+    p = detailed_frame$proportion)
+)
+stopifnot(max(abs(convex_soln$residuals)) < 1e-8)
+stopifnot(all(convex_soln$coefficients > -1e-8))
+stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
+```
+
+And, in this case, it turns out each of our extreme solutions recovers essentially the same logistic regression solution! And this matches the unobserved detailed solution!
+
 ```{r}
 soln_i <- 0
 coef_list <- as.list(rep(NULL, length(soln_names)))
 for (soln_name in soln_names) {
   print(soln_name)
   soln <- as.numeric(detailed_frame[[soln_name]])
-  print("recovered proportions")
-  print(soln)
   m_rec <- as.numeric(margin_transform %*% soln)
   max_error <- max(abs(m_rec - margins))
   stopifnot(max_error < 1e-8)
@@ -214,3 +276,10 @@ for (soln_name in soln_names) {
   coef_list[[soln_i]] <- coef
 }
 ```
+
+## Conclusion
+
+The point is: by pooling their observations the two researchers can recover a very good estimate of the joint analysis neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data they saw and analyze that. This in fact gives us how to invert the bias introduced by the omitted variable observations.
+
+In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to guess low-norm pre-images of the data. And, as always, as we are now introducing a lot of unobserved data we could got to Bayesian graphical model methods to integreate this out (instead of proposing a specific pointwise heuristic as we did here).
+
