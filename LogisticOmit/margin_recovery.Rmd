@@ -23,7 +23,7 @@ Our data is then keyed by the values of these explanatory variables and the depe
   stringsAsFactors = FALSE))
 ```
 
-Let's specify the probabilities each variable is `1`, which we are specifying as independent with the following expected values.
+Let's specify the joint probabilty distribution of our two explanatory variables. We choose them as independent with the following expected values.
 
 ```{r}
 # specify explanatory variable distribution 
@@ -84,11 +84,18 @@ stopifnot(abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 knitr::kable(detailed_frame)
 ```
 
+```{r}
+# clear some columns we are no longer using
+detailed_frame$x_distribution <- NULL
+detailed_frame$p_observed_outcome <- NULL
+```
+
+
 We can confirm this data set encodes the expected logistic relationship.
 
 ```{r}
 # suppressWarnings() to avoid fractional data weight complaint
-suppressWarnings(
+correct_coef <- suppressWarnings(
   glm(
     y ~ x1 + x2,
     data = detailed_frame,
@@ -96,6 +103,8 @@ suppressWarnings(
     family = binomial()
   )$coef
 )
+
+correct_coef
 ```
 
 Notice we recover the `cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` form.
@@ -145,12 +154,14 @@ Experimenter 1 only knows about the rows named `ln(0/1, *, FALSE/TRUE)`. Experim
 Let's see what happens when each experimenter tries to perform inference on their fraction of the data.
 
 ```{r}
+# select data available to d1
 d1 <- margin_frame[margin_frame$x2 == '*', , drop = FALSE]
 d1$x1 <- as.numeric(d1$x1)
 d1$y <- as.logical(d1$y)
 ```
 
 ```{r}
+# solve from d1's point of view
 suppressWarnings(
   glm(
     y ~ x1,
@@ -166,6 +177,7 @@ Notice experimenter 1 got a way too small extimate of the `x1` coefficient.
 ### Experimenter 2's view
 
 ```{r}
+# select data available to d2
 d2 <- margin_frame[margin_frame$x1 == '*', , drop = FALSE]
 d2$x2 <- as.numeric(d2$x2)
 d2$y <- as.logical(d2$y)
@@ -173,6 +185,7 @@ d2$y <- as.logical(d2$y)
 
 
 ```{r}
+# solve from d2's point of view
 suppressWarnings(
   glm(
     y ~ x2,
@@ -185,15 +198,22 @@ suppressWarnings(
 
 Experimenter 2 also gets a wrong estimate, but closer as the the omitted `x1` variable had less influence.
 
-## The Solution
+## The Question
 
-What we are going to do is: simulate experimenter 1 and experimenter 2 working together to try and recover a joint estimate of the `x1` and `x2` coefficients.
+From the original data set's point of view: both experimenters have wrong estimates of their respective coefficients. The question then is: if the experimenters pool their effort can they infer the correct coefficients?
 
-First we characterize all pre-images of the pooled marginal information. These are all of the form of a pre-image of the observed `margins` vector plus any elements of the marginalization processes' null-space (i.e. changes in data that are not respected by the summation process).
+Each experimenter knows a lot about the data. They known the distribution of their explanatory variable, and even the joint distribution of their explanatory and the dependent and outcome data. Assuming the two explanatory variables are independent, they even know the joint distribution of the explanatory variables. Together they *almost* know the original non-marginalized data distribution. Let's try to solve for an estimate of that distribution given the data available when the experimenters pool their observations.
+
+## A Solution
+
+What we are going to do is: simulate experimenter 1 and experimenter 2 working together to try and recover a joint estimate of the `x1` and `x2` coefficients. We are going to use their pooled information to guess at plausible pre-images that represent the unobserved joint data set that has simultaneous `x1` and `x2` observations. This is kind of cute: instead of trying to invert the estimate bias, we try and guess at original data wher we know how to perform an unbiased analysis.
+
+We characterize all pre-images of the pooled marginal information. These are all of the form of a pre-image of the observed `margins` vector plus any elements of the marginalization processes' null-space (i.e. changes in data that are not respected by the summation process).
 
 In our case we have an example data distribution (with illegal negative entries!).
 
 ```{r}
+# typical solution (in the linear sense, signs not enforced)
 v <- as.numeric(MASS::ginv(margin_transform) %*% margins)
 
 v
@@ -202,6 +222,7 @@ v
 And we have a single element of the null space. 
 
 ```{r}
+# our degree of freedom between solutions
 ns <- MASS::Null(t(margin_transform))
 stopifnot(ncol(ns) == 1)
 ns <- as.numeric(ns)
@@ -212,11 +233,15 @@ ns
 So all valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. Let's solve for them.
 
 ```{r}
+# solve for the z's
 proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
 solns <- proposed_solns[vapply(proposed_solns, function(soln) {all(soln * ns + v >= -1e-8)}, logical(1))]
+solns <- unique(c(min(solns), max(solns)))
+stopifnot(length(solns) > 0)
 ```
 
 ```{r}
+# solve the logistic regression for each of our extreme guessed pre-images of the data
 soln_i <- 0
 soln_names <- rep('', length(solns))
 for (soln in solns) {
@@ -251,9 +276,15 @@ stopifnot(all(convex_soln$coefficients > -1e-8))
 stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
 ```
 
-And, in this case, it turns out each of our extreme solutions recovers essentially the same logistic regression solution! And this matches the unobserved detailed solution!
+And, in this case, it turns out each of our extreme solutions recovers essentially the same logistic regression solution! And this matches the unobserved detailed solution! Likely the one degree of freedom in the solution space matches some of the logistic regression balance conditions, and is therefore a unimportant or indifferent source of variation.
 
 ```{r}
+# remind ourselves of the correct solution from actual (unobserved) joint data
+correct_coef
+```
+
+```{r}
+# run through our recovered solutions
 soln_i <- 0
 coef_list <- as.list(rep(NULL, length(soln_names)))
 for (soln_name in soln_names) {
@@ -277,9 +308,58 @@ for (soln_name in soln_names) {
 }
 ```
 
+### Picking a point-estimate
+
+It is convenient to pick a distinguished or "best guess" solution. In our case here it doesn't matter much, as both our extreme solutions can nearly identical logistic regression inferences. However if we do want to pick a single guess at the data pre-image the usual criterion is pick the maximum entropy one. 
+
+This is just a simple principle: prefer flat distributions until one have evidence against them. This modeling techique is itself very strongly related to logistic regression modeling.
+
+```{r}
+# brute force solve for maximum entropy mix
+# obviously this can be done a bit slicker
+entropy <- function(v) {
+  v <- v[v > 0]
+  v <- v / sum(v)
+  -sum(v * log2(v))
+}
+
+opt_soln <- optimize(
+  function(z) {entropy(z * detailed_frame$recovered_1 + (1 - z) * detailed_frame$recovered_2)},
+  c(0, 1),
+  maximum = TRUE)
+
+z_opt <- opt_soln$maximum
+stopifnot(z_opt >= 0)
+stopifnot(z_opt <= 1)
+detailed_frame["opt_dist"] <- z_opt * detailed_frame$recovered_1 + (1 - z_opt) * detailed_frame$recovered_2
+```
+
+Notice that the recoved `opt_dist` is pretanaturally close to the unobserved original `proportion`.
+
+```{r}
+knitr::kable(detailed_frame)
+```
+
+And we feel confident with the following estimated coefficients.
+
+```{r}
+coef <- suppressWarnings(
+  glm(
+    y ~ x1 + x2,
+    data = detailed_frame,
+    weights = detailed_frame[["opt_dist"]],
+    family = binomial()
+  )$coef
+)
+print("recovered solution")
+print(coef)
+```
+
+
+
 ## Conclusion
 
 The point is: by pooling their observations the two researchers can recover a very good estimate of the joint analysis neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data they saw and analyze that. This in fact gives us how to invert the bias introduced by the omitted variable observations.
 
-In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to guess low-norm pre-images of the data. And, as always, as we are now introducing a lot of unobserved data we could got to Bayesian graphical model methods to integreate this out (instead of proposing a specific pointwise heuristic as we did here).
+In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to guess low-discrepancy pre-images of the data. And, as always, as we are now introducing a lot of unobserved data we could got to Bayesian graphical model methods to sum this out (instead of proposing a specific pointwise heuristic as we did here).
 
