@@ -1969,7 +1969,7 @@ variables.
 In the real world the two experimenters at best would be looking at
 marginalizations of different draws of related data. So we would not
 have exact matches we can invert- but instead would have to estimate
-low-discrepancy pre-images of the data. And, as always, as we are now
-introducing a lot of unobserved parameters we could go to Bayesian
-graphical model methods to sum this all out (instead of proposing a
-specific point-wise heuristic as we did here).
+low-discrepancy pre-images of the data. And, as we are now introducing a
+lot of unobserved parameters, we could go to Bayesian graphical model
+methods to sum this all out (instead of proposing a specific point-wise
+heuristic as we did here).
