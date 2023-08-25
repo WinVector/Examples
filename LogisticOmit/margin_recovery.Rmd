@@ -188,7 +188,7 @@ for (row_index in seq(nrow(margin_transform))) {
 }
 
 knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 12)
+  kableExtra::kable_styling(font_size = 10)
 ```
 
 

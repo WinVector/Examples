@@ -265,10 +265,10 @@ for (row_index in seq(nrow(margin_transform))) {
 }
 
 knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 12)
+  kableExtra::kable_styling(font_size = 10)
 ```
 
-<table class="table" style="font-size: 12px; margin-left: auto; margin-right: auto;">
+<table class="table" style="font-size: 10px; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
