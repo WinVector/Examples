@@ -1419,6 +1419,9 @@ entries!).
 # typical solution (in the linear sense, signs not enforced)
 v <- as.numeric(
   MASS::ginv(margin_transform) %*% estimated_proportions)
+stopifnot(  # abort render if this claim is not true
+  max(abs(margin_transform %*% v - estimated_proportions)) < 1e-6
+)
 
 v
 ```
@@ -1435,6 +1438,9 @@ ns <- MASS::Null(t(margin_transform))
 stopifnot(  # abort render if this claim is not true
   ncol(ns) == 1)
 ns <- as.numeric(ns)
+stopifnot(  # abort render if this claim is not true
+  max(abs(margin_transform %*% ns)) < 1e-6
+)
 
 ns
 ```
