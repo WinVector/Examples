@@ -265,10 +265,10 @@ for (row_index in seq(nrow(margin_transform))) {
 }
 
 knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 10)
+  kableExtra::kable_styling(font_size = 8)
 ```
 
-<table class="table" style="font-size: 10px; margin-left: auto; margin-right: auto;">
+<table class="table" style="font-size: 8px; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -1417,8 +1417,7 @@ entries!).
 
 ``` r
 # typical solution (in the linear sense, signs not enforced)
-v <- as.numeric(
-  MASS::ginv(margin_transform) %*% estimated_proportions)
+v <- solve(qr(margin_transform, LAPACK = TRUE), estimated_proportions)
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% v - estimated_proportions)) < 1e-6
 )
@@ -1426,18 +1425,22 @@ stopifnot(  # abort render if this claim is not true
 v
 ```
 
-    ## [1]  0.08874118 -0.03697960  0.52131267  0.27559189  0.05125882  0.09697960
-    ## [7]  0.03868733 -0.03559189
+    ## p(0,0,FALSE) p(1,0,FALSE) p(0,1,FALSE) p(1,1,FALSE)  p(0,0,TRUE)  p(1,0,TRUE) 
+    ##  0.047964126  0.003797454  0.562089720  0.234814833  0.092035874  0.056202546 
+    ##  p(0,1,TRUE)  p(1,1,TRUE) 
+    ## -0.002089720  0.005185167
 
 And we have a single element of the null space, which is the direction
 different possible solutions vary in.
 
 ``` r
 # our degree of freedom between solutions
-ns <- MASS::Null(t(margin_transform))
+ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combine
 stopifnot(  # abort render if this claim is not true
   ncol(ns) == 1)
 ns <- as.numeric(ns)
+stopifnot(  # abort render if this claim is not true
+  max(abs(ns)) > 1e-3)
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% ns)) < 1e-6
 )

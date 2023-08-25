@@ -188,7 +188,7 @@ for (row_index in seq(nrow(margin_transform))) {
 }
 
 knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 10)
+  kableExtra::kable_styling(font_size = 8)
 ```
 
 
@@ -340,8 +340,7 @@ In our case we have an example data distribution (with illegal negative entries!
 
 ```{r}
 # typical solution (in the linear sense, signs not enforced)
-v <- as.numeric(
-  MASS::ginv(margin_transform) %*% estimated_proportions)
+v <- solve(qr(margin_transform, LAPACK = TRUE), estimated_proportions)
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% v - estimated_proportions)) < 1e-6
 )
@@ -353,10 +352,12 @@ And we have a single element of the null space, which is the direction different
 
 ```{r}
 # our degree of freedom between solutions
-ns <- MASS::Null(t(margin_transform))
+ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combine
 stopifnot(  # abort render if this claim is not true
   ncol(ns) == 1)
 ns <- as.numeric(ns)
+stopifnot(  # abort render if this claim is not true
+  max(abs(ns)) > 1e-3)
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% ns)) < 1e-6
 )
