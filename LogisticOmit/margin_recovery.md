@@ -1,6 +1,6 @@
 Overcoming Omitted Variable Bias by Solving for Hidden Data
 ================
-2023-08-24
+2023-08-25
 
 ## Introduction
 
@@ -909,7 +909,7 @@ complete the joint coefficient inference.
 
 ### Experimenter 1’s view
 
-Let’s see what happens when each experimenter tries to perform inference
+Let’s see what happens when an experimenter tries to perform inference
 on their fraction of the data.
 
 ``` r
@@ -1143,28 +1143,21 @@ TRUE
 From the original data set’s point of view: both experimenters have
 wrong estimates of their respective coefficients. The question then is:
 if the experimenters pool their effort can they infer the correct
-coefficients?
-
-From our point of view only `d1` plus `d2` are observable, even after
-the experimenters choose to collaborate. This is because we are assuming
-neither of them had access to the original data as each failed to
-measure one of the explanatory variables.
+coefficients? From our point of view only `d1` plus `d2` are observable,
+even after the experimenters choose to collaborate. This is because we
+are assuming neither of them had access to the original data as each
+failed to measure one of the explanatory variables.
 
 Each experimenter knows a lot about the data. They known the
 distribution of their explanatory variable, and even the joint
 distribution of their explanatory and the dependent and outcome data.
 Assuming the two explanatory variables are independent, they even know
-the joint distribution of the explanatory variables. Together they
-*almost* know the original non-marginalized data distribution. Let’s try
-to solve for an estimate of that distribution given the data available
-when the experimenters pool their observations.
+the joint distribution of the explanatory variables.
 
 This isn’t the first time we have proposed a “guess at the original
 data, as it wasn’t shared” as we played with this in [Checking claims in
 published statistics
 papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistics-papers/).
-It is a continual source of frustration that researchers are allowed to
-claim “results” without the backing code and data.
 
 ## A Solution
 
@@ -1174,7 +1167,7 @@ working together to try and recover a joint estimate of the `x1` and
 at plausible pre-images that represent the unobserved joint data set
 that has simultaneous `x1` and `x2` observations. This is kind of cute:
 instead of trying to invert the estimate bias, we try and guess at
-original data wher we know how to perform an unbiased analysis.
+original data where we know how to perform an unbiased analysis.
 
 We characterize all pre-images of the pooled marginal information. These
 are all of the form of a pre-image of the estimated proportions column
@@ -1283,8 +1276,8 @@ p(1,1,&ast;)
 </tbody>
 </table>
 
-However, under their independence assumption they can estimate it from
-their observations as follows.
+However, under the independence assumption they can estimate it from
+their pooled observations as follows.
 
 ``` r
 # estimate x1 x2 distribution from d1 and d2
@@ -1367,8 +1360,8 @@ Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed
 independence of `x1` and `x2`). At this point we have inferred the `pX1`
 and `pX2` parameters from the observed data.
 
-Putting this all together we get the joint experimenters estimate of the
-complete `proportion` vector.
+Putting this all together we get a joint estimate of the complete
+`proportion` vector.
 
 ``` r
 # put together experimenter 1 and 2's joint estimate of marginal proportions
@@ -1407,7 +1400,7 @@ v
     ##  p(0,1,TRUE)  p(1,1,TRUE) 
     ## -0.002089720  0.005185167
 
-We have a single element of the null space, which is the direction
+We have a single dimensional null space, which is the direction
 different possible solutions vary in.
 
 ``` r
@@ -1428,7 +1421,7 @@ ns
     ## [1] -0.3535534  0.3535534  0.3535534 -0.3535534  0.3535534 -0.3535534 -0.3535534
     ## [8]  0.3535534
 
-So all valid solutions are of the form `v + z * ns` for scalars `z`. In
+All valid solutions are of the form `v + z * ns` for scalars `z`. In
 fact all solutions are some interval of `z` values. Let’s solve for
 them.
 
@@ -1728,15 +1721,15 @@ for (soln_name in soln_names) {
 ### Picking a point-estimate
 
 It is convenient to pick a distinguished or “best guess” solution. In
-our case here it doesn’t matter much, as both our extreme solutions can
+our case here it doesn’t matter much, as both our extreme solutions have
 nearly identical logistic regression inferences. However if we do want
-to pick a single guess at the data pre-image the usual criterion is pick
-the maximum entropy one.
+to pick a single guess at the data pre-image the usual method is to pick
+the maximum entropy pre-image distribution.
 
 This is just a simple principle: prefer flat distributions until one
-have evidence against them. This modeling technique is itself very
-strongly related to logistic regression modeling. Or one can say this is
-a bit opportunistic, we have an under-conditioned problem se we add an
+have evidence against them. This modeling technique is itself strongly
+related to logistic regression modeling. Or one can say this is a bit
+opportunistic, we have an under-conditioned problem so we add an
 arbitrary convex criterion to pick a solution. Roughly we don’t want to
 over-sell the maximum entropy pick, as we are already enforcing a lot of
 our sensible desiderata with the linear constraints.
@@ -1937,7 +1930,7 @@ TRUE
 </tbody>
 </table>
 
-And we feel confident with the following estimated coefficients.
+And these are our estimated coefficients.
 
 ``` r
 recovered_coef <- suppressWarnings(
@@ -1959,17 +1952,23 @@ recovered_coef
 
 ## Conclusion
 
-By pooling their observations the two researchers can recover a good
-estimate of a joint analysis that neither of them performed. The
-strategy we used is: try to estimate plausible pre-images of the data
-that formed the observations that they saw, and then analyze that. This
-in fact gives us a method to invert the bias introduced by the omitted
-variables.
+By pooling observations we can recover a good estimate of a joint
+analysis on data that was not available to us. The strategy is: try to
+estimate plausible pre-images of the data that formed the observations,
+and then analyze that. This in fact gives us a method to invert the bias
+introduced by the omitted variables in logistic regression.
 
-In the real world the two experimenters at best would be looking at
-marginalizations of different draws of related data. So we would not
-have exact matches we can invert- but instead would have to estimate
-low-discrepancy pre-images of the data. And, as we are now introducing a
-lot of unobserved parameters, we could go to Bayesian graphical model
-methods to sum this all out (instead of proposing a specific point-wise
+In the real world we would at best be looking at marginalizations of
+different draws of related data. So we would not have exact matches we
+can invert- but instead would have to estimate low-discrepancy
+pre-images of the data. And, as we are now introducing a lot of
+unobserved parameters, we could go to Bayesian graphical model methods
+to sum this all out (instead of proposing a specific point-wise
 heuristic as we did here).
+
+## Links
+
+The source code of this article is available
+[here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/margin_recovery.Rmd)
+(plus render
+[here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/margin_recovery.md)).
