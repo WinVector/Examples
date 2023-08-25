@@ -1,12 +1,15 @@
 ---
-title: "Overcoming Omitted Variable Bias by Pooling Data"
+title: "Overcoming Omitted Variable Bias by Inferring the Hidden Data"
 output: github_document
 date: "2023-08-24"
+always_allow_html: true
 ---
 
 ## Introduction
 
 Let's continue along the lines discussed in [Omitted Variable Effects in Logistic Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/). 
+
+The issue is as follows. For logistic regression, omitted variables cause estimation bias. This *even for independent variables* (which is not the case for more familiar linear regression).
 
 This is a known problem with known mitigations:
 
@@ -14,7 +17,7 @@ This is a known problem with known mitigations:
   * Rhian Daniel, Jingjing Zhang, Daniel Farewell, (2020) "Making apples from oranges: Comparing noncollapsible effect estimators and their standard errors after adjustment for different covariate sets", Biometrical Journal, DOI: 10.1002/bimj.201900297.
   * Zhang, Zhiwei (2009) "Estimating a Marginal Causal Odds Ratio Subject to Confounding", Communications in Statistics - Theory and Methods, 38:3, 309 — 321.
   
-(Thank you, Tom Palmer and Bob Horton for references!)
+(Thank you, Tom Palmer and Robert Horton for references!)
 
 For this note, let's work out how to directly try and overcome the noted omitted variable bias.
 
@@ -65,7 +68,7 @@ Our data set can then be completely described by above explanatory variable dist
 
 ```{r}
 # 27.182
-(b2 <- - 3 * exp(1))
+(b2 <- -3 * exp(1))
 ```
 
 Please remember these coefficients in this order for later.
@@ -101,7 +104,8 @@ detailed_frame$p_observed_outcome <- ifelse(
 # compute joint explanatory plus outcome probability of each row
 detailed_frame$proportion <- (
   detailed_frame$x_distribution * detailed_frame$p_observed_outcome)
-stopifnot(abs(sum(detailed_frame$proportion) - 1) < 1e-6)
+stopifnot(  # abort render if this claim is not true
+  abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
 
 ```{r}
@@ -182,7 +186,8 @@ for (row_index in seq(nrow(margin_transform))) {
   }
 }
 
-knitr::kable(margin_transform)
+knitr::kable(margin_transform, format = "html") |>
+  kableExtra::kable_styling(font_size = 12)
 ```
 
 
@@ -199,7 +204,7 @@ rownames(margin_frame) <- paste0(
 knitr::kable(margin_frame)
 ```
 
-The above margin frame describes how the detailed experiment is marginalized or censored down to what different experimenters that have access to only some of the explanatory variables see. Experimenter 1 sees oly the first four rows, and experimenter 2 sees only the next 4 rows. 
+The above margin frame describes how the detailed experiment is marginalized or censored down to different experimenters see. In our set-up experimenter 1 sees only the first four rows, and experimenter 2 sees only the next 4 rows. 
 
 We consider the original detailed data as "unobserved", and parts of the marginalized results as what is observed by two experimenters.
 
@@ -235,7 +240,7 @@ suppressWarnings(
 )
 ```
 
-Notice experimenter 1 got a much too small extimate of the `x1` coefficient. From experimenter 1's point of view, the effect of the omitted variable `x2` is making `x1` hard to correctly infer.
+Notice experimenter 1 got a *much* too small extimate of the `x1` coefficient. From experimenter 1's point of view, the effect of the omitted variable `x2` is making `x1` hard to correctly infer.
 
 ### Experimenter 2's view
 
@@ -302,12 +307,15 @@ dxe["proportion"] <- dxe$proportion.x * dxe$proportion.y
 dxe$proportion.x <- NULL
 dxe$proportion.y <- NULL
 dxe <- dxe[order(dxe$x2, dxe$x1), , drop = FALSE]
-stopifnot(all(dx[, c("x1", "x2")] == dxe[, c("x1", "x2")]))
+stopifnot(  # abort render if this claim is not true
+  all(dx[, c("x1", "x2")] == dxe[, c("x1", "x2")]))
 
 knitr::kable(dxe)
 ```
 
-Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed independence of `x1` and `x2`).
+Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed independence of `x1` and `x2`). At this point we have inferred the `pX1` and `pX2` parameters from the observed data.
+
+Putting this all together we get the joint experimenters estimate of the complete `proportion` vector.
 
 ```{r}
 # put together experimenter 1 and 2's joint estimate of marginal proportions
@@ -317,11 +325,13 @@ estimated_proportions <- c(
   d2$proportion,
   dxe$proportion
 )
+stopifnot(  # abort render if this claim is not true
+  max(abs(estimated_proportions - margin_frame$proportion)) < 1e-6)
 
 estimated_proportions
 ```
 
-At this point we have inferred the `pX1` and `pX2` parameters from the observed data.
+
 
 ### Solving For the Joint Distribution
 
@@ -335,12 +345,13 @@ v <- as.numeric(
 v
 ```
 
-And we have a single element of the null space. 
+And we have a single element of the null space, which is the direction different possible solutions vary in.
 
 ```{r}
 # our degree of freedom between solutions
 ns <- MASS::Null(t(margin_transform))
-stopifnot(ncol(ns) == 1)
+stopifnot(  # abort render if this claim is not true
+  ncol(ns) == 1)
 ns <- as.numeric(ns)
 
 ns
@@ -356,7 +367,8 @@ solns <- proposed_solns[
          function(soln) {all(soln * ns + v >= -1e-8)}, 
          logical(1))]
 solns <- unique(c(min(solns), max(solns)))
-stopifnot(length(solns) > 0)
+stopifnot(  # abort render if this claim is not true
+  length(solns) > 0)
 ```
 
 ```{r}
@@ -390,6 +402,7 @@ convex_soln <- lm(
     r2 = detailed_frame$recovered_2, 
     p = detailed_frame$proportion)
 )
+# abort render if these claims are not true
 stopifnot(max(abs(convex_soln$residuals)) < 1e-8)
 stopifnot(all(convex_soln$coefficients > -1e-8))
 stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
@@ -413,7 +426,8 @@ for (soln_name in soln_names) {
   soln <- as.numeric(detailed_frame[[soln_name]])
   m_rec <- as.numeric(margin_transform %*% soln)
   max_error <- max(abs(m_rec - estimated_proportions))
-  stopifnot(max_error < 1e-8)
+  stopifnot(  # abort render if this claim is not true
+    max_error < 1e-8)
   coef <- suppressWarnings(
     glm(
       y ~ x1 + x2,
@@ -422,6 +436,8 @@ for (soln_name in soln_names) {
       family = binomial()
     )$coef
   )
+  stopifnot(  # abort render if this claim is not true
+    max(abs(correct_coef - coef)) < 1e-6)
   print("recovered solution")
   print(coef)
   soln_i <- soln_i + 1
@@ -453,13 +469,15 @@ opt_soln <- optimize(
   maximum = TRUE)
 
 z_opt <- opt_soln$maximum
-stopifnot(z_opt >= 0)
-stopifnot(z_opt <= 1)
+stopifnot(z_opt >= 0)  # abort render if this claim is not true
+stopifnot(z_opt <= 1)  # abort render if this claim is not true
 detailed_frame["maxent_dist"] <- (
   z_opt * detailed_frame$recovered_1 + 
     (1 - z_opt) * detailed_frame$recovered_2)
 detailed_frame$recovered_1 <- NULL
 detailed_frame$recovered_2 <- NULL
+stopifnot(  # abort render if this claim is not true
+  max(abs(detailed_frame$proportion - detailed_frame$maxent_dist)) < 1e-5)
 ```
 
 Notice that the recovered `maxent_dist` is preternaturally close to the unobserved original `proportion`.
@@ -471,7 +489,7 @@ knitr::kable(detailed_frame)
 And we feel confident with the following estimated coefficients.
 
 ```{r}
-coef <- suppressWarnings(
+recovered_coef <- suppressWarnings(
   glm(
     y ~ x1 + x2,
     data = detailed_frame,
@@ -479,13 +497,15 @@ coef <- suppressWarnings(
     family = binomial()
   )$coef
 )
-print("recovered solution")
-print(coef)
+stopifnot(  # abort render if this claim is not true
+  max(abs(correct_coef - recovered_coef)) < 1e-6)
+
+recovered_coef
 ```
 
 
 ## Conclusion
 
-By pooling their observations the two researchers can recover a very good estimate of a joint analysis that neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data that formed the observations that they saw, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variable observations.
+By pooling their observations the two researchers can recover a very good estimate of a joint analysis that neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data that formed the observations that they saw, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variables.
 
-In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to guess low-discrepancy pre-images of the data. And, as always, as we are now introducing a lot of unobserved parameters we could go to Bayesian graphical model methods to sum this out (instead of proposing a specific point-wise heuristic as we did here).
+In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to estimate low-discrepancy pre-images of the data. And, as always, as we are now introducing a lot of unobserved parameters we could go to Bayesian graphical model methods to sum this all out (instead of proposing a specific point-wise heuristic as we did here).
