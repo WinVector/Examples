@@ -149,21 +149,22 @@ To show this let's build a linear operator that computes the margins the experim
 
 ```{r}
 # build transfer matrix from joint observations to marginal observations
+asterisk_symbol <- "&ast;"
 margin_names <- rbind(
   expand.grid(
     x1 = c('0', '1'), 
-    x2 = '*', 
+    x2 = asterisk_symbol, 
     y = c(FALSE, TRUE), 
     stringsAsFactors = FALSE),
   expand.grid(
-    x1 = '*', 
+    x1 = asterisk_symbol, 
     x2 = c('0', '1'), 
     y = c(FALSE, TRUE), 
     stringsAsFactors = FALSE),
   expand.grid(
     x1 = c('0', '1'), 
     x2 = c('0', '1'), 
-    y = '*', 
+    y = asterisk_symbol, 
     stringsAsFactors = FALSE)
 )
 margin_transform <- matrix(
@@ -221,7 +222,7 @@ Let's see what happens when each experimenter tries to perform inference on thei
 ```{r}
 # select data available to d1
 d1 <- margin_frame[
-  margin_frame$x2 == '*', , drop = FALSE]
+  margin_frame$x2 == asterisk_symbol, , drop = FALSE]
 d1$x1 <- as.numeric(d1$x1)
 d1$y <- as.logical(d1$y)
 
@@ -247,7 +248,7 @@ Notice experimenter 1 got a *much* too small extimate of the `x1` coefficient. F
 ```{r}
 # select data available to d2
 d2 <- margin_frame[
-  margin_frame$x1 == '*', , drop = FALSE]
+  margin_frame$x1 == asterisk_symbol, , drop = FALSE]
 d2$x2 <- as.numeric(d2$x2)
 d2$y <- as.logical(d2$y)
 
@@ -291,7 +292,7 @@ Neither experimenter observed the following part of the marginal frame:
 
 ```{r}
 # show x1 x2 distribution poriton of margin_frame
-dx <- margin_frame[margin_frame$y == '*', , drop = FALSE]
+dx <- margin_frame[margin_frame$y == asterisk_symbol, , drop = FALSE]
 
 knitr::kable(dx)
 ```
