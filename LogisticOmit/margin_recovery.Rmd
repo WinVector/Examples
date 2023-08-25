@@ -1,5 +1,5 @@
 ---
-title: "Overcoming Omitted Variable Bias by Inferring the Hidden Data"
+title: "Overcoming Omitted Variable Bias by Solving for Hidden Data"
 output: github_document
 date: "2023-08-24"
 always_allow_html: true
@@ -17,7 +17,7 @@ This is a known problem with known mitigations:
   * Rhian Daniel, Jingjing Zhang, Daniel Farewell, (2020) "Making apples from oranges: Comparing noncollapsible effect estimators and their standard errors after adjustment for different covariate sets", Biometrical Journal, DOI: 10.1002/bimj.201900297.
   * Zhang, Zhiwei (2009) "Estimating a Marginal Causal Odds Ratio Subject to Confounding", Communications in Statistics - Theory and Methods, 38:3, 309 — 321.
   
-(Thank you, Tom Palmer and Robert Horton for references!)
+(Thank you, Tom Palmer and Robert Horton for the references!)
 
 For this note, let's work out how to directly try and overcome the noted omitted variable bias.
 
@@ -188,7 +188,7 @@ for (row_index in seq(nrow(margin_transform))) {
 }
 
 knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 8)
+  kableExtra::kable_styling(font_size = 10)
 ```
 
 
@@ -205,17 +205,13 @@ rownames(margin_frame) <- paste0(
 knitr::kable(margin_frame)
 ```
 
-The above margin frame describes how the detailed experiment is marginalized or censored down to different experimenters see. In our set-up experimenter 1 sees only the first four rows, and experimenter 2 sees only the next 4 rows. 
-
-We consider the original detailed data as "unobserved", and parts of the marginalized results as what is observed by two experimenters.
+The above margin frame describes how the detailed experiment is marginalized or censored down to different experimenters see. In our set-up experimenter 1 sees only the first four rows, and experimenter 2 sees only the next 4 rows. We consider the rest of the data "unobserved".
 
 ### The Solution Strategy
 
-We will see how collaborating experimenters, who never had a chance to examine the full detailed data, can estimate `proportion` and then estimate its pre-image under the `margin_transform`. This pre image is a complete distribution or description of the original (unobserved) detailed data. Once we have estimated or imputed the (previously) unobserved data we can then apply direct modeling techniques on that to complete the joint coefficient inference.
+We will show how collaborating experimenters, who never had a chance to examine the full detailed data, can estimate `proportion` and then estimate its pre-image under the `margin_transform`. This pre image is a complete distribution or description of the original (unobserved) detailed data. Once we have estimated or imputed the (previously) unobserved data we can then apply direct modeling techniques on that to complete the joint coefficient inference.
 
 ### Experimenter 1's view
-
-Experimenter 1 only knows about the rows of the form `p(0/1, *, FALSE/TRUE)`. Experimenter 2 only knows about the rows named `p(*, 0/1, FALSE/TRUE)`. Neither experimenter knows the `p(0/1, 0/1, *)` rows. If they pool their data, they can in fact use the independence assumption to recover these rows.
 
 Let's see what happens when each experimenter tries to perform inference on their fraction of the data.
 
@@ -241,9 +237,11 @@ suppressWarnings(
 )
 ```
 
-Notice experimenter 1 got a *much* too small extimate of the `x1` coefficient. From experimenter 1's point of view, the effect of the omitted variable `x2` is making `x1` hard to correctly infer.
+Notice experimenter 1 got a *much* too small estimate of the `x1` coefficient. From experimenter 1's point of view, the effect of the omitted variable `x2` is making `x1` hard to correctly infer.
 
 ### Experimenter 2's view
+
+Experimenter 2 has the following portion of data, which also is not enough to get an unbiased coefficient estimate.
 
 ```{r}
 # select data available to d2
@@ -254,21 +252,6 @@ d2$y <- as.logical(d2$y)
 
 knitr::kable(d2)
 ```
-
-
-```{r}
-# solve from d2's point of view
-suppressWarnings(
-  glm(
-    y ~ x2,
-    data = d2,
-    weights = d2$proportion,
-    family = binomial()
-  )$coef
-)
-```
-
-Experimenter 2 also gets a wrong estimate, but closer as the the omitted `x1` variable had less influence.
 
 ## The Question
 
@@ -336,7 +319,7 @@ estimated_proportions
 
 ### Solving For the Joint Distribution
 
-In our case we have an example data distribution (with illegal negative entries!).
+We use linear algebra to solve for an example data distribution estimate (with illegal negative entries!).
 
 ```{r}
 # typical solution (in the linear sense, signs not enforced)
@@ -348,7 +331,7 @@ stopifnot(  # abort render if this claim is not true
 v
 ```
 
-And we have a single element of the null space, which is the direction different possible solutions vary in.
+We have a single element of the null space, which is the direction different possible solutions vary in.
 
 ```{r}
 # our degree of freedom between solutions
@@ -514,6 +497,6 @@ recovered_coef
 
 ## Conclusion
 
-By pooling their observations the two researchers can recover a very good estimate of a joint analysis that neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data that formed the observations that they saw, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variables.
+By pooling their observations the two researchers can recover a good estimate of a joint analysis that neither of them performed. The strategy we used is: try to estimate plausible pre-images of the data that formed the observations that they saw, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variables.
 
 In the real world the two experimenters at best would be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to estimate low-discrepancy pre-images of the data. And, as always, as we are now introducing a lot of unobserved parameters we could go to Bayesian graphical model methods to sum this all out (instead of proposing a specific point-wise heuristic as we did here).

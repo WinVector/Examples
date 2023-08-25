@@ -1,4 +1,4 @@
-Overcoming Omitted Variable Bias by Inferring the Hidden Data
+Overcoming Omitted Variable Bias by Solving for Hidden Data
 ================
 2023-08-24
 
@@ -25,7 +25,7 @@ This is a known problem with known mitigations:
   to Confounding”, Communications in Statistics - Theory and Methods,
   38:3, 309 — 321.
 
-(Thank you, Tom Palmer and Robert Horton for references!)
+(Thank you, Tom Palmer and Robert Horton for the references!)
 
 For this note, let’s work out how to directly try and overcome the noted
 omitted variable bias.
@@ -265,10 +265,10 @@ for (row_index in seq(nrow(margin_transform))) {
 }
 
 knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 8)
+  kableExtra::kable_styling(font_size = 10)
 ```
 
-<table class="table" style="font-size: 8px; margin-left: auto; margin-right: auto;">
+<table class="table" style="font-size: 10px; margin-left: auto; margin-right: auto;">
 <thead>
 <tr>
 <th style="text-align:left;">
@@ -894,14 +894,12 @@ p(1,1,&ast;)
 The above margin frame describes how the detailed experiment is
 marginalized or censored down to different experimenters see. In our
 set-up experimenter 1 sees only the first four rows, and experimenter 2
-sees only the next 4 rows.
-
-We consider the original detailed data as “unobserved”, and parts of the
-marginalized results as what is observed by two experimenters.
+sees only the next 4 rows. We consider the rest of the data
+“unobserved”.
 
 ### The Solution Strategy
 
-We will see how collaborating experimenters, who never had a chance to
+We will show how collaborating experimenters, who never had a chance to
 examine the full detailed data, can estimate `proportion` and then
 estimate its pre-image under the `margin_transform`. This pre image is a
 complete distribution or description of the original (unobserved)
@@ -910,12 +908,6 @@ unobserved data we can then apply direct modeling techniques on that to
 complete the joint coefficient inference.
 
 ### Experimenter 1’s view
-
-Experimenter 1 only knows about the rows of the form
-`p(0/1, *, FALSE/TRUE)`. Experimenter 2 only knows about the rows named
-`p(*, 0/1, FALSE/TRUE)`. Neither experimenter knows the `p(0/1, 0/1, *)`
-rows. If they pool their data, they can in fact use the independence
-assumption to recover these rows.
 
 Let’s see what happens when each experimenter tries to perform inference
 on their fraction of the data.
@@ -1036,11 +1028,14 @@ suppressWarnings(
     ## (Intercept)          x1 
     ##  -1.9143360   0.5567057
 
-Notice experimenter 1 got a *much* too small extimate of the `x1`
+Notice experimenter 1 got a *much* too small estimate of the `x1`
 coefficient. From experimenter 1’s point of view, the effect of the
 omitted variable `x2` is making `x1` hard to correctly infer.
 
 ### Experimenter 2’s view
+
+Experimenter 2 has the following portion of data, which also is not
+enough to get an unbiased coefficient estimate.
 
 ``` r
 # select data available to d2
@@ -1142,24 +1137,6 @@ TRUE
 </tr>
 </tbody>
 </table>
-
-``` r
-# solve from d2's point of view
-suppressWarnings(
-  glm(
-    y ~ x2,
-    data = d2,
-    weights = d2$proportion,
-    family = binomial()
-  )$coef
-)
-```
-
-    ## (Intercept)          x2 
-    ##    1.052174   -6.602977
-
-Experimenter 2 also gets a wrong estimate, but closer as the the omitted
-`x1` variable had less influence.
 
 ## The Question
 
@@ -1412,8 +1389,8 @@ estimated_proportions
 
 ### Solving For the Joint Distribution
 
-In our case we have an example data distribution (with illegal negative
-entries!).
+We use linear algebra to solve for an example data distribution estimate
+(with illegal negative entries!).
 
 ``` r
 # typical solution (in the linear sense, signs not enforced)
@@ -1430,7 +1407,7 @@ v
     ##  p(0,1,TRUE)  p(1,1,TRUE) 
     ## -0.002089720  0.005185167
 
-And we have a single element of the null space, which is the direction
+We have a single element of the null space, which is the direction
 different possible solutions vary in.
 
 ``` r
@@ -1982,8 +1959,8 @@ recovered_coef
 
 ## Conclusion
 
-By pooling their observations the two researchers can recover a very
-good estimate of a joint analysis that neither of them performed. The
+By pooling their observations the two researchers can recover a good
+estimate of a joint analysis that neither of them performed. The
 strategy we used is: try to estimate plausible pre-images of the data
 that formed the observations that they saw, and then analyze that. This
 in fact gives us a method to invert the bias introduced by the omitted
