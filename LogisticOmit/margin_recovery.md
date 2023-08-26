@@ -1,4 +1,4 @@
-Overcoming Omitted Variable Bias by Solving for Hidden Data
+Patching Omitted Variables by Solving for Hidden Data
 ================
 2023-08-25
 
@@ -154,6 +154,75 @@ The following table relates `x1`, `x2`, `y` combinations to the
 For a logistic regression problem, the relation between `x1`, `x2` and
 `y` is encoded in the `proportion` distribution that gives the joint
 expected frequency of each possible data row in a drawn sample.
+
+### An Extra Invariant
+
+There is an interesting non-linear invariant the `proportion` column
+obeys. We will use this invariant later, so it is worth establishing.
+The principle is: our solution disappears with respect to certain
+test-vectors, which will help us re-identify it later.
+
+Consider the following test vector.
+
+``` r
+test_vec <- (
+  (-1)^detailed_frame$x1 
+  * (-1)^detailed_frame$x2 
+  * (-1)^detailed_frame$y)
+
+test_vec
+```
+
+    ## [1]  1 -1 -1  1 -1  1  1 -1
+
+`log(detailed_frame$proportion))` is orthogonal to this test vector.
+
+``` r
+p_vec <- test_vec * log(detailed_frame$proportion)
+stopifnot(  # abort render if claim is not true
+  abs(sum(p_vec)) < 1e-8)
+
+sum(p_vec)
+```
+
+    ## [1] -2.553513e-15
+
+This can be confirmed to always be the case by using algebra to sum-out
+the `y` values and checking this expands into a sum over only constant
+and linear terms.
+
+``` r
+s_vec <- -(
+  (-1)^detailed_frame$x1[1:4] 
+  * (-1)^detailed_frame$x2[1:4] 
+  * (c0 + b1 * detailed_frame$x1[1:4] + b2 * detailed_frame$x2[1:4]))
+
+s_vec
+```
+
+    ## [1] -0.5772157  3.7188083 -7.5776298  4.4360372
+
+The above indeed is the terms where the two different `y` outcomes have
+been combined. This is a consequence of the linear structure of the
+logit of the logistic regression prediction.
+
+``` r
+p_comb <- p_vec[1:4] + p_vec[5:8]
+stopifnot(  # abort render if claim is not true
+  abs(s_vec - p_comb) < 1e-8)
+
+p_comb
+```
+
+    ## [1] -0.5772157  3.7188083 -7.5776298  4.4360372
+
+A sum over varying signs, such as above, will annihilate constant and
+linear terms. So `s_vec` must always sum to zero, thus `p_vec` must also
+always sum to zero. Roughly this is a check the model has no
+interactions, or models without interactions pass this check. We are
+using two very strong assumptions on `x1` and `x2`: they are independent
+*and* the modeled probabilities don’t contain an `x1` and `x2`
+interaction.
 
 ### Inferring From Fully Observed Data
 
@@ -1322,12 +1391,12 @@ ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combi
 ```
 
 ``` r
-ns <- ns / mean(abs(ns))
+ns <- ns / (mean(abs(ns)) * ifelse(ns[[1]] >= 0, 1, -1))
 
 ns
 ```
 
-    ## [1] -1  1  1 -1  1 -1 -1  1
+    ## [1]  1 -1 -1  1 -1  1  1 -1
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In
 fact all solutions are some interval of `z` values. We can solve for the
@@ -1377,13 +1446,13 @@ FALSE
 0.0503403
 </td>
 <td style="text-align:right;">
-0.0517616
-</td>
-<td style="text-align:right;">
 0.0500538
 </td>
 <td style="text-align:right;">
--1
+0.0517616
+</td>
+<td style="text-align:right;">
+1
 </td>
 </tr>
 <tr>
@@ -1400,13 +1469,13 @@ FALSE
 0.0014213
 </td>
 <td style="text-align:right;">
-0.0000000
-</td>
-<td style="text-align:right;">
 0.0017077
 </td>
 <td style="text-align:right;">
-1
+0.0000000
+</td>
+<td style="text-align:right;">
+-1
 </td>
 </tr>
 <tr>
@@ -1423,13 +1492,13 @@ FALSE
 0.5597136
 </td>
 <td style="text-align:right;">
-0.5582923
-</td>
-<td style="text-align:right;">
 0.5600000
 </td>
 <td style="text-align:right;">
-1
+0.5582923
+</td>
+<td style="text-align:right;">
+-1
 </td>
 </tr>
 <tr>
@@ -1446,13 +1515,13 @@ FALSE
 0.2371910
 </td>
 <td style="text-align:right;">
-0.2386123
-</td>
-<td style="text-align:right;">
 0.2369046
 </td>
 <td style="text-align:right;">
--1
+0.2386123
+</td>
+<td style="text-align:right;">
+1
 </td>
 </tr>
 <tr>
@@ -1469,13 +1538,13 @@ TRUE
 0.0896597
 </td>
 <td style="text-align:right;">
-0.0882384
-</td>
-<td style="text-align:right;">
 0.0899462
 </td>
 <td style="text-align:right;">
-1
+0.0882384
+</td>
+<td style="text-align:right;">
+-1
 </td>
 </tr>
 <tr>
@@ -1492,13 +1561,13 @@ TRUE
 0.0585787
 </td>
 <td style="text-align:right;">
-0.0600000
-</td>
-<td style="text-align:right;">
 0.0582923
 </td>
 <td style="text-align:right;">
--1
+0.0600000
+</td>
+<td style="text-align:right;">
+1
 </td>
 </tr>
 <tr>
@@ -1515,13 +1584,13 @@ TRUE
 0.0002864
 </td>
 <td style="text-align:right;">
-0.0017077
-</td>
-<td style="text-align:right;">
 0.0000000
 </td>
 <td style="text-align:right;">
--1
+0.0017077
+</td>
+<td style="text-align:right;">
+1
 </td>
 </tr>
 <tr>
@@ -1538,13 +1607,13 @@ TRUE
 0.0028090
 </td>
 <td style="text-align:right;">
-0.0013877
-</td>
-<td style="text-align:right;">
 0.0030954
 </td>
 <td style="text-align:right;">
-1
+0.0013877
+</td>
+<td style="text-align:right;">
+-1
 </td>
 </tr>
 </tbody>
@@ -1556,49 +1625,33 @@ combination of these solutions. And the null vector (or variation
 allowed by the linear constraints) is reading off if `(x1, x2, y)` is
 even or odd.
 
-### Inferring the logistic coefficients
-
-Let’s inspect our extreme (boundary of feasibility) solutions.
-
-    ## [1] "recovered_1"
-    ## (Intercept)          x1          x2 
-    ##   0.5772157   3.1415927  -8.1548455 
-    ## [1] "recovered_2"
-    ## (Intercept)          x1          x2 
-    ##   0.5772157   3.1415927  -8.1548455
-
-And, in this case, it turns out each of our extreme solutions recovers
-essentially the same logistic regression solution! And this matches the
-unobserved detailed solution! Likely the one degree of freedom in the
-solution space matches some of the logistic regression balance
-conditions, and is therefore a unimportant or indifferent source of
-variation.
-
 ### Picking a point-estimate
 
-It is convenient to pick a distinguished or “best guess” solution. In
-our case here it doesn’t matter much, as both our extreme solutions have
-nearly identical logistic regression inferences. However if we do want
-to pick a single guess at the data pre-image the usual method is to pick
-the maximum entropy pre-image distribution.
-
-This is just a simple principle: prefer flat distributions until one
-have evidence against them. This modeling technique is itself strongly
-related to logistic regression modeling. Or one can say this is a bit
-opportunistic, we have an under-conditioned problem so we add an
-arbitrary convex criterion to pick a solution. Roughly we don’t want to
-over-sell the maximum entropy pick, as we are already enforcing a lot of
-our sensible desiderata with the linear constraints.
+We have seen `ns` before, it is `test_vec`! So we know the actual
+solution is orthogonal to `ns`. Some algebra will also show us this
+vector is reading off the sum of the following entropy function of
+proposed distributions.
 
 ``` r
-# brute force solve for maximum entropy mix
-# obviously this can be done a bit slicker
 entropy <- function(v) {
   v <- v[v > 0]
   v <- v / sum(v)
   -sum(v * log2(v))
 }
+```
 
+Entropy is convex, so it has a unique maximal point. And this maximal
+point is the unique point where the gradient disappears for a vector
+that sums to zero. In our case the solution that maximizes entropy is
+exactly the solution that picks a distribution orthogonal to `ns`.
+Usually entropy is more of a heuristic preferring flat distributions
+until one have evidence against them. In this case it will pick the
+exact distribution we are trying to recover (the one with no
+interactions).
+
+``` r
+# brute force solve for maximum entropy mix
+# obviously this can be done a bit slicker
 opt_soln <- optimize(
   function(z) {
     entropy(
@@ -1613,8 +1666,8 @@ detailed_frame["maxent_dist"] <- (
     (1 - z_opt) * detailed_frame$recovered_2)
 ```
 
-Notice that the recovered `maxent_dist` is preternaturally close to the
-unobserved original `proportion`.
+Notice that the recovered `maxent_dist` *is* the unobserved original
+`proportion`.
 
 <table>
 <thead>
@@ -1805,6 +1858,15 @@ analysis on data that was not available to us. The strategy is: try to
 estimate plausible pre-images of the data that formed the observations,
 and then analyze that. This in fact gives us a method to invert the bias
 introduced by the omitted variables in logistic regression.
+
+The maximum entropy principle in machine learning can be thought of as
+aspiring to the role the [stationary-action principle
+action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays
+in classic mechanics. And, [maximum entropy modeling is very related to
+logistic regresion
+modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
+The germinal reference on this remains, in my opinion, Cover and Thomas,
+“Elements of Information Theory”.
 
 In the real world we would at best be looking at marginalizations of
 different draws of related data. So we would not have exact matches we

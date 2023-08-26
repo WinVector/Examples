@@ -1,5 +1,5 @@
 ---
-title: "Overcoming Omitted Variable Bias by Solving for Hidden Data"
+title: "Patching Omitted Variables by Solving for Hidden Data"
 output: github_document
 date: "2023-08-25"
 always_allow_html: true
@@ -125,6 +125,55 @@ For a logistic regression problem, the relation between `x1`, `x2` and `y` is en
 detailed_frame$x_distribution <- NULL
 detailed_frame$p_observed_outcome <- NULL
 ```
+
+
+### An Extra Invariant
+
+There is an interesting non-linear invariant the `proportion` column obeys. We will use this invariant later, so it is worth establishing. The principle is: our solution disappears with respect to certain test-vectors, which will help us re-identify it later.
+
+Consider the following test vector.
+
+```{r}
+test_vec <- (
+  (-1)^detailed_frame$x1 
+  * (-1)^detailed_frame$x2 
+  * (-1)^detailed_frame$y)
+
+test_vec
+```
+
+`log(detailed_frame$proportion))` is orthogonal to this test vector.
+
+```{r}
+p_vec <- test_vec * log(detailed_frame$proportion)
+stopifnot(  # abort render if claim is not true
+  abs(sum(p_vec)) < 1e-8)
+
+sum(p_vec)
+```
+
+This can be confirmed to always be the case by using algebra to sum-out the `y` values and checking this expands into a sum over only constant and linear terms.
+
+```{r}
+s_vec <- -(
+  (-1)^detailed_frame$x1[1:4] 
+  * (-1)^detailed_frame$x2[1:4] 
+  * (c0 + b1 * detailed_frame$x1[1:4] + b2 * detailed_frame$x2[1:4]))
+
+s_vec
+```
+
+The above indeed is the terms where the two different `y` outcomes have been combined. This is a consequence of the linear structure of the logit of the logistic regression prediction. 
+
+```{r}
+p_comb <- p_vec[1:4] + p_vec[5:8]
+stopifnot(  # abort render if claim is not true
+  abs(s_vec - p_comb) < 1e-8)
+
+p_comb
+```
+
+A sum over varying signs, such as above, will annihilate constant and linear terms. So `s_vec` must always sum to zero, thus `p_vec` must also always sum to zero. Roughly this is a check the model has no interactions, or models without interactions pass this check. We are using two very strong assumptions on `x1` and `x2`: they are independent *and* the modeled probabilities don't contain an `x1` and `x2` interaction.
 
 ### Inferring From Fully Observed Data
 
@@ -388,12 +437,17 @@ stopifnot(  # abort render if this claim is not true
 ```
 
 ```{r}
-ns <- ns / mean(abs(ns))
+ns <- ns / (mean(abs(ns)) * ifelse(ns[[1]] >= 0, 1, -1))
 
 ns
 ```
 
-All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for the `z`, and plug them in to get solutions.
+```{r, echo = FALSE}
+stopifnot(  # stop render if claim is not true
+  max(abs(ns - test_vec)) < 1e-8)
+```
+
+All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for the `z`, and plug them in to get solutions. 
 
 ```{r, echo = FALSE}
 # solve for the z's
@@ -447,54 +501,24 @@ stopifnot(all(convex_soln$coefficients > -1e-8))
 stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
 ```
 
-### Inferring the logistic coefficients
-
-Let's inspect our extreme (boundary of feasibility) solutions.
-
-```{r, echo = FALSE}
-# run through our recovered solutions
-soln_i <- 0
-coef_list <- as.list(rep(NULL, length(soln_names)))
-for (soln_name in soln_names) {
-  print(soln_name)
-  soln <- as.numeric(detailed_frame[[soln_name]])
-  m_rec <- as.numeric(margin_transform %*% soln)
-  max_error <- max(abs(m_rec - estimated_proportions))
-  stopifnot(  # abort render if this claim is not true
-    max_error < 1e-8)
-  coef <- suppressWarnings(
-    glm(
-      y ~ x1 + x2,
-      data = detailed_frame,
-      weights = detailed_frame[[soln_name]],
-      family = binomial()
-    )$coef
-  )
-  stopifnot(  # abort render if this claim is not true
-    max(abs(correct_coef - coef)) < 1e-6)
-  print(coef)
-  soln_i <- soln_i + 1
-  coef_list[[soln_i]] <- coef
-}
-```
-
-And, in this case, it turns out each of our extreme solutions recovers essentially the same logistic regression solution! And this matches the unobserved detailed solution! Likely the one degree of freedom in the solution space matches some of the logistic regression balance conditions, and is therefore a unimportant or indifferent source of variation.
 
 ### Picking a point-estimate
 
-It is convenient to pick a distinguished or "best guess" solution. In our case here it doesn't matter much, as both our extreme solutions have nearly identical logistic regression inferences. However if we do want to pick a single guess at the data pre-image the usual method is to pick the maximum entropy pre-image distribution. 
-
-This is just a simple principle: prefer flat distributions until one have evidence against them. This modeling technique is itself strongly related to logistic regression modeling. Or one can say this is a bit opportunistic, we have an under-conditioned problem so we add an arbitrary convex criterion to pick a solution. Roughly we don't want to over-sell the maximum entropy pick, as we are already enforcing a lot of our sensible desiderata with the linear constraints.
+We have seen `ns` before, it is `test_vec`! So we know the actual solution is orthogonal to `ns`. Some algebra will also show us this vector is reading off the sum of the following entropy function of proposed distributions.
 
 ```{r}
-# brute force solve for maximum entropy mix
-# obviously this can be done a bit slicker
 entropy <- function(v) {
   v <- v[v > 0]
   v <- v / sum(v)
   -sum(v * log2(v))
 }
+```
 
+Entropy is convex, so it has a unique maximal point. And this maximal point is the unique point where the gradient disappears for a vector that sums to zero. In our case the solution that maximizes entropy is exactly the solution that picks a distribution orthogonal to `ns`. Usually entropy is more of a heuristic preferring flat distributions until one have evidence against them. In this case it will pick the exact distribution we are trying to recover (the one with no interactions).
+
+```{r}
+# brute force solve for maximum entropy mix
+# obviously this can be done a bit slicker
 opt_soln <- optimize(
   function(z) {
     entropy(
@@ -519,7 +543,7 @@ stopifnot(  # abort render if this claim is not true
   max(abs(detailed_frame$proportion - detailed_frame$maxent_dist)) < 1e-5)
 ```
 
-Notice that the recovered `maxent_dist` is preternaturally close to the unobserved original `proportion`.
+Notice that the recovered `maxent_dist` *is* the unobserved original `proportion`.
 
 ```{r, echo = FALSE}
 knitr::kable(detailed_frame)
@@ -550,6 +574,8 @@ This matches the correct `r paste0("(c0=", round(c0, digits = 4), ", b1=", round
 ## Conclusion
 
 By pooling observations we can recover a good estimate of a joint analysis on data that was not available to us. The strategy is: try to estimate plausible pre-images of the data that formed the observations, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variables in logistic regression.
+
+The maximum entropy principle in machine learning can be thought of as aspiring to the role the [stationary-action principle action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays in classic mechanics. And, [maximum entropy modeling is very related to logistic regresion modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/). The germinal reference on this remains, in my opinion, Cover and Thomas, "Elements of Information Theory".
 
 In the real world we would at best be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to estimate low-discrepancy pre-images of the data. And, as we are now introducing a lot of unobserved parameters, we could go to Bayesian graphical model methods to sum this all out (instead of proposing a specific point-wise heuristic as we did here).
 
