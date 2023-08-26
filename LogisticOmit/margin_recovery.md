@@ -1761,7 +1761,6 @@ recovered_coef <- suppressWarnings(
   )$coef
 )
 
-
 recovered_coef
 ```
 

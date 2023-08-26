@@ -380,7 +380,7 @@ ns
 
 ```{r, echo = FALSE}
 stopifnot(  # abort render if this claim is not true
-  max(abs(ns)) > 1e-3)
+  abs(sum(ns * ns) - 1) < 1e-5)
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% ns)) < 1e-6
 )
@@ -527,7 +527,6 @@ recovered_coef <- suppressWarnings(
     family = binomial()
   )$coef
 )
-
 
 recovered_coef
 ```
