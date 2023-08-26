@@ -27,7 +27,7 @@ For an example let's set up a logistic regression on two explanatory variables `
 
 Our data is then keyed by the values of these explanatory variables and the dependent or outcome variable `y`. The keying looks like the following.
 
-```{r}
+```{r, echo = FALSE}
 # show row labels
 detailed_names <- expand.grid(
   x1 = c('0', '1'), 
@@ -80,9 +80,8 @@ c(c0, b1, b2)
 
 Using the methodology of [Replicating a Linear Model](https://win-vector.com/2019/07/03/replicating-a-linear-model/) we can build an example data set that obeys the specified explanatory variable distribution and has specified outcome probabilities. This is just us building a data set matching an assumed known answer. Our data distribution is going to be determined by `pX1`, `pX2`, and `P[y == TRUE] ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our inference task is to recover the parameters `pX1`, `pX2`, `c0`, `b1`, and `b2` from data, even in the situation where observers have omitted variable issues.
 
-The complete detailed data is generated as follows. The `proportion` column is what proportion of a data set drawn from this specified distribution matches the row keys `x1`, `x2`, `y`, or is the joint probability of a given row type.
+The complete detailed data is generated as follows. The `proportion` column is what proportion of a data set drawn from this specified distribution matches the row keys `x1`, `x2`, `y`, or is the joint probability of a given row type. We can derive all the detailed probabilities as follows.
 
-It takes a bit of code to generate the detailed data distribution.
 
 ```{r}
 # assign an example outcome or dependent variable
@@ -110,15 +109,15 @@ stopifnot(  # abort render if this claim is not true
   abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
 
-The above code gives us the following table, relating `x1`, `x2`, `y` combinations to the `proportion` column (which shows how common each such row is).
+The following table relates `x1`, `x2`, `y` combinations to the `proportion` column (which shows how common each such row is).
 
-```{r}
+```{r, echo = FALSE}
 knitr::kable(detailed_frame)
 ```
 
 For a logistic regression problem, the relation between `x1`, `x2` and `y` is encoded in the `proportion` distribution that gives the joint expected frequency of each possible data row in a drawn sample.
 
-```{r}
+```{r, echo = FALSE}
 # clear some columns we are no longer using
 detailed_frame$x_distribution <- NULL
 detailed_frame$p_observed_outcome <- NULL
@@ -151,7 +150,7 @@ Now let's get to our issue. Suppose we have two experimenters, each of which onl
 To show this let's build a linear operator that computes the margins the experimenters actually observe.
 
 
-```{r}
+```{r, echo = FALSE}
 # build transfer matrix from joint observations to marginal observations
 asterisk_symbol <- "&ast;"
 margin_names <- rbind(
@@ -202,7 +201,7 @@ The above matrix linearly maps our earlier `proportions` columns to various inte
 proportion <- margin_transform %*% detailed_frame$proportion
 ```
 
-```{r}
+```{r, echo = FALSE}
 # organize into a table for presentation
 margin_frame <- margin_names
 margin_frame$proportion <- as.numeric(proportion)
@@ -361,9 +360,9 @@ stopifnot(  # abort render if this claim is not true
 ns
 ```
 
-All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. Let's solve for them.
+All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for them.
 
-```{r}
+```{r, echo = FALSE}
 # solve for the z's
 proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
 soln_zs <- proposed_solns[
@@ -377,7 +376,7 @@ stopifnot(  # abort render if this claim is not true
 soln_zs
 ```
 
-```{r}
+```{r, echo = FALSE}
 # solve the logistic regression for each of our extreme guessed pre-images of the data
 soln_i <- 0
 soln_names <- rep('', length(soln_zs))
@@ -393,13 +392,13 @@ for (soln_z in soln_zs) {
 
 Our attempted recovered solutions to the (unknown to either experimenter!) original data distribution details can be seen below.
 
-```{r}
+```{r, echo = FALSE}
 knitr::kable(detailed_frame)
 ```
 
 As we can see these two extreme solutions are in fact actually fairly close. And the original (unobserved) data distribution is in fact a convex combination of these solutions.
 
-```{r}
+```{r, echo = FALSE}
 # confirm actual proportions in convex hull of solutions
 convex_soln <- lm(
   p ~ 0 + r1 + r2, 
@@ -418,7 +417,7 @@ stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
 
 Let's inspect our extreme (boundary of feasibility) solutions.
 
-```{r}
+```{r, echo = FALSE}
 # run through our recovered solutions
 soln_i <- 0
 coef_list <- as.list(rep(NULL, length(soln_names)))
@@ -484,7 +483,7 @@ stopifnot(  # abort render if this claim is not true
 
 Notice that the recovered `maxent_dist` is preternaturally close to the unobserved original `proportion`.
 
-```{r}
+```{r, echo = FALSE}
 knitr::kable(detailed_frame)
 ```
 

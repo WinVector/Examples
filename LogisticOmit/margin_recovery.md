@@ -41,23 +41,6 @@ Our data is then keyed by the values of these explanatory variables and
 the dependent or outcome variable `y`. The keying looks like the
 following.
 
-``` r
-# show row labels
-detailed_names <- expand.grid(
-  x1 = c('0', '1'), 
-  x2 = c('0', '1'), 
-  y = c(FALSE, TRUE),
-  stringsAsFactors = FALSE)
-detailed_names <- detailed_names[
-  order(detailed_names$y, 
-        detailed_names$x2, 
-        detailed_names$x1),
-  , 
-  drop = FALSE]
-
-knitr::kable(detailed_names)
-```
-
 | x1  | x2  | y     |
 |:----|:----|:------|
 | 0   | 0   | FALSE |
@@ -130,9 +113,8 @@ even in the situation where observers have omitted variable issues.
 The complete detailed data is generated as follows. The `proportion`
 column is what proportion of a data set drawn from this specified
 distribution matches the row keys `x1`, `x2`, `y`, or is the joint
-probability of a given row type.
-
-It takes a bit of code to generate the detailed data distribution.
+probability of a given row type. We can derive all the detailed
+probabilities as follows.
 
 ``` r
 # assign an example outcome or dependent variable
@@ -160,13 +142,8 @@ stopifnot(  # abort render if this claim is not true
   abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
 
-The above code gives us the following table, relating `x1`, `x2`, `y`
-combinations to the `proportion` column (which shows how common each
-such row is).
-
-``` r
-knitr::kable(detailed_frame)
-```
+The following table relates `x1`, `x2`, `y` combinations to the
+`proportion` column (which shows how common each such row is).
 
 |  x1 |  x2 | y     | x_distribution | p_observed_outcome | proportion |
 |----:|----:|:------|---------------:|-------------------:|-----------:|
@@ -182,12 +159,6 @@ knitr::kable(detailed_frame)
 For a logistic regression problem, the relation between `x1`, `x2` and
 `y` is encoded in the `proportion` distribution that gives the joint
 expected frequency of each possible data row in a drawn sample.
-
-``` r
-# clear some columns we are no longer using
-detailed_frame$x_distribution <- NULL
-detailed_frame$p_observed_outcome <- NULL
-```
 
 ### Inferring From Fully Observed Data
 
@@ -229,50 +200,6 @@ for the explanatory variable available to them!
 
 To show this let’s build a linear operator that computes the margins the
 experimenters actually observe.
-
-``` r
-# build transfer matrix from joint observations to marginal observations
-asterisk_symbol <- "&ast;"
-margin_names <- rbind(
-  expand.grid(
-    x1 = c('0', '1'), 
-    x2 = asterisk_symbol, 
-    y = c(FALSE, TRUE), 
-    stringsAsFactors = FALSE),
-  expand.grid(
-    x1 = asterisk_symbol, 
-    x2 = c('0', '1'), 
-    y = c(FALSE, TRUE), 
-    stringsAsFactors = FALSE),
-  expand.grid(
-    x1 = c('0', '1'), 
-    x2 = c('0', '1'), 
-    y = asterisk_symbol, 
-    stringsAsFactors = FALSE)
-)
-margin_transform <- matrix(
-  data=0, 
-  nrow = nrow(margin_names), 
-  ncol = nrow(detailed_names))
-colnames(margin_transform) <- paste0(
-  "p(", 
-  apply(detailed_names, 1, paste, collapse = ","), 
-  ")")
-rownames(margin_transform) <- paste0(
-  "p(", 
-  apply(margin_names, 1, paste, collapse = ","), 
-  ")")
-for (row_index in seq(nrow(margin_transform))) {
-  for (col_index in seq(ncol(margin_transform))) {
-    if (sum(detailed_names[col_index, ] == margin_names[row_index, ]) == 2) {
-      margin_transform[row_index, col_index] = 1
-    }
-  }
-}
-
-knitr::kable(margin_transform, format = "html") |>
-  kableExtra::kable_styling(font_size = 10)
-```
 
 <table class="table" style="font-size: 10px; margin-left: auto; margin-right: auto;">
 <thead>
@@ -663,18 +590,6 @@ various interesting roll-ups or aggregations.
 ``` r
 # apply the linear operator to compute marginalized observations
 proportion <- margin_transform %*% detailed_frame$proportion
-```
-
-``` r
-# organize into a table for presentation
-margin_frame <- margin_names
-margin_frame$proportion <- as.numeric(proportion)
-rownames(margin_frame) <- paste0(
-  "p(", 
-  apply(margin_frame[, c('x1', 'x2', 'y')], 1, paste, collapse = ","), 
-  ")")
-
-knitr::kable(margin_frame)
 ```
 
 <table>
@@ -1437,45 +1352,13 @@ ns
     ## [8]  0.3535534
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In
-fact all solutions are some interval of `z` values. Let’s solve for
+fact all solutions are some interval of `z` values. We can solve for
 them.
-
-``` r
-# solve for the z's
-proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
-soln_zs <- proposed_solns[
-  vapply(proposed_solns, 
-         function(soln) {all(soln * ns + v >= -1e-8)}, 
-         logical(1))]
-soln_zs <- unique(c(min(soln_zs), max(soln_zs)))
-stopifnot(  # abort render if this claim is not true
-  length(soln_zs) > 0)
-
-soln_zs
-```
 
     ## [1] -0.010740822 -0.005910622
 
-``` r
-# solve the logistic regression for each of our extreme guessed pre-images of the data
-soln_i <- 0
-soln_names <- rep('', length(soln_zs))
-for (soln_z in soln_zs) {
-  recovered <- as.numeric(soln_z * ns + v)
-  recovered <- pmax(recovered, 0)  # get rid of any very near zero entries
-  soln_i <- soln_i + 1
-  soln_name <- paste0("recovered_", soln_i)
-  detailed_frame[soln_name] <- recovered
-  soln_names[soln_i] <- soln_name
-}
-```
-
 Our attempted recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below.
-
-``` r
-knitr::kable(detailed_frame)
-```
 
 <table>
 <thead>
@@ -1668,51 +1551,9 @@ As we can see these two extreme solutions are in fact actually fairly
 close. And the original (unobserved) data distribution is in fact a
 convex combination of these solutions.
 
-``` r
-# confirm actual proportions in convex hull of solutions
-convex_soln <- lm(
-  p ~ 0 + r1 + r2, 
-  data = data.frame(
-    r1 = detailed_frame$recovered_1, 
-    r2 = detailed_frame$recovered_2, 
-    p = detailed_frame$proportion)
-)
-# abort render if these claims are not true
-stopifnot(max(abs(convex_soln$residuals)) < 1e-8)
-stopifnot(all(convex_soln$coefficients > -1e-8))
-stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
-```
-
 ### Inferring the logistic coefficients
 
 Let’s inspect our extreme (boundary of feasibility) solutions.
-
-``` r
-# run through our recovered solutions
-soln_i <- 0
-coef_list <- as.list(rep(NULL, length(soln_names)))
-for (soln_name in soln_names) {
-  print(soln_name)
-  soln <- as.numeric(detailed_frame[[soln_name]])
-  m_rec <- as.numeric(margin_transform %*% soln)
-  max_error <- max(abs(m_rec - estimated_proportions))
-  stopifnot(  # abort render if this claim is not true
-    max_error < 1e-8)
-  coef <- suppressWarnings(
-    glm(
-      y ~ x1 + x2,
-      data = detailed_frame,
-      weights = detailed_frame[[soln_name]],
-      family = binomial()
-    )$coef
-  )
-  stopifnot(  # abort render if this claim is not true
-    max(abs(correct_coef - coef)) < 1e-6)
-  print(coef)
-  soln_i <- soln_i + 1
-  coef_list[[soln_i]] <- coef
-}
-```
 
     ## [1] "recovered_1"
     ## (Intercept)          x1          x2 
@@ -1775,10 +1616,6 @@ stopifnot(  # abort render if this claim is not true
 
 Notice that the recovered `maxent_dist` is preternaturally close to the
 unobserved original `proportion`.
-
-``` r
-knitr::kable(detailed_frame)
-```
 
 <table>
 <thead>
