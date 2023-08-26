@@ -9,32 +9,33 @@ Logistic
 Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/).
 
 The issue is as follows. For logistic regression, omitted variables
-cause estimation bias. This *even for independent variables* (which is
-not the case for more familiar linear regression).
+cause estimation bias. This *even for independent variables*, which is
+not the case for more familiar linear regression.
 
 This is a known problem with known mitigations:
 
-- John M. Neuhaus and Nicholas P. Jewell, (1993), “A Geometric Approach
-  to Assess Bias Due to Omitted Covariates in Generalized Linear
-  Models”, Biometrika, Vol. 80, No. 4 (Dec., 1993), pp. 807-815.
-- Rhian Daniel, Jingjing Zhang, Daniel Farewell, (2020) “Making apples
+- Rhian Daniel, Jingjing Zhang, Daniel Farewell, (2020), “Making apples
   from oranges: Comparing noncollapsible effect estimators and their
   standard errors after adjustment for different covariate sets”,
   Biometrical Journal, DOI: 10.1002/bimj.201900297.
-- Zhang, Zhiwei (2009) “Estimating a Marginal Causal Odds Ratio Subject
-  to Confounding”, Communications in Statistics - Theory and Methods,
-  38:3, 309 — 321.
+- John M. Neuhaus and Nicholas P. Jewell, (1993), “A Geometric Approach
+  to Assess Bias Due to Omitted Covariates in Generalized Linear
+  Models”, Biometrika, Vol. 80, No. 4 (Dec. 1993), pp. 807-815.
+- Zhang, Zhiwei, (2009), “Estimating a Marginal Causal Odds Ratio
+  Subject to Confounding”, Communications in Statistics - Theory and
+  Methods, 38:3, 309 — 321.
 
 (Thank you, Tom Palmer and Robert Horton for the references!)
 
-For this note, let’s work out how to directly try and overcome the noted
-omitted variable bias.
+For this note, let’s work out how to directly try and overcome the
+omitted variable bias. We will work our example in
+[`R`](https://www.r-project.org).
 
 ## Our Example
 
 For an example let’s set up a logistic regression on two explanatory
 variables `x1` and `x2` . For simplicity we will take the case where
-`x1` and `x2` take on the values `0` and `1`.
+`x1` and `x2` only take on the values `0` and `1`.
 
 Our data is then keyed by the values of these explanatory variables and
 the dependent or outcome variable `y`. The keying looks like the
@@ -68,7 +69,7 @@ knitr::kable(detailed_names)
 | 0   | 1   | TRUE  |
 | 1   | 1   | TRUE  |
 
-### The Data
+### The Example Data
 
 Let’s specify the joint probability distribution of our two explanatory
 variables. We choose them as independent with the following expected
@@ -83,12 +84,12 @@ pX2 = 0.8
 Our data set can then be completely described by above explanatory
 variable distribution *and* the conditional probability of the dependent
 outcomes. For our logistic regression problem we set up our outcome
-conditioning as `P[y == TRUE] ~ sigmoid(cval + b1 * x1 + b2 * x2)`. Our
+conditioning as `P[y == TRUE] ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our
 example coefficients are as follows.
 
 ``` r
 # 0.5772
-(cval <- -digamma(1))
+(c0 <- -digamma(1))
 ```
 
     ## [1] 0.5772157
@@ -111,26 +112,27 @@ Please remember these coefficients in this order for later.
 
 ``` r
 # show constants in an order will see again
-c(cval, b1, b2)
+c(c0, b1, b2)
 ```
 
     ## [1]  0.5772157  3.1415927 -8.1548455
 
 Using the methodology of [Replicating a Linear
 Model](https://win-vector.com/2019/07/03/replicating-a-linear-model/) we
-can build a data set that obeys the specified explanatory variable
-distribution and has specified outcome probabilities. This is just us
-building a data set matching an assumed known answer. Our data
+can build an example data set that obeys the specified explanatory
+variable distribution and has specified outcome probabilities. This is
+just us building a data set matching an assumed known answer. Our data
 distribution is going to be determined by `pX1`, `pX2`, and
-`P[y == TRUE] ~ sigmoid(cval + b1 * x1 + b2 * x2)`. Our inference task
-is to recover the parameters `pX1`, `pX2`, `cval`, `b1`, and `b2` from
-data, even in the situation where observers have omitted variable
-issues.
+`P[y == TRUE] ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our inference task is
+to recover the parameters `pX1`, `pX2`, `c0`, `b1`, and `b2` from data,
+even in the situation where observers have omitted variable issues.
 
 The complete detailed data is generated as follows. The `proportion`
 column is what proportion of a data set drawn from this specified
 distribution matches the row keys `x1`, `x2`, `y`, or is the joint
 probability of a given row type.
+
+It takes a bit of code to generate the detailed data distribution.
 
 ``` r
 # assign an example outcome or dependent variable
@@ -143,7 +145,7 @@ detailed_frame$x_distribution <- (
     * (detailed_frame$x2 * pX2 + (1 - detailed_frame$x2) * (1 - pX2))
 )
 # get conditional probability of observed outcome
-y_linear <- cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
+y_linear <- c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
 # converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 y_probability <- sigmoid(y_linear)
@@ -157,6 +159,10 @@ detailed_frame$proportion <- (
 stopifnot(  # abort render if this claim is not true
   abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
+
+The above code gives us the following table, relating `x1`, `x2`, `y`
+combinations to the `proportion` column (which shows how common each
+such row is).
 
 ``` r
 knitr::kable(detailed_frame)
@@ -206,7 +212,7 @@ correct_coef
     ##   0.5772157   3.1415927  -8.1548455
 
 Notice we recover the
-`cval + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` form.
+`c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` form.
 
 ## The Problem
 
@@ -651,11 +657,18 @@ p(1,1,&ast;)
 </tbody>
 </table>
 
+The above matrix linearly maps our earlier `proportions` columns to
+various interesting roll-ups or aggregations.
+
 ``` r
 # apply the linear operator to compute marginalized observations
+proportion <- margin_transform %*% detailed_frame$proportion
+```
+
+``` r
+# organize into a table for presentation
 margin_frame <- margin_names
-margin_frame$proportion <- as.numeric(
-  margin_transform %*% detailed_frame$proportion)
+margin_frame$proportion <- as.numeric(proportion)
 rownames(margin_frame) <- paste0(
   "p(", 
   apply(margin_frame[, c('x1', 'x2', 'y')], 1, paste, collapse = ","), 
@@ -897,16 +910,6 @@ set-up experimenter 1 sees only the first four rows, and experimenter 2
 sees only the next 4 rows. We consider the rest of the data
 “unobserved”.
 
-### The Solution Strategy
-
-We will show how collaborating experimenters, who never had a chance to
-examine the full detailed data, can estimate `proportion` and then
-estimate its pre-image under the `margin_transform`. This pre image is a
-complete distribution or description of the original (unobserved)
-detailed data. Once we have estimated or imputed the (previously)
-unobserved data we can then apply direct modeling techniques on that to
-complete the joint coefficient inference.
-
 ### Experimenter 1’s view
 
 Let’s see what happens when an experimenter tries to perform inference
@@ -1015,7 +1018,7 @@ TRUE
 
 ``` r
 # solve from d1's point of view
-suppressWarnings(
+d1_est <- suppressWarnings(
   glm(
     y ~ x1,
     data = d1,
@@ -1023,14 +1026,19 @@ suppressWarnings(
     family = binomial()
   )$coef
 )
+stopifnot(  # stop render if this claim is not true
+  abs(d1_est[["x1"]]) < abs(b1) / 2)
+
+d1_est
 ```
 
     ## (Intercept)          x1 
     ##  -1.9143360   0.5567057
 
 Notice experimenter 1 got a *much* too small estimate of the `x1`
-coefficient. From experimenter 1’s point of view, the effect of the
-omitted variable `x2` is making `x1` hard to correctly infer.
+coefficient of 0.5567057, whereas the correct value is 3.1415927. From
+experimenter 1’s point of view, the effect of the omitted variable `x2`
+is making `x1` hard to correctly infer.
 
 ### Experimenter 2’s view
 
@@ -1138,7 +1146,7 @@ TRUE
 </tbody>
 </table>
 
-## The Question
+### A Critique
 
 From the original data set’s point of view: both experimenters have
 wrong estimates of their respective coefficients. The question then is:
@@ -1148,33 +1156,34 @@ even after the experimenters choose to collaborate. This is because we
 are assuming neither of them had access to the original data as each
 failed to measure one of the explanatory variables.
 
+## The Solution Strategy
+
 Each experimenter knows a lot about the data. They known the
 distribution of their explanatory variable, and even the joint
 distribution of their explanatory and the dependent and outcome data.
 Assuming the two explanatory variables are independent, they even know
-the joint distribution of the explanatory variables.
+the joint distribution of the explanatory variables. We will show how to
+use their combined observations to estimate the hidden data elements.
+This data can then be used for standard detailed analysis, like we
+showed on the original full data set.
 
 This isn’t the first time we have proposed a “guess at the original
 data, as it wasn’t shared” as we played with this in [Checking claims in
 published statistics
 papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistics-papers/).
 
-## A Solution
+## Solution Steps
 
-What we are going to do is: simulate experimenter 1 and experimenter 2
-working together to try and recover a joint estimate of the `x1` and
-`x2` coefficients. We are going to use their pooled information to guess
-at plausible pre-images that represent the unobserved joint data set
-that has simultaneous `x1` and `x2` observations. This is kind of cute:
-instead of trying to invert the estimate bias, we try and guess at
-original data where we know how to perform an unbiased analysis.
+Our solutions strategy is as follows:
 
-We characterize all pre-images of the pooled marginal information. These
-are all of the form of a pre-image of the estimated proportions column
-plus any elements of the marginalization processes’ null-space
-(i.e. changes in data that are not respected by the summation process).
+- We will estimate the joint distribution of `x1` and `x2` from the
+  observed marginal distributions of `x1` and `x2` plus an assumption of
+  independence.
+- We will plug the above and other details in to the inverse of
+  `margin_transform` to get an estimate of the original hidden data.
+- We will perform inference on this data to get coefficient estimates.
 
-### The `x1` and `x2` distribution
+### Estimating the `x1` and `x2` joint distribution
 
 Neither experimenter observed the following part of the marginal frame:
 
@@ -1360,8 +1369,10 @@ Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed
 independence of `x1` and `x2`). At this point we have inferred the `pX1`
 and `pX2` parameters from the observed data.
 
-Putting this all together we get a joint estimate of the complete
-`proportion` vector.
+### Combining Observations
+
+We new combine all of our known data to get an estimate of the
+(unobserved) summaries produced by `margin_transform`.
 
 ``` r
 # put together experimenter 1 and 2's joint estimate of marginal proportions
@@ -1380,10 +1391,11 @@ estimated_proportions
     ##  [1] 0.610053847 0.238612287 0.089946153 0.061387713 0.051761580 0.796904554
     ##  [7] 0.148238420 0.003095446 0.140000000 0.060000000 0.560000000 0.240000000
 
-### Solving For the Joint Distribution
+### Solving For the Full Joint Distribution
 
-We use linear algebra to solve for an example data distribution estimate
-(with illegal negative entries!).
+We use linear algebra to pull `estimated_proportions` back through
+`margin_transform` inverse to get a linear estimate of the unobserved
+original data.
 
 ``` r
 # typical solution (in the linear sense, signs not enforced)
@@ -1400,8 +1412,11 @@ v
     ##  p(0,1,TRUE)  p(1,1,TRUE) 
     ## -0.002089720  0.005185167
 
-We have a single dimensional null space, which is the direction
-different possible solutions vary in.
+Note this estimate has negative entries, so is not yet a sequence of
+valid frequencies or probabilities. We will correct this by adding
+elements that don’t change the forward mapping under `margin_transform`.
+In linear algebra this means we need a basis for `margin_transform`’s
+“null space.” This is gotten as follows.
 
 ``` r
 # our degree of freedom between solutions
@@ -1428,21 +1443,25 @@ them.
 ``` r
 # solve for the z's
 proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
-solns <- proposed_solns[
+soln_zs <- proposed_solns[
   vapply(proposed_solns, 
          function(soln) {all(soln * ns + v >= -1e-8)}, 
          logical(1))]
-solns <- unique(c(min(solns), max(solns)))
+soln_zs <- unique(c(min(soln_zs), max(soln_zs)))
 stopifnot(  # abort render if this claim is not true
-  length(solns) > 0)
+  length(soln_zs) > 0)
+
+soln_zs
 ```
+
+    ## [1] -0.010740822 -0.005910622
 
 ``` r
 # solve the logistic regression for each of our extreme guessed pre-images of the data
 soln_i <- 0
-soln_names <- rep('', length(solns))
-for (soln in solns) {
-  recovered <- as.numeric(soln * ns + v)
+soln_names <- rep('', length(soln_zs))
+for (soln_z in soln_zs) {
+  recovered <- as.numeric(soln_z * ns + v)
   recovered <- pmax(recovered, 0)  # get rid of any very near zero entries
   soln_i <- soln_i + 1
   soln_name <- paste0("recovered_", soln_i)
@@ -1666,20 +1685,7 @@ stopifnot(abs(sum(convex_soln$coefficients) - 1) < 1e-8)
 
 ### Inferring the logistic coefficients
 
-And, in this case, it turns out each of our extreme solutions recovers
-essentially the same logistic regression solution! And this matches the
-unobserved detailed solution! Likely the one degree of freedom in the
-solution space matches some of the logistic regression balance
-conditions, and is therefore a unimportant or indifferent source of
-variation.
-
-``` r
-# remind ourselves of the correct solution from actual (unobserved) joint data
-correct_coef
-```
-
-    ## (Intercept)          x1          x2 
-    ##   0.5772157   3.1415927  -8.1548455
+Let’s inspect our extreme (boundary of feasibility) solutions.
 
 ``` r
 # run through our recovered solutions
@@ -1702,7 +1708,6 @@ for (soln_name in soln_names) {
   )
   stopifnot(  # abort render if this claim is not true
     max(abs(correct_coef - coef)) < 1e-6)
-  print("recovered solution")
   print(coef)
   soln_i <- soln_i + 1
   coef_list[[soln_i]] <- coef
@@ -1710,13 +1715,18 @@ for (soln_name in soln_names) {
 ```
 
     ## [1] "recovered_1"
-    ## [1] "recovered solution"
     ## (Intercept)          x1          x2 
     ##   0.5772157   3.1415927  -8.1548455 
     ## [1] "recovered_2"
-    ## [1] "recovered solution"
     ## (Intercept)          x1          x2 
     ##   0.5772157   3.1415927  -8.1548455
+
+And, in this case, it turns out each of our extreme solutions recovers
+essentially the same logistic regression solution! And this matches the
+unobserved detailed solution! Likely the one degree of freedom in the
+solution space matches some of the logistic regression balance
+conditions, and is therefore a unimportant or indifferent source of
+variation.
 
 ### Picking a point-estimate
 
@@ -1949,6 +1959,10 @@ recovered_coef
 
     ## (Intercept)          x1          x2 
     ##   0.5772157   3.1415927  -8.1548455
+
+This matches the correct (c0=0.5772, b1=3.1416, b2=-8.1548). We have
+correctly inferred the actual coefficient values from the observed data.
+I.e. we have removed the bias.
 
 ## Conclusion
 
