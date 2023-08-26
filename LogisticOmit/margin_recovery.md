@@ -1319,21 +1319,19 @@ In linear algebra this means we need a basis for `margin_transform`’s
 ``` r
 # our degree of freedom between solutions
 ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combine
-stopifnot(  # abort render if this claim is not true
-  ncol(ns) == 1)
-ns <- as.numeric(ns)
+```
+
+``` r
+ns <- ns / mean(abs(ns))
 
 ns
 ```
 
-    ## [1] -0.3535534  0.3535534  0.3535534 -0.3535534  0.3535534 -0.3535534 -0.3535534
-    ## [8]  0.3535534
+    ## [1] -1  1  1 -1  1 -1 -1  1
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In
-fact all solutions are some interval of `z` values. We can solve for
-them, and they solutions are the following interval.
-
-    ## [1] -0.010740822 -0.005910622
+fact all solutions are some interval of `z` values. We can solve for the
+`z`, and plug them in to get solutions.
 
 Our attempted recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below.
@@ -1359,6 +1357,9 @@ recovered_1
 <th style="text-align:right;">
 recovered_2
 </th>
+<th style="text-align:right;">
+null vector
+</th>
 </tr>
 </thead>
 <tbody>
@@ -1381,6 +1382,9 @@ FALSE
 <td style="text-align:right;">
 0.0500538
 </td>
+<td style="text-align:right;">
+-1
+</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1400,6 +1404,9 @@ FALSE
 </td>
 <td style="text-align:right;">
 0.0017077
+</td>
+<td style="text-align:right;">
+1
 </td>
 </tr>
 <tr>
@@ -1421,6 +1428,9 @@ FALSE
 <td style="text-align:right;">
 0.5600000
 </td>
+<td style="text-align:right;">
+1
+</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1440,6 +1450,9 @@ FALSE
 </td>
 <td style="text-align:right;">
 0.2369046
+</td>
+<td style="text-align:right;">
+-1
 </td>
 </tr>
 <tr>
@@ -1461,6 +1474,9 @@ TRUE
 <td style="text-align:right;">
 0.0899462
 </td>
+<td style="text-align:right;">
+1
+</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1480,6 +1496,9 @@ TRUE
 </td>
 <td style="text-align:right;">
 0.0582923
+</td>
+<td style="text-align:right;">
+-1
 </td>
 </tr>
 <tr>
@@ -1501,6 +1520,9 @@ TRUE
 <td style="text-align:right;">
 0.0000000
 </td>
+<td style="text-align:right;">
+-1
+</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1521,13 +1543,18 @@ TRUE
 <td style="text-align:right;">
 0.0030954
 </td>
+<td style="text-align:right;">
+1
+</td>
 </tr>
 </tbody>
 </table>
 
 As we can see these two extreme solutions are in fact actually fairly
-close. And the original (unobserved) data distribution is in fact a
-convex combination of these solutions.
+close. The original (unobserved) data distribution is in fact a convex
+combination of these solutions. And the null vector (or variation
+allowed by the linear constraints) is reading off if `(x1, x2, y)` is
+even or odd.
 
 ### Inferring the logistic coefficients
 

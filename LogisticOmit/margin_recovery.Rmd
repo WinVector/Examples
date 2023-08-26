@@ -371,11 +371,12 @@ Note this estimate has negative entries, so is not yet a sequence of valid frequ
 ```{r}
 # our degree of freedom between solutions
 ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combine
+```
+
+```{r, echo = FALSE}
 stopifnot(  # abort render if this claim is not true
   ncol(ns) == 1)
 ns <- as.numeric(ns)
-
-ns
 ```
 
 ```{r, echo = FALSE}
@@ -386,7 +387,13 @@ stopifnot(  # abort render if this claim is not true
 )
 ```
 
-All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for them, and they solutions are the following interval.
+```{r}
+ns <- ns / mean(abs(ns))
+
+ns
+```
+
+All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for the `z`, and plug them in to get solutions.
 
 ```{r, echo = FALSE}
 # solve for the z's
@@ -400,8 +407,6 @@ soln_zs <- proposed_solns[
 soln_zs <- unique(c(min(soln_zs), max(soln_zs)))
 stopifnot(  # abort render if this claim is not true
   length(soln_zs) == 2)
-
-soln_zs
 ```
 
 ```{r, echo = FALSE}
@@ -416,6 +421,7 @@ for (soln_z in soln_zs) {
   detailed_frame[soln_name] <- recovered
   soln_names[soln_i] <- soln_name
 }
+detailed_frame["null vector"] <- ns
 ```
 
 Our attempted recovered solutions to the (unknown to either experimenter!) original data distribution details can be seen below.
@@ -424,7 +430,7 @@ Our attempted recovered solutions to the (unknown to either experimenter!) origi
 knitr::kable(detailed_frame)
 ```
 
-As we can see these two extreme solutions are in fact actually fairly close. And the original (unobserved) data distribution is in fact a convex combination of these solutions.
+As we can see these two extreme solutions are in fact actually fairly close. The original (unobserved) data distribution is in fact a convex combination of these solutions. And the null vector (or variation allowed by the linear constraints) is reading off if `(x1, x2, y)` is even or odd.
 
 ```{r, echo = FALSE}
 # confirm actual proportions in convex hull of solutions
@@ -508,6 +514,7 @@ stopifnot(z_opt >= 0)  # abort render if this claim is not true
 stopifnot(z_opt <= 1)  # abort render if this claim is not true
 detailed_frame$recovered_1 <- NULL
 detailed_frame$recovered_2 <- NULL
+detailed_frame["null vector"] <- NULL
 stopifnot(  # abort render if this claim is not true
   max(abs(detailed_frame$proportion - detailed_frame$maxent_dist)) < 1e-5)
 ```
