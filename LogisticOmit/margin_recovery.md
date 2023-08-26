@@ -60,8 +60,8 @@ values.
 
 ``` r
 # specify explanatory variable distribution 
-pX1 = 0.3
-pX2 = 0.8
+pX1 <- 0.3
+pX2 <- 0.8
 ```
 
 Our data set can then be completely described by above explanatory

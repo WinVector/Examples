@@ -50,8 +50,8 @@ Let's specify the joint probability distribution of our two explanatory variable
 
 ```{r}
 # specify explanatory variable distribution 
-pX1 = 0.3
-pX2 = 0.8
+pX1 <- 0.3
+pX2 <- 0.8
 ```
 
 Our data set can then be completely described by above explanatory variable distribution *and* the conditional probability of the dependent outcomes. For our logistic regression problem we set up our outcome conditioning as `P[y == TRUE] ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our example coefficients are as follows.
