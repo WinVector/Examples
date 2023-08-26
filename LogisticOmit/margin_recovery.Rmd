@@ -82,12 +82,14 @@ Using the methodology of [Replicating a Linear Model](https://win-vector.com/201
 
 The complete detailed data is generated as follows. The `proportion` column is what proportion of a data set drawn from this specified distribution matches the row keys `x1`, `x2`, `y`, or is the joint probability of a given row type. We can derive all the detailed probabilities as follows.
 
-
-```{r}
+```{r, echo = FALSE}
 # assign an example outcome or dependent variable
 detailed_frame <- detailed_names
 detailed_frame$x1 <- as.numeric(detailed_frame$x1)
 detailed_frame$x2 <- as.numeric(detailed_frame$x2)
+```
+
+```{r}
 # get joint distribution of explanatory variables
 detailed_frame$x_distribution <- (
   (detailed_frame$x1 * pX1 + (1 - detailed_frame$x1) * (1 - pX1))
@@ -98,6 +100,7 @@ y_linear <- c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
 # converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 y_probability <- sigmoid(y_linear)
+# record probability of observation
 detailed_frame$p_observed_outcome <- ifelse(
   detailed_frame$y, 
   y_probability, 
@@ -105,13 +108,13 @@ detailed_frame$p_observed_outcome <- ifelse(
 # compute joint explanatory plus outcome probability of each row
 detailed_frame$proportion <- (
   detailed_frame$x_distribution * detailed_frame$p_observed_outcome)
-stopifnot(  # abort render if this claim is not true
-  abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
 
 The following table relates `x1`, `x2`, `y` combinations to the `proportion` column (which shows how common each such row is).
 
 ```{r, echo = FALSE}
+stopifnot(  # abort render if this claim is not true
+  abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 knitr::kable(detailed_frame)
 ```
 
@@ -224,10 +227,13 @@ Let's see what happens when an experimenter tries to perform inference on their 
 # select data available to d1
 d1 <- margin_frame[
   margin_frame$x2 == asterisk_symbol, , drop = FALSE]
-d1$x1 <- as.numeric(d1$x1)
-d1$y <- as.logical(d1$y)
 
 knitr::kable(d1)
+```
+
+```{r, echo = FALSE}
+d1$x1 <- as.numeric(d1$x1)
+d1$y <- as.logical(d1$y)
 ```
 
 ```{r}
@@ -240,10 +246,13 @@ d1_est <- suppressWarnings(
     family = binomial()
   )$coef
 )
-stopifnot(  # stop render if this claim is not true
-  abs(d1_est[["x1"]]) < abs(b1) / 2)
 
 d1_est
+```
+
+```{r, echo = FALSE}
+stopifnot(  # stop render if this claim is not true
+  abs(d1_est[["x1"]]) < abs(b1) / 2)
 ```
 
 Notice experimenter 1 got a *much* too small estimate of the `x1` coefficient of `r d1_est[["x1"]]`, whereas the correct value is `r b1`. From experimenter 1's point of view, the effect of the omitted variable `x2` is making `x1` hard to correctly infer.
@@ -256,10 +265,13 @@ Experimenter 2 has the following portion of data, which also is not enough to ge
 # select data available to d2
 d2 <- margin_frame[
   margin_frame$x1 == asterisk_symbol, , drop = FALSE]
-d2$x2 <- as.numeric(d2$x2)
-d2$y <- as.logical(d2$y)
 
 knitr::kable(d2)
+```
+
+```{r, echo = FALSE}
+d2$x2 <- as.numeric(d2$x2)
+d2$y <- as.logical(d2$y)
 ```
 
 ### A Critique
@@ -287,7 +299,8 @@ Neither experimenter observed the following part of the marginal frame:
 
 ```{r}
 # show x1 x2 distribution poriton of margin_frame
-dx <- margin_frame[margin_frame$y == asterisk_symbol, , drop = FALSE]
+dx <- margin_frame[
+  margin_frame$y == asterisk_symbol, , drop = FALSE]
 
 knitr::kable(dx)
 ```
@@ -303,11 +316,15 @@ dxe["proportion"] <- dxe$proportion.x * dxe$proportion.y
 dxe$proportion.x <- NULL
 dxe$proportion.y <- NULL
 dxe <- dxe[order(dxe$x2, dxe$x1), , drop = FALSE]
-stopifnot(  # abort render if this claim is not true
-  all(dx[, c("x1", "x2")] == dxe[, c("x1", "x2")]))
 
 knitr::kable(dxe)
 ```
+
+```{r, echo = FALSE}
+stopifnot(  # abort render if this claim is not true
+  all(dx[, c("x1", "x2")] == dxe[, c("x1", "x2")]))
+```
+
 
 Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed independence of `x1` and `x2`). At this point we have inferred the `pX1` and `pX2` parameters from the observed data.
 
@@ -323,10 +340,13 @@ estimated_proportions <- c(
   d2$proportion,
   dxe$proportion
 )
-stopifnot(  # abort render if this claim is not true
-  max(abs(estimated_proportions - margin_frame$proportion)) < 1e-6)
 
 estimated_proportions
+```
+
+```{r, echo = FALSE}
+stopifnot(  # abort render if this claim is not true
+  max(abs(estimated_proportions - margin_frame$proportion)) < 1e-6)
 ```
 
 ### Solving For the Full Joint Distribution
@@ -336,11 +356,14 @@ We use linear algebra to pull `estimated_proportions` back through `margin_trans
 ```{r}
 # typical solution (in the linear sense, signs not enforced)
 v <- solve(qr(margin_transform, LAPACK = TRUE), estimated_proportions)
+
+v
+```
+
+```{r, echo = FALSE}
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% v - estimated_proportions)) < 1e-6
 )
-
-v
 ```
 
 Note this estimate has negative entries, so is not yet a sequence of valid frequencies or probabilities. We will correct this by adding elements that don't change the forward mapping under `margin_transform`. In linear algebra this means we need a basis for `margin_transform`'s "null space." This is gotten as follows.
@@ -351,13 +374,16 @@ ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combi
 stopifnot(  # abort render if this claim is not true
   ncol(ns) == 1)
 ns <- as.numeric(ns)
+
+ns
+```
+
+```{r, echo = FALSE}
 stopifnot(  # abort render if this claim is not true
   max(abs(ns)) > 1e-3)
 stopifnot(  # abort render if this claim is not true
   max(abs(margin_transform %*% ns)) < 1e-6
 )
-
-ns
 ```
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for them.
@@ -470,11 +496,14 @@ opt_soln <- optimize(
   maximum = TRUE)
 
 z_opt <- opt_soln$maximum
-stopifnot(z_opt >= 0)  # abort render if this claim is not true
-stopifnot(z_opt <= 1)  # abort render if this claim is not true
 detailed_frame["maxent_dist"] <- (
   z_opt * detailed_frame$recovered_1 + 
     (1 - z_opt) * detailed_frame$recovered_2)
+```
+
+```{r, echo = FALSE}
+stopifnot(z_opt >= 0)  # abort render if this claim is not true
+stopifnot(z_opt <= 1)  # abort render if this claim is not true
 detailed_frame$recovered_1 <- NULL
 detailed_frame$recovered_2 <- NULL
 stopifnot(  # abort render if this claim is not true
@@ -498,12 +527,15 @@ recovered_coef <- suppressWarnings(
     family = binomial()
   )$coef
 )
-stopifnot(  # abort render if this claim is not true
-  max(abs(correct_coef - recovered_coef)) < 1e-6)
+
 
 recovered_coef
 ```
 
+```{r, echo = FALSE}
+stopifnot(  # abort render if this claim is not true
+  max(abs(correct_coef - recovered_coef)) < 1e-6)
+```
 
 This matches the correct `r paste0("(c0=", round(c0, digits = 4), ", b1=", round(b1, digits = 4), ", b2=", round(b2, digits = 4), ")")`. We have correctly inferred the actual coefficient values from the observed data. I.e. we have removed the bias.
 

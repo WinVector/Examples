@@ -117,10 +117,6 @@ probability of a given row type. We can derive all the detailed
 probabilities as follows.
 
 ``` r
-# assign an example outcome or dependent variable
-detailed_frame <- detailed_names
-detailed_frame$x1 <- as.numeric(detailed_frame$x1)
-detailed_frame$x2 <- as.numeric(detailed_frame$x2)
 # get joint distribution of explanatory variables
 detailed_frame$x_distribution <- (
   (detailed_frame$x1 * pX1 + (1 - detailed_frame$x1) * (1 - pX1))
@@ -131,6 +127,7 @@ y_linear <- c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
 # converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 y_probability <- sigmoid(y_linear)
+# record probability of observation
 detailed_frame$p_observed_outcome <- ifelse(
   detailed_frame$y, 
   y_probability, 
@@ -138,8 +135,6 @@ detailed_frame$p_observed_outcome <- ifelse(
 # compute joint explanatory plus outcome probability of each row
 detailed_frame$proportion <- (
   detailed_frame$x_distribution * detailed_frame$p_observed_outcome)
-stopifnot(  # abort render if this claim is not true
-  abs(sum(detailed_frame$proportion) - 1) < 1e-6)
 ```
 
 The following table relates `x1`, `x2`, `y` combinations to the
@@ -834,8 +829,6 @@ on their fraction of the data.
 # select data available to d1
 d1 <- margin_frame[
   margin_frame$x2 == asterisk_symbol, , drop = FALSE]
-d1$x1 <- as.numeric(d1$x1)
-d1$y <- as.logical(d1$y)
 
 knitr::kable(d1)
 ```
@@ -845,7 +838,7 @@ knitr::kable(d1)
 <tr>
 <th style="text-align:left;">
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 x1
 </th>
 <th style="text-align:left;">
@@ -864,7 +857,7 @@ proportion
 <td style="text-align:left;">
 p(0,&ast;,FALSE)
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 0
 </td>
 <td style="text-align:left;">
@@ -881,7 +874,7 @@ FALSE
 <td style="text-align:left;">
 p(1,&ast;,FALSE)
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 1
 </td>
 <td style="text-align:left;">
@@ -898,7 +891,7 @@ FALSE
 <td style="text-align:left;">
 p(0,&ast;,TRUE)
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 0
 </td>
 <td style="text-align:left;">
@@ -915,7 +908,7 @@ TRUE
 <td style="text-align:left;">
 p(1,&ast;,TRUE)
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 1
 </td>
 <td style="text-align:left;">
@@ -941,8 +934,6 @@ d1_est <- suppressWarnings(
     family = binomial()
   )$coef
 )
-stopifnot(  # stop render if this claim is not true
-  abs(d1_est[["x1"]]) < abs(b1) / 2)
 
 d1_est
 ```
@@ -964,8 +955,6 @@ enough to get an unbiased coefficient estimate.
 # select data available to d2
 d2 <- margin_frame[
   margin_frame$x1 == asterisk_symbol, , drop = FALSE]
-d2$x2 <- as.numeric(d2$x2)
-d2$y <- as.logical(d2$y)
 
 knitr::kable(d2)
 ```
@@ -978,7 +967,7 @@ knitr::kable(d2)
 <th style="text-align:left;">
 x1
 </th>
-<th style="text-align:right;">
+<th style="text-align:left;">
 x2
 </th>
 <th style="text-align:left;">
@@ -997,7 +986,7 @@ p(&ast;,0,FALSE)
 <td style="text-align:left;">
 &ast;
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 0
 </td>
 <td style="text-align:left;">
@@ -1014,7 +1003,7 @@ p(&ast;,1,FALSE)
 <td style="text-align:left;">
 &ast;
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 1
 </td>
 <td style="text-align:left;">
@@ -1031,7 +1020,7 @@ p(&ast;,0,TRUE)
 <td style="text-align:left;">
 &ast;
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 0
 </td>
 <td style="text-align:left;">
@@ -1048,7 +1037,7 @@ p(&ast;,1,TRUE)
 <td style="text-align:left;">
 &ast;
 </td>
-<td style="text-align:right;">
+<td style="text-align:left;">
 1
 </td>
 <td style="text-align:left;">
@@ -1104,7 +1093,8 @@ Neither experimenter observed the following part of the marginal frame:
 
 ``` r
 # show x1 x2 distribution poriton of margin_frame
-dx <- margin_frame[margin_frame$y == asterisk_symbol, , drop = FALSE]
+dx <- margin_frame[
+  margin_frame$y == asterisk_symbol, , drop = FALSE]
 
 knitr::kable(dx)
 ```
@@ -1212,8 +1202,6 @@ dxe["proportion"] <- dxe$proportion.x * dxe$proportion.y
 dxe$proportion.x <- NULL
 dxe$proportion.y <- NULL
 dxe <- dxe[order(dxe$x2, dxe$x1), , drop = FALSE]
-stopifnot(  # abort render if this claim is not true
-  all(dx[, c("x1", "x2")] == dxe[, c("x1", "x2")]))
 
 knitr::kable(dxe)
 ```
@@ -1297,8 +1285,6 @@ estimated_proportions <- c(
   d2$proportion,
   dxe$proportion
 )
-stopifnot(  # abort render if this claim is not true
-  max(abs(estimated_proportions - margin_frame$proportion)) < 1e-6)
 
 estimated_proportions
 ```
@@ -1315,9 +1301,6 @@ original data.
 ``` r
 # typical solution (in the linear sense, signs not enforced)
 v <- solve(qr(margin_transform, LAPACK = TRUE), estimated_proportions)
-stopifnot(  # abort render if this claim is not true
-  max(abs(margin_transform %*% v - estimated_proportions)) < 1e-6
-)
 
 v
 ```
@@ -1339,11 +1322,6 @@ ns <- MASS::Null(t(margin_transform))  # also uses QR decomposition, could combi
 stopifnot(  # abort render if this claim is not true
   ncol(ns) == 1)
 ns <- as.numeric(ns)
-stopifnot(  # abort render if this claim is not true
-  max(abs(ns)) > 1e-3)
-stopifnot(  # abort render if this claim is not true
-  max(abs(margin_transform %*% ns)) < 1e-6
-)
 
 ns
 ```
@@ -1603,15 +1581,9 @@ opt_soln <- optimize(
   maximum = TRUE)
 
 z_opt <- opt_soln$maximum
-stopifnot(z_opt >= 0)  # abort render if this claim is not true
-stopifnot(z_opt <= 1)  # abort render if this claim is not true
 detailed_frame["maxent_dist"] <- (
   z_opt * detailed_frame$recovered_1 + 
     (1 - z_opt) * detailed_frame$recovered_2)
-detailed_frame$recovered_1 <- NULL
-detailed_frame$recovered_2 <- NULL
-stopifnot(  # abort render if this claim is not true
-  max(abs(detailed_frame$proportion - detailed_frame$maxent_dist)) < 1e-5)
 ```
 
 Notice that the recovered `maxent_dist` is preternaturally close to the
@@ -1788,8 +1760,7 @@ recovered_coef <- suppressWarnings(
     family = binomial()
   )$coef
 )
-stopifnot(  # abort render if this claim is not true
-  max(abs(correct_coef - recovered_coef)) < 1e-6)
+
 
 recovered_coef
 ```
