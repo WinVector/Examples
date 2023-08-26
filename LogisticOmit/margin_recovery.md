@@ -14,16 +14,16 @@ not the case for more familiar linear regression.
 
 This is a known problem with known mitigations:
 
-- Rhian Daniel, Jingjing Zhang, Daniel Farewell, (2020), “Making apples
-  from oranges: Comparing noncollapsible effect estimators and their
-  standard errors after adjustment for different covariate sets”,
-  Biometrical Journal, DOI: 10.1002/bimj.201900297.
-- John M. Neuhaus and Nicholas P. Jewell, (1993), “A Geometric Approach
-  to Assess Bias Due to Omitted Covariates in Generalized Linear
-  Models”, Biometrika, Vol. 80, No. 4 (Dec. 1993), pp. 807-815.
-- Zhang, Zhiwei, (2009), “Estimating a Marginal Causal Odds Ratio
-  Subject to Confounding”, Communications in Statistics - Theory and
-  Methods, 38:3, 309 — 321.
+- Rhian Daniel, Jingjing Zhang, Daniel Farewell, “Making apples from
+  oranges: Comparing noncollapsible effect estimators and their standard
+  errors after adjustment for different covariate sets”, Biometrical
+  Journal, (2020), DOI: 10.1002/bimj.201900297.
+- John M. Neuhaus and Nicholas P. Jewell, “A Geometric Approach to
+  Assess Bias Due to Omitted Covariates in Generalized Linear Models”,
+  Biometrika, Vol. 80, No. 4 (Dec. 1993), pp. 807-815.
+- Zhang, Zhiwei, “Estimating a Marginal Causal Odds Ratio Subject to
+  Confounding”, Communications in Statistics - Theory and Methods, 38:3,
+  (2009), 309-321.
 
 (Thank you, Tom Palmer and Robert Horton for the references!)
 
@@ -1331,7 +1331,7 @@ ns
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In
 fact all solutions are some interval of `z` values. We can solve for
-them.
+them, and they solutions are the following interval.
 
     ## [1] -0.010740822 -0.005910622
 

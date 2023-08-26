@@ -13,9 +13,9 @@ The issue is as follows. For logistic regression, omitted variables cause estima
 
 This is a known problem with known mitigations:
 
-  * Rhian Daniel, Jingjing Zhang, Daniel Farewell, (2020), "Making apples from oranges: Comparing noncollapsible effect estimators and their standard errors after adjustment for different covariate sets", Biometrical Journal, DOI: 10.1002/bimj.201900297.
-  * John M. Neuhaus and Nicholas P. Jewell, (1993), "A Geometric Approach to Assess Bias Due to Omitted Covariates in Generalized Linear Models", Biometrika, Vol. 80, No. 4 (Dec. 1993), pp. 807-815.
-  * Zhang, Zhiwei, (2009), "Estimating a Marginal Causal Odds Ratio Subject to Confounding", Communications in Statistics - Theory and Methods, 38:3, 309 — 321.
+  * Rhian Daniel, Jingjing Zhang, Daniel Farewell, "Making apples from oranges: Comparing noncollapsible effect estimators and their standard errors after adjustment for different covariate sets", Biometrical Journal, (2020), DOI: 10.1002/bimj.201900297.
+  * John M. Neuhaus and Nicholas P. Jewell, "A Geometric Approach to Assess Bias Due to Omitted Covariates in Generalized Linear Models", Biometrika, Vol. 80, No. 4 (Dec. 1993), pp. 807-815.
+  * Zhang, Zhiwei, "Estimating a Marginal Causal Odds Ratio Subject to Confounding", Communications in Statistics - Theory and Methods, 38:3, (2009), 309-321.
   
 (Thank you, Tom Palmer and Robert Horton for the references!)
 
@@ -386,18 +386,20 @@ stopifnot(  # abort render if this claim is not true
 )
 ```
 
-All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for them.
+All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for them, and they solutions are the following interval.
 
 ```{r, echo = FALSE}
 # solve for the z's
 proposed_solns <- unique(as.numeric(- v / ns )[abs(ns) > 1e-8])
+stopifnot(  # abort render if this claim is not true
+  length(proposed_solns) >= 2)
 soln_zs <- proposed_solns[
   vapply(proposed_solns, 
          function(soln) {all(soln * ns + v >= -1e-8)}, 
          logical(1))]
 soln_zs <- unique(c(min(soln_zs), max(soln_zs)))
 stopifnot(  # abort render if this claim is not true
-  length(soln_zs) > 0)
+  length(soln_zs) == 2)
 
 soln_zs
 ```
