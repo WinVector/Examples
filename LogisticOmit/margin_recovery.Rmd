@@ -514,7 +514,7 @@ entropy <- function(v) {
 }
 ```
 
-Entropy is convex, so it has a unique maximal point. And this maximal point is the unique point where the gradient disappears for a vector that sums to zero. In our case the solution that maximizes entropy is exactly the solution that picks a distribution orthogonal to `ns`. Usually entropy is more of a heuristic preferring flat distributions until one have evidence against them. In this case it will pick the exact distribution we are trying to recover (the one with no interactions).
+Entropy is convex, so it has a unique maximal point. And this maximal point is the unique point where the gradient disappears for a displacement vector that sums to zero. In our case the solution that maximizes entropy is exactly the solution that picks a distribution orthogonal to `ns`. Usually entropy is more of a heuristic preferring flat distributions until one have evidence against them. In this case it will pick the exact distribution we are trying to recover (the one with no interactions).
 
 ```{r}
 # brute force solve for maximum entropy mix
