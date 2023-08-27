@@ -1,4 +1,4 @@
-Patching Omitted Variables by Solving for Hidden Data
+Solving for Hidden Data
 ================
 2023-08-25
 
@@ -28,8 +28,9 @@ This is a known problem with known mitigations:
 (Thank you, Tom Palmer and Robert Horton for the references!)
 
 For this note, let’s work out how to directly try and overcome the
-omitted variable bias. We will work our example in
-[`R`](https://www.r-project.org).
+omitted variable bias by solving for the hidden data. We will work our
+example in [`R`](https://www.r-project.org). We will derive some deep
+results out of a simple set-up.
 
 ## Our Example
 
