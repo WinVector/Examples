@@ -1859,14 +1859,15 @@ estimate plausible pre-images of the data that formed the observations,
 and then analyze that. This in fact gives us a method to invert the bias
 introduced by the omitted variables in logistic regression.
 
-The maximum entropy principle in machine learning can be thought of as
-aspiring to the role the [stationary-action principle
+In machine learning the [maximum entropy
+principle](https://en.wikipedia.org/wiki/Principle_of_maximum_entropy)
+plays the role that the [stationary-action principle
 action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays
-in classic mechanics. And, [maximum entropy modeling is very related to
-logistic regresion
+in classic mechanics. While *nature* isn’t forced to put equal
+probabilities on different states, deterministic models must put equal
+probabilities on indistinguishable states. And, [maximum entropy
+modeling is very related to logistic regresion
 modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
-The germinal reference on this remains, in my opinion, Cover and Thomas,
-“Elements of Information Theory”.
 
 In the real world we would at best be looking at marginalizations of
 different draws of related data. So we would not have exact matches we
