@@ -28,9 +28,9 @@ This is a known problem with known mitigations:
 (Thank you, Tom Palmer and Robert Horton for the references!)
 
 For this note, let’s work out how to directly try and overcome the
-omitted variable bias by solving for the hidden data. We will work our
-example in [`R`](https://www.r-project.org). We will derive some deep
-results out of a simple set-up.
+omitted variable bias by solving for the hidden or unobserved detailed
+data. We will work our example in [`R`](https://www.r-project.org). We
+will derive some deep results out of a simple set-up.
 
 ## Our Example
 
@@ -39,8 +39,8 @@ variables `x1` and `x2` . For simplicity we will take the case where
 `x1` and `x2` only take on the values `0` and `1`.
 
 Our data is then keyed by the values of these explanatory variables and
-the dependent or outcome variable `y`. The keying looks like the
-following.
+the dependent or outcome variable `y`, which takes on only the values
+`FALSE` and `TRUE`. The keying looks like the following.
 
 | x1  | x2  | y     |
 |:----|:----|:------|
@@ -264,7 +264,7 @@ which only observing one of the explanatory variables. As we saw in
 Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/)
 each of these experimenters will in fact estimate coefficients that are
 **biased towards zero**, due to the non-collapsibility of the modeling
-set up. This differs from linear regression where for independent
+set up. This differs from linear regression, where for independent
 explanatory variables (as we have here) we would expect each
 experimenter to be able to get an unbiased estimate of the coefficient
 for the explanatory variable available to them!
@@ -1144,17 +1144,16 @@ TRUE
 </tbody>
 </table>
 
-### A Critique
+### Our Point
 
 From the original data set’s point of view: both experimenters have
-wrong estimates of their respective coefficients. The question then is:
+wrong estimates of their respective coefficients. They do have correct
+estimates for their limited view of columns, but this is not what we are
+looking for when trying to infer causal effects. The question then is:
 if the experimenters pool their effort can they infer the correct
-coefficients? From our point of view only `d1` plus `d2` are observable,
-even after the experimenters choose to collaborate. This is because we
-are assuming neither of them had access to the original data as each
-failed to measure one of the explanatory variables.
+coefficients?
 
-## The Solution Strategy
+## A Solution Strategy
 
 Each experimenter knows a lot about the data. They known the
 distribution of their explanatory variable, and even the joint
@@ -1174,12 +1173,21 @@ papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistic
 
 Our solutions strategy is as follows:
 
-- We will estimate the joint distribution of `x1` and `x2` from the
-  observed marginal distributions of `x1` and `x2` plus an assumption of
+- Estimate the joint distribution of `x1` and `x2` from the observed
+  marginal distributions of `x1` and `x2` plus an assumption of
   independence.
-- We will plug the above and other details in to the inverse of
-  `margin_transform` to get an estimate of the original hidden data.
-- We will perform inference on this data to get coefficient estimates.
+- Plug the above and other details in to the inverse of
+  `margin_transform` to get a family of estimates of the original hidden
+  data.
+- Use the maximum entropy principle to pick a distinguished pre-image as
+  the most interaction free pre-image of our observations.
+- Perform inference on this data to get coefficient estimates.
+
+Note this strategy biases the data recovery to data sets that match our
+modeling assumptions. If the original data met our modeling assumptions
+this is in fact a useful inductive bias. If the original data did not
+match the modeling assumptions, then this will (unfortunately) hide
+issues.
 
 ### Estimating the `x1` and `x2` joint distribution
 
@@ -1368,7 +1376,7 @@ and `pX2` parameters from the observed data.
 
 ### Combining Observations
 
-We new combine all of our known data to get an estimate of the
+We now combine all of our known data to get an estimate of the
 (unobserved) summaries produced by `margin_transform`.
 
 ``` r
@@ -1425,12 +1433,18 @@ ns
 
     ## [1]  1 -1 -1  1 -1  1  1 -1
 
-All valid solutions are of the form `v + z * ns` for scalars `z`. In
-fact all solutions are some interval of `z` values. We can solve for
-this interval. And, we have seen the direction we are varying (`ns`)
-before, it is `test_vec`!
+In our case the null space was one dimensional, or spanned by a single
+vector. This means all valid solutions are of the form `v + z * ns` for
+scalars `z`. In fact all solutions are some interval of `z` values. We
+can solve for this interval.
 
-Our attempted recovered solutions to the (unknown to either
+Note, we have seen the direction we are varying (`ns`) before, it is
+`test_vec`! We have re-derived the blind spot of the observation
+procedure: it obscures interactions in the original data. For our
+particular example data there were no interactions, so this is in this
+case actually a benefit.
+
+The range of recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below.
 
 <table>
@@ -1634,6 +1648,9 @@ This works as follows.
 ``` r
 entropy <- function(v) {
   v <- v[v > 0]
+  if (length(v) < 2) {
+    return(0)
+  }
   v <- v / sum(v)
   -sum(v * log2(v))
 }
@@ -1656,8 +1673,8 @@ detailed_frame["maxent_dist"] <- (
     (1 - z_opt) * detailed_frame$recovered_2)
 ```
 
-Notice that the recovered `maxent_dist` *is* the unobserved original
-`proportion`.
+Notice that the recovered `maxent_dist` *is* the original unobserved
+original `proportion`.
 
 <table>
 <thead>
@@ -1844,10 +1861,10 @@ I.e. we have removed the bias.
 ### Why the Maximum Entropy Solution is So Good
 
 Some calculus will show us in our case the entropy is maximized where
-the gradient is zero, and that this gradient being zero is the same
-condition as our distribution being orthogonal to `ns`. So the maximum
-entropy condition is enforcing the “no interactions” invariant we
-commented on earlier.
+the gradient is zero. For our example this gradient being zero is the
+same condition as our distribution being orthogonal to `ns`. So the
+maximum entropy condition is enforcing the “no interactions” invariant
+we commented on earlier.
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be
@@ -1869,7 +1886,7 @@ plays the role that the [stationary-action principle
 action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays
 in classic mechanics. While *nature* isn’t forced to put equal
 probabilities on different states, deterministic models *must* put equal
-probabilities on indistinguishable states. Maximum entropy pushes
+probabilities on model indistinguishable states. Maximum entropy pushes
 solutions to such symmetries, unless there are variables to support
 differences. And, [maximum entropy modeling is very related to logistic
 regresion
@@ -1880,21 +1897,20 @@ indifference](https://en.wikipedia.org/wiki/Principle_of_indifference)
 can lead to incorrect modeling. Nature may be able to distinguish
 between states that a given set of experimental variables can not. Also,
 the general applicability of maximum entropy techniques isn’t an excuse
-to not look for *reasons* that are causing the maximum entropy
-conditions are in play. This is what we did in this note when developing
-the non-linear orthogonality condition. This condition is a consequence
-of the logit-linear form of the logistic regression *we*, as the
-experimenter, imposed on the solution. Often the structure of the
-problem is due to some regularity in the experimenter’s set up, and not
-some ineffable universal truth.
+to not look for problem specific *reasons* why such an objective helps.
+This is what we did in this note when developing the non-linear
+orthogonality condition. This condition is a consequence of the fact
+that the logit-linear form of the logistic regression *we*, as the
+experimenter, imposed on the data. At some point we are observing the
+regularity of our assumptions, not of the original unobserved data.
 
 In the real world we would at best be looking at marginalizations of
 different draws of related data. So we would not have exact matches we
 can invert- but instead would have to estimate low-discrepancy
 pre-images of the data. And, as we are now introducing a lot of
 unobserved parameters, we could go to Bayesian graphical model methods
-to sum this all out (instead of proposing a specific point-wise
-heuristic as we did here).
+to sum this all out (instead of proposing a specific point-wise method
+as we did here).
 
 ## Links
 
