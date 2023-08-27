@@ -1400,8 +1400,8 @@ ns
     ## [1]  1 -1 -1  1 -1  1  1 -1
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In
-fact all solutions are some interval of `z` values. We can solve for the
-`z`, and plug them in to get solutions.
+fact all solutions are some interval of `z` values. We can solve for
+this interval.
 
 Our attempted recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below.
@@ -1621,17 +1621,15 @@ TRUE
 </table>
 
 As we can see these two extreme solutions are in fact actually fairly
-close. The original (unobserved) data distribution is in fact a convex
-combination of these solutions. And the null vector (or variation
-allowed by the linear constraints) is reading off if `(x1, x2, y)` is
-even or odd.
+close.
 
 ### Picking a point-estimate
 
-We have seen `ns` before, it is `test_vec`! So we know the actual
-solution is orthogonal to `ns`. Some algebra will also show us this
-vector is reading off the sum of the following entropy function of
-proposed distributions.
+The standard trick with an under-specified system is to add an
+objective. A great choice is: maximize the entropy of (or flatness of)
+the distribution we are solving for.
+
+This works as follows.
 
 ``` r
 entropy <- function(v) {
@@ -1640,15 +1638,6 @@ entropy <- function(v) {
   -sum(v * log2(v))
 }
 ```
-
-Entropy is convex, so it has a unique maximal point. And this maximal
-point is the unique point where the gradient disappears for a
-displacement vector that sums to zero. In our case the solution that
-maximizes entropy is exactly the solution that picks a distribution
-orthogonal to `ns`. Usually entropy is more of a heuristic preferring
-flat distributions until one have evidence against them. In this case it
-will pick the exact distribution we are trying to recover (the one with
-no interactions).
 
 ``` r
 # brute force solve for maximum entropy mix
@@ -1851,6 +1840,19 @@ recovered_coef
 This matches the correct (c0=0.5772, b1=3.1416, b2=-8.1548). We have
 correctly inferred the actual coefficient values from the observed data.
 I.e. we have removed the bias.
+
+### Why the Maximum Entropy Solution is So Good
+
+We have the direction we are varying (`ns`) before, it is `test_vec`! So
+we know the actual solution is orthogonal to `ns`. Some calculus will
+show us in our case the entropy is maximized where the gradient is zero,
+and that this gradient being zero is the same condition as our
+distribution being orthogonal to `ns`. So the maximum entropy condition
+is enforcing the “no interactions” invariant we commented on earlier.
+
+The funny thing is, we don’t have to know exactly what the maximum
+entropy objective was doing to actually benefit from it. It tends to be
+a helpful objective in modeling.
 
 ## Conclusion
 
