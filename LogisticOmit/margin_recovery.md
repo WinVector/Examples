@@ -156,7 +156,7 @@ For a logistic regression problem, the relation between `x1`, `x2` and
 `y` is encoded in the `proportion` distribution that gives the joint
 expected frequency of each possible data row in a drawn sample.
 
-### An Extra Invariant
+### An Invariant
 
 There is an interesting non-linear invariant the `proportion` column
 obeys. We will use this invariant later, so it is worth establishing.
@@ -176,7 +176,7 @@ test_vec
 
     ## [1]  1 -1 -1  1 -1  1  1 -1
 
-`log(detailed_frame$proportion))` is orthogonal to this test vector.
+`log(detailed_frame$proportion)` is orthogonal to this test vector.
 
 ``` r
 p_vec <- test_vec * log(detailed_frame$proportion)
@@ -219,11 +219,17 @@ p_comb
 
 A sum over varying signs, such as above, will annihilate constant and
 linear terms. So `s_vec` must always sum to zero, thus `p_vec` must also
-always sum to zero. Roughly this is a check the model has no
+always sum to zero. Roughly this is a check that the model has no
 interactions, or models without interactions pass this check. We are
-using two very strong assumptions on `x1` and `x2`: they are independent
-*and* the modeled probabilities don’t contain an `x1` and `x2`
-interaction.
+using two very strong assumptions on `x1` and `x2`: that they are
+independent *and* that the modeled probabilities don’t contain an `x1`
+and `x2` interaction.
+
+This non-linear invariant is a consequence of the logit-linear structure
+of the logistic regression style set-up we have specified for this
+problem. We will return to the `test_vec` later in the write-up, and
+show how to automatically discover it *without* detailed knowledge as we
+used above.
 
 ### Inferring From Fully Observed Data
 
@@ -263,7 +269,9 @@ explanatory variables (as we have here) we would expect each
 experimenter to be able to get an unbiased estimate of the coefficient
 for the explanatory variable available to them!
 
-To show this let’s build a linear operator that computes the margins the
+### The Unobserved to Observed Linear Mapping
+
+Let’s build a linear operator that computes the margins the
 experimenters actually observe.
 
 <table class="table" style="font-size: 10px; margin-left: auto; margin-right: auto;">
@@ -890,6 +898,22 @@ set-up experimenter 1 sees only the first four rows, and experimenter 2
 sees only the next 4 rows. We consider the rest of the data
 “unobserved”.
 
+### A Blind Spot
+
+We also note that `margin_transform` is blind to variation in the
+direction of our earlier `test_vec`. This can be confirmed as follows.
+
+``` r
+test_map <- margin_transform %*% test_vec
+
+stopifnot(
+  max(abs(test_map)) < 1e-8)
+```
+
+We know`log(detailed_frame$proportion)` is orthogonal to `test_vec`, but
+we don’t have an obvious linear relation between
+`detailed_frame$proportion` and `test_vec`.
+
 ### Experimenter 1’s view
 
 Let’s see what happens when an experimenter tries to perform inference
@@ -1384,7 +1408,9 @@ Note this estimate has negative entries, so is not yet a sequence of
 valid frequencies or probabilities. We will correct this by adding
 elements that don’t change the forward mapping under `margin_transform`.
 In linear algebra this means we need a basis for `margin_transform`’s
-“null space.” This is gotten as follows.
+“null space.” This is gotten as follows. The null space calculation is
+the systematic way of finding blind-spots in the linear transform,
+without requiring prior domain knowledge.
 
 ``` r
 # our degree of freedom between solutions
@@ -1401,7 +1427,8 @@ ns
 
 All valid solutions are of the form `v + z * ns` for scalars `z`. In
 fact all solutions are some interval of `z` values. We can solve for
-this interval.
+this interval. And, we have seen the direction we are varying (`ns`)
+before, it is `test_vec`!
 
 Our attempted recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below.
@@ -1427,9 +1454,6 @@ recovered_1
 <th style="text-align:right;">
 recovered_2
 </th>
-<th style="text-align:right;">
-null vector
-</th>
 </tr>
 </thead>
 <tbody>
@@ -1452,9 +1476,6 @@ FALSE
 <td style="text-align:right;">
 0.0517616
 </td>
-<td style="text-align:right;">
-1
-</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1474,9 +1495,6 @@ FALSE
 </td>
 <td style="text-align:right;">
 0.0000000
-</td>
-<td style="text-align:right;">
--1
 </td>
 </tr>
 <tr>
@@ -1498,9 +1516,6 @@ FALSE
 <td style="text-align:right;">
 0.5582923
 </td>
-<td style="text-align:right;">
--1
-</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1520,9 +1535,6 @@ FALSE
 </td>
 <td style="text-align:right;">
 0.2386123
-</td>
-<td style="text-align:right;">
-1
 </td>
 </tr>
 <tr>
@@ -1544,9 +1556,6 @@ TRUE
 <td style="text-align:right;">
 0.0882384
 </td>
-<td style="text-align:right;">
--1
-</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1566,9 +1575,6 @@ TRUE
 </td>
 <td style="text-align:right;">
 0.0600000
-</td>
-<td style="text-align:right;">
-1
 </td>
 </tr>
 <tr>
@@ -1590,9 +1596,6 @@ TRUE
 <td style="text-align:right;">
 0.0017077
 </td>
-<td style="text-align:right;">
-1
-</td>
 </tr>
 <tr>
 <td style="text-align:right;">
@@ -1612,9 +1615,6 @@ TRUE
 </td>
 <td style="text-align:right;">
 0.0013877
-</td>
-<td style="text-align:right;">
--1
 </td>
 </tr>
 </tbody>
@@ -1843,16 +1843,17 @@ I.e. we have removed the bias.
 
 ### Why the Maximum Entropy Solution is So Good
 
-We have the direction we are varying (`ns`) before, it is `test_vec`! So
-we know the actual solution is orthogonal to `ns`. Some calculus will
-show us in our case the entropy is maximized where the gradient is zero,
-and that this gradient being zero is the same condition as our
-distribution being orthogonal to `ns`. So the maximum entropy condition
-is enforcing the “no interactions” invariant we commented on earlier.
+Some calculus will show us in our case the entropy is maximized where
+the gradient is zero, and that this gradient being zero is the same
+condition as our distribution being orthogonal to `ns`. So the maximum
+entropy condition is enforcing the “no interactions” invariant we
+commented on earlier.
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be
-a helpful objective in modeling.
+a helpful objective in modeling. In practice we don’t usually derive
+`test_vec` but just impose the maximum entropy objective and trust that
+it will help.
 
 ## Conclusion
 
@@ -1867,10 +1868,25 @@ principle](https://en.wikipedia.org/wiki/Principle_of_maximum_entropy)
 plays the role that the [stationary-action principle
 action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays
 in classic mechanics. While *nature* isn’t forced to put equal
-probabilities on different states, deterministic models must put equal
-probabilities on indistinguishable states. And, [maximum entropy
-modeling is very related to logistic regresion
+probabilities on different states, deterministic models *must* put equal
+probabilities on indistinguishable states. Maximum entropy pushes
+solutions to such symmetries, unless there are variables to support
+differences. And, [maximum entropy modeling is very related to logistic
+regresion
 modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
+
+There is, however, a danger. A naive over-reliance on the [principle of
+indifference](https://en.wikipedia.org/wiki/Principle_of_indifference)
+can lead to incorrect modeling. Nature may be able to distinguish
+between states that a given set of experimental variables can not. Also,
+the general applicability of maximum entropy techniques isn’t an excuse
+to not look for *reasons* that are causing the maximum entropy
+conditions are in play. This is what we did in this note when developing
+the non-linear orthogonality condition. This condition is a consequence
+of the logit-linear form of the logistic regression *we*, as the
+experimenter, imposed on the solution. Often the structure of the
+problem is due to some regularity in the experimenter’s set up, and not
+some ineffable universal truth.
 
 In the real world we would at best be looking at marginalizations of
 different draws of related data. So we would not have exact matches we

@@ -127,7 +127,7 @@ detailed_frame$p_observed_outcome <- NULL
 ```
 
 
-### An Extra Invariant
+### An Invariant
 
 There is an interesting non-linear invariant the `proportion` column obeys. We will use this invariant later, so it is worth establishing. The principle is: our solution disappears with respect to certain test-vectors, which will help us re-identify it later.
 
@@ -142,7 +142,7 @@ test_vec <- (
 test_vec
 ```
 
-`log(detailed_frame$proportion))` is orthogonal to this test vector.
+`log(detailed_frame$proportion)` is orthogonal to this test vector.
 
 ```{r}
 p_vec <- test_vec * log(detailed_frame$proportion)
@@ -173,7 +173,9 @@ stopifnot(  # abort render if claim is not true
 p_comb
 ```
 
-A sum over varying signs, such as above, will annihilate constant and linear terms. So `s_vec` must always sum to zero, thus `p_vec` must also always sum to zero. Roughly this is a check the model has no interactions, or models without interactions pass this check. We are using two very strong assumptions on `x1` and `x2`: they are independent *and* the modeled probabilities don't contain an `x1` and `x2` interaction.
+A sum over varying signs, such as above, will annihilate constant and linear terms. So `s_vec` must always sum to zero, thus `p_vec` must also always sum to zero. Roughly this is a check that the model has no interactions, or models without interactions pass this check. We are using two very strong assumptions on `x1` and `x2`: that they are independent *and* that the modeled probabilities don't contain an `x1` and `x2` interaction.
+
+This non-linear invariant is a consequence of the logit-linear structure of the logistic regression style set-up we have specified for this problem. We will return to the `test_vec` later in the write-up, and show how to automatically discover it *without* detailed knowledge as we used above.
 
 ### Inferring From Fully Observed Data
 
@@ -199,8 +201,9 @@ Notice we recover the `c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` for
 
 Now let's get to our issue. Suppose we have two experimenters, each of which only observing one of the explanatory variables. As we saw in [Omitted Variable Effects in Logistic Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/) each of these experimenters will in fact estimate coefficients that are **biased towards zero**, due to the non-collapsibility of the modeling set up. This differs from linear regression where for independent explanatory variables (as we have here) we would expect each experimenter to be able to get an unbiased estimate of the coefficient for the explanatory variable available to them!
 
-To show this let's build a linear operator that computes the margins the experimenters actually observe.
+### The Unobserved to Observed Linear Mapping
 
+Let's build a linear operator that computes the margins the experimenters actually observe.
 
 ```{r, echo = FALSE}
 # build transfer matrix from joint observations to marginal observations
@@ -266,6 +269,19 @@ knitr::kable(margin_frame)
 ```
 
 The above margin frame describes how the detailed experiment is marginalized or censored down to different experimenters see. In our set-up experimenter 1 sees only the first four rows, and experimenter 2 sees only the next 4 rows. We consider the rest of the data "unobserved".
+
+### A Blind Spot
+
+We also note that `margin_transform` is blind to variation in the direction of our earlier `test_vec`. This can be confirmed as follows.
+
+```{r}
+test_map <- margin_transform %*% test_vec
+
+stopifnot(
+  max(abs(test_map)) < 1e-8)
+```
+
+We know`log(detailed_frame$proportion)` is orthogonal to `test_vec`, but we don't have an obvious linear relation between `detailed_frame$proportion` and `test_vec`.
 
 
 ### Experimenter 1's view
@@ -415,7 +431,7 @@ stopifnot(  # abort render if this claim is not true
 )
 ```
 
-Note this estimate has negative entries, so is not yet a sequence of valid frequencies or probabilities. We will correct this by adding elements that don't change the forward mapping under `margin_transform`. In linear algebra this means we need a basis for `margin_transform`'s "null space." This is gotten as follows.
+Note this estimate has negative entries, so is not yet a sequence of valid frequencies or probabilities. We will correct this by adding elements that don't change the forward mapping under `margin_transform`. In linear algebra this means we need a basis for `margin_transform`'s "null space." This is gotten as follows. The null space calculation is the systematic way of finding blind-spots in the linear transform, without requiring prior domain knowledge.
 
 ```{r}
 # our degree of freedom between solutions
@@ -447,7 +463,7 @@ stopifnot(  # stop render if claim is not true
   max(abs(ns - test_vec)) < 1e-8)
 ```
 
-All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for this interval.
+All valid solutions are of the form `v + z * ns` for scalars `z`. In fact all solutions are some interval of `z` values. We can solve for this interval. And, we have seen the direction we are varying (`ns`) before, it is `test_vec`!
 
 ```{r, echo = FALSE}
 # solve for the z's
@@ -475,7 +491,6 @@ for (soln_z in soln_zs) {
   detailed_frame[soln_name] <- recovered
   soln_names[soln_i] <- soln_name
 }
-detailed_frame["null vector"] <- ns
 ```
 
 Our attempted recovered solutions to the (unknown to either experimenter!) original data distribution details can be seen below.
@@ -538,7 +553,6 @@ stopifnot(z_opt >= 0)  # abort render if this claim is not true
 stopifnot(z_opt <= 1)  # abort render if this claim is not true
 detailed_frame$recovered_1 <- NULL
 detailed_frame$recovered_2 <- NULL
-detailed_frame["null vector"] <- NULL
 stopifnot(  # abort render if this claim is not true
   max(abs(detailed_frame$proportion - detailed_frame$maxent_dist)) < 1e-5)
 ```
@@ -573,15 +587,17 @@ This matches the correct `r paste0("(c0=", round(c0, digits = 4), ", b1=", round
 
 ### Why the Maximum Entropy Solution is So Good
 
-We have the direction we are varying (`ns`) before, it is `test_vec`! So we know the actual solution is orthogonal to `ns`. Some calculus will show us in our case the entropy is maximized where the gradient is zero, and that this gradient being zero is the same condition as our distribution being orthogonal to `ns`. So the maximum entropy condition is enforcing the "no interactions" invariant we commented on earlier.
+Some calculus will show us in our case the entropy is maximized where the gradient is zero, and that this gradient being zero is the same condition as our distribution being orthogonal to `ns`. So the maximum entropy condition is enforcing the "no interactions" invariant we commented on earlier.
 
-The funny thing is, we don't have to know exactly what the maximum entropy objective was doing to actually benefit from it. It tends to be a helpful objective in modeling.
+The funny thing is, we don't have to know exactly what the maximum entropy objective was doing to actually benefit from it. It tends to be a helpful objective in modeling. In practice we don't usually derive `test_vec` but just impose the maximum entropy objective and trust that it will help.
 
 ## Conclusion
 
 By pooling observations we can recover a good estimate of a joint analysis on data that was not available to us. The strategy is: try to estimate plausible pre-images of the data that formed the observations, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variables in logistic regression.
 
-In machine learning the [maximum entropy principle](https://en.wikipedia.org/wiki/Principle_of_maximum_entropy) plays the role that the [stationary-action principle action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays in classic mechanics. While *nature* isn't forced to put equal probabilities on different states, deterministic models must put equal probabilities on indistinguishable states. And, [maximum entropy modeling is very related to logistic regresion modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
+In machine learning the [maximum entropy principle](https://en.wikipedia.org/wiki/Principle_of_maximum_entropy) plays the role that the [stationary-action principle action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays in classic mechanics. While *nature* isn't forced to put equal probabilities on different states, deterministic models *must* put equal probabilities on indistinguishable states. Maximum entropy pushes solutions to such symmetries, unless there are variables to support differences. And, [maximum entropy modeling is very related to logistic regresion modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
+
+There is, however, a danger. A naive over-reliance on the [principle of indifference](https://en.wikipedia.org/wiki/Principle_of_indifference) can lead to incorrect modeling. Nature may be able to distinguish between states that a given set of experimental variables can not. Also, the general applicability of maximum entropy techniques isn't an excuse to not look for *reasons* that are causing the maximum entropy conditions are in play. This is what we did in this note when developing the non-linear orthogonality condition. This condition is a consequence of the logit-linear form of the logistic regression *we*, as the experimenter, imposed on the solution. Often the structure of the problem is due to some regularity in the experimenter's set up, and not some ineffable universal truth.
 
 In the real world we would at best be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to estimate low-discrepancy pre-images of the data. And, as we are now introducing a lot of unobserved parameters, we could go to Bayesian graphical model methods to sum this all out (instead of proposing a specific point-wise heuristic as we did here).
 
