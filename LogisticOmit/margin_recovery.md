@@ -1863,7 +1863,15 @@ I.e. we have removed the bias.
 Some calculus (not shown) can prove that the entropy function is
 maximized where the joint distribution is orthogonal to `ns` or
 `test_vec`. So the maximum entropy condition is enforcing the “no
-interaction” invariant we commented on earlier.
+interaction” invariant we commented on earlier. We can confirm the
+(numerically near) zero dot-product as follows.
+
+``` r
+log(detailed_frame[["maxent_dist"]]) %*% test_vec
+```
+
+    ##              [,1]
+    ## [1,] 3.395224e-05
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be

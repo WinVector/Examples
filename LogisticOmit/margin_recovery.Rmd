@@ -589,13 +589,20 @@ recovered_coef
 ```{r, echo = FALSE}
 stopifnot(  # abort render if this claim is not true
   max(abs(correct_coef - recovered_coef)) < 1e-6)
+stopifnot(  # abort render if this claim is not true
+  abs(log(detailed_frame[["maxent_dist"]]) %*% test_vec) < 1e-4)
 ```
 
 This matches the correct `r paste0("(c0=", round(c0, digits = 4), ", b1=", round(b1, digits = 4), ", b2=", round(b2, digits = 4), ")")`. We have correctly inferred the actual coefficient values from the observed data. I.e. we have removed the bias.
 
 ### Why the Maximum Entropy Solution is So Good
 
-Some calculus (not shown) can prove that the entropy function is maximized where the joint distribution is orthogonal to `ns` or `test_vec`. So the maximum entropy condition is enforcing the "no interaction" invariant we commented on earlier.
+Some calculus (not shown) can prove that the entropy function is maximized where the joint distribution is orthogonal to `ns` or `test_vec`. So the maximum entropy condition is enforcing the "no interaction" invariant we commented on earlier. We can confirm the (numerically near) zero dot-product as follows.
+
+```{r}
+log(detailed_frame[["maxent_dist"]]) %*% test_vec
+```
+
 
 The funny thing is, we don't have to know exactly what the maximum entropy objective was doing to actually benefit from it. It tends to be a helpful objective in modeling. In practice we don't usually derive `test_vec` but just impose the maximum entropy objective and trust that it will help.
 
