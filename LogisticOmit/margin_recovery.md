@@ -156,7 +156,7 @@ For a logistic regression problem, the relation between `x1`, `x2` and
 `y` is encoded in the `proportion` distribution that gives the joint
 expected frequency of each possible data row in a drawn sample.
 
-### An Invariant
+### The “No Interaction” Invariant
 
 There is an interesting non-linear invariant the `proportion` column
 obeys. We will use this invariant later, so it is worth establishing.
@@ -225,11 +225,11 @@ using two very strong assumptions on `x1` and `x2`: that they are
 independent *and* that the modeled probabilities don’t contain an `x1`
 and `x2` interaction.
 
-This non-linear invariant is a consequence of the logit-linear structure
-of the logistic regression style set-up we have specified for this
-problem. We will return to the `test_vec` later in the write-up, and
-show how to automatically discover it *without* detailed knowledge as we
-used above.
+This non-linear “no interaction” invariant is a consequence of the
+logit-linear structure of the logistic regression style set-up we have
+specified for this problem. We will return to the `test_vec` later in
+the write-up, and show how to automatically discover it *without*
+detailed knowledge as we used above.
 
 ### Inferring From Fully Observed Data
 
@@ -1860,11 +1860,10 @@ I.e. we have removed the bias.
 
 ### Why the Maximum Entropy Solution is So Good
 
-Some calculus will show us in our case the entropy is maximized where
-the gradient is zero. For our example this gradient being zero is the
-same condition as our distribution being orthogonal to `ns`. So the
-maximum entropy condition is enforcing the “no interactions” invariant
-we commented on earlier.
+Some calculus (not shown) can prove that the entropy function is
+maximized where the joint distribution is orthogonal to `ns` or
+`test_vec`. So the maximum entropy condition is enforcing the “no
+interaction” invariant we commented on earlier.
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be
