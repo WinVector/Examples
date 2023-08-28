@@ -1871,9 +1871,9 @@ We have removed the bias.
 ### Why the Maximum Entropy Solution is So Good
 
 Some calculus (not shown) can prove that the entropy function for this
-problem is maximized where the joint distribution is orthogonal to `ns`
-or `test_vec`. So the maximum entropy condition will enforce the “no
-interaction” invariant we commented on earlier.
+problem is maximized where the logarithm of the joint distribution is
+orthogonal to `ns` or `test_vec`. So the maximum entropy condition will
+enforce the “no interaction” invariant we commented on earlier.
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be
