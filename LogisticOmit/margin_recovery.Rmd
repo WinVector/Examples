@@ -565,7 +565,7 @@ stopifnot(  # abort render if this claim is not true
   max(abs(detailed_frame$proportion - detailed_frame$maxent_dist)) < 1e-5)
 ```
 
-The recovered `maxent_dist` obeys the "no interaction" check. The maximum entropy condition pushed us to this check.
+The recovered `maxent_dist` obeys the "no interaction" check to a high degree.
 
 ```{r, echo = FALSE}
 stopifnot(  # abort render if this claim is not true
@@ -576,7 +576,7 @@ stopifnot(  # abort render if this claim is not true
 log(detailed_frame[["maxent_dist"]]) %*% test_vec
 ```
 
-In fact, the recovered `maxent_dist` *is* the original unobserved original `proportion`.
+In fact, the recovered `maxent_dist` *is* the original unobserved original `proportion` to many digits.
 
 ```{r, echo = FALSE}
 knitr::kable(detailed_frame)
@@ -602,17 +602,17 @@ stopifnot(  # abort render if this claim is not true
   max(abs(correct_coef - recovered_coef)) < 1e-6)
 ```
 
-This matches the correct `r paste0("(c0=", round(c0, digits = 4), ", b1=", round(b1, digits = 4), ", b2=", round(b2, digits = 4), ")")`. We have correctly inferred the actual coefficient values from the observed data. I.e. we have removed the bias.
+This matches the correct `r paste0("(c0=", round(c0, digits = 4), ", b1=", round(b1, digits = 4), ", b2=", round(b2, digits = 4), ")")`. We have correctly inferred the actual coefficient values from the observed data. We have removed the bias.
 
 ### Why the Maximum Entropy Solution is So Good
 
-Some calculus (not shown) can prove that the entropy function is maximized where the joint distribution is orthogonal to `ns` or `test_vec`. So the maximum entropy condition is enforcing the "no interaction" invariant we commented on earlier.
+Some calculus (not shown) can prove that the entropy function for this problem is maximized where the joint distribution is orthogonal to `ns` or `test_vec`. So the maximum entropy condition will enforce the "no interaction" invariant we commented on earlier.
 
 The funny thing is, we don't have to know exactly what the maximum entropy objective was doing to actually benefit from it. It tends to be a helpful objective in modeling. In practice we don't usually derive `test_vec` but just impose the maximum entropy objective and trust that it will help.
 
 ## Conclusion
 
-By pooling observations we can recover a good estimate of a joint analysis on data that was not available to us. The strategy is: try to estimate plausible pre-images of the data that formed the observations, and then analyze that. This in fact gives us a method to invert the bias introduced by the omitted variables in logistic regression.
+By pooling observations we can recover a good estimate of a joint analysis on data that was not available to us. The strategy is: try to estimate plausible pre-images of the data that formed the observations, and then analyze that. This gives us a method to invert the bias introduced by the omitted variables in logistic regression.
 
 In machine learning the [maximum entropy principle](https://en.wikipedia.org/wiki/Principle_of_maximum_entropy) plays the role that the [stationary-action principle action](https://en.wikipedia.org/wiki/Stationary-action_principle) plays in classic mechanics. While *nature* isn't forced to put equal probabilities on different states, deterministic models *must* put equal probabilities on model indistinguishable states. Maximum entropy pushes solutions to such symmetries, unless there are variables to support differences. And, [maximum entropy modeling is very related to logistic regresion modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
 

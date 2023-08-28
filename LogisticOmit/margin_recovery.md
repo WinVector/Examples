@@ -1673,8 +1673,8 @@ detailed_frame["maxent_dist"] <- (
     (1 - z_opt) * detailed_frame$recovered_2)
 ```
 
-The recovered `maxent_dist` obeys the “no interaction” check. The
-maximum entropy condition pushed us to this check.
+The recovered `maxent_dist` obeys the “no interaction” check to a high
+degree.
 
 ``` r
 log(detailed_frame[["maxent_dist"]]) %*% test_vec
@@ -1684,7 +1684,7 @@ log(detailed_frame[["maxent_dist"]]) %*% test_vec
     ## [1,] 3.395224e-05
 
 In fact, the recovered `maxent_dist` *is* the original unobserved
-original `proportion`.
+original `proportion` to many digits.
 
 <table>
 <thead>
@@ -1866,13 +1866,13 @@ recovered_coef
 
 This matches the correct (c0=0.5772, b1=3.1416, b2=-8.1548). We have
 correctly inferred the actual coefficient values from the observed data.
-I.e. we have removed the bias.
+We have removed the bias.
 
 ### Why the Maximum Entropy Solution is So Good
 
-Some calculus (not shown) can prove that the entropy function is
-maximized where the joint distribution is orthogonal to `ns` or
-`test_vec`. So the maximum entropy condition is enforcing the “no
+Some calculus (not shown) can prove that the entropy function for this
+problem is maximized where the joint distribution is orthogonal to `ns`
+or `test_vec`. So the maximum entropy condition will enforce the “no
 interaction” invariant we commented on earlier.
 
 The funny thing is, we don’t have to know exactly what the maximum
@@ -1886,7 +1886,7 @@ it will help.
 By pooling observations we can recover a good estimate of a joint
 analysis on data that was not available to us. The strategy is: try to
 estimate plausible pre-images of the data that formed the observations,
-and then analyze that. This in fact gives us a method to invert the bias
+and then analyze that. This gives us a method to invert the bias
 introduced by the omitted variables in logistic regression.
 
 In machine learning the [maximum entropy
