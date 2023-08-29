@@ -18,8 +18,8 @@ This is a known problem with known mitigations:
   oranges: Comparing noncollapsible effect estimators and their standard
   errors after adjustment for different covariate sets”, Biometrical
   Journal, (2020), DOI: 10.1002/bimj.201900297.
-- John M. Neuhaus and Nicholas P. Jewell, “A Geometric Approach to
-  Assess Bias Due to Omitted Covariates in Generalized Linear Models”,
+- John M. Neuhaus, Nicholas P. Jewell, “A Geometric Approach to Assess
+  Bias Due to Omitted Covariates in Generalized Linear Models”,
   Biometrika, Vol. 80, No. 4 (Dec. 1993), pp. 807-815.
 - Zhang, Zhiwei, “Estimating a Marginal Causal Odds Ratio Subject to
   Confounding”, Communications in Statistics - Theory and Methods, 38:3,
@@ -1130,11 +1130,12 @@ coefficients?
 Each experimenter knows a lot about the data. They known the
 distribution of their explanatory variable, and even the joint
 distribution of their explanatory and the dependent and outcome data.
-Assuming the two explanatory variables are independent, they even know
-the joint distribution of the explanatory variables. We will show how to
-use their combined observations to estimate the hidden data elements.
-This data can then be used for standard detailed analysis, like we
-showed on the original full data set.
+Assuming the two explanatory variables are independent, the
+experimenters can cooperate to estimate the joint distribution of the
+explanatory variables. We will show how to use their combined
+observations to estimate the hidden data elements. This data can then be
+used for standard detailed analysis, like we showed on the original full
+data set.
 
 This isn’t the first time we have proposed a “guess at the original
 data, as it wasn’t shared” as we played with this in [Checking claims in
@@ -1387,10 +1388,10 @@ v
 Note this estimate has negative entries, so is not yet a sequence of
 valid frequencies or probabilities. We will correct this by adding
 elements that don’t change the forward mapping under `margin_transform`.
-In linear algebra this means we need a basis for `margin_transform`’s
-“null space.” This is gotten as follows. The null space calculation is
-the systematic way of finding blind-spots in the linear transform,
-without requiring prior domain knowledge.
+This means we need a linear algebra basis for `margin_transform`’s “null
+space.” This is gotten as follows. The null space calculation is the
+systematic way of finding blind-spots in the linear transform, without
+requiring prior domain knowledge.
 
 ``` r
 # our degree of freedom between solutions
@@ -1407,7 +1408,7 @@ ns
 
 In our case the null space was one dimensional, or spanned by a single
 vector. This means all valid solutions are of the form `v + z * ns` for
-scalars `z`. In fact all solutions are some interval of `z` values. We
+scalars `z`. In fact all solutions are in an interval of `z` values. We
 can solve for this interval.
 
 Note, we have seen the direction we are varying (`ns`) before, it is
@@ -1607,11 +1608,11 @@ TRUE
 </table>
 
 As we can see these two extreme solutions are in fact actually fairly
-close. In fact the actual solution is in the convex hull of the two
-extreme solutions. And the logistic regression is blind to changes in
-the `test_vec` direction, so it in fact recovers the same coefficients
+close. The actual solution is in the convex hull of the two extreme
+solutions. And the logistic regression is blind to changes in the
+`test_vec` direction, so it in fact recovers the same coefficients
 (correct) coefficients for all distributions in this interval. So from a
-recover the coefficients point of view we are done.
+“recover the coefficients” point of view we are done.
 
 ``` r
 for (soln_name in soln_names) {
@@ -1873,7 +1874,7 @@ We have removed the bias.
 Some calculus (in appendix) shows that the entropy function for this
 problem is maximized where the logarithm of the joint distribution is
 orthogonal to `ns` or `test_vec`. So the maximum entropy condition will
-enforce the “no interaction” invariant we commented on earlier.
+enforce the “no interaction” invariant found in the data.
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be
@@ -1972,7 +1973,8 @@ logistic regression solution, not just the optimal one. This condition
 is true for our data set, as we designed it to have the structure of a
 logistic regression. And this shows logistic regression can not tell
 `proportion + z * test_vec` from `proportion`, as it is blind to changes
-in that direction.
+in that direction. This is why all our data pre-images yield the same
+logistic regression coefficients.
 
 ## Appendix: the Entropy Gradient Goes to Zero at our Check Position
 
