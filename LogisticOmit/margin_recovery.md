@@ -201,31 +201,11 @@ test_vec
 
     ## [1]  1 -1 -1  1 -1  1  1 -1
 
-Now consider `sum(test_vec * log(detailed_frame$proportion))`. We can
-write this as:
-
-<pre>
-sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
-   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> log(p(x1, x2) * p(Y=y | x1, x2)
-   )
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
-    log(p(x1, x2) * (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
-      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
-    )
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
-    log(p(x1, x2) * (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
-      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
-    )
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * log(exp(c0 + b1 * x1 + b2 * x2))
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (c0 + b1 * x1 + b2 * x2)
-&#10; = 0
-</pre>
-
-That is: `sum(test_vec * log(detailed_frame$proportion))` is *always*
-zero when `detailed_frame$proportion` is the row probabilities from a
-logitistic model of the form we have been working with. Or
+`sum(test_vec * log(detailed_frame$proportion))` is *always* zero when
+`detailed_frame$proportion` is the row probabilities from a logistic
+model of the form we have been working with. Or
 `log(detailed_frame$proportion)` is orthogonal to `test_vec`. We can
-confirm this.
+confirm this in our case, and derive this in the appendix.
 
 ``` r
 p_vec <- test_vec * log(detailed_frame$proportion)
@@ -1906,6 +1886,33 @@ pre-images of the data. And, as we are now introducing a lot of
 unobserved parameters, we could go to Bayesian graphical model methods
 to sum this all out (instead of proposing a specific point-wise method
 as we did here).
+
+## Appendices
+
+## Appendix: `test_vec` is an Orthogonal Test
+
+To show `sum(test_vec * log(proportion)) = 0` when proportion is the row
+probabilities matching a logistic model, write
+`sum(test_vec * log(proportion))` as:
+
+<pre>
+sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
+   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> log(p(x1, x2) * p(Y=y | x1, x2))
+   )
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
+    log(p(x1, x2) * (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    )
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
+    log(p(x1, x2) * (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    )
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * log(exp(c0 + b1 * x1 + b2 * x2))
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (c0 + b1 * x1 + b2 * x2)
+&#10; = 0
+</pre>
+
+And we have our claim.
 
 ## Links
 
