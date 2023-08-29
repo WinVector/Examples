@@ -880,6 +880,12 @@ We know`log(detailed_frame$proportion)` is orthogonal to `test_vec`, but
 we don’t have an obvious linear relation between
 `detailed_frame$proportion` and `test_vec`.
 
+Fortunately we can show the logistic regression is also blind in this
+direction, so all of the indistinguishable data pre-images give us the
+same logistic regression solution. Also, we can use a maximum entropy
+principle to correctly recover the single actual data distribution
+specified.
+
 ### Experimenter 1’s view
 
 Let’s see what happens when an experimenter tries to perform inference
