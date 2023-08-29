@@ -1836,7 +1836,7 @@ We have removed the bias.
 
 ### Why the Maximum Entropy Solution is So Good
 
-Some calculus (not shown) can prove that the entropy function for this
+Some calculus (in appendix) shows that the entropy function for this
 problem is maximized where the logarithm of the joint distribution is
 orthogonal to `ns` or `test_vec`. So the maximum entropy condition will
 enforce the “no interaction” invariant we commented on earlier.
@@ -1913,6 +1913,29 @@ sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
 </pre>
 
 And we have our claim.
+
+## Appendix: the Entropy Gradient Goes to Zero at our Check Position
+
+We can show the entropy gradient is zero at our check-gradient position.
+So, maximizing entropy picks the position where we meet our non-linear
+orthogonal check condition.
+
+To establish this, consider the entropy function we are maximizing
+<code>f(z) = -sum<sub>i</sub> (p<sub>i</sub> + z \*
+test_vec<sub>i</sub>) log(p<sub>i</sub> + z \*
+test_vec<sub>i</sub>)</code>. We expect our maximum occurs where
+<code>f(z)</code> has a zero derivative.
+
+<pre>
+(d / d z) f(z) [evaluated at z = 0]
+&#10; = (d / d z) -sum<sub>i</sub> (p<sub>i</sub> + z * test_vec<sub>i</sub>) log(p<sub>i</sub> + z * test_vec<sub>i</sub>) [evaluated at z = 0]
+ &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> (log(p<sub>i</sub> + z * test_vec<sub>i</sub>) + 1) [evaluated at z = 0]
+ &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> (log(p<sub>i</sub>) + 1)
+ &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> log(p<sub>i</sub>)  [using -sum<sub>i</sub> test_vec<sub>i</sub> = 0]
+</pre>
+
+And this is zero exactly where the non-linear orthogonal check condition
+is zero.
 
 ## Links
 
