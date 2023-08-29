@@ -1937,7 +1937,7 @@ test_vec<sub>i</sub>)</code>. We expect our maximum occurs where
 And this is zero exactly where the non-linear orthogonal check condition
 is zero.
 
-## Links
+## Appendix: Links
 
 The source code of this article is available
 [here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/margin_recovery.Rmd)
