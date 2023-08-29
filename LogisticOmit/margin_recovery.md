@@ -156,81 +156,6 @@ For a logistic regression problem, the relation between `x1`, `x2` and
 `y` is encoded in the `proportion` distribution that gives the joint
 expected frequency of each possible data row in a drawn sample.
 
-### The “No Interaction” Invariant
-
-There is an interesting non-linear invariant the `proportion` column
-obeys. We will use this invariant later, so it is worth establishing.
-The principle is: our solution disappears with respect to certain
-test-vectors, which will help us re-identify it later.
-
-Consider the following test vector.
-
-``` r
-test_vec <- (
-  (-1)^detailed_frame$x1 
-  * (-1)^detailed_frame$x2 
-  * (-1)^detailed_frame$y)
-
-test_vec
-```
-
-    ## [1]  1 -1 -1  1 -1  1  1 -1
-
-`log(detailed_frame$proportion)` is orthogonal to this test vector.
-
-``` r
-p_vec <- test_vec * log(detailed_frame$proportion)
-stopifnot(  # abort render if claim is not true
-  abs(sum(p_vec)) < 1e-8)
-
-sum(p_vec)
-```
-
-    ## [1] -2.553513e-15
-
-This can be confirmed to always be the case by using algebra to sum-out
-the `y` values and checking this expands into a sum over only constant
-and linear terms.
-
-``` r
-s_vec <- -(
-  (-1)^detailed_frame$x1[1:4] 
-  * (-1)^detailed_frame$x2[1:4] 
-  * (c0 + b1 * detailed_frame$x1[1:4] + b2 * detailed_frame$x2[1:4]))
-
-s_vec
-```
-
-    ## [1] -0.5772157  3.7188083 -7.5776298  4.4360372
-
-The above indeed is the terms where the two different `y` outcomes have
-been combined. This is a consequence of the linear structure of the
-logit of the logistic regression prediction.
-
-``` r
-p_comb <- p_vec[1:4] + p_vec[5:8]
-stopifnot(  # abort render if claim is not true
-  abs(s_vec - p_comb) < 1e-8)
-
-p_comb
-```
-
-    ## [1] -0.5772157  3.7188083 -7.5776298  4.4360372
-
-A sum over varying signs, such as above, will annihilate constant and
-linear terms. So `s_vec` must always sum to zero, thus `p_vec` must also
-always sum to zero. Roughly this is a check that the model has no
-interactions, or models without interactions pass this check. We are
-using two very strong assumptions on `x1` and `x2`: that they are
-independent *and* that the modeled probabilities don’t contain an `x1`
-and `x2` interaction.
-
-This non-linear “no interaction” invariant is a consequence of the
-logit-linear structure of the logistic regression style set-up we have
-specified for this problem. We will return to the `test_vec` later in
-the write-up, and show how to automatically discover it *without*
-detailed knowledge as we used above.
-
 ### Inferring From Fully Observed Data
 
 We can confirm this data set encodes the expected logistic relationship
@@ -255,6 +180,67 @@ correct_coef
 
 Notice we recover the
 `c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` form.
+
+### The “No Interaction” Invariant
+
+There is an interesting non-linear invariant the `proportion` column
+obeys. We will use this invariant later, so it is worth establishing.
+The principle is: our solution disappears with respect to certain
+test-vectors, which will help us re-identify it later.
+
+Consider the following test vector.
+
+``` r
+test_vec <- (
+  (-1)^detailed_frame$x1 
+  * (-1)^detailed_frame$x2 
+  * (-1)^detailed_frame$y)
+
+test_vec
+```
+
+    ## [1]  1 -1 -1  1 -1  1  1 -1
+
+Now consider `sum(test_vec * log(detailed_frame$proportion))`. We can
+write this as:
+
+<pre>
+sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
+   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> log(p(x1, x2) * p(Y=y | x1, x2)
+   )
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
+    log(p(x1, x2) * (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    )
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
+    log(p(x1, x2) * (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    )
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * log(exp(c0 + b1 * x1 + b2 * x2))
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (c0 + b1 * x1 + b2 * x2)
+&#10; = 0
+</pre>
+
+That is: `sum(test_vec * log(detailed_frame$proportion))` is *always*
+zero when `detailed_frame$proportion` is the row probabilities from a
+logitistic model of the form we have been working with. Or
+`log(detailed_frame$proportion)` is orthogonal to `test_vec`. We can
+confirm this.
+
+``` r
+p_vec <- test_vec * log(detailed_frame$proportion)
+stopifnot(  # abort render if claim is not true
+  abs(sum(p_vec)) < 1e-8)
+
+sum(p_vec)
+```
+
+    ## [1] -2.553513e-15
+
+Roughly: this is a check that the model has no interactions, or models
+without interactions pass this check. We are using two very strong
+assumptions on `x1` and `x2`: that they are independent *and* that the
+modeled probabilities don’t contain an `x1` and `x2` interaction.
 
 ## The Problem
 
