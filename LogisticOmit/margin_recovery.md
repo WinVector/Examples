@@ -1,6 +1,6 @@
 Solving for Hidden Data
 ================
-2023-08-25
+2023-08-29
 
 ## Introduction
 
@@ -1601,7 +1601,35 @@ TRUE
 </table>
 
 As we can see these two extreme solutions are in fact actually fairly
-close.
+close. In fact the actual solution is in the convex hull of the two
+extreme solutions. And the logistic regression is blind to changes in
+the `test_vec` direction, so it in fact recovers the same coefficients
+(correct) coefficients for all distributions in this interval. So from a
+recover the coefficients point of view we are done.
+
+``` r
+for (soln_name in soln_names) {
+  print(soln_name)
+  suppressWarnings(
+    soln_i <- glm(
+      y ~ x1 + x2,
+      data = detailed_frame,
+      weights = detailed_frame[[soln_name]],
+      family = binomial()
+    )$coef
+  )
+  print(soln_i)
+  stopifnot(  # abort render if this claim is not true
+    max(abs(correct_coef - soln_i)) < 1e-6)
+}
+```
+
+    ## [1] "recovered_1"
+    ## (Intercept)          x1          x2 
+    ##   0.5772157   3.1415927  -8.1548455 
+    ## [1] "recovered_2"
+    ## (Intercept)          x1          x2 
+    ##   0.5772157   3.1415927  -8.1548455
 
 ### Picking a point-estimate
 
@@ -1889,6 +1917,27 @@ as we did here).
 
 ## Appendices
 
+## Appendix: The Relation to Entropy
+
+The maximum likelihood solution to a logistic regression problem is
+equivalent picking a paramaterized distribution `q` close to the target
+distribution `p` by minimizing the cross entropy below.
+
+<pre>
+  - sum<sub>i</sub> p<sub>i</sub> log q<sub>i</sub>
+</pre>
+
+When `q` gets close to `p` this looks a lot like the standard entropy
+below.
+
+<pre>
+  - sum<sub>i</sub> p<sub>i</sub> log p<sub>i</sub>
+</pre>
+
+So we do expect entropy calculations to be relevant to logistic
+regression structure. We will back up this claim with detailed
+calculation.
+
 ## Appendix: `test_vec` is an Orthogonal Test
 
 To show `sum(test_vec * log(proportion)) = 0` when proportion is the row
@@ -1912,7 +1961,12 @@ sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
 &#10; = 0
 </pre>
 
-And we have our claim.
+This establishes that `sum(test_vec * log(proportion)) = 0` for any
+logistic regression solution, not just the optimal one. This condition
+is true for our data set, as we designed it to have the structure of a
+logistic regression. And this shows logistic regression can not tell
+`proportion + z * test_vec` from `proportion`, as it is blind to changes
+in that direction.
 
 ## Appendix: the Entropy Gradient Goes to Zero at our Check Position
 
