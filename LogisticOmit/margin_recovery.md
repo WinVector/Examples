@@ -35,11 +35,11 @@ will derive some deep results out of a simple set-up.
 ## Our Example
 
 For an example let’s set up a logistic regression on two explanatory
-variables `x1` and `x2` . For simplicity we will take the case where
-`x1` and `x2` only take on the values `0` and `1`.
+variables `X1` and `X2` . For simplicity we will take the case where
+`X1` and `X2` only take on the values `0` and `1`.
 
 Our data is then keyed by the values of these explanatory variables and
-the dependent or outcome variable `y`, which takes on only the values
+the dependent or outcome variable `Y`, which takes on only the values
 `FALSE` and `TRUE`. The keying looks like the following.
 
 | x1  | x2  | y     |
@@ -53,6 +53,9 @@ the dependent or outcome variable `y`, which takes on only the values
 | 0   | 1   | TRUE  |
 | 1   | 1   | TRUE  |
 
+Note: we are using upper case names for *random variables* and lower
+case names for coresponding *values of these variables*.
+
 ### The Example Data
 
 Let’s specify the joint probability distribution of our two explanatory
@@ -61,8 +64,10 @@ values.
 
 ``` r
 # specify explanatory variable distribution 
-pX1 <- 0.3
-pX2 <- 0.8
+`P[X1 = 1]` <- 0.3
+`P[X2 = 1]` <- 0.8
+`P[X1 = 0]` <- 1 - `P[X1 = 1]`
+`P[X2 = 0]` <- 1 - `P[X2 = 1]`
 ```
 
 Our data set can then be completely described by above explanatory
@@ -106,10 +111,11 @@ Model](https://win-vector.com/2019/07/03/replicating-a-linear-model/) we
 can build an example data set that obeys the specified explanatory
 variable distribution and has specified outcome probabilities. This is
 just us building a data set matching an assumed known answer. Our data
-distribution is going to be determined by `pX1`, `pX2`, and
+distribution is going to be determined by `P[X1 = 1]`, `P[X2 = 1]`, and
 `P[y == TRUE] ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our inference task is
-to recover the parameters `pX1`, `pX2`, `c0`, `b1`, and `b2` from data,
-even in the situation where observers have omitted variable issues.
+to recover the parameters `P[X1 = 1]`, `P[X2 = 1]`, `c0`, `b1`, and `b2`
+from data, even in the situation where observers have omitted variable
+issues.
 
 The complete detailed data is generated as follows. The `proportion`
 column is what proportion of a data set drawn from this specified
@@ -119,41 +125,44 @@ probabilities as follows.
 
 ``` r
 # get joint distribution of explanatory variables
-detailed_frame$x_distribution <- (
-  (detailed_frame$x1 * pX1 + (1 - detailed_frame$x1) * (1 - pX1))
-    * (detailed_frame$x2 * pX2 + (1 - detailed_frame$x2) * (1 - pX2))
+detailed_frame["P[X1=x1, X2=x2]"] <- (
+  (detailed_frame$x1 * `P[X1 = 1]` + (1 - detailed_frame$x1) * `P[X1 = 0]`)
+    * (detailed_frame$x2 * `P[X2 = 1]` + (1 - detailed_frame$x2) * `P[X2 = 0]`)
 )
-# get conditional probability of observed outcome
-y_linear <- c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2
+
 # converting "links" to probabilities
 sigmoid <- function(x) {1 / (1 + exp(-x))}
-y_probability <- sigmoid(y_linear)
+
+# get conditional probability of observed outcome
+y_probability <- sigmoid(c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2)
+
 # record probability of observation
-detailed_frame$p_observed_outcome <- ifelse(
+detailed_frame[["P[Y=y | X1=x1, X2=x2]"]] <- ifelse(
   detailed_frame$y, 
   y_probability, 
   1 - y_probability)
+
 # compute joint explanatory plus outcome probability of each row
-detailed_frame$proportion <- (
-  detailed_frame$x_distribution * detailed_frame$p_observed_outcome)
+detailed_frame[["P[X1=x1, X2=x2, Y=y]"]] <- (
+  detailed_frame[["P[X1=x1, X2=x2]"]] * detailed_frame[["P[Y=y | X1=x1, X2=x2]"]])
 ```
 
-The following table relates `x1`, `x2`, `y` combinations to the
+The following table relates `x1`, `x2`, `y` value combinations to the
 `proportion` column (which shows how common each such row is).
 
-|  x1 |  x2 | y     | x_distribution | p_observed_outcome | proportion |
-|----:|----:|:------|---------------:|-------------------:|-----------:|
-|   0 |   0 | FALSE |           0.14 |          0.3595735 |  0.0503403 |
-|   1 |   0 | FALSE |           0.06 |          0.0236881 |  0.0014213 |
-|   0 |   1 | FALSE |           0.56 |          0.9994885 |  0.5597136 |
-|   1 |   1 | FALSE |           0.24 |          0.9882958 |  0.2371910 |
-|   0 |   0 | TRUE  |           0.14 |          0.6404265 |  0.0896597 |
-|   1 |   0 | TRUE  |           0.06 |          0.9763119 |  0.0585787 |
-|   0 |   1 | TRUE  |           0.56 |          0.0005115 |  0.0002864 |
-|   1 |   1 | TRUE  |           0.24 |          0.0117042 |  0.0028090 |
+|  x1 |  x2 | y     | P\[X1=x1, X2=x2\] | P\[Y=y \| X1=x1, X2=x2\] | P\[X1=x1, X2=x2, Y=y\] |
+|----:|----:|:------|------------------:|-------------------------:|-----------------------:|
+|   0 |   0 | FALSE |              0.14 |                0.3595735 |              0.0503403 |
+|   1 |   0 | FALSE |              0.06 |                0.0236881 |              0.0014213 |
+|   0 |   1 | FALSE |              0.56 |                0.9994885 |              0.5597136 |
+|   1 |   1 | FALSE |              0.24 |                0.9882958 |              0.2371910 |
+|   0 |   0 | TRUE  |              0.14 |                0.6404265 |              0.0896597 |
+|   1 |   0 | TRUE  |              0.06 |                0.9763119 |              0.0585787 |
+|   0 |   1 | TRUE  |              0.56 |                0.0005115 |              0.0002864 |
+|   1 |   1 | TRUE  |              0.24 |                0.0117042 |              0.0028090 |
 
-For a logistic regression problem, the relation between `x1`, `x2` and
-`y` is encoded in the `proportion` distribution that gives the joint
+For a logistic regression problem, the relation between `X1`, `X2` and
+`Y` is encoded in the `proportion` distribution that gives the joint
 expected frequency of each possible data row in a drawn sample.
 
 ### Inferring From Fully Observed Data
@@ -167,7 +176,7 @@ correct_coef <- suppressWarnings(
   glm(
     y ~ x1 + x2,
     data = detailed_frame,
-    weights = detailed_frame$proportion,
+    weights = detailed_frame[["P[X1=x1, X2=x2, Y=y]"]],
     family = binomial()
   )$coef
 )
@@ -181,7 +190,7 @@ correct_coef
 Notice we recover the
 `c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2` form.
 
-### The “No Interaction” Invariant
+### The Nonlinear Invariant
 
 There is an interesting non-linear invariant the `proportion` column
 obeys. We will use this invariant later, so it is worth establishing.
@@ -201,14 +210,15 @@ test_vec
 
     ## [1]  1 -1 -1  1 -1  1  1 -1
 
-`sum(test_vec * log(detailed_frame$proportion))` is *always* zero when
-`detailed_frame$proportion` is the row probabilities from a logistic
-model of the form we have been working with. Or
-`log(detailed_frame$proportion)` is orthogonal to `test_vec`. We can
-confirm this in our case, and derive this in the appendix.
+`sum(test_vec * log(detailed_frame[["P[X1=x1, X2=x2, Y=y]"]]))` is
+*always* zero when `detailed_frame[["P[X1=x1, X2=x2, Y=y]"]]` is the row
+probabilities from a logistic model of the form we have been working
+with. Or `log(detailed_frame[["P[X1=x1, X2=x2, Y=y]"]])` is orthogonal
+to `test_vec`. We can confirm this in our case, and derive this in the
+appendix.
 
 ``` r
-p_vec <- test_vec * log(detailed_frame$proportion)
+p_vec <- test_vec * log(detailed_frame[["P[X1=x1, X2=x2, Y=y]"]])
 stopifnot(  # abort render if claim is not true
   abs(sum(p_vec)) < 1e-8)
 
@@ -217,10 +227,9 @@ sum(p_vec)
 
     ## [1] -2.553513e-15
 
-Roughly: this is a check that the model has no interactions, or models
-without interactions pass this check. We are using two very strong
-assumptions on `x1` and `x2`: that they are independent *and* that the
-modeled probabilities don’t contain an `x1` and `x2` interaction.
+Roughly: this is one check that the data is consistent with the
+distributions a logistic regression with independent explanatory
+variables can produce.
 
 ## The Problem
 
@@ -238,7 +247,14 @@ for the explanatory variable available to them!
 ### The Unobserved to Observed Linear Mapping
 
 Let’s build a linear operator that computes the margins the
-experimenters actually observe.
+experimenters actually observe. We or the experimenters can specify this
+mapping, and its output. We just don’t (yet) have complete inforation on
+the pre-image of this mapping.
+
+``` r
+knitr::kable(margin_transform, format = "html") |>
+  kableExtra::kable_styling(font_size = 10)
+```
 
 <table class="table" style="font-size: 10px; margin-left: auto; margin-right: auto;">
 <thead>
@@ -628,7 +644,7 @@ various interesting roll-ups or aggregations.
 
 ``` r
 # apply the linear operator to compute marginalized observations
-proportion <- margin_transform %*% detailed_frame$proportion
+observed_distribution <- margin_transform %*% detailed_frame[["P[X1=x1, X2=x2, Y=y]"]]
 ```
 
 <table>
@@ -646,7 +662,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-proportion
+observed_distribution
 </th>
 </tr>
 </thead>
@@ -876,9 +892,9 @@ stopifnot(
   max(abs(test_map)) < 1e-8)
 ```
 
-We know`log(detailed_frame$proportion)` is orthogonal to `test_vec`, but
-we don’t have an obvious linear relation between
-`detailed_frame$proportion` and `test_vec`.
+We know`log(detailed_frame[["P[X1=x1, X2=x2, Y=y]"]])` is orthogonal to
+`test_vec`, but we don’t have an obvious linear relation between
+`detailed_frame[["P[X1=x1, X2=x2, Y=y]"]]` and `test_vec`.
 
 Fortunately we can show the logistic regression is also blind in this
 direction, so all of the indistinguishable data pre-images give us the
@@ -914,7 +930,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-proportion
+observed_distribution
 </th>
 </tr>
 </thead>
@@ -996,7 +1012,7 @@ d1_est <- suppressWarnings(
   glm(
     y ~ x1,
     data = d1,
-    weights = d1$proportion,
+    weights = d1$observed_distribution,
     family = binomial()
   )$coef
 )
@@ -1007,10 +1023,10 @@ d1_est
     ## (Intercept)          x1 
     ##  -1.9143360   0.5567057
 
-Notice experimenter 1 got a *much* too small estimate of the `x1`
+Notice experimenter 1 got a *much* too small estimate of the `X1`
 coefficient of 0.5567057, whereas the correct value is 3.1415927. From
-experimenter 1’s point of view, the effect of the omitted variable `x2`
-is making `x1` hard to correctly infer.
+experimenter 1’s point of view, the effect of the omitted variable `X2`
+is making `X1` hard to correctly infer.
 
 ### Experimenter 2’s view
 
@@ -1040,7 +1056,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-proportion
+observed_distribution
 </th>
 </tr>
 </thead>
@@ -1146,14 +1162,14 @@ papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistic
 
 Our solutions strategy is as follows:
 
-- Estimate the joint distribution of `x1` and `x2` from the observed
-  marginal distributions of `x1` and `x2` plus an assumption of
+- Estimate the joint distribution of `X1` and `X2` from the observed
+  marginal distributions of `X1` and `X2` plus an assumption of
   independence.
 - Plug the above and other details in to the inverse of
   `margin_transform` to get a family of estimates of the original hidden
   data.
 - Use the maximum entropy principle to pick a distinguished pre-image as
-  the most interaction free pre-image of our observations.
+  the least surprising.
 - Perform inference on this data to get coefficient estimates.
 
 Note this strategy biases the data recovery to data sets that match our
@@ -1162,7 +1178,7 @@ this is in fact a useful inductive bias. If the original data did not
 match the modeling assumptions, then this will (unfortunately) hide
 issues.
 
-### Estimating the `x1` and `x2` joint distribution
+### Estimating the `X1` and `X2` joint distribution
 
 Neither experimenter observed the following part of the marginal frame:
 
@@ -1189,7 +1205,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-proportion
+observed_distribution
 </th>
 </tr>
 </thead>
@@ -1270,12 +1286,12 @@ their pooled observations as follows.
 
 ``` r
 # estimate x1 x2 distribution from d1 and d2
-d1a <- aggregate(proportion ~ x1, data = d1, sum)
-d2a <- aggregate(proportion ~ x2, data = d2, sum)
+d1a <- aggregate(observed_distribution ~ x1, data = d1, sum)
+d2a <- aggregate(observed_distribution ~ x2, data = d2, sum)
 dxe <- merge(d1a, d2a, by = c())
-dxe["proportion"] <- dxe$proportion.x * dxe$proportion.y
-dxe$proportion.x <- NULL
-dxe$proportion.y <- NULL
+dxe["observed_distribution"] <- dxe$observed_distribution.x * dxe$observed_distribution.y
+dxe$observed_distribution.x <- NULL
+dxe$observed_distribution.y <- NULL
 dxe <- dxe[order(dxe$x2, dxe$x1), , drop = FALSE]
 
 knitr::kable(dxe)
@@ -1291,7 +1307,7 @@ x1
 x2
 </th>
 <th style="text-align:right;">
-proportion
+observed_distribution
 </th>
 </tr>
 </thead>
@@ -1344,8 +1360,8 @@ proportion
 </table>
 
 Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed
-independence of `x1` and `x2`). At this point we have inferred the `pX1`
-and `pX2` parameters from the observed data.
+independence of `X1` and `X2`). At this point we have inferred the
+`P[X1 = 1]` and `P[X2 = 1]` parameters from the observed data.
 
 ### Combining Observations
 
@@ -1356,9 +1372,9 @@ We now combine all of our known data to get an estimate of the
 # put together experimenter 1 and 2's joint estimate of marginal proportions
 # from data they have in their sub-experiments.
 estimated_proportions <- c(
-  d1$proportion,
-  d2$proportion,
-  dxe$proportion
+  d1$observed_distribution,
+  d2$observed_distribution,
+  dxe$observed_distribution
 )
 
 estimated_proportions
@@ -1412,10 +1428,7 @@ scalars `z`. In fact all solutions are in an interval of `z` values. We
 can solve for this interval.
 
 Note, we have seen the direction we are varying (`ns`) before, it is
-`test_vec`! We have re-derived the blind spot of the observation
-procedure: it obscures interactions in the original data. For our
-particular example data there were no interactions, so this is in this
-case actually a benefit.
+`test_vec`!
 
 The range of recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below.
@@ -1433,7 +1446,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-proportion
+P\[X1=x1, X2=x2, Y=y\]
 </th>
 <th style="text-align:right;">
 recovered_1
@@ -1674,8 +1687,8 @@ detailed_frame["maxent_dist"] <- (
     (1 - z_opt) * detailed_frame$recovered_2)
 ```
 
-The recovered `maxent_dist` obeys the “no interaction” check to a high
-degree.
+The recovered `maxent_dist` obeys the additional non-linear check to a
+high degree.
 
 ``` r
 log(detailed_frame[["maxent_dist"]]) %*% test_vec
@@ -1700,7 +1713,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-proportion
+P\[X1=x1, X2=x2, Y=y\]
 </th>
 <th style="text-align:right;">
 maxent_dist
@@ -1874,7 +1887,7 @@ We have removed the bias.
 Some calculus (in appendix) shows that the entropy function for this
 problem is maximized where the logarithm of the joint distribution is
 orthogonal to `ns` or `test_vec`. So the maximum entropy condition will
-enforce the “no interaction” invariant found in the data.
+enforce the extra non-linear invariant found in the data.
 
 The funny thing is, we don’t have to know exactly what the maximum
 entropy objective was doing to actually benefit from it. It tends to be
@@ -1947,21 +1960,21 @@ calculation.
 
 ## Appendix: `test_vec` is an Orthogonal Test
 
-To show `sum(test_vec * log(proportion)) = 0` when proportion is the row
-probabilities matching a logistic model, write
+To show `sum(test_vec * log(proportion)) = 0` when `proportion` is the
+row probabilities matching a logistic model, write
 `sum(test_vec * log(proportion))` as:
 
 <pre>
 sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
-   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> log(p(x1, x2) * p(Y=y | x1, x2))
+   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> log(P[X1=x1, X2=x2] * p(Y=y | x1, x2))
    )
 &#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
-    log(p(x1, x2) * (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
-      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    log(P[X1=x1, X2=x2] * (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(P[X1=x1, X2=x2] * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
     )
 &#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
-    log(p(x1, x2) * (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
-      - log(p(x1, x2) * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    log(P[X1=x1, X2=x2] * (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(P[X1=x1, X2=x2] * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
     )
 &#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * log(exp(c0 + b1 * x1 + b2 * x2))
 &#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (c0 + b1 * x1 + b2 * x2)
