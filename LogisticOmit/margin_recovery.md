@@ -73,7 +73,7 @@ values.
 Our data set can then be completely described by above explanatory
 variable distribution *and* the conditional probability of the dependent
 outcomes. For our logistic regression problem we set up our outcome
-conditioning as `P(y = TRUE) ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our
+conditioning as `P(Y=TRUE) ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our
 example coefficients are as follows.
 
 ``` r
@@ -112,16 +112,16 @@ can build an example data set that obeys the specified explanatory
 variable distribution and has specified outcome probabilities. This is
 just us building a data set matching an assumed known answer. Our data
 distribution is going to be determined by `P(X1=1)`, `P(X2=1)`, and
-`P(y == TRUE) ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our inference task is
-to recover the parameters `P(X1=1)`, `P(X2=1)`, `c0`, `b1`, and `b2`
-from data, even in the situation where observers have omitted variable
+`P(Y=TRUE) ~ sigmoid(c0 + b1 * x1 + b2 * x2)`. Our inference task is to
+recover the parameters `P(X1=1)`, `P(X2=1)`, `c0`, `b1`, and `b2` from
+data, even in the situation where observers have omitted variable
 issues.
 
-The complete detailed data is generated as follows. The `proportion`
-column is what proportion of a data set drawn from this specified
-distribution matches the row keys `x1`, `x2`, `y`, or is the joint
-probability of a given row type. We can derive all the detailed
-probabilities as follows.
+The complete detailed data is generated as follows. The
+`P(X1=x1, X2=c2, Y=y)` column is what proportion of a data set drawn
+from this specified distribution matches the row keys `x1`, `x2`, `y`,
+or is the joint probability of a given row type. We can derive all the
+detailed probabilities as follows.
 
 ``` r
 # get joint distribution of explanatory variables
@@ -150,7 +150,7 @@ detailed_frame[["P(X1=x1, X2=x2, Y=y)"]] <- (
 ```
 
 The following table relates `x1`, `x2`, `y` value combinations to the
-`proportion` column (which shows how common each such row is).
+`P(X1=x1, X2=c2, Y=y)` column (which shows how common each such row is).
 
 |  x1 |  x2 | y     | P(X1=x1, X2=x2) | P(Y=y \| X1=x1, X2=x2) | P(X1=x1, X2=x2, Y=y) |
 |----:|----:|:------|----------------:|-----------------------:|---------------------:|
@@ -164,8 +164,8 @@ The following table relates `x1`, `x2`, `y` value combinations to the
 |   1 |   1 | TRUE  |            0.24 |              0.0117042 |            0.0028090 |
 
 For a logistic regression problem, the relation between `X1`, `X2` and
-`Y` is encoded in the `proportion` distribution that gives the joint
-expected frequency of each possible data row in a drawn sample.
+`Y` is encoded in the `P(X1=x1, X2=c2, Y=y)` distribution that gives the
+joint expected frequency of each possible data row in a drawn sample.
 
 ### Inferring From Fully Observed Data
 
@@ -194,10 +194,10 @@ Notice we recover the
 
 ### The Nonlinear Invariant
 
-There is an interesting non-linear invariant the `proportion` column
-obeys. We will use this invariant later, so it is worth establishing.
-The principle is: our solution disappears with respect to certain
-test-vectors, which will help us re-identify it later.
+There is an interesting non-linear invariant the `P(X1=x1, X2=c2, Y=y)`
+column obeys. We will use this invariant later, so it is worth
+establishing. The principle is: our solution disappears with respect to
+certain test-vectors, which will help us re-identify it later.
 
 Consider the following test vector.
 
@@ -236,7 +236,7 @@ variables can produce.
 ## The Problem
 
 Now let’s get to our issue. Suppose we have two experimenters, each of
-which only observing one of the explanatory variables. As we saw in
+which only observes one of the explanatory variables. As we saw in
 [Omitted Variable Effects in Logistic
 Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/)
 each of these experimenters will in fact estimate coefficients that are
@@ -641,17 +641,17 @@ P(X1=1, X2=1, Y=&ast;)
 </tbody>
 </table>
 
-The above matrix linearly maps our earlier `proportions` columns to
-various interesting roll-ups or aggregations. Or, it is 12 linear checks
-we expect our 8 unobserved distribution parameters to obey.
-Unfortunately the rank of this linear transform is only 7, so there is
-redundancy among the checks and the linear relations do not fully
-specify the unobserved distribution parameters. This is why we need
-additional criteria to drive our solution.
+The above matrix linearly maps our earlier `P(X1=x1, X2=c2, Y=y)`
+columns to various interesting roll-ups or aggregations. Or, it is 12
+linear checks we expect our 8 unobserved distribution parameters to
+obey. Unfortunately the rank of this linear transform is only 7, so
+there is redundancy among the checks and the linear relations do not
+fully specify the unobserved distribution parameters. This is why we
+need additional criteria to drive our solution.
 
 ``` r
 # apply the linear operator to compute marginalized observations
-observed_distribution <- margin_transform %*% detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]
+actual_margins <- margin_transform %*% detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]
 ```
 
 <table>
@@ -669,7 +669,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-observed_distribution
+actual_margins
 </th>
 </tr>
 </thead>
@@ -937,7 +937,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-observed_distribution
+actual_margins
 </th>
 </tr>
 </thead>
@@ -1019,7 +1019,7 @@ d1_est <- suppressWarnings(
   glm(
     y ~ x1,
     data = d1,
-    weights = d1$observed_distribution,
+    weights = d1$actual_margins,
     family = binomial()
   )$coef
 )
@@ -1063,7 +1063,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-observed_distribution
+actual_margins
 </th>
 </tr>
 </thead>
@@ -1212,7 +1212,7 @@ x2
 y
 </th>
 <th style="text-align:right;">
-observed_distribution
+actual_margins
 </th>
 </tr>
 </thead>
@@ -1293,13 +1293,13 @@ their pooled observations as follows.
 
 ``` r
 # estimate x1 x2 distribution from d1 and d2
-d1a <- aggregate(observed_distribution ~ x1, data = d1, sum)
-d2a <- aggregate(observed_distribution ~ x2, data = d2, sum)
+d1a <- aggregate(actual_margins ~ x1, data = d1, sum)
+d2a <- aggregate(actual_margins ~ x2, data = d2, sum)
 dxe <- merge(d1a, d2a, by = c())
-dxe["estimated_distribution"] <- (
-  dxe$observed_distribution.x * dxe$observed_distribution.y)
-dxe$observed_distribution.x <- NULL
-dxe$observed_distribution.y <- NULL
+dxe["estimated_margins"] <- (
+  dxe$actual_margins.x * dxe$actual_margins.y)
+dxe$actual_margins.x <- NULL
+dxe$actual_margins.y <- NULL
 dxe <- dxe[order(dxe$x2, dxe$x1), , drop = FALSE]
 
 knitr::kable(dxe)
@@ -1315,7 +1315,7 @@ x1
 x2
 </th>
 <th style="text-align:right;">
-estimated_distribution
+estimated_margins
 </th>
 </tr>
 </thead>
@@ -1369,7 +1369,7 @@ estimated_distribution
 
 Notice `dxe` is build only from `dx1` and `dx2` (plus the assumed
 independence of `X1` and `X2`). At this point we have inferred the
-`P(X1=1)` and `P(X2=1)` parameters from the observed data.
+`P(X1=x1, X2=x2)` parameters from the observed data.
 
 ### Combining Observations
 
@@ -1379,35 +1379,36 @@ We now combine all of our known data to get an estimate of the
 ``` r
 # put together experimenter 1 and 2's joint estimate of marginal proportions
 # from data they have in their sub-experiments.
-estimated_proportions <- c(
-  d1$observed_distribution,
-  d2$observed_distribution,
-  dxe$estimated_distribution
+estimated_margins <- c(
+  d1$actual_margins,
+  d2$actual_margins,
+  dxe$estimated_margins
 )
 
-estimated_proportions
+estimated_margins
 ```
 
     ##  [1] 0.610053847 0.238612287 0.089946153 0.061387713 0.051761580 0.796904554
     ##  [7] 0.148238420 0.003095446 0.140000000 0.060000000 0.560000000 0.240000000
 
 We see that the two experimenters have estimated the output of the
-`margin_frame` transform. As they know the `margin_frame` outout and the
+`margin_frame` transform. As they know the `margin_frame` output and the
 `margin_frame` operator itself, they can try to estimate the pre-image
 or input. This pre-image is the detailed distribution of data they are
 actually interested in.
 
 ### Solving For the Full Joint Distribution
 
-We use linear algebra to pull `estimated_proportions` back through
+We use linear algebra to pull `estimated_margins` back through
 `margin_transform` inverse to get a linear estimate of the unobserved
 original data.
 
 ``` r
 # typical solution (in the linear sense, signs not enforced)
+# remember: estimated_margins = margin_transform %*% v
 v <- solve(
   qr(margin_transform, LAPACK = TRUE), 
-  estimated_proportions)
+  estimated_margins)
 
 v
 ```
@@ -1449,12 +1450,12 @@ vector. This means all valid solutions are of the form `v + z * ns` for
 scalars `z`. In fact all solutions are in an interval of `z` values. We
 can solve for this interval.
 
-Note, we have seen the direction we are varying (`ns`) before, it is
+Note, we have seen the direction we are varying (`ns`) before: it is
 `test_vec`!
 
 The range of recovered solutions to the (unknown to either
 experimenter!) original data distribution details can be seen below as
-the `recovered_*` columns.
+the `recovered_distribution_*` columns.
 
 <table>
 <thead>
@@ -1472,10 +1473,10 @@ y
 P(X1=x1, X2=x2, Y=y)
 </th>
 <th style="text-align:right;">
-recovered_1
+recovered_distribution_1
 </th>
 <th style="text-align:right;">
-recovered_2
+recovered_distribution_2
 </th>
 </tr>
 </thead>
@@ -1665,15 +1666,15 @@ for (soln_name in soln_names) {
 }
 ```
 
-    ## [1] "recovered_1"
+    ## [1] "recovered_distribution_1"
     ## (Intercept)          x1          x2 
     ##   0.5772157   3.1415927  -8.1548455 
-    ## [1] "recovered_2"
+    ## [1] "recovered_distribution_2"
     ## (Intercept)          x1          x2 
     ##   0.5772157   3.1415927  -8.1548455
 
-We see, all recovered distribuitons give the same correct estimates of
-the logistic regression coefficients.
+We see, all recovered data distributions give the same correct estimates
+of the logistic regression coefficients.
 
 ### Picking a point-estimate
 
@@ -1700,15 +1701,15 @@ entropy <- function(v) {
 opt_soln <- optimize(
   function(z) {
     entropy(
-      z * detailed_frame$recovered_1 + 
-        (1 - z) * detailed_frame$recovered_2)},
+      z * detailed_frame$recovered_distribution_1 + 
+        (1 - z) * detailed_frame$recovered_distribution_2)},
   c(0, 1),
   maximum = TRUE)
 
 z_opt <- opt_soln$maximum
 detailed_frame["maxent_distribution"] <- (
-  z_opt * detailed_frame$recovered_1 + 
-    (1 - z_opt) * detailed_frame$recovered_2)
+  z_opt * detailed_frame$recovered_distribution_1 + 
+    (1 - z_opt) * detailed_frame$recovered_distribution_2)
 ```
 
 The recovered `maxent_distribution` obeys the additional non-linear
@@ -1722,7 +1723,7 @@ log(detailed_frame[["maxent_distribution"]]) %*% test_vec
     ## [1,] 3.395224e-05
 
 In fact, the recovered `maxent_distribution` *is* the original
-unobserved original `proportion` to many digits.
+unobserved original `P(X1=x1, X2=x2, Y=y)` to many digits.
 
 <table>
 <thead>
@@ -1985,34 +1986,45 @@ calculation.
 
 ## Appendix: `test_vec` is an Orthogonal Test
 
-To show `sum(test_vec * log(proportion)) = 0` when `proportion` is the
-row probabilities matching a logistic model, write
-`sum(test_vec * log(proportion))` as:
+To show `sum(test_vec * log(P(X1=x1, X2=x2, Y=y)) = 0` when
+`P(X1=x1, X2=x2, Y=y)` is the row probabilities matching a logistic
+model, write `sum(test_vec * log(P(X1=x1, X2=x2, Y=y)))` as:
 
 <pre>
 sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> sum<sub>y=F,T</sub> (
-   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> log(P(X1=x1, X2=x2] * p(Y=y | x1, x2))
+   (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (-1)<sup>y</sup> 
+     * log(P(X1=x1, X2=x2) * p(Y=y | x1, x2))
    )
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
-    log(P(X1=x1, X2=x2] * (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
-      - log(P(X1=x1, X2=x2] * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
-    )
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
-    log(P(X1=x1, X2=x2] * (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
-      - log(P(X1=x1, X2=x2] * 1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
-    )
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * log(exp(c0 + b1 * x1 + b2 * x2))
-&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (c0 + b1 * x1 + b2 * x2)
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (
+    (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
+       log(P(X1=x1, X2=x2) * 
+          (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(P(X1=x1, X2=x2) * 
+          1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    ))
+    &#10;
+ = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (
+    (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * ( 
+        log(P(X1=x1, X2=x2) * 
+           (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(P(X1=x1, X2=x2) * 
+           1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    ))
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (
+    (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * log(exp(c0 + b1 * x1 + b2 * x2)))
+&#10; = sum<sub>x1=0,1</sub> sum<sub>x2=0,1</sub> (
+    (-1)<sup>x1</sup> * (-1)<sup>x2</sup> * (c0 + b1 * x1 + b2 * x2))
 &#10; = 0
 </pre>
 
-This establishes that `sum(test_vec * log(proportion)) = 0` for any
-logistic regression solution, not just the optimal one. This condition
-is true for our data set, as we designed it to have the structure of a
-logistic regression. And this shows logistic regression can not tell
-`proportion + z * test_vec` from `proportion`, as it is blind to changes
-in that direction. This is why all our data pre-images yield the same
-logistic regression coefficients.
+This establishes that `sum(test_vec * log(P(X1=x1, X2=x2, Y=y))) = 0`
+for any logistic regression solution, not just the optimal one. This
+condition is true for our data set, as we designed it to have the
+structure of a logistic regression. And this shows logistic regression
+can not tell `P(X1=x1, X2=x2, Y=y) + z * test_vec` from
+`P(X1=x1, X2=x2, Y=y)`, as it is blind to changes in that direction.
+This is why all our data pre-images yield the same logistic regression
+coefficients.
 
 ## Appendix: the Entropy Gradient Goes to Zero at our Check Position
 
@@ -2028,10 +2040,16 @@ test_vec<sub>i</sub>)</code>. We expect our maximum occurs where
 
 <pre>
 (d / d z) f(z) [evaluated at z = 0]
-&#10; = (d / d z) -sum<sub>i</sub> (p<sub>i</sub> + z * test_vec<sub>i</sub>) log(p<sub>i</sub> + z * test_vec<sub>i</sub>) [evaluated at z = 0]
- &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> (log(p<sub>i</sub> + z * test_vec<sub>i</sub>) + 1) [evaluated at z = 0]
+&#10; = (d / d z) -sum<sub>i</sub> (
+    p<sub>i</sub> + z * test_vec<sub>i</sub>) 
+      * log(p<sub>i</sub> + z * test_vec<sub>i</sub>) 
+    [evaluated at z = 0]
+ &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> (
+    log(p<sub>i</sub> + z * test_vec<sub>i</sub>) + 1) 
+    [evaluated at z = 0]
  &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> (log(p<sub>i</sub>) + 1)
- &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> log(p<sub>i</sub>)  [using -sum<sub>i</sub> test_vec<sub>i</sub> = 0]
+ &#10; = -sum<sub>i</sub> test_vec<sub>i</sub> log(p<sub>i</sub>)  
+    [using -sum<sub>i</sub> test_vec<sub>i</sub> = 0]
 </pre>
 
 And this is zero exactly where the non-linear orthogonal check condition
