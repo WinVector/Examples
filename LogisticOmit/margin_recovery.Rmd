@@ -9,7 +9,7 @@ always_allow_html: true
 
 Let's continue along the lines discussed in [Omitted Variable Effects in Logistic Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/). 
 
-The issue is as follows. For logistic regression, omitted variables cause estimation bias. This *even for independent variables*, which is not the case for more familiar linear regression.
+The issue is as follows. For logistic regression, omitted variables cause parameter estimation bias. This is true *even for independent variables*, which is not the case for more familiar linear regression.
 
 This is a known problem with known mitigations:
 
@@ -285,7 +285,7 @@ margin_frame$observed_distribution <- as.numeric(observed_distribution)
 knitr::kable(margin_frame)
 ```
 
-The above margin frame describes how the detailed experiment is marginalized or censored down to different experimenters see. In our set-up experimenter 1 sees only the first four rows, and experimenter 2 sees only the next 4 rows. We consider the rest of the data "unobserved".
+The above margin frame describes how the detailed experiment is marginalized or censored down to what different experimenters see. In our set-up experimenter 1 sees only the first four rows, and experimenter 2 sees only the next 4 rows. We consider the rest of the data "unobserved".
 
 ### A Blind Spot
 
@@ -363,7 +363,7 @@ From the original data set's point of view: both experimenters have wrong estima
 
 ## A Solution Strategy
 
-Each experimenter knows a lot about the data. They known the distribution of their explanatory variable, and even the joint distribution of their explanatory and the dependent and outcome data. Assuming the two explanatory variables are independent, the experimenters can cooperate to estimate the joint distribution of the explanatory variables. We will show how to use their combined observations to estimate the hidden data elements. This data can then be used for standard detailed analysis, like we showed on the original full data set.
+Each experimenter knows a lot about the data. They known the distribution of their explanatory variable, and even the joint distribution of their explanatory and the dependent or outcome data. Assuming the two explanatory variables are independent, the experimenters can cooperate to estimate the joint distribution of the explanatory variables. We will show how to use their combined observations to estimate the hidden data elements. This data can then be used for standard detailed analysis, like we showed on the original full data set.
 
 This isn't the first time we have proposed a "guess at the original data, as it wasn't shared" as we played with this in [Checking claims in published statistics papers](https://win-vector.com/2013/04/08/checking-claims-in-published-statistics-papers/).
 

@@ -9,8 +9,8 @@ Logistic
 Regression](https://win-vector.com/2023/08/18/omitted-variable-effects-in-logistic-regression/).
 
 The issue is as follows. For logistic regression, omitted variables
-cause estimation bias. This *even for independent variables*, which is
-not the case for more familiar linear regression.
+cause parameter estimation bias. This is true *even for independent
+variables*, which is not the case for more familiar linear regression.
 
 This is a known problem with known mitigations:
 
@@ -882,10 +882,10 @@ P(X1=1, X2=1, Y=&ast;)
 </table>
 
 The above margin frame describes how the detailed experiment is
-marginalized or censored down to different experimenters see. In our
-set-up experimenter 1 sees only the first four rows, and experimenter 2
-sees only the next 4 rows. We consider the rest of the data
-“unobserved”.
+marginalized or censored down to what different experimenters see. In
+our set-up experimenter 1 sees only the first four rows, and
+experimenter 2 sees only the next 4 rows. We consider the rest of the
+data “unobserved”.
 
 ### A Blind Spot
 
@@ -1152,7 +1152,7 @@ coefficients?
 
 Each experimenter knows a lot about the data. They known the
 distribution of their explanatory variable, and even the joint
-distribution of their explanatory and the dependent and outcome data.
+distribution of their explanatory and the dependent or outcome data.
 Assuming the two explanatory variables are independent, the
 experimenters can cooperate to estimate the joint distribution of the
 explanatory variables. We will show how to use their combined
