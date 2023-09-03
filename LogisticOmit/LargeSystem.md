@@ -5,7 +5,9 @@ Larger System
 ## Introduction
 
 We will work on a slightly larger version of [“Solving for Hidden
-Data”](https://win-vector.com/2023/09/02/solving-for-hidden-data/).
+Data”](https://win-vector.com/2023/09/02/solving-for-hidden-data/). We
+will also show the maximum entropy method recovers the original
+unobserved data distribution in general.
 
 ## The Example
 
@@ -1483,9 +1485,9 @@ per-variable null spaces. Each of the per-variable null spaces are just
 a basis for the orthogonal complement of an all ones vector of length
 equal to the number of values the variable takes.
 
-All we need to do to establish that these are *all* of the null-vectors,
-is to bound the rank of the null space that there are in. In [“Solving
-for Hidden
+We can establish that these are *all* of the null-vectors by showing the
+number of these independent vectors match the rank of the null space. In
+[“Solving for Hidden
 Data”](https://win-vector.com/2023/09/02/solving-for-hidden-data/) the
 null space is rank 1, and here it is rank 4. In both of these cases this
 means the Kronecker product vectors are the entire null space. It turns
@@ -1710,65 +1712,67 @@ with the same the above as zero-gradient conditions.
 
 To show this we just expand one such sum as follows. Write our Kronecker
 product null vector as
-`v<sub>x1, x2, y</sub> = f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (-1)<sup>y</sup>`,
-where `fi(<sup>xi</sup>)` is orthogonal to the all ones vector for the
+`v<sub>x1, x2, y</sub> = f1(x1) * f2(x2) * (-1)<sup>y</sup>`, where
+`fi(<sup>xi</sup>)` is orthogonal to the all ones vector for the
 appropiate sums and sub-sums.
 
 <pre>
 sum<sub>x1</sub> sum<sub>x2</sub> sum<sub>y=F,T</sub> (
-   f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (-1)<sup>y</sup> 
+   f1(x1) * f2(x2) * (-1)<sup>y</sup> 
      * log(P(X1=x1, X2=x2, Y))
    )
    &#10; = sum<sub>x1</sub> sum<sub>x2</sub> sum<sub>y=F,T</sub> (
-     f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (-1)<sup>y</sup> 
+     f1(x1) * f2(x2) * (-1)<sup>y</sup> 
        * log(P(X1=x1, X2=x2) * p(Y=y | x1, x2))
      )
 &#10; = sum<sub>x1</sub> sum<sub>x2</sub> (
-    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * ( 
+    f1(x1) * f2(x2) * ( 
        log(P(X1=x1, X2=x2) * 
-          (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+          (1 - 1 / (1 + exp(c0 + g1(b1, x1) + g2(b2, x2)))))
       - log(P(X1=x1, X2=x2) * 
-          1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+          1 / (1 + exp(c0 + g1(b1, x1) + g2(b2, x2))))
     ))
     &#10; = sum<sub>x1</sub> sum<sub>x2</sub> (
-    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * ( 
+    f1(x1) * f2(x2) * ( 
         log(P(X1=x1, X2=x2) * 
-           (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+           (exp(c0 + g1(b1, x1) + g2(b2, x2)) / (1 + exp(c0 + g1(b1, x1) + g2(b2, x2)))))
       - log(P(X1=x1, X2=x2) * 
-           1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+           1 / (1 + exp(c0 + g1(b1, x1) + g2(b2, x2))))
     ))
 &#10; = sum<sub>x1</sub> sum<sub>x2</sub> (
-    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * log(exp(c0 + b1 * x1 + b2 * x2)))
+    f1(x1) * f2(x2) * log(exp(c0 + g1(b1, x1) + g2(b2, x2))))
 &#10; = sum<sub>x1</sub> sum<sub>x2</sub> (
-    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (c0 + b1 * x1 + b2 * x2))
+    f1(x1) * f2(x2) * (c0 + g1(b1, x1) + g2(b2, x2)))
 &#10; = (
    sum<sub>x1</sub> sum<sub>x2</sub> (
-    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (c0 + b1 * x1))
+    f1(x1) * f2(x2) * (c0 + g1(b1, x1)))
    +
    sum<sub>x1</sub> sum<sub>x2</sub> (
-    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (b2 * x2))
+    f1(x1) * f2(x2) * g2(b2, x2))
    )
 &#10; = (
-    sum<sub>x2</sub> f2(<sup>x2</sup>) * (
-    sum<sub>x1</sub>f1(<sup>x1</sup>) * (c0 + b1 * x1))
+    sum<sub>x2</sub> f2(x2) * (
+    sum<sub>x1</sub>f1(x1) * (c0 + g1(b1, x1)))
    +
-   sum<sub>x1</sub> f1(<sup>x1</sup>) * (
-     sum<sub>x2</sub> f2(<sup>x2</sup>) * (b2 * x2))
+   sum<sub>x1</sub> f1(x1) * (
+     sum<sub>x2</sub> f2(x2) * g2(b2, x2))
    )
 &#10; = (
-   sum<sub>x2</sub> f2(<sup>x2</sup>) * C1
+   sum<sub>x2</sub> f2(x2) * C1
    +
-   sum<sub>x1</sub> f1(<sup>x1</sup>) * C2
+   sum<sub>x1</sub> f1(x1) * C2
    )
    &#10; = 0
 </pre>
 
 In both cases we are using that
-`sum<sub>xi</sub> f2(<sup>xi</sup>) 1 = 0`. This derivation also works
-for categorica variables, if we write `mi(bi, xi)` in place of
-`bi * xi*` throughout.
+`sum<sub>xi</sub> f2(<sup>xi</sup>) 1 = 0`. We worked this derivation
+for the case where `x1` and `x2` are arbitrary categorical variables (by
+the general `gi(bi, xi)` notation). For a standard logsistic regression
+treating `x1` and `x2` is continuous variables we just substitute in
+`gi(bi, xi) := bi * xi` to specialize our demonstration.
 
-## Bounding the rank
+## Calculating the null space rank
 
 All the remains is to check that a the rank of the linear operator
 summing out (or marginalizing) a `u` by `v` by `2` 3-way contingency
@@ -1778,5 +1782,9 @@ Kroenker product null vectors, and if these are all of the solution
 degrees of freedom then we know the maximum entropy solution is the
 original unobserved data distribution we wished to solve for.
 
-We have checked the rank condition in the two cases `(u, v)` is `(2, 2)`
-and `(3, 3)`. What remains is to establish this in general.
+The above is just the number of degrees of freedom of a `u` by `v` by
+`2` contingency table with known margins. And is
+`(u - 1) * (v - 1) * (2 - 1)`, exactly as we need. The standard argument
+is: fill in a `(u - 1) * (v - 1) * (2 - 1)` sub-cube and the rest of the
+entries are then just linear functions of this partial fill in and the
+known marginal totals.
