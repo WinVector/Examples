@@ -5,9 +5,13 @@ date: "2023-09-03"
 always_allow_html: true
 ---
 
-Work a slightly larger version of ["Solving for Hidden Data"](https://win-vector.com/2023/09/02/solving-for-hidden-data/).
+## Introduction
 
-Define our frame.
+We will work on a slightly larger version of ["Solving for Hidden Data"](https://win-vector.com/2023/09/02/solving-for-hidden-data/).
+
+## The Example 
+
+We define our detailed names frame frame.
 
 ```{r, echo = FALSE}
 # show row labels
@@ -27,7 +31,7 @@ detailed_names <- detailed_names[
   drop = FALSE]
 ```
 
-Define our explanatory variable probabilities.
+We specify our (to be inferred) explanatory variable probabilities.
 
 ```{r}
 # specify explanatory variable distribution 
@@ -39,7 +43,7 @@ Define our explanatory variable probabilities.
 `P(X2=0)` <- 1 - (`P(X2=1)` + `P(X2=2)`)
 ```
 
-Define our condidtional probability of outcome given explanatory variables. 
+Define our conditional probability of outcome given explanatory variables. 
 
 ```{r}
 c0 = 0.5
@@ -47,7 +51,7 @@ b1 = 3.2
 b2 = -1.1
 ```
 
-Build up a data frame with row distribution defined as above.
+We build up a data frame with row distribution defined as above.
 
 ```{r}
 # assign an example outcome or dependent variable
@@ -87,7 +91,9 @@ detailed_frame[["P(X1=x1, X2=x2, Y=y)"]] <- (
 knitr::kable(detailed_frame)
 ```
 
-Build the linear operator that maps detailed probabilities to summarized observed probabilities (where each view marginalizes out one variable).
+## The unobserved to observed mapping
+
+We show the linear operator that maps detailed probabilities to summarized observed probabilities (where each view marginalizes out one variable).
 
 ```{r, echo = FALSE}
 # build transfer matrix from joint observations to marginal observations
@@ -148,7 +154,9 @@ margins <-
    margin_transform %*% detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]
 ```
 
-Show a linear pre-image of the marginalization.
+## Reversing the mapping as a solution step
+
+Let's compute a linear pre-image of the marginalization.
 
 ```{r}
 (pre_image <- solve(
@@ -158,13 +166,17 @@ Show a linear pre-image of the marginalization.
 
 Notice this does not obey sign constraints. We will use our degrees of freedom in the pre-image process to both establish non-negativity (moving to valid likelihoods/probabilities/frequencies) and maximize entropy (under the assumption the actual solution is itself maximal entropy).
 
-Show the degrees of freedom in the pre-image process.
+## Fixing the linear solution
+
+The the degrees of freedom in the pre-image process are given as follows.
 
 ```{r}
 (ns <- MASS::Null(t(margin_transform)))
 ```
 
-The above null vectors include the [Kronecker product](https://en.wikipedia.org/wiki/Kronecker_product) of the per-variable null spaces. Each of the per-variable null spaces are just a basis for the orthogonal complement of an all ones vector of length equal to the number of values the variable takes. So *if* we establish that these are *all* of the null-vectors, we expect the null space to be of dimension the product of each variables number of levels each minus 1. That would be why in ["Solving for Hidden Data"](https://win-vector.com/2023/09/02/solving-for-hidden-data/) the null space is rank 1, and here it is rank 4.
+The above null vectors include the [Kronecker product](https://en.wikipedia.org/wiki/Kronecker_product) of the per-variable null spaces. Each of the per-variable null spaces are just a basis for the orthogonal complement of an all ones vector of length equal to the number of values the variable takes. 
+
+All we need to do to establish that these are *all* of the null-vectors, is to bound the rank of the null space that there are in. In ["Solving for Hidden Data"](https://win-vector.com/2023/09/02/solving-for-hidden-data/) the null space is rank 1, and here it is rank 4. In both of these cases this means the Kronecker product vectors are the entire null space. It turns out this is enough to allow us to confirm the following recovery procedure can find the original data set.
 
 Define our "pick a good solution" objective function.
 
@@ -179,7 +191,7 @@ entropy <- function(v) {
 }
 ```
 
-Solve: maximize `entropy(pre_image + ns * z)` subject to `pre_image + ns * z >= 0`.
+To solve: maximize `entropy(pre_image + ns * z)` subject to `pre_image + ns * z >= 0`.
 
 ```{r}
 library(lpSolve)
@@ -219,7 +231,7 @@ recovered0
 entropy(recovered0)
 ```
 
-Solve the constrained optimization problem.
+We then finish by solving the following constrained optimization problem.
 
 ```{r}
 # maximize entropy in constrained region
@@ -299,5 +311,78 @@ stopifnot(
 ```
 
 What we want to show is that the distribution given is highest entropy with respect to the variations of the specified adjustment vectors. If this is the case, then we *always* recover the actual pre-image distribution through these methods.
+
+## The Kronecker product null vectors are orthogonal to the log probabilities
+
+The Kronecker product null vectors are orthogonal to the log probabilities of the original data set. Once we know this we know the solution method recovers the original data, as it picks a unique optimum with the same the above as zero-gradient conditions.
+
+To show this we just expand one such sum as follows. Write our Kronecker product null vector as `v<sub>x1, x2, y</sub> = f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (-1)<sup>y</sup>`, where `fi(<sup>xi</sup>)` is orthogonal to the all ones vector for the appropiate sums and sub-sums.
+
+<pre>
+sum<sub>x1</sub> sum<sub>x2</sub> sum<sub>y=F,T</sub> (
+   f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (-1)<sup>y</sup> 
+     * log(P(X1=x1, X2=x2, Y))
+   )
+   
+ = sum<sub>x1</sub> sum<sub>x2</sub> sum<sub>y=F,T</sub> (
+     f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (-1)<sup>y</sup> 
+       * log(P(X1=x1, X2=x2) * p(Y=y | x1, x2))
+     )
+
+ = sum<sub>x1</sub> sum<sub>x2</sub> (
+    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * ( 
+       log(P(X1=x1, X2=x2) * 
+          (1 - 1 / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(P(X1=x1, X2=x2) * 
+          1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    ))
+    
+ = sum<sub>x1</sub> sum<sub>x2</sub> (
+    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * ( 
+        log(P(X1=x1, X2=x2) * 
+           (exp(c0 + b1 * x1 + b2 * x2) / (1 + exp(c0 + b1 * x1 + b2 * x2))))
+      - log(P(X1=x1, X2=x2) * 
+           1 / (1 + exp(c0 + b1 * x1 + b2 * x2)))
+    ))
+
+ = sum<sub>x1</sub> sum<sub>x2</sub> (
+    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * log(exp(c0 + b1 * x1 + b2 * x2)))
+
+ = sum<sub>x1</sub> sum<sub>x2</sub> (
+    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (c0 + b1 * x1 + b2 * x2))
+
+ = (
+   sum<sub>x1</sub> sum<sub>x2</sub> (
+    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (c0 + b1 * x1))
+   +
+   sum<sub>x1</sub> sum<sub>x2</sub> (
+    f1(<sup>x1</sup>) * f2(<sup>x2</sup>) * (b2 * x2))
+   )
+
+ = (
+    sum<sub>x2</sub> f2(<sup>x2</sup>) * (
+    sum<sub>x1</sub>f1(<sup>x1</sup>) * (c0 + b1 * x1))
+   +
+   sum<sub>x1</sub> f1(<sup>x1</sup>) * (
+     sum<sub>x2</sub> f2(<sup>x2</sup>) * (b2 * x2))
+   )
+
+ = (
+   sum<sub>x2</sub> f2(<sup>x2</sup>) * C1
+   +
+   sum<sub>x1</sub> f1(<sup>x1</sup>) * C2
+   )
+   
+ = 0
+</pre>
+
+In both cases we are using that `sum<sub>xi</sub> f2(<sup>xi</sup>) 1 = 0`. This derivation also works for categorica variables, if we write `mi(bi, xi)` in place of `bi * xi*` throughout.
+
+## Bounding the rank
+
+All the remains is to check that a the rank of the linear operator summing out (or marginalizing) a `u` by `v` by `2` 3-way contingency table has a null space with rank no larger than `(u - 1) * (v - 1)`. This finishes the problem as we can find `(u - 1) * (v - 1)` independent Kroenker product null vectors, and if these are all of the solution degrees of freedom then we know the maximum entropy solution is the original unobserved data distribution we wished to solve for.
+
+We have checked the rank condition in the two cases `(u, v)` is `(2, 2)` and `(3, 3)`. What remains is to establish this in general.
+
 
 
