@@ -1,4 +1,4 @@
-Large System
+Larger System
 ================
 2023-09-03
 
@@ -47,7 +47,7 @@ detailed_frame["P(X1=x1, X2=x2)"] <- (
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 
 # get conditional probability of observed outcome
-# could treat x1 as categorical here
+# could also consider categorical x1, x2 here
 y_probability <- sigmoid(
   c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2)
 
@@ -1560,16 +1560,7 @@ Solve the constrained optimization problem.
 # maximize entropy in constrained region
 f <- function(z) {-entropy(ns %*% z + pre_image)}
 g <- function(z) {
-  eps = 1e-8
-  n = length(z)
-  f_val = f(z)
-  ret = rep(0, n)
-  for (i in seq(n)) {
-    zi = z
-    zi[i] = z[i] + eps
-    ret[i] = (f(zi) - f_val)/eps
-  }
-  return(ret)
+  as.numeric(t((log(ns %*% z + pre_image) + 1) / log(2))  %*% ns)
 }
 soln1 <- constrOptim(
   theta = z0,
@@ -1586,7 +1577,13 @@ z1 <- soln1$par
 z1
 ```
 
-    ## [1] -0.1599510 -0.2543812  0.4066425 -0.2458285
+    ## [1] -0.1599510 -0.2543812  0.4066426 -0.2458285
+
+``` r
+stopifnot(
+  max(abs(g(z1))) < 1e-5
+)
+```
 
 ``` r
 recovered1 <- ns %*% z1 + pre_image
@@ -1601,22 +1598,22 @@ recovered1
 ```
 
     ##                                [,1]
-    ## P(X1=0, X2=0, Y=FALSE) 2.831559e-02
-    ## P(X1=1, X2=0, Y=FALSE) 1.085676e-03
-    ## P(X1=2, X2=0, Y=FALSE) 3.020277e-05
-    ## P(X1=0, X2=1, Y=FALSE) 1.614139e-02
-    ## P(X1=1, X2=1, Y=FALSE) 1.659324e-02
-    ## P(X1=2, X2=1, Y=FALSE) 3.018495e-05
-    ## P(X1=0, X2=2, Y=FALSE) 2.113835e-02
-    ## P(X1=1, X2=2, Y=FALSE) 4.378215e-02
-    ## P(X1=2, X2=2, Y=FALSE) 9.013256e-05
-    ## P(X1=0, X2=0, Y=TRUE)  4.668441e-02
-    ## P(X1=1, X2=0, Y=TRUE)  4.391432e-02
+    ## P(X1=0, X2=0, Y=FALSE) 2.831555e-02
+    ## P(X1=1, X2=0, Y=FALSE) 1.085715e-03
+    ## P(X1=2, X2=0, Y=FALSE) 3.020314e-05
+    ## P(X1=0, X2=1, Y=FALSE) 1.614140e-02
+    ## P(X1=1, X2=1, Y=FALSE) 1.659323e-02
+    ## P(X1=2, X2=1, Y=FALSE) 3.018418e-05
+    ## P(X1=0, X2=2, Y=FALSE) 2.113838e-02
+    ## P(X1=1, X2=2, Y=FALSE) 4.378212e-02
+    ## P(X1=2, X2=2, Y=FALSE) 9.013295e-05
+    ## P(X1=0, X2=0, Y=TRUE)  4.668445e-02
+    ## P(X1=1, X2=0, Y=TRUE)  4.391428e-02
     ## P(X1=2, X2=0, Y=TRUE)  2.996980e-02
-    ## P(X1=0, X2=1, Y=TRUE)  8.858613e-03
+    ## P(X1=0, X2=1, Y=TRUE)  8.858600e-03
     ## P(X1=1, X2=1, Y=TRUE)  2.234068e-01
-    ## P(X1=2, X2=1, Y=TRUE)  9.969815e-03
-    ## P(X1=0, X2=2, Y=TRUE)  3.861651e-03
+    ## P(X1=2, X2=1, Y=TRUE)  9.969816e-03
+    ## P(X1=0, X2=2, Y=TRUE)  3.861625e-03
     ## P(X1=1, X2=2, Y=TRUE)  1.962179e-01
     ## P(X1=2, X2=2, Y=TRUE)  9.909867e-03
 
@@ -1644,7 +1641,7 @@ entropy(detailed_frame[["P(X1=x1, X2=x2, Y=y)"]])
 
 ``` r
 stopifnot(
-  entropy(recovered1) - entropy(detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]) > -1e-6
+  entropy(recovered1) - entropy(detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]) > -1e-8
 )
 ```
 
@@ -1657,28 +1654,28 @@ distribution. I.e.: we have solved the problem.
 ```
 
     ##                                 [,1]
-    ## P(X1=0, X2=0, Y=FALSE) -3.994634e-08
-    ## P(X1=1, X2=0, Y=FALSE)  3.959010e-08
-    ## P(X1=2, X2=0, Y=FALSE)  3.562358e-10
-    ## P(X1=0, X2=1, Y=FALSE)  2.049785e-08
-    ## P(X1=1, X2=1, Y=FALSE) -1.971028e-08
-    ## P(X1=2, X2=1, Y=FALSE) -7.875771e-10
-    ## P(X1=0, X2=2, Y=FALSE)  1.944849e-08
-    ## P(X1=1, X2=2, Y=FALSE) -1.987983e-08
-    ## P(X1=2, X2=2, Y=FALSE)  4.313413e-10
-    ## P(X1=0, X2=0, Y=TRUE)   3.994634e-08
-    ## P(X1=1, X2=0, Y=TRUE)  -3.959010e-08
-    ## P(X1=2, X2=0, Y=TRUE)  -3.562359e-10
-    ## P(X1=0, X2=1, Y=TRUE)  -2.049785e-08
-    ## P(X1=1, X2=1, Y=TRUE)   1.971028e-08
-    ## P(X1=2, X2=1, Y=TRUE)   7.875772e-10
-    ## P(X1=0, X2=2, Y=TRUE)  -1.944849e-08
-    ## P(X1=1, X2=2, Y=TRUE)   1.987983e-08
-    ## P(X1=2, X2=2, Y=TRUE)  -4.313415e-10
+    ## P(X1=0, X2=0, Y=FALSE) -4.623074e-10
+    ## P(X1=1, X2=0, Y=FALSE)  4.810488e-10
+    ## P(X1=2, X2=0, Y=FALSE) -1.874144e-11
+    ## P(X1=0, X2=1, Y=FALSE)  7.253382e-09
+    ## P(X1=1, X2=1, Y=FALSE) -7.233596e-09
+    ## P(X1=2, X2=1, Y=FALSE) -1.978541e-11
+    ## P(X1=0, X2=2, Y=FALSE) -6.791074e-09
+    ## P(X1=1, X2=2, Y=FALSE)  6.752547e-09
+    ## P(X1=2, X2=2, Y=FALSE)  3.852690e-11
+    ## P(X1=0, X2=0, Y=TRUE)   4.623073e-10
+    ## P(X1=1, X2=0, Y=TRUE)  -4.810489e-10
+    ## P(X1=2, X2=0, Y=TRUE)   1.874137e-11
+    ## P(X1=0, X2=1, Y=TRUE)  -7.253382e-09
+    ## P(X1=1, X2=1, Y=TRUE)   7.233596e-09
+    ## P(X1=2, X2=1, Y=TRUE)   1.978557e-11
+    ## P(X1=0, X2=2, Y=TRUE)   6.791074e-09
+    ## P(X1=1, X2=2, Y=TRUE)  -6.752547e-09
+    ## P(X1=2, X2=2, Y=TRUE)  -3.852712e-11
 
 ``` r
 stopifnot(
-  max(abs(residuals)) < 1e-5
+  max(abs(residuals)) < 1e-8
 )
 ```
 

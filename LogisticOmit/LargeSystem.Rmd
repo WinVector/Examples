@@ -1,5 +1,5 @@
 ---
-title: "Large System"
+title: "Larger System"
 output: github_document
 date: "2023-09-03"
 always_allow_html: true
@@ -66,7 +66,7 @@ detailed_frame["P(X1=x1, X2=x2)"] <- (
 sigmoid <- function(x) {1 / (1 + exp(-x))}
 
 # get conditional probability of observed outcome
-# could treat x1 as categorical here
+# could also consider categorical x1, x2 here
 y_probability <- sigmoid(
   c0 + b1 * detailed_frame$x1 + b2 * detailed_frame$x2)
 
@@ -225,16 +225,7 @@ Solve the constrained optimization problem.
 # maximize entropy in constrained region
 f <- function(z) {-entropy(ns %*% z + pre_image)}
 g <- function(z) {
-  eps = 1e-8
-  n = length(z)
-  f_val = f(z)
-  ret = rep(0, n)
-  for (i in seq(n)) {
-    zi = z
-    zi[i] = z[i] + eps
-    ret[i] = (f(zi) - f_val)/eps
-  }
-  return(ret)
+  as.numeric(t((log(ns %*% z + pre_image) + 1) / log(2))  %*% ns)
 }
 soln1 <- constrOptim(
   theta = z0,
@@ -251,6 +242,11 @@ z1 <- soln1$par
 z1
 ```
 
+```{r}
+stopifnot(
+  max(abs(g(z1))) < 1e-5
+)
+```
 
 
 ```{r}
@@ -277,13 +273,15 @@ stopifnot(
 
 This recovered entropy should be at least as high as the unobserved actual solution (modulo optimization early stopping and numeric issues). If they are equal they are the same solution.
 
+
+
 ```{r}
 entropy(detailed_frame[["P(X1=x1, X2=x2, Y=y)"]])
 ```
 
 ```{r}
 stopifnot(
-  entropy(recovered1) - entropy(detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]) > -1e-6
+  entropy(recovered1) - entropy(detailed_frame[["P(X1=x1, X2=x2, Y=y)"]]) > -1e-8
 )
 ```
 
@@ -296,7 +294,7 @@ We show this solution is very close to the original (unobserved) distribution. I
 
 ```{r}
 stopifnot(
-  max(abs(residuals)) < 1e-5
+  max(abs(residuals)) < 1e-8
 )
 ```
 
