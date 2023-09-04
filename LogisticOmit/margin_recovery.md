@@ -1961,6 +1961,9 @@ unobserved parameters, we could go to Bayesian graphical model methods
 to sum this all out (instead of proposing a specific point-wise method
 as we did here).
 
+We have some notes on how this method applies in a more general case
+[here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/LargeSystem.md).
+
 ## Appendices
 
 ## Appendix: The Relation to Entropy

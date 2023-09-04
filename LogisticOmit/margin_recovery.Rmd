@@ -665,6 +665,8 @@ There is, however, a danger. A naive over-reliance on the [principle of indiffer
 
 In the real world we would at best be looking at marginalizations of different draws of related data. So we would not have exact matches we can invert- but instead would have to estimate low-discrepancy pre-images of the data. And, as we are now introducing a lot of unobserved parameters, we could go to Bayesian graphical model methods to sum this all out (instead of proposing a specific point-wise method as we did here).
 
+We have some notes on how this method applies in a more general case [here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/LargeSystem.md).
+
 ## Appendices
 
 ## Appendix: The Relation to Entropy
@@ -751,3 +753,4 @@ And this is zero exactly where the non-linear orthogonal check condition is zero
 ## Appendix: Links
 
 The source code of this article is available [here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/margin_recovery.Rmd) (plus render [here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/margin_recovery.md)).
+
