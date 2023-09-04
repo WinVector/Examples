@@ -1938,7 +1938,7 @@ probabilities on different states, deterministic models *must* put equal
 probabilities on model indistinguishable states. Maximum entropy pushes
 solutions to such symmetries, unless there are variables to support
 differences. And, [maximum entropy modeling is very related to logistic
-regresion
+regression
 modeling](https://win-vector.com/2011/09/23/the-equivalence-of-logistic-regression-and-maximum-entropy-models/).
 
 There is, however, a danger. A naive over-reliance on the [principle of
