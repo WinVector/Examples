@@ -1416,7 +1416,9 @@ margins <-
 
 ## Reversing the mapping as a solution step
 
-Let’s compute a linear pre-image of the marginalization.
+Combining observations to estimate `margins` was solved in our earlier
+note. Let’s compute a linear pre-image of the marginalization on our way
+to estimate the original data distribution.
 
 ``` r
 (pre_image <- solve(
