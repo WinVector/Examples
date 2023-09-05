@@ -1965,6 +1965,8 @@ as we did here).
 We have some notes on how this method applies in a more general case
 [here](https://github.com/WinVector/Examples/blob/main/LogisticOmit/LargeSystem.md).
 
+Thank you to Dr. Nina Zumel for help and comments.
+
 ## Appendices
 
 ## Appendix: The Relation to Entropy
