@@ -30,7 +30,8 @@ This is a known problem with known mitigations:
 For this note, let’s work out how to directly try and overcome the
 omitted variable bias by solving for the hidden or unobserved detailed
 data. We will work our example in [`R`](https://www.r-project.org). We
-will derive some deep results out of a simple set-up.
+will derive some deep results out of a simple set-up. We show how to
+“un-marginalize” or “un-summarize” data.
 
 ## Our Example
 
