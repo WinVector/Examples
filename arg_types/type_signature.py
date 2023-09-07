@@ -77,7 +77,7 @@ class TypeSignature:
                         expected_type_set = expected_type[col_name].values[0]
                         if expected_type_set is not None:
                             for vi in observed_value[col_name]:
-                                if (vi is not None) and (not np.any([isinstance(vi, ti) for ti in expected_type_set])):
+                                if (pd.isnull(vi) == False) and (not np.any([isinstance(vi, ti) for ti in expected_type_set])):
                                     tnames = "{" + ", ".join(sorted([t.__name__ for t in expected_type_set])) + "}"
                                     msgs.append(f" column '{col_name}' has a type {type(vi).__name__} entry, when one of {tnames} expected")
             if len(msgs) > 0:
