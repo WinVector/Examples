@@ -204,6 +204,7 @@ class TypeSignatureRaises:
             wrapped_fn.__doc__ = type_doc
         else:
             wrapped_fn.__doc__ = type_doc + "\n\n" + type_check_fn.__doc__
+        wrapped_fn.type_schema = self
         return wrapped_fn
 
 
