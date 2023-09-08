@@ -1,4 +1,7 @@
 
+"""
+Tools for checking incoming and outgoing types of functions of data frames
+"""
 
 from functools import wraps
 from typing import Any, Dict, List, Optional, Set, Type, Union
@@ -205,9 +208,11 @@ class TypeSignatureRaises:
 
 
 class TypeSignatureNOOP:
+    """Does nothing."""
     def __init__(self, arg_specs: Optional[Dict[str, Any]]=None, *, return_spec=None) -> None:
         """Does nothing."""
         pass
 
     def __call__(self, type_check_fn):
+        """Does nothing."""
         return type_check_fn
