@@ -55,6 +55,32 @@ def non_null_types_in_frame(d: pd.DataFrame) -> Dict[str, Optional[Set[Type]]]:
     return result
 
 
+class TypeCheckSwitch(object):
+    """
+    From: https://python-patterns.guide/gang-of-four/singleton/
+    """
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(TypeCheckSwitch, cls).__new__(cls)
+            cls._instance.is_on_setting = True
+        return cls._instance
+    
+    def on(self) -> None:
+        self.is_on_setting = True
+
+    def off(self)-> None:
+        self.is_on_setting = False
+
+    def is_on(self) -> bool:
+        return self.is_on_setting
+
+
+# early build
+TypeCheckSwitch()
+
+
 class TypeSignatureRaises:
     """
     Class as a type checking decorator.
@@ -112,6 +138,8 @@ class TypeSignatureRaises:
         return None
 
     def check_args(self, *, arg_names: List[str], fname: str, args, kwargs) -> None:
+        if not TypeCheckSwitch().is_on():
+            return
         assert isinstance(fname, str)
         # check positional args (by name)
         seen = set()
@@ -139,6 +167,8 @@ class TypeSignatureRaises:
             raise TypeError("\nfunction " + fname + "(), issues:\n" + "  \n".join(msgs))
 
     def check_return(self, *, fname: str, return_value) -> None:
+        if not TypeCheckSwitch().is_on():
+            return
         assert isinstance(fname, str)
         msg = self._check_spec(expected_type=self.return_spec, observed_value=return_value)
         if msg is not None:
