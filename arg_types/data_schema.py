@@ -1,4 +1,3 @@
-
 """
 Tools for checking incoming and outgoing names and types of functions of data frames
 """
@@ -62,6 +61,7 @@ class SchemaCheckSwitch(object):
     """
     From: https://python-patterns.guide/gang-of-four/singleton/
     """
+
     _instance = None
 
     def __new__(cls):
@@ -69,11 +69,11 @@ class SchemaCheckSwitch(object):
             cls._instance = super(SchemaCheckSwitch, cls).__new__(cls)
             cls._instance.is_on_setting = True
         return cls._instance
-    
+
     def on(self) -> None:
         self.is_on_setting = True
 
-    def off(self)-> None:
+    def off(self) -> None:
         self.is_on_setting = False
 
     def is_on(self) -> bool:
@@ -88,8 +88,11 @@ class SchemaBase(object):
     """
     Input and output schema decorator.
     """
-    def __init__(self, arg_specs: Optional[Dict[str, Any]]=None, *, return_spec=None) -> None:
-        """ 
+
+    def __init__(
+        self, arg_specs: Optional[Dict[str, Any]] = None, *, return_spec=None
+    ) -> None:
+        """
         Pandas data frames must have at least declared columns and no unexpected types in columns.
         Nulls/Nones/NaNs values are not considered to have type (treating them as missingness).
         None as type constraints are considered no-type (unfailable).
@@ -105,8 +108,11 @@ class SchemaRaises(SchemaBase):
     """
     Input and output schema decorator.
     Raises TypeError on schema violations.
-    """    
-    def _check_spec(self, *, expected_type: Optional[Union[Type, Set, Dict]], observed_value) -> Optional[str]:
+    """
+
+    def _check_spec(
+        self, *, expected_type: Optional[Union[Type, Set, Dict]], observed_value
+    ) -> Optional[str]:
         if expected_type is None:
             # no expectation, no failure possible
             return None
@@ -119,7 +125,11 @@ class SchemaRaises(SchemaBase):
             # type set, expect value to be one of the types
             if not np.any([isinstance(observed_value, ti) for ti in expected_type]):
                 observed_type = type(observed_value)
-                type_names = "{" + ", ".join(sorted([_type_name(t) for t in expected_type])) + "}"
+                type_names = (
+                    "{"
+                    + ", ".join(sorted([_type_name(t) for t in expected_type]))
+                    + "}"
+                )
                 return f"expected type one of {type_names}, found type {_type_name(observed_type)}"
         elif isinstance(expected_type, dict):
             if not isinstance(observed_value, pd.DataFrame):
@@ -133,7 +143,9 @@ class SchemaRaises(SchemaBase):
                     if (spec_i is not None) and (observed_value.shape[0] > 0):
                         for vi in observed_value[col_name]:
                             if not pd.isnull(vi):
-                                msg_i = self._check_spec(expected_type=spec_i, observed_value=vi)
+                                msg_i = self._check_spec(
+                                    expected_type=spec_i, observed_value=vi
+                                )
                                 if msg_i is not None:
                                     msgs.append(f" column '{col_name}' {msg_i}")
                                     break
@@ -157,7 +169,9 @@ class SchemaRaises(SchemaBase):
             seen.add(k)
             if k in self.arg_specs.keys():
                 expected_type = self.arg_specs[k]
-                msg = self._check_spec(expected_type=expected_type, observed_value=observed_value)
+                msg = self._check_spec(
+                    expected_type=expected_type, observed_value=observed_value
+                )
                 if msg is not None:
                     msgs.append(f"arg {k} {msg}")
         # check types of named arguments
@@ -167,7 +181,9 @@ class SchemaRaises(SchemaBase):
                     msgs.append(f"expected arg {k} missing")
                 else:
                     observed_value = kwargs[k]
-                    msg = self._check_spec(expected_type=expected_type, observed_value=observed_value)
+                    msg = self._check_spec(
+                        expected_type=expected_type, observed_value=observed_value
+                    )
                     if msg is not None:
                         msgs.append(f"arg {k} {msg}")
         if len(msgs) > 0:
@@ -177,7 +193,9 @@ class SchemaRaises(SchemaBase):
         if not SchemaCheckSwitch().is_on():
             return
         assert isinstance(fname, str)
-        msg = self._check_spec(expected_type=self.return_spec, observed_value=return_value)
+        msg = self._check_spec(
+            expected_type=self.return_spec, observed_value=return_value
+        )
         if msg is not None:
             raise TypeError(f"{fname}() return value: {msg}", return_value)
 
@@ -187,23 +205,31 @@ class SchemaRaises(SchemaBase):
         """
         type_check_self = self
         type_check_fn_name = type_check_fn.__name__
-        type_check_arg_names = [k for k, v in signature(type_check_fn).parameters.items()]
+        type_check_arg_names = [
+            k for k, v in signature(type_check_fn).parameters.items()
+        ]
+
         @wraps(type_check_fn)
         def wrapped_fn(*args, **kwargs):
             type_check_self.check_args(
-                fname=type_check_fn_name, 
-                arg_names=type_check_arg_names, 
-                args=args, 
-                kwargs=kwargs)
+                fname=type_check_fn_name,
+                arg_names=type_check_arg_names,
+                args=args,
+                kwargs=kwargs,
+            )
             type_check_return_value = type_check_fn(*args, **kwargs)
             type_check_self.check_return(
-                fname=type_check_fn_name, 
-                return_value=type_check_return_value)
+                fname=type_check_fn_name, return_value=type_check_return_value
+            )
             return type_check_return_value
+
         type_doc = (
-            "\n arg specifications\n" + pprint.pformat(self.arg_specs)
-            + "\n return specification:\n" + pprint.pformat(self.return_spec)
-            + "\n")
+            "\n arg specifications\n"
+            + pprint.pformat(self.arg_specs)
+            + "\n return specification:\n"
+            + pprint.pformat(self.return_spec)
+            + "\n"
+        )
         if type_check_fn.__doc__ is None:
             wrapped_fn.__doc__ = type_doc
         else:
@@ -213,7 +239,8 @@ class SchemaRaises(SchemaBase):
 
 
 class SchemaMock(SchemaBase):
-    """Build schema, but do not enforce or attach"""
+    """Build schema, but do not enforce or attach to fn"""
+
     def __call__(self, type_check_fn):
         """Does nothing."""
         return type_check_fn
