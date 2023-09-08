@@ -1,6 +1,6 @@
 
 
-Code to enforce function and data frame partial schemas.
+Code to enforce function and data frame partial schemas in Python for Pandas.
 
 Supplies a decorator demonstrated [here](https://github.com/WinVector/Examples/blob/main/arg_types/type_check.ipynb).
 
@@ -13,6 +13,8 @@ The argument specs are as follows:
   * Items that are not None, types, sets, or dictionaries are converted to types.
 
 The test criterion is: a function or data frame must have at least the specified columns, and all non-null values must be only the declared expected types.
+
+What this all means, and how to use it, is easiest shown in [the demo](https://github.com/WinVector/Examples/blob/main/arg_types/type_check.ipynb).
 
 Unit tests:
 
