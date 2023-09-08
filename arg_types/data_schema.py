@@ -1,6 +1,6 @@
 
 """
-Tools for checking incoming and outgoing types of functions of data frames
+Tools for checking incoming and outgoing names and types of functions of data frames
 """
 
 from functools import wraps
@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 
-def _prep_type_arg(v) -> Optional[Union[Type, Set, Dict]]:
+def _prep_schema_specification(v) -> Optional[Union[Type, Set, Dict]]:
     """
     Transform/enforce type, set of types, or dict of name to type maps to standard form.
     None represents no constraint.
@@ -23,13 +23,13 @@ def _prep_type_arg(v) -> Optional[Union[Type, Set, Dict]]:
     elif isinstance(v, type):
         return v
     elif isinstance(v, set):
-        new_set = {_prep_type_arg(vi) for vi in v}
+        new_set = {_prep_schema_specification(vi) for vi in v}
         new_set = {vi for vi in v if v is not None}
         for vi in new_set:
             assert not isinstance(vi, set)
         return new_set
     elif isinstance(v, dict):
-        new_set = {ki: _prep_type_arg(vi) for ki, vi in v.items()}
+        new_set = {ki: _prep_schema_specification(vi) for ki, vi in v.items()}
         for vi in new_set:
             assert not isinstance(vi, dict)
         return new_set
@@ -58,7 +58,7 @@ def non_null_types_in_frame(d: pd.DataFrame) -> Dict[str, Optional[Set[Type]]]:
     return result
 
 
-class TypeCheckSwitch(object):
+class SchemaCheckSwitch(object):
     """
     From: https://python-patterns.guide/gang-of-four/singleton/
     """
@@ -66,7 +66,7 @@ class TypeCheckSwitch(object):
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(TypeCheckSwitch, cls).__new__(cls)
+            cls._instance = super(SchemaCheckSwitch, cls).__new__(cls)
             cls._instance.is_on_setting = True
         return cls._instance
     
@@ -80,18 +80,16 @@ class TypeCheckSwitch(object):
         return self.is_on_setting
 
 
-# early build
-TypeCheckSwitch()
+# early build of singleton
+SchemaCheckSwitch()
 
 
-class TypeSignatureRaises:
+class SchemaBase(object):
     """
-    Class as a type checking decorator.
+    Input and output schema decorator.
     """
     def __init__(self, arg_specs: Optional[Dict[str, Any]]=None, *, return_spec=None) -> None:
-        """
-        Wraps function to raise TypeError on argument non-compliance.
-        Types must be in specified set. 
+        """ 
         Pandas data frames must have at least declared columns and no unexpected types in columns.
         Nulls/Nones/NaNs values are not considered to have type (treating them as missingness).
         None as type constraints are considered no-type (unfailable).
@@ -99,9 +97,15 @@ class TypeSignatureRaises:
         :param arg_specs: dictionary of named args to type specifications.
         :param return_spec: optional return type specification.
         """
-        self.arg_specs = _prep_type_arg(arg_specs)
-        self.return_spec = _prep_type_arg(return_spec)
-    
+        self.arg_specs = _prep_schema_specification(arg_specs)
+        self.return_spec = _prep_schema_specification(return_spec)
+
+
+class SchemaRaises(SchemaBase):
+    """
+    Input and output schema decorator.
+    Raises TypeError on schema violations.
+    """    
     def _check_spec(self, *, expected_type: Optional[Union[Type, Set, Dict]], observed_value) -> Optional[str]:
         if expected_type is None:
             # no expectation, no failure possible
@@ -141,7 +145,7 @@ class TypeSignatureRaises:
         return None
 
     def check_args(self, *, arg_names: List[str], fname: str, args, kwargs) -> None:
-        if not TypeCheckSwitch().is_on():
+        if not SchemaCheckSwitch().is_on():
             return
         assert isinstance(fname, str)
         # check positional args (by name)
@@ -170,7 +174,7 @@ class TypeSignatureRaises:
             raise TypeError("\nfunction " + fname + "(), issues:\n" + "  \n".join(msgs))
 
     def check_return(self, *, fname: str, return_value) -> None:
-        if not TypeCheckSwitch().is_on():
+        if not SchemaCheckSwitch().is_on():
             return
         assert isinstance(fname, str)
         msg = self._check_spec(expected_type=self.return_spec, observed_value=return_value)
@@ -204,16 +208,12 @@ class TypeSignatureRaises:
             wrapped_fn.__doc__ = type_doc
         else:
             wrapped_fn.__doc__ = type_doc + "\n\n" + type_check_fn.__doc__
-        wrapped_fn.type_schema = self
+        wrapped_fn.data_schema = self
         return wrapped_fn
 
 
-class TypeSignatureNOOP:
-    """Does nothing."""
-    def __init__(self, arg_specs: Optional[Dict[str, Any]]=None, *, return_spec=None) -> None:
-        """Does nothing."""
-        pass
-
+class SchemaMock(SchemaBase):
+    """Build schema, but do not enforce or attach"""
     def __call__(self, type_check_fn):
         """Does nothing."""
         return type_check_fn

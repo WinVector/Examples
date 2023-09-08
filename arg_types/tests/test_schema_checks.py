@@ -1,16 +1,15 @@
 
 import numpy as np
 import pandas as pd
-from type_signature import non_null_types_in_frame
-from type_signature import TypeCheckSwitch
-# from type_signature import TypeSignatureNOOP as TypeSignature
-from type_signature import TypeSignatureRaises as TypeSignature
+from data_schema import non_null_types_in_frame
+from data_schema import SchemaCheckSwitch
+from data_schema import SchemaRaises as SchemaCheck
 
 
-def test_tchecks_on():
-    TypeCheckSwitch().on()
+def test_schema_checks_on():
+    SchemaCheckSwitch().on()
 
-    @TypeSignature({
+    @SchemaCheck({
             'a': int, 
             'b': int, 
             'c': {'x': int},
@@ -19,6 +18,9 @@ def test_tchecks_on():
     def fn(a, /, b, *, c, d=None):
         """doc"""
         return d
+    
+    assert fn.data_schema.arg_specs is not None
+    assert fn.data_schema.return_spec is not None
 
     help(fn)
 
@@ -77,7 +79,7 @@ def test_tchecks_on():
 
     rv
 
-    @TypeSignature(
+    @SchemaCheck(
             {'a': pd.DataFrame},
             return_spec=int,
     )
@@ -120,14 +122,14 @@ def test_tchecks_on():
     non_null_types_in_frame(d)
 
 
-def test_tchecks_off():
-    TypeCheckSwitch().off()
+def test_schema_checks_off():
+    SchemaCheckSwitch().off()
 
     """ begin text
     We add a decorator that shows the types of at least a subset of positional and named arguments. Declarations are either Python types, or sets of types. A special case is Pandas data frames, where we specify a required subset of columns and their value type-sets. "return_spec" is reserved to name the return type of the function (so the function we are working with may not have an argument of that name).
     """  # end text
 
-    @TypeSignature({
+    @SchemaCheck({
             'a': int, 
             'b': int, 
             'c': {'x': int},
