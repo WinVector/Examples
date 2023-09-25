@@ -36,7 +36,7 @@ def convert_arg_to_R(arg):
 
 def last_ggplot(
         *,
-        device = None,
+        device: str = "png",
         scale = 1,
         width = 8,
         height = 5,
@@ -47,9 +47,11 @@ def last_ggplot(
 ) -> Image:
     """
     Return last ggplot2 run in R as an IPython.display.Image.
-    Arguments are from ggplot2::ggsave()
+    Arguments are from ggplot2::ggsave().
+
     :return: Image
     """
+    assert isinstance(device, str)
     assert isinstance(units, str)
     assert isinstance(limitsize, bool)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as tf:
@@ -71,7 +73,7 @@ def last_ggplot(
 def get_ggplot_fn_by_name(
         fn_name: str,
         *,
-        device = None,
+        device: str = "png",
         scale = 1,
         width = 8,
         height = 5,
@@ -89,6 +91,7 @@ def get_ggplot_fn_by_name(
     :return: function that calls R function and then returns last ggplot2
     """
     assert isinstance(fn_name, str)
+    assert isinstance(device, str)
     assert isinstance(units, str)
     assert isinstance(limitsize, bool)
     fn = robjects.r[fn_name]
@@ -99,7 +102,7 @@ def get_ggplot_fn_by_name(
     def w_fn(*args, **kwargs) -> Image:
         r_args = [convert_arg_to_R(arg) for arg in args]
         r_kwargs = {k: convert_arg_to_R(v) for k, v in kwargs.items()}
-        plt_obj = fn(*r_args, **r_kwargs)  # conversion of return value causes evaluation of plot
+        _ = fn(*r_args, **r_kwargs)  # conversion of return value causes evaluation of plot
         return last_ggplot(
             device=device,
             scale=scale,
