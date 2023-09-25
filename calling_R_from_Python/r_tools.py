@@ -61,7 +61,7 @@ def get_ggplot_fn_by_name(fn_name: str):
     fn_env = str(robjects.r(f'environment({fn_name})')).strip()
     fn_srcfile = str(robjects.r(f'attr(attr({fn_name}, "srcref"), "srcfile")')).strip()
     # fn_attr = str(robjects.r(f'attributes({fn_name})')).strip()
-    def w_fn(*args, **kwargs):
+    def w_fn(*args, **kwargs) -> Image:
         r_args = [convert_arg_to_R(arg) for arg in args]
         r_kwargs = {k: convert_arg_to_R(v) for k, v in kwargs.items()}
         plt_obj = fn(*r_args, **r_kwargs)  # conversion of return value causes evaluation of plot
