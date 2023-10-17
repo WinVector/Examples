@@ -200,6 +200,10 @@ def convert_plotnine_to_PIL_image(plt) -> PIL.Image:
     return result
 
 
+logo = PIL.Image.open("Logo.png")
+logo = logo.resize((int(0.12 * logo.size[0]), int(0.12 * logo.size[1])))
+
+
 def composite_graphs_using_PIL(graphs) -> PIL.Image:
     """
     Composite 3 graphs to images of the same size using PIL and then composite
@@ -210,4 +214,5 @@ def composite_graphs_using_PIL(graphs) -> PIL.Image:
     img_c.paste(imgs[0], (0, int(imgs[0].size[1]/2)))
     img_c.paste(imgs[1], (imgs[0].size[0], 0))
     img_c.paste(imgs[2], (imgs[0].size[0], imgs[0].size[1]))
+    img_c.paste(logo, (200, 2200), logo)
     return img_c
