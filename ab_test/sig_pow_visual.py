@@ -4,15 +4,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from data_algebra.cdata import RecordSpecification
-from plotnine import (
-    aes, 
-    ggplot, 
-    geom_line, geom_point, geom_ribbon, geom_vline,
-    scale_color_manual, scale_fill_manual,
-    xlab, ylab,
-    ggtitle,
-    theme, theme_minimal
-)
+from plotnine import *
 
 
 def binomial_diff_sig_pow_visual(
@@ -92,8 +84,8 @@ def binomial_diff_sig_pow_visual(
                 )
             + geom_vline(
                 xintercept=threshold, 
-                color='black', 
-                size=1.0,
+                color='blue', 
+                size=2.0,
                 )
             + geom_ribbon(
                 aes(ymin=0, ymax='tail', fill='group'), 
@@ -109,3 +101,87 @@ def binomial_diff_sig_pow_visual(
             + theme_minimal()
         )
     return p
+
+
+def graph_factory(
+    *,
+    n:float = 557,  # the experiment size
+    r:float = 0.1,  # the assumed large effect size (difference in conversion rates)
+    t:float = 0.061576,  # the correct threshold for specified power and significance
+):
+    """
+    Build 3 related A/B difference in rates graphs
+
+    :param n: the experiment size
+    :param r: the assumed large effect size (difference in conversion rates)
+    :param t: the correct threshold for specified power and significance
+    :return: tuple of 3 plotnine graphs
+    """
+    # get the overall expected behavior of the experiment size
+    n_b_steps = 100
+    behaviors = pd.DataFrame({
+        'threshold': np.arange(0, r + r/n_b_steps, r/n_b_steps)
+    })
+    stdev = np.sqrt(0.5 / n)
+    behaviors['false positive rate'] = [
+        norm.sf(x=threshold, loc=0, scale=stdev) for threshold in behaviors["threshold"]]
+    behaviors['true positive rate'] = [
+        norm.cdf(x=r, loc=threshold, scale=stdev) for threshold in behaviors["threshold"]]
+    # get the keyed column version
+    map = RecordSpecification(
+        pd.DataFrame({
+            'measure': ["false positive rate", "true positive rate"],
+            'value': ["false positive rate", "true positive rate"],
+        }),
+        record_keys=['threshold'],
+        control_table_keys=['measure'],
+    ).map_from_rows()
+    behaviors_kv = map.transform(behaviors)
+    def make_graphs(threshold):
+        # convert to what were the function arguments
+        threshold = float(threshold)
+        stdev = np.sqrt(0.5 / n)
+        effect_size = r
+        sig_area = norm.sf(x=threshold, loc=0, scale=stdev)  # .sf() = 1 - .cdf()
+        mpow_area = norm.sf(x=effect_size, loc=threshold, scale=stdev)
+        title='Shaded area under the tails give you significance and 1-power '
+        subtitle = f' H0: significance (false positive rate) = {sig_area:.3f} = right area\n H1: 1-power (false negative rate) = {mpow_area:.3f} = left area'
+        # find nearest threshold
+        row_dist = np.abs(behaviors["threshold"] - threshold)
+        selected_rows = behaviors.loc[[np.argmin(row_dist)], :].reset_index(drop=True, inplace=False)
+        g_areas = ( 
+            binomial_diff_sig_pow_visual(
+                stdev=stdev,
+                effect_size=effect_size,
+                threshold=threshold,
+                title=title,
+                subtitle=subtitle
+            )
+        )
+        g_thresholds = (
+            ggplot(
+                    data=behaviors_kv,
+                    mapping=aes(x='threshold', y='value'),
+                )
+                + geom_line()
+                + ylim(0, 1)
+                + geom_vline(xintercept=threshold, size=2, color="blue")
+                + facet_wrap("measure", ncol=1)
+        )
+        g_roc = (
+            ggplot(
+                    data=behaviors,
+                    mapping=aes(x='false positive rate', y='true positive rate'),
+                )
+                + geom_point(
+                    data=selected_rows,
+                    size=3,
+                    color="blue",
+                )
+                + geom_line()
+                + coord_fixed()
+                + ylim(0.5, 1)
+                + xlim(0, 0.5)
+        )
+        return (g_areas, g_thresholds, g_roc)
+    return make_graphs
