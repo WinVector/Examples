@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from data_algebra.cdata import RecordSpecification
-from IPython.display import Image
 from plotnine import *
 import PIL
+from PIL import Image
 
 
 def binomial_diff_sig_pow_visual(
@@ -119,7 +119,7 @@ def graph_factory(
     :return: tuple of 3 plotnine graphs
     """
     # get the overall expected behavior of the experiment size
-    n_b_steps = 100
+    n_b_steps = 1000
     behaviors = pd.DataFrame({
         'threshold': np.arange(0, r + r/n_b_steps, r/n_b_steps)
     })
