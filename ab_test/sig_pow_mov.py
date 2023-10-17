@@ -48,20 +48,21 @@ if __name__ == '__main__':
         p.map(f, thresholds)
     i_max = thresholds[len(thresholds) - 1][0]
     i_current = i_max + 1
-    # run backwards
-    for i in range(len(thresholds)):
-        shutil.copyfile(  # symlink wasn't readable
-            src=os.path.join(dir, f"img_{(i_max - i):08d}.png"),
-            dst=os.path.join(dir, f"img_{i_current:08d}.png"),
-        )
-        i_current = i_current + 1
-    # run forwards
-    for i in range(len(thresholds)):
-        shutil.copyfile(
-            src=os.path.join(dir, f"img_{i:08d}.png"),
-            dst=os.path.join(dir, f"img_{i_current:08d}.png"),
-        )
-        i_current = i_current + 1
+    for rep in range(5):
+        # run backwards
+        for i in range(len(thresholds)):
+            shutil.copyfile(  # symlink wasn't readable
+                src=os.path.join(dir, f"img_{(i_max - i):08d}.png"),
+                dst=os.path.join(dir, f"img_{i_current:08d}.png"),
+            )
+            i_current = i_current + 1
+        # run forwards
+        for i in range(len(thresholds)):
+            shutil.copyfile(
+                src=os.path.join(dir, f"img_{i:08d}.png"),
+                dst=os.path.join(dir, f"img_{i_current:08d}.png"),
+            )
+            i_current = i_current + 1
 
 
 # ffmpeg -framerate 25 -pattern_type glob -i 'imgs/img_*.png' -c:v libx264 -pix_fmt yuv420p out.mp4
