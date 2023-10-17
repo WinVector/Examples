@@ -107,14 +107,12 @@ def graph_factory(
     *,
     n:float = 557,  # the experiment size
     r:float = 0.1,  # the assumed large effect size (difference in conversion rates)
-    t:float = 0.061576,  # the correct threshold for specified power and significance
 ):
     """
-    Build 3 related A/B difference in rates graphs
+    Build function that returns 3 related A/B difference in rates graphs
 
     :param n: the experiment size
     :param r: the assumed large effect size (difference in conversion rates)
-    :param t: the correct threshold for specified power and significance
     :return: tuple of 3 plotnine graphs
     """
     # get the overall expected behavior of the experiment size
