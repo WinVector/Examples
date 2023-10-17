@@ -11,6 +11,7 @@ To see the interaction: download [directory](https://github.com/WinVector/Exampl
 import numpy as np
 import pandas as pd
 import os
+import shutil
 from sig_pow_visual import composite_graphs_using_PIL, graph_factory
 import PIL
 from multiprocessing import Pool
@@ -19,7 +20,6 @@ from multiprocessing import Pool
 # derived from the above
 n = 557  # the experiment size
 r = 0.1  # the assumed large effect size (difference in conversion rates)
-t = 0.061576 # the correct threshold for specified power and significance
 
 
 
@@ -31,9 +31,6 @@ mk_graphs = graph_factory(
 
 dir = "imgs"
 
-n_step = 500
-thresholds = list(enumerate(np.arange(0, r + r/n_step, r/n_step)))
-
 
 def f(v):
     i, threshold = v
@@ -44,8 +41,27 @@ def f(v):
 
 
 if __name__ == '__main__':
+    n_step = 500
+    thresholds = list(enumerate(np.arange(0, r + r/n_step, r/n_step)))
     os.makedirs(dir)
     with Pool(5) as p:
         p.map(f, thresholds)
+    i_max = thresholds[len(thresholds) - 1][0]
+    i_current = i_max + 1
+    # run backwards
+    for i in range(len(thresholds)):
+        shutil.copyfile(  # symlink wasn't readable
+            src=os.path.join(dir, f"img_{(i_max - i):08d}.png"),
+            dst=os.path.join(dir, f"img_{i_current:08d}.png"),
+        )
+        i_current = i_current + 1
+    # run forwards
+    for i in range(len(thresholds)):
+        shutil.copyfile(
+            src=os.path.join(dir, f"img_{i:08d}.png"),
+            dst=os.path.join(dir, f"img_{i_current:08d}.png"),
+        )
+        i_current = i_current + 1
+
 
 # ffmpeg -framerate 25 -pattern_type glob -i 'imgs/img_*.png' -c:v libx264 -pix_fmt yuv420p out.mp4
