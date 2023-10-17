@@ -1,10 +1,13 @@
 
 # import our modules
+import tempfile
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
 from data_algebra.cdata import RecordSpecification
+from IPython.display import Image
 from plotnine import *
+import PIL
 
 
 def binomial_diff_sig_pow_visual(
@@ -183,3 +186,28 @@ def graph_factory(
         )
         return (g_areas, g_thresholds, g_roc)
     return make_graphs
+
+
+def convert_plotnine_to_PIL_image(plt) -> PIL.Image:
+    """
+    Convert plotnine plot to Image.
+    """
+    # https://stackoverflow.com/a/70817254
+    fig = plt.draw(show=False)
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as tf:
+        fig.savefig(tf.name, dpi=300)
+        result = PIL.Image.open(tf.name)
+    return result
+
+
+def composite_graphs_using_PIL(graphs) -> PIL.Image:
+    """
+    Composite 3 graphs to images of the same size using PIL and then composite
+    """
+    # composite the images using PIL
+    imgs = [convert_plotnine_to_PIL_image(g) for g in graphs]
+    img_c = PIL.Image.new("RGB", (2 * imgs[0].size[0], 2 * imgs[0].size[1]), "white")
+    img_c.paste(imgs[0], (0, int(imgs[0].size[1]/2)))
+    img_c.paste(imgs[1], (imgs[0].size[0], 0))
+    img_c.paste(imgs[2], (imgs[0].size[0], imgs[0].size[1]))
+    return img_c
