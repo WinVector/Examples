@@ -196,6 +196,8 @@ def graph_factory(
         effect_size = r
         title = None
         subtitle = None
+        sig_area = np.nan
+        mpow_area = np.nan
         if threshold is not None:
             threshold = float(threshold)
             sig_area = norm.sf(x=threshold, loc=0, scale=stdev)  # .sf() = 1 - .cdf()
@@ -250,6 +252,8 @@ def graph_factory(
             "g_thresholds": g_thresholds,
             "g_roc": g_roc,
             "i_title": i_title,
+            "sig_area": sig_area,
+            "mpow_area": mpow_area,
             }
     return make_graphs
 
