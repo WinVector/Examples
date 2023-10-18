@@ -1,6 +1,6 @@
 
 # import our modules
-from typing import Optional
+from typing import Any, Dict, Optional
 import tempfile
 import numpy as np
 import pandas as pd
@@ -163,7 +163,7 @@ def graph_factory(
 
     :param n: the experiment size
     :param r: the assumed large effect size (difference in conversion rates)
-    :return: tuple of 3 plotnine graphs
+    :return: function returnin dictionary of figures and images
     """
     # get the overall expected behavior of the experiment size
     n_b_steps = 1000
@@ -185,7 +185,7 @@ def graph_factory(
         control_table_keys=['measure'],
     ).map_from_rows()
     behaviors_kv = map.transform(behaviors)
-    def make_graphs(threshold):
+    def make_graphs(threshold) -> Dict[str, Any]:
         # convert to what were the function arguments
         threshold = float(threshold)
         stdev = np.sqrt(0.5 / n)
@@ -234,7 +234,12 @@ def graph_factory(
         i_title = (
             sig_pow_text_color(sig_area, mpow_area)
         )
-        return (g_areas, g_thresholds, g_roc, i_title)
+        return {
+            "g_areas": g_areas, 
+            "g_thresholds": g_thresholds,
+            "g_roc": g_roc,
+            "i_title": i_title,
+            }
     return make_graphs
 
 
@@ -256,14 +261,17 @@ logo = logo.resize((int(0.12 * logo.size[0]), int(0.12 * logo.size[1])))
 
 def composite_graphs_using_PIL(graphs) -> PIL.Image:
     """
-    Composite 3 graphs plus image to images of the same size using PIL and then composite
+    Composite 3 same size graphs plus image to images of the same size using PIL and then composite
     """
     # composite the images using PIL
-    imgs = [convert_plotnine_to_PIL_image(graphs[i]) for i in range(3)] + [graphs[3]]
-    img_c = PIL.Image.new("RGB", (2 * imgs[0].size[0], 2 * imgs[0].size[1]), "white")
-    img_c.paste(imgs[3], (200, 200))  # text
-    img_c.paste(imgs[0], (0, int(imgs[0].size[1]/2)))
-    img_c.paste(imgs[1], (imgs[0].size[0], 0))
-    img_c.paste(imgs[2], (imgs[0].size[0], imgs[0].size[1]))
+    i_areas = convert_plotnine_to_PIL_image(graphs["g_areas"])
+    i_thresholds = convert_plotnine_to_PIL_image(graphs["g_thresholds"])
+    i_roc = convert_plotnine_to_PIL_image(graphs["g_roc"])
+    i_title = graphs["i_title"]
+    img_c = PIL.Image.new("RGB", (2 * i_areas.size[0], 2 * i_areas.size[1]), "white")
+    img_c.paste(i_title, (200, 200))  # text
+    img_c.paste(i_areas, (0, int(i_areas.size[1]/2)))
+    img_c.paste(i_thresholds, (i_areas.size[0], 0))
+    img_c.paste(i_roc, (i_areas.size[0], i_areas.size[1]))
     img_c.paste(logo, (200, 2200), logo)
     return img_c
