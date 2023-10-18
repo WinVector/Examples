@@ -1,5 +1,6 @@
 
 # import our modules
+from typing import Optional
 import tempfile
 import numpy as np
 import pandas as pd
@@ -7,15 +8,15 @@ from scipy.stats import norm
 from data_algebra.cdata import RecordSpecification
 from plotnine import *
 import PIL
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 
 def binomial_diff_sig_pow_visual(
     stdev: float,
     effect_size: float,
     threshold: float,
-    title: str = 'Area under the tails give you significance and (1-power)',
-    subtitle: str = 'Significance: assumed_no_effect right tail; (1-Power): assumed_large_effect left tail',
+    title: Optional[str] = 'Area under the tails give you significance and (1-power)',
+    subtitle: Optional[str] = 'Significance: assumed_no_effect right tail; (1-Power): assumed_large_effect left tail',
     assumed_no_effect_color:str = '#f1a340',
     assumed_large_effect_color:str = '#998ec3',
     suppress_assumed_large_effect:bool = False,
@@ -97,13 +98,59 @@ def binomial_diff_sig_pow_visual(
             + scale_fill_manual(values=palette)
             + ylab('density')
             + xlab('observed difference')
-            + ggtitle(
+            + theme_minimal()
+
+        )
+    if (title is not None) and (subtitle is not None):
+        p = p + ggtitle(
                 title 
                 + "\n" + subtitle,
                 )
-            + theme_minimal()
-        )
     return p
+
+
+# sig_area, mpow_area are calculated in make_graphs
+
+def sig_pow_text_monochrome(sig_area, mpow_area, img_size=(480, 180), fontsize=24):
+    img_t = PIL.Image.new("RGB", img_size, "white")
+    draw = ImageDraw.Draw(img_t)
+
+    fnt = ImageFont.truetype("Verdana.ttf", fontsize)
+
+    textlabels = "False Positive Rate:\nFalse Negative Rate:"
+    textvalues = f"{sig_area:.3f}\n{mpow_area:.3f}"
+
+    value_xoffset = fnt.getlength("False Negative Rate:") + 5
+
+    draw.multiline_text((0,0), textlabels, font=fnt, fill=(0,0,0), align='right')
+    draw.multiline_text((value_xoffset, 0), textvalues, font=fnt, fill=(0,0,0), align='left')
+    return img_t
+
+
+def sig_pow_text_color(sig_area, mpow_area, img_size=(4*480, 4*180), fontsize=100):
+    # these are the colors in binomial_diff_sig_pow_visual
+    # converted to (R, G, B)
+    assumed_no_effect_color = (241, 163, 64) # '#f1a340',
+    assumed_large_effect_color = (153, 142, 195) # '#998ec3'
+
+    img_t = PIL.Image.new("RGB", img_size, "white")
+    draw = ImageDraw.Draw(img_t)
+
+    fnt = ImageFont.truetype("Verdana.ttf", fontsize)
+
+    textlabels = "False Positive Rate:\nFalse Negative Rate:"
+    significance = f"{sig_area:.3f}"
+    mpow = f"{mpow_area:.3f}"
+
+    value_xoffset = fnt.getlength("False Negative Rate:") + 5
+    bb = fnt.getbbox(significance) 
+    # (left, top, right, bottom)
+    # multiline_text by default puts 4 pixel spacing between lines
+
+    draw.multiline_text((0,0), textlabels, font=fnt, fill=(0,0,0), align='right')
+    draw.text((value_xoffset, 0), significance, font=fnt, fill=assumed_no_effect_color)
+    draw.text((value_xoffset, bb[3]+4), mpow, font=fnt, fill=assumed_large_effect_color)
+    return img_t
 
 
 def graph_factory(
@@ -145,8 +192,8 @@ def graph_factory(
         effect_size = r
         sig_area = norm.sf(x=threshold, loc=0, scale=stdev)  # .sf() = 1 - .cdf()
         mpow_area = norm.sf(x=effect_size, loc=threshold, scale=stdev)
-        title='Shaded area under the tails give you significance and 1-power '
-        subtitle = f' H0: significance (false positive rate) = {sig_area:.3f} = right area\n H1: 1-power (false negative rate) = {mpow_area:.3f} = left area'
+        title = None
+        subtitle = None
         # find nearest threshold
         row_dist = np.abs(behaviors["threshold"] - threshold)
         selected_rows = behaviors.loc[[np.argmin(row_dist)], :].reset_index(drop=True, inplace=False)
@@ -184,7 +231,10 @@ def graph_factory(
                 + ylim(0.5, 1)
                 + xlim(0, 0.5)
         )
-        return (g_areas, g_thresholds, g_roc)
+        i_title = (
+            sig_pow_text_color(sig_area, mpow_area)
+        )
+        return (g_areas, g_thresholds, g_roc, i_title)
     return make_graphs
 
 
@@ -206,11 +256,12 @@ logo = logo.resize((int(0.12 * logo.size[0]), int(0.12 * logo.size[1])))
 
 def composite_graphs_using_PIL(graphs) -> PIL.Image:
     """
-    Composite 3 graphs to images of the same size using PIL and then composite
+    Composite 3 graphs plus image to images of the same size using PIL and then composite
     """
     # composite the images using PIL
-    imgs = [convert_plotnine_to_PIL_image(g) for g in graphs]
+    imgs = [convert_plotnine_to_PIL_image(graphs[i]) for i in range(3)] + [graphs[3]]
     img_c = PIL.Image.new("RGB", (2 * imgs[0].size[0], 2 * imgs[0].size[1]), "white")
+    img_c.paste(imgs[3], (200, 200))  # text
     img_c.paste(imgs[0], (0, int(imgs[0].size[1]/2)))
     img_c.paste(imgs[1], (imgs[0].size[0], 0))
     img_c.paste(imgs[2], (imgs[0].size[0], imgs[0].size[1]))
