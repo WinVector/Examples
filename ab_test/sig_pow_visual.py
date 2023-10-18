@@ -14,7 +14,7 @@ from PIL import Image, ImageDraw, ImageFont
 def binomial_diff_sig_pow_visual(
     stdev: float,
     effect_size: float,
-    threshold: float,
+    threshold: Optional[float],
     title: Optional[str] = 'Area under the tails give you significance and (1-power)',
     subtitle: Optional[str] = 'Significance: assumed_no_effect right tail; (1-Power): assumed_large_effect left tail',
     assumed_no_effect_color:str = '#f1a340',
@@ -45,17 +45,22 @@ def binomial_diff_sig_pow_visual(
     eps:float = 1e-6
     # define the wide plotting data
     x = set(np.arange(-5 * stdev, 5 * stdev + effect_size, step=stdev / 100))
-    x.update([threshold, threshold-eps, threshold+eps])
+    if threshold is not None:
+        x.update([threshold, threshold-eps, threshold+eps])
     x = sorted(x)
     pframe = pd.DataFrame({
         'x': x,
         'assumed_no_effect': norm.pdf(x, loc=0, scale=stdev),
         'assumed_large_effect': norm.pdf(x, loc=effect_size, scale=stdev),
     })
-    # assumed_no_effect's right tail
-    pframe['assumed_no_effect_tail'] = np.where(pframe['x'] > threshold, pframe['assumed_no_effect'], 0)
-    # assumed_large_effect's left tail
-    pframe['assumed_large_effect_tail'] = np.where(pframe['x'] <= threshold, pframe['assumed_large_effect'], 0)
+    if threshold is not None:
+        # assumed_no_effect's right tail
+        pframe['assumed_no_effect_tail'] = np.where(pframe['x'] > threshold, pframe['assumed_no_effect'], 0)
+        # assumed_large_effect's left tail
+        pframe['assumed_large_effect_tail'] = np.where(pframe['x'] <= threshold, pframe['assumed_large_effect'], 0)
+    else:
+        pframe['assumed_no_effect_tail'] = 0
+        pframe['assumed_large_effect_tail'] = 0
     # convert from to long for for plotting using the data algebra
     # specify the cdata record transform
     record_transform = RecordSpecification(
@@ -86,11 +91,7 @@ def binomial_diff_sig_pow_visual(
             + geom_line(
                 aes(color='group', linetype='group')
                 )
-            + geom_vline(
-                xintercept=threshold, 
-                color='blue', 
-                size=2.0,
-                )
+
             + geom_ribbon(
                 aes(ymin=0, ymax='tail', fill='group'), 
                 alpha = 0.8)
@@ -99,13 +100,18 @@ def binomial_diff_sig_pow_visual(
             + ylab('density')
             + xlab('observed difference')
             + theme_minimal()
-
         )
-    if (title is not None) and (subtitle is not None):
-        p = p + ggtitle(
-                title 
-                + "\n" + subtitle,
-                )
+    if threshold is not None:
+        p = p + geom_vline(
+                    xintercept=threshold, 
+                    color='blue', 
+                    size=2.0,
+                    )
+    if title is not None:
+        txt = title
+        if subtitle is not None:
+            txt = txt + "\n" + subtitle
+        p = p + ggtitle(txt)
     return p
 
 
@@ -185,18 +191,18 @@ def graph_factory(
         control_table_keys=['measure'],
     ).map_from_rows()
     behaviors_kv = map.transform(behaviors)
-    def make_graphs(threshold) -> Dict[str, Any]:
-        # convert to what were the function arguments
-        threshold = float(threshold)
+    def make_graphs(threshold: Optional[float]) -> Dict[str, Any]:
         stdev = np.sqrt(0.5 / n)
         effect_size = r
-        sig_area = norm.sf(x=threshold, loc=0, scale=stdev)  # .sf() = 1 - .cdf()
-        mpow_area = norm.sf(x=effect_size, loc=threshold, scale=stdev)
         title = None
         subtitle = None
-        # find nearest threshold
-        row_dist = np.abs(behaviors["threshold"] - threshold)
-        selected_rows = behaviors.loc[[np.argmin(row_dist)], :].reset_index(drop=True, inplace=False)
+        if threshold is not None:
+            threshold = float(threshold)
+            sig_area = norm.sf(x=threshold, loc=0, scale=stdev)  # .sf() = 1 - .cdf()
+            mpow_area = norm.sf(x=effect_size, loc=threshold, scale=stdev)
+            # find nearest threshold
+            row_dist = np.abs(behaviors["threshold"] - threshold)
+            selected_rows = behaviors.loc[[np.argmin(row_dist)], :].reset_index(drop=True, inplace=False)
         g_areas = ( 
             binomial_diff_sig_pow_visual(
                 stdev=stdev,
@@ -213,27 +219,32 @@ def graph_factory(
                 )
                 + geom_line()
                 + ylim(0, 1)
-                + geom_vline(xintercept=threshold, size=2, color="blue")
                 + facet_wrap("measure", ncol=1)
         )
+        if threshold is not None:
+            g_thresholds = g_thresholds + geom_vline(xintercept=threshold, size=2, color="blue")
         g_roc = (
             ggplot(
                     data=behaviors,
                     mapping=aes(x='false positive rate', y='true positive rate'),
-                )
-                + geom_point(
-                    data=selected_rows,
-                    size=3,
-                    color="blue",
                 )
                 + geom_line()
                 + coord_fixed()
                 + ylim(0.5, 1)
                 + xlim(0, 0.5)
         )
-        i_title = (
-            sig_pow_text_color(sig_area, mpow_area)
-        )
+        if threshold is not None:
+            g_roc = g_roc + geom_point(
+                    data=selected_rows,
+                    size=3,
+                    color="blue",
+                )
+        if threshold is not None:
+            i_title = (
+                sig_pow_text_color(sig_area, mpow_area)
+            )
+        else:
+            i_title = None
         return {
             "g_areas": g_areas, 
             "g_thresholds": g_thresholds,
@@ -269,7 +280,8 @@ def composite_graphs_using_PIL(graphs) -> PIL.Image:
     i_roc = convert_plotnine_to_PIL_image(graphs["g_roc"])
     i_title = graphs["i_title"]
     img_c = PIL.Image.new("RGB", (2 * i_areas.size[0], 2 * i_areas.size[1]), "white")
-    img_c.paste(i_title, (200, 200))  # text
+    if i_title is not None:
+        img_c.paste(i_title, (200, 200))  # text
     img_c.paste(i_areas, (0, int(i_areas.size[1]/2)))
     img_c.paste(i_thresholds, (i_areas.size[0], 0))
     img_c.paste(i_roc, (i_areas.size[0], i_areas.size[1]))
