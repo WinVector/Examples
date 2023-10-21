@@ -3,6 +3,10 @@ ib_pow
 2023-10-21
 
 ``` r
+library(ggplot2)
+```
+
+``` r
 pbeta(0.1, 4, 1)^(1/4) + (1 - pbeta(0.1, 1, 4))^(1/4)
 ```
 
@@ -129,11 +133,9 @@ ggplot(
   ggtitle("nice ROC curve")
 ```
 
-![](ib_pow_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](ib_pow_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 ``` r
-library(ggplot2)
-
 d_bad <- data.frame(
   threshold = seq(0, 1, 0.001)
 )
@@ -150,4 +152,42 @@ ggplot(
   ggtitle("not nice ROC curve")
 ```
 
-![](ib_pow_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](ib_pow_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+``` r
+d_norm <- data.frame(
+  threshold = seq(-10, 10, 0.001)
+)
+d_norm$false_positive_rate = 1 - pnorm(d_norm$threshold, mean=1, sd=1)
+d_norm$true_positive_rate = 1 - pnorm(d_norm$threshold, mean=2, sd=0.5)
+
+ggplot(
+  data=d_norm,
+  mapping=aes(x=false_positive_rate, y=true_positive_rate)
+  ) +
+  geom_line() +
+  geom_abline(intercept=0, slope=1, color="Blue", alpha=0.5) +
+  theme(aspect.ratio=1) + 
+  ggtitle("normal ROC curve")
+```
+
+![](ib_pow_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+``` r
+d_norm_zoomed <- data.frame(
+  threshold = seq(2.5, 10, 0.001)
+)
+d_norm_zoomed$false_positive_rate = 1 - pnorm(d_norm_zoomed$threshold, mean=1, sd=1)
+d_norm_zoomed$true_positive_rate = 1 - pnorm(d_norm_zoomed$threshold, mean=2, sd=0.5)
+
+ggplot(
+  data=d_norm_zoomed,
+  mapping=aes(x=false_positive_rate, y=true_positive_rate)
+  ) +
+  geom_line() +
+  geom_abline(intercept=0, slope=1, color="Blue", alpha=0.5) +
+  theme(aspect.ratio=1) + 
+  ggtitle("normal ROC curve")
+```
+
+![](ib_pow_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
