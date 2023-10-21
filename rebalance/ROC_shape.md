@@ -313,11 +313,8 @@ will limit ourselves to a \> b \>= 1.
 In this case we have the following strong claim.
 
 <pre>
-The ROC plot curve is: 
+The ROC plot curve is close to: 
 &#10;   y = 1 - (1 - x^(1/s))^s
-   &#10;where s is:
-&#10;  s = log(1 - I(1/2; b, a)) / log(0.5)
-  &#10;where I(t; a, b) is the normalized incomplete beta function.
 </pre>
 
 Let’s try that. First we try an arbitrary curve meeting our mirror
@@ -432,15 +429,15 @@ This is already enough to show mirror symmetry around the line between
 For b=1 then the AUC curve is then:
 
 <pre>
-x(t) = 1 - t^a / a
-y(t) = (1 - t)^a / a
+x(t) = 1 - t^a
+y(t) = (1 - t)^a
 </pre>
 
 We eliminate the classifier threshold t, to get a non-parameterized
 version of this curve:
 
 <pre>
-(1 - x)^(1/a) + y^(1/a) = 1 / a^(1/a)
+(1 - x)^(1/a) + y^(1/a) = 1
 </pre>
 
 This *is* the curve for the b=1 case.
@@ -456,7 +453,7 @@ examples here) that the ROC plots produced from mirror-symmetric
 conditional beta distributions are (ideally) all graphs of the form:
 
 <pre>
-   (1 - y)^(1/s) + x^(1/s) = c
+   (1 - y)^(1/s) + x^(1/s) = 1
 </pre>
 
 for s\>=1.
@@ -464,13 +461,13 @@ for s\>=1.
 Or (in terms of the quantities being studied instead of the graph):
 
 <pre>
-   (1 - sensitivity)^(1/s) + (1 - specificity)^(1/s) = c
+   (1 - sensitivity)^(1/s) + (1 - specificity)^(1/s) = 1
 </pre>
 
 This single parameter family of curves are all symmetric, convex, and
 comparable (for any pair one is contained in the other)- which are
 *very* nice properties not generally true of the ROC plot. It is our
-further, unproven, claim that you expect this shape in sufficiently rich
+further, unproven, claim that you expect this shape is sufficiently rich
 (enough variables, powerful enough models, and enough examples) modeling
 situations. As the mirrored conditional beta family is nominally
 parameterized by two parameters, the fact that the non-parameterized
