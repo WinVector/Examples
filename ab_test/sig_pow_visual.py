@@ -258,14 +258,15 @@ def graph_factory(
     return make_graphs
 
 
-def convert_plotnine_to_PIL_image(plt) -> PIL.Image:
+def convert_plotnine_to_PIL_image(plt, *, dpi: int=200) -> PIL.Image:
     """
     Convert plotnine plot to Image.
     """
+    dpi = int(dpi)
     # https://stackoverflow.com/a/70817254
     fig = plt.draw(show=False)
     with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as tf:
-        fig.savefig(tf.name, dpi=300)
+        fig.savefig(tf.name, dpi=dpi)  # renders 640 x 480 as dpi / 100 times scale up
         result = PIL.Image.open(tf.name)
     return result
 
@@ -274,20 +275,30 @@ logo = PIL.Image.open("Logo.png")
 logo = logo.resize((int(0.12 * logo.size[0]), int(0.12 * logo.size[1])))
 
 
-def composite_graphs_using_PIL(graphs) -> PIL.Image:
+def composite_graphs_using_PIL(graphs, *, hd_aspect: bool = True) -> PIL.Image:
     """
     Composite 3 same size graphs plus image to images of the same size using PIL and then composite
     """
+    if hd_aspect:
+        dpi = 200
+        sheet_size = (3840, 2160)  # hd4k, more vertically constrained
+        vrt_pad = 0
+        lft_pad = 200
+    else:
+        dpi = 300
+        sheet_size = (640 * 6, 480 * 6)  # sd aspect
+        vrt_pad = 100
+        lft_pad = 0
     # composite the images using PIL
-    i_areas = convert_plotnine_to_PIL_image(graphs["g_areas"])
-    i_thresholds = convert_plotnine_to_PIL_image(graphs["g_thresholds"])
-    i_roc = convert_plotnine_to_PIL_image(graphs["g_roc"])
+    i_areas = convert_plotnine_to_PIL_image(graphs["g_areas"], dpi=dpi)
+    i_thresholds = convert_plotnine_to_PIL_image(graphs["g_thresholds"], dpi=dpi)
+    i_roc = convert_plotnine_to_PIL_image(graphs["g_roc"], dpi=dpi)
     i_title = graphs["i_title"]
-    img_c = PIL.Image.new("RGB", (2 * i_areas.size[0], 2 * i_areas.size[1]), "white")
+    img_c = PIL.Image.new("RGB", sheet_size, "white")
     if i_title is not None:
-        img_c.paste(i_title, (200, 200))  # text
-    img_c.paste(i_areas, (0, int(i_areas.size[1]/2)))
-    img_c.paste(i_thresholds, (i_areas.size[0], 0))
-    img_c.paste(i_roc, (i_areas.size[0], i_areas.size[1]))
-    img_c.paste(logo, (200, 2200), logo)
+        img_c.paste(i_title, (lft_pad + 100, 200))  # text
+    img_c.paste(i_areas, (lft_pad, int(i_areas.size[1]/2) + vrt_pad))
+    img_c.paste(i_thresholds, (lft_pad + int(sheet_size[0]/2), 0))
+    img_c.paste(i_roc, (lft_pad+ int(sheet_size[0]/2), int(sheet_size[1]/2)))
+    img_c.paste(logo, (lft_pad + 100, int(3 * sheet_size[1] / 4) + vrt_pad), logo)
     return img_c
