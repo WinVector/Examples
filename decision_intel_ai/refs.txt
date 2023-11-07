@@ -1,0 +1,29 @@
+
+
+References from
+
+Basics of Machine Learning & Artificial Intelligence
+Decision Intelligence Confronts A.I.
+Friday November 10, 2023
+John Mount
+Win Vector LLC
+
+
+https://www.win-vector.com/
+
+Hastie, Tibshirani, Friedman, The Elements of Statistical Learning, Springer 2001.
+Bishop, Pattern Recognition and Machine Learning, 2006.
+
+https://openai.com/research/ai-and-compute 
+https://chat.openai.com 
+
+https://www.linkedin.com/posts/philipp-schmid-a6a2bb196_how-openai-improved-their-rag-pipeline-by-activity-7127563601300606976-EDcm 
+
+ 
+https://spectrum.ieee.org/in-2016-microsofts-racist-chatbot-revealed-the-dangers-of-online-conversation 
+https://www.jumpstartmag.com/top-5-epic-fails-of-ai-chatbots/
+https://www.bloomberg.com/news/newsletters/2022-12-08/chatgpt-open-ai-s-chatbot-is-spitting-out-biased-sexist-results 
+
+https://www.jwz.org/blog/2023/11/once-again-ai-is-revealed-to-be-an-army-of-mechanical-turks-in-a-call-center/ 
+https://youtu.be/EUrOxh_0leE 
+
