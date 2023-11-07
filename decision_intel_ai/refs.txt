@@ -10,9 +10,12 @@ Win Vector LLC
 
 https://www.win-vector.com/
 
+Event:
+  https://web.cvent.com/event/ad17da9d-93ce-4b6e-97bd-d2169147d590/summary
 
-This list:
-  https://github.com/WinVector/Examples/blob/main/decision_intel_ai/refs.txt
+
+This list refs.txt at:
+  https://github.com/WinVector/Examples/blob/main/decision_intel_ai
  
 Hastie, Tibshirani, Friedman, The Elements of Statistical Learning, Springer 2001.
 Bishop, Pattern Recognition and Machine Learning, 2006.
