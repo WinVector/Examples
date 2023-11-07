@@ -8,9 +8,12 @@ Friday November 10, 2023
 John Mount
 Win Vector LLC
 
-
 https://www.win-vector.com/
 
+
+This list:
+  https://github.com/WinVector/Examples/blob/main/decision_intel_ai/refs.txt
+ 
 Hastie, Tibshirani, Friedman, The Elements of Statistical Learning, Springer 2001.
 Bishop, Pattern Recognition and Machine Learning, 2006.
 
