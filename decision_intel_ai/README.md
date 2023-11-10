@@ -2,6 +2,6 @@ Materials from my "orient the audience on current AI terms" talk for "Decision I
 
 The slides and links are available here: https://github.com/WinVector/Examples/tree/main/decision_intel_ai
 
-A rehearsal video is here: https://youtu.be/UFXQ7Z6b7uY
+A rehearsal video is here: https://youtu.be/UFXQ7Z6b7uY . Some stuff was changed after this rehearsal (including switching microphones).
 
 
