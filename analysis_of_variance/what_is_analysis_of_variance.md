@@ -1,6 +1,6 @@
 What Good is Analysis of Variance?
 ================
-2024-02-19
+2024-02-28
 
 ## Introduction
 

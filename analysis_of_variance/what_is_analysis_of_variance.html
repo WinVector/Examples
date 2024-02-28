@@ -1,5 +1,5 @@
 <h1 id="what-good-is-analysis-of-variance">What Good is Analysis of Variance?</h1>
-<p>2024-02-19</p>
+<p>2024-02-28</p>
 <h2 id="introduction">Introduction</h2>
 <p>I'd like to demonstrate what "analysis of variance" (often abbreviated as "anova" or "aov") does for you as a data scientist or analyst. After reading this note you should be able to determine how an analysis of variance style calculation can or can not help with your project.</p>
 <center>
@@ -720,3 +720,6 @@
 <p>Even for "something as simple as" linear models the analysis of variance attributions are much more reliable on attributions made by coefficient size, coefficient significance, or even so-called "terms" (<code>R</code> phrase for: coefficient times individual variables). So there are good reasons to consider analysis of variance style summaries.</p>
 <p>The point of analysis of variance <em>can</em> be obscured by derivations that show that the traditional calculation tracks how nested models <em>differ from each other</em>, instead of directly tracking <em>how much nested models improve residual variance</em>. The two quantities <em>are identical given the usual orthogonality of residuals properties known to be true for linear modeling</em>. The confusion being: the first quantity makes for easier bookkeeping, while only the second quantity is inherently interesting to the analyst or data scientist. The identity of these two quantities is called out in the included example code at the "<code>confirm equal</code>" comment. Due to historic practice, we have a situation where implementations refer to "<a href="https://en.wikipedia.org/wiki/The_Scottish_play">The Scottish Play</a>", when users really want "Macbeth."</p>
 
+<p>
+  The source code for this article can be found <a href="https://github.com/WinVector/Examples/tree/main/analysis_of_variance">here</a>.
+</p>
