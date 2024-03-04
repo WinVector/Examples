@@ -790,3 +790,6 @@ comment. Due to historic practice, we have a situation where
 implementations refer to “[The Scottish
 Play](https://en.wikipedia.org/wiki/The_Scottish_play)”, when users
 really want “Macbeth.”
+
+The source of this article can be found
+[here](https://github.com/WinVector/Examples/blob/main/analysis_of_variance/).
