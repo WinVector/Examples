@@ -258,6 +258,7 @@ def _identify_variance_fn_through_sym(
     is symmetrized on a set of states smaller than the full symmetric group.
     Works on a decomposition of the symmetry group into equal sized segments where the functions we are working over are constant
     (so it is enough to average over representatives.)
+    Another approach would be to build a map of all possible monomials to symmetrized versions.
 
     :param partition: partition of group sizes to work with
     :param symmetry_fn: symmetry_fn(n=, values=, symmetry_args=symmetry_args) generates n-vectors working through symmetries we need to sum out
@@ -360,6 +361,7 @@ def identify_variance_fn(partition: Iterable[int]):
     Identify the variance function by evaluating on a mostly zero example that
     is symmetrized on a set of states smaller than the full symmetric group.
     Works on a factorial(n_cells) = binomial(n_cells, 4) * factorial(4) * factorial(n_cells - 4) decomposition.
+    Another approach would be to build a map of all possible monomials to symmetrized versions.
 
     :param partition: partition of group sizes to work with
     :return: variance polynomial as elementary symmetric polynomials
@@ -524,6 +526,7 @@ def identify_variance_fn_regular_blocks(
     Identify the variance function by evaluating on a mostly zero example that
     is symmetrized on a set of states smaller than the full symmetric group.
     Works on a factorial(n_cells) = binomial(n_cells, 4) * factorial(4) * factorial(n_cells - 4) decomposition.
+    Another approach would be to build a map of all possible monomials to symmetrized versions.
 
     :param n_blocks: number of blocks
     :param block_size: size of each block
@@ -547,7 +550,8 @@ def identify_variance_fn_regular_blocks_e(
     detect_support: bool = True,
 ):
     """
-    Identify the variance function by working on a 4,4 system and substituting in different counts
+    Identify the variance function by working on a 4,4 system and substituting in different counts.
+    Another approach would be to build a map of all possible monomials to symmetrized versions.
 
     :param n_blocks: number of blocks
     :param block_size: size of each block >=4 or variable
