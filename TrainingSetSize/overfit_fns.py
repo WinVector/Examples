@@ -56,13 +56,15 @@ def measure_train_test_quality(
 
 def run_training_size_modeling_experiments(
     *,
-    cache_file_name = 'plot_frame_sizes.parquet',
+    cache_file_name: str = 'plot_frame_sizes.parquet',
     d_large_ideal_test: pd.DataFrame,
     example_factory,
     rng,
     rmse_null: float,
     rmse_perfect: float,
     alphas,
+    n_repetitions: int = 10,
+    param_excess: float = 20,
 ):
     # build or get model evaluation data
     if os.path.isfile(cache_file_name):
@@ -74,7 +76,7 @@ def run_training_size_modeling_experiments(
         n_parameters = len(variables)
         eval_ms = sorted(set(np.linspace(
             start=1,
-            stop=20 * n_parameters,
+            stop= param_excess * n_parameters,
             endpoint=True,
             num=500).astype(int)))
         # generate data for different training set sizes (m_row)
@@ -90,7 +92,7 @@ def run_training_size_modeling_experiments(
                     d_large_ideal_test=d_large_ideal_test) 
                     for m_row in eval_ms] 
                 for alpha in alphas]
-            for rep in range(10)]
+            for rep in range(n_repetitions)]
         # flatten lists into a single data frame
         plot_frame = sum(plot_frame, [])
         plot_frame = sum(plot_frame, [])
@@ -170,6 +172,8 @@ def plot_error_curves(
         draw_smooth: bool = False,
         x_variable_name: str = 'training rows',
         vline = None,
+        line_function: str = "median",
+        alpha_adjust: bool = True
         ):
     colors = {  # https://colorbrewer2.org/?type=qualitative&scheme=Dark2&n=4
         'RMSE train': '#e7298a',
@@ -199,7 +203,7 @@ def plot_error_curves(
         plot_frame
             .loc[:, [x_variable_name, "alpha", "measurement", "L2 regularization", "value"]]
             .groupby([x_variable_name, "alpha", "measurement", "L2 regularization"])
-            .median()
+            .apply(line_function)
             .reset_index(drop=False, inplace=False)
     )
     gplot = (
@@ -221,7 +225,7 @@ def plot_error_curves(
         )
     if draw_points:
         alpha = 1
-        if draw_lines or draw_smooth:
+        if alpha_adjust and (draw_lines or draw_smooth):
             alpha=0.05
         gplot = (
             gplot 
@@ -231,7 +235,7 @@ def plot_error_curves(
         )
     if draw_lines:
         alpha = 1
-        if draw_smooth:
+        if alpha_adjust and draw_smooth:
             alpha=0.15
         gplot = (
             gplot
