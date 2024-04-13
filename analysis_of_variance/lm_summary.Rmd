@@ -1,0 +1,30 @@
+---
+title: "lm summary"
+output: github_document
+date: "2024-04-13"
+---
+
+```{r}
+set.seed(2024)
+
+m_row <- 20
+n_var <- 3
+d <- data.frame(matrix(
+  rnorm((n_var+1)*m_row), 
+  nrow=m_row))
+colnames(d)[n_var+1] <- 'y'
+vars <- colnames(d)[1:n_var]
+```
+
+```{r}
+summary(lm(y ~., data=d))
+```
+
+```{r}
+summary(aov(y ~ ., data=d))
+```
+
+```{r}
+summary(aov(lm(y ~ ., data=d)))
+```
+
