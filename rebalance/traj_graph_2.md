@@ -15,6 +15,10 @@ library(data.table)
     ## Warning: package 'data.table' was built under R version 4.3.2
 
 ``` r
+set.seed(2024)
+```
+
+``` r
 d_ex <- wrapr::build_frame(
    "x1"  , "x2", "y" |
      0   , 0   , 0   |
@@ -24,35 +28,88 @@ d_ex <- wrapr::build_frame(
      1   , 2   , 1   |
      1   , 1   , 0   )
 
-knitr::kable(d_ex)
+# knitr::kable(d_ex)
 ```
 
-|  x1 |  x2 |   y |
-|----:|----:|----:|
-|   0 |   0 |   0 |
-|   1 |   0 |   1 |
-|  -2 |   0 |   0 |
-|   0 |   2 |   1 |
-|   1 |   2 |   1 |
-|   1 |   1 |   0 |
+``` r
+build_traj <- function(d_ex, lambda_max = 4, length.out = 100) {
+    frames <- list()
+    suppressWarnings(
+      for(lambda in seq(0, lambda_max, length.out = length.out)) {
+        model <- glm(y ~ x1 + x2, family=binomial(), data=d_ex, weights = 1 + lambda * d_ex$y)
+        preds <- predict(model, type='response', newdata=d_ex)
+        row_frame <- as.data.frame(t(as.matrix(preds)))
+        row_frame['lambda'] <- lambda
+        frames <- c(frames, list(row_frame))
+      }
+    )
+    frames <- do.call(rbind, frames)
+    return(frames)
+}
+```
 
 ``` r
 logit <- function(x) {log(x/(1-x))}
-is_non_decreasing <- function(x) {all(x == cummax(x))}
 ```
 
 ``` r
-frames <- list()
-suppressWarnings(
-  for(lambda in seq(0, 10.0, length.out = 1000)) {
-    model <- glm(y ~ x1 + x2, family=binomial(), data=d_ex, weights = 1 + lambda * d_ex$y)
-    preds <- predict(model, type='response', newdata=d_ex)
-    row_frame <- as.data.frame(t(as.matrix(preds)))
-    row_frame['lambda'] <- lambda
-    frames <- c(frames, list(row_frame))
+frames <- build_traj(d_ex)
+```
+
+``` r
+mk_example <- function() {
+  d_cols <- c('x1', 'x2', 'x3', 'y')
+  n_rows <- 8
+  while(TRUE) {
+    d_ex <- data.frame(matrix(
+      sample(seq(-5, 5), size = length(d_cols) * n_rows, replace = TRUE),
+      ncol=length(d_cols)))
+    colnames(d_ex) <- d_cols
+    d_ex['y'] = d_ex['y'] >= 0
+    frames <- build_traj(d_ex)
+    n_f_rows <- nrow(frames)
+    have_cross <- FALSE
+    have_increasing <- FALSE
+    have_decreasing <- FALSE
+    for(col in colnames(frames)) {
+      if(col != 'lambda') {
+        col_v <- frames[[col]]
+        have_increasing <- have_increasing || ((col_v[[1]] + 1e-2) < col_v[[n_f_rows]])
+        have_decreasing <- have_decreasing || ((col_v[[1]] - 1e-2) > col_v[[n_f_rows]])
+        for(col2 in colnames(frames)) {
+          if(col2 != 'lambda') {
+            col2_v <- frames[[col2]]
+            see_cross <- (abs(col_v[[1]] - col2_v[[1]]) > 1e-2) && (abs(col_v[[n_f_rows]] - col2_v[[n_f_rows]]) > 1e-2) && (col_v[[n_f_rows]] != col2_v[[n_f_rows]]) && ((col_v[[1]] > col2_v[[1]]) != (col_v[[n_f_rows]] > col2_v[[n_f_rows]]))
+            have_cross <- have_cross || see_cross
+          }
+        }
+      }
+    }
+    if(have_increasing && have_decreasing && have_cross) {
+      return(d_ex)
+    }
   }
-)
-frames <- do.call(rbind, frames)
+}
+```
+
+``` r
+d_ex <- mk_example()
+knitr::kable(d_ex)
+```
+
+|  x1 |  x2 |  x3 | y     |
+|----:|----:|----:|:------|
+|  -2 |  -5 |  -5 | TRUE  |
+|  -4 |  -2 |   0 | TRUE  |
+|  -2 |   0 |  -1 | TRUE  |
+|   3 |   2 |   2 | FALSE |
+|  -5 |  -5 |   3 | FALSE |
+|   1 |   0 |  -2 | FALSE |
+|   2 |  -4 |   2 | FALSE |
+|   1 |  -1 |  -3 | FALSE |
+
+``` r
+frames <- build_traj(d_ex)
 plot_dat <- data.frame(data.table::melt(
   data.table(frames), 
   variable.name = 'row',
@@ -68,4 +125,4 @@ ggplot(
   geom_line()
 ```
 
-![](traj_graph_2_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](traj_graph_2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
