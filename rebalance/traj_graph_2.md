@@ -33,18 +33,18 @@ d_ex <- wrapr::build_frame(
 
 ``` r
 build_traj <- function(d_ex, lambda_max = 4, length.out = 100) {
-    frames <- list()
+    frame <- list()
     suppressWarnings(
       for(lambda in seq(0, lambda_max, length.out = length.out)) {
         model <- glm(y ~ x1 + x2, family=binomial(), data=d_ex, weights = 1 + lambda * d_ex$y)
         preds <- predict(model, type='response', newdata=d_ex)
         row_frame <- as.data.frame(t(as.matrix(preds)))
         row_frame['lambda'] <- lambda
-        frames <- c(frames, list(row_frame))
+        frame <- c(frame, list(row_frame))
       }
     )
-    frames <- do.call(rbind, frames)
-    return(frames)
+    frame <- do.call(rbind, frame)
+    return(frame)
 }
 ```
 
@@ -53,39 +53,63 @@ logit <- function(x) {log(x/(1-x))}
 ```
 
 ``` r
-frames <- build_traj(d_ex)
+frame <- build_traj(d_ex)
 ```
 
 ``` r
-mk_example <- function() {
-  d_cols <- c('x1', 'x2', 'x3', 'y')
-  n_rows <- 8
-  while(TRUE) {
-    d_ex <- data.frame(matrix(
-      sample(seq(-5, 5), size = length(d_cols) * n_rows, replace = TRUE),
-      ncol=length(d_cols)))
-    colnames(d_ex) <- d_cols
-    d_ex['y'] = d_ex['y'] >= 0
-    frames <- build_traj(d_ex)
-    n_f_rows <- nrow(frames)
+want_frame <- function(frame) {
+    n_f_rows <- nrow(frame)
     have_cross <- FALSE
     have_increasing <- FALSE
     have_decreasing <- FALSE
-    for(col in colnames(frames)) {
+    for(col in colnames(frame)) {
       if(col != 'lambda') {
-        col_v <- frames[[col]]
+        col_v <- frame[[col]]
+        if( (min(col_v) + 1e2 < min(col_v[[1]], col_v[[n_f_rows]])) || (max(col_v) - 1e2 > max(col_v[[1]], col_v[[n_f_rows]])) ) {
+          return(TRUE)
+        }
+      }
+    }
+  return(FALSE)
+}
+```
+
+``` r
+want_frame <- function(frame) {
+    n_f_rows <- nrow(frame)
+    have_cross <- FALSE
+    have_increasing <- FALSE
+    have_decreasing <- FALSE
+    for(col in colnames(frame)) {
+      if(col != 'lambda') {
+        col_v <- frame[[col]]
         have_increasing <- have_increasing || ((col_v[[1]] + 1e-2) < col_v[[n_f_rows]])
         have_decreasing <- have_decreasing || ((col_v[[1]] - 1e-2) > col_v[[n_f_rows]])
-        for(col2 in colnames(frames)) {
+        for(col2 in colnames(frame)) {
           if(col2 != 'lambda') {
-            col2_v <- frames[[col2]]
+            col2_v <- frame[[col2]]
             see_cross <- (abs(col_v[[1]] - col2_v[[1]]) > 1e-2) && (abs(col_v[[n_f_rows]] - col2_v[[n_f_rows]]) > 1e-2) && (col_v[[n_f_rows]] != col2_v[[n_f_rows]]) && ((col_v[[1]] > col2_v[[1]]) != (col_v[[n_f_rows]] > col2_v[[n_f_rows]]))
             have_cross <- have_cross || see_cross
           }
         }
       }
     }
-    if(have_increasing && have_decreasing && have_cross) {
+    return(have_increasing && have_decreasing && have_cross)
+}
+```
+
+``` r
+mk_example <- function() {
+  d_cols <- c('x1', 'x2', 'x3', 'x4', 'y')
+  n_rows <- 10
+  while(TRUE) {
+    d_ex <- data.frame(matrix(
+      sample(seq(-5, 5), size = length(d_cols) * n_rows, replace = TRUE),
+      ncol=length(d_cols)))
+    colnames(d_ex) <- d_cols
+    d_ex['y'] = d_ex['y'] >= 0
+    frame <- build_traj(d_ex)
+    if(want_frame(frame)) {
       return(d_ex)
     }
   }
@@ -97,21 +121,23 @@ d_ex <- mk_example()
 knitr::kable(d_ex)
 ```
 
-|  x1 |  x2 |  x3 | y     |
-|----:|----:|----:|:------|
-|  -2 |  -5 |  -5 | TRUE  |
-|  -4 |  -2 |   0 | TRUE  |
-|  -2 |   0 |  -1 | TRUE  |
-|   3 |   2 |   2 | FALSE |
-|  -5 |  -5 |   3 | FALSE |
-|   1 |   0 |  -2 | FALSE |
-|   2 |  -4 |   2 | FALSE |
-|   1 |  -1 |  -3 | FALSE |
+|  x1 |  x2 |  x3 |  x4 | y     |
+|----:|----:|----:|----:|:------|
+|  -4 |   4 |   0 |  -2 | TRUE  |
+|   3 |  -5 |  -1 |  -1 | TRUE  |
+|   1 |  -3 |  -1 |  -3 | TRUE  |
+|  -5 |  -2 |  -3 |  -5 | TRUE  |
+|   4 |  -3 |   1 |  -5 | FALSE |
+|  -1 |   3 |   2 |  -3 | TRUE  |
+|   2 |   2 |  -2 |  -2 | FALSE |
+|  -5 |   3 |  -3 |   5 | TRUE  |
+|   5 |   5 |  -1 |  -1 | FALSE |
+|  -2 |  -5 |   2 |  -4 | FALSE |
 
 ``` r
-frames <- build_traj(d_ex)
+frame <- build_traj(d_ex)
 plot_dat <- data.frame(data.table::melt(
-  data.table(frames), 
+  data.table(frame), 
   variable.name = 'row',
   value.name = 'score',
   id.vars='lambda'))
@@ -125,4 +151,4 @@ ggplot(
   geom_line()
 ```
 
-![](traj_graph_2_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](traj_graph_2_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
