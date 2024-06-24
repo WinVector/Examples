@@ -20,8 +20,22 @@ d_ex <- wrapr::build_frame(
      0   , 2   , 1   |
      1   , 2   , 1   |
      1   , 1   , 0   )
+```
 
-# knitr::kable(d_ex)
+
+```{r}
+ d_ex <- wrapr::build_frame(
+    "x1"  , "x2", "x3", "x4", "y"   |
+      -4L ,  4L ,  0L , -2L , TRUE  |
+       3L , -5L , -1L , -1L , TRUE  |
+       1L , -3L , -1L , -3L , TRUE  |
+      -5L , -2L , -3L , -5L , TRUE  |
+       4L , -3L ,  1L , -5L , FALSE |
+      -1L ,  3L ,  2L , -3L , TRUE  |
+       2L ,  2L , -2L , -2L , FALSE |
+      -5L ,  3L , -3L ,  5L , TRUE  |
+       5L ,  5L , -1L , -1L , FALSE |
+      -2L , -5L ,  2L , -4L , FALSE )
 ```
 
 
@@ -56,44 +70,28 @@ frame <- build_traj(d_ex)
 
 ```{r}
 want_frame <- function(frame) {
-    n_f_rows <- nrow(frame)
-    have_cross <- FALSE
-    have_increasing <- FALSE
-    have_decreasing <- FALSE
-    for(col in colnames(frame)) {
-      if(col != 'lambda') {
-        col_v <- frame[[col]]
-        if( (min(col_v) + 1e2 < min(col_v[[1]], col_v[[n_f_rows]])) || (max(col_v) - 1e2 > max(col_v[[1]], col_v[[n_f_rows]])) ) {
-          return(TRUE)
+  check_eps = 1e-2
+  n_f_rows <- nrow(frame)
+  have_cross <- FALSE
+  have_increasing <- FALSE
+  have_decreasing <- FALSE
+  have_non_monotone <- FALSE
+  for(col in colnames(frame)) {
+    if(col != 'lambda') {
+      col_v <- frame[[col]]
+      have_increasing <- have_increasing || ((col_v[[1]] + check_eps) < col_v[[n_f_rows]])
+      have_decreasing <- have_decreasing || ((col_v[[1]] - check_eps) > col_v[[n_f_rows]])
+      have_non_monotone <- have_non_monotone || (min(col_v) + check_eps < min(col_v[[1]], col_v[[n_f_rows]])) || (max(col_v) - check_eps > max(col_v[[1]], col_v[[n_f_rows]])) 
+      for(col2 in colnames(frame)) {
+        if(col2 != 'lambda') {
+          col2_v <- frame[[col2]]
+          see_cross <- (abs(col_v[[1]] - col2_v[[1]]) > check_eps) && (abs(col_v[[n_f_rows]] - col2_v[[n_f_rows]]) > check_eps) && (col_v[[n_f_rows]] != col2_v[[n_f_rows]]) && ((col_v[[1]] > col2_v[[1]]) != (col_v[[n_f_rows]] > col2_v[[n_f_rows]]))
+          have_cross <- have_cross || see_cross
         }
       }
     }
-  return(FALSE)
-}
-```
-
-
-```{r}
-want_frame <- function(frame) {
-    n_f_rows <- nrow(frame)
-    have_cross <- FALSE
-    have_increasing <- FALSE
-    have_decreasing <- FALSE
-    for(col in colnames(frame)) {
-      if(col != 'lambda') {
-        col_v <- frame[[col]]
-        have_increasing <- have_increasing || ((col_v[[1]] + 1e-2) < col_v[[n_f_rows]])
-        have_decreasing <- have_decreasing || ((col_v[[1]] - 1e-2) > col_v[[n_f_rows]])
-        for(col2 in colnames(frame)) {
-          if(col2 != 'lambda') {
-            col2_v <- frame[[col2]]
-            see_cross <- (abs(col_v[[1]] - col2_v[[1]]) > 1e-2) && (abs(col_v[[n_f_rows]] - col2_v[[n_f_rows]]) > 1e-2) && (col_v[[n_f_rows]] != col2_v[[n_f_rows]]) && ((col_v[[1]] > col2_v[[1]]) != (col_v[[n_f_rows]] > col2_v[[n_f_rows]]))
-            have_cross <- have_cross || see_cross
-          }
-        }
-      }
-    }
-    return(have_increasing && have_decreasing && have_cross)
+  }
+  return(have_increasing && have_decreasing && have_cross)
 }
 ```
 
@@ -122,6 +120,13 @@ mk_example <- function() {
 
 ```{r}
 d_ex <- mk_example()
+```
+
+```{r}
+cat(wrapr::draw_frame(d_ex))
+```
+
+```{r}
 knitr::kable(d_ex)
 ```
 
