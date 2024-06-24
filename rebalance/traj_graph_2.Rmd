@@ -41,7 +41,7 @@ d_ex <- wrapr::build_frame(
 
 
 ```{r}
-build_traj <- function(d_ex, lambda_max = 4, length.out = 100) {
+build_traj <- function(d_ex, lambda_max = 3, length.out = 100) {
     frame <- list()
     suppressWarnings(
       for(lambda in seq(0, lambda_max, length.out = length.out)) {
@@ -70,7 +70,7 @@ frame <- build_traj(d_ex)
 
 ```{r}
 want_frame <- function(frame) {
-  check_eps = 1e-2
+  check_eps = 0.02
   n_f_rows <- nrow(frame)
   have_cross <- FALSE
   have_increasing <- FALSE
@@ -100,11 +100,11 @@ want_frame <- function(frame) {
 
 ```{r}
 mk_example <- function() {
-  d_cols <- c('x1', 'x2', 'x3', 'x4', 'y')
+  d_cols <- c('x1', 'x2', 'y')
   n_rows <- 10
   while(TRUE) {
     d_ex <- data.frame(matrix(
-      sample(seq(-5, 5), size = length(d_cols) * n_rows, replace = TRUE),
+      sample(seq(-10, 10), size = length(d_cols) * n_rows, replace = TRUE),
       ncol=length(d_cols)))
     colnames(d_ex) <- d_cols
     d_ex['y'] = d_ex['y'] >= 0

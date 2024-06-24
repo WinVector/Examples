@@ -45,7 +45,7 @@ d_ex <- wrapr::build_frame(
 ```
 
 ``` r
-build_traj <- function(d_ex, lambda_max = 4, length.out = 100) {
+build_traj <- function(d_ex, lambda_max = 3, length.out = 100) {
     frame <- list()
     suppressWarnings(
       for(lambda in seq(0, lambda_max, length.out = length.out)) {
@@ -71,7 +71,7 @@ frame <- build_traj(d_ex)
 
 ``` r
 want_frame <- function(frame) {
-  check_eps = 1e-2
+  check_eps = 0.02
   n_f_rows <- nrow(frame)
   have_cross <- FALSE
   have_increasing <- FALSE
@@ -98,11 +98,11 @@ want_frame <- function(frame) {
 
 ``` r
 mk_example <- function() {
-  d_cols <- c('x1', 'x2', 'x3', 'x4', 'y')
+  d_cols <- c('x1', 'x2', 'y')
   n_rows <- 10
   while(TRUE) {
     d_ex <- data.frame(matrix(
-      sample(seq(-5, 5), size = length(d_cols) * n_rows, replace = TRUE),
+      sample(seq(-10, 10), size = length(d_cols) * n_rows, replace = TRUE),
       ncol=length(d_cols)))
     colnames(d_ex) <- d_cols
     d_ex['y'] = d_ex['y'] >= 0
@@ -123,34 +123,34 @@ cat(wrapr::draw_frame(d_ex))
 ```
 
     ## d_ex <- wrapr::build_frame(
-    ##    "x1"  , "x2", "x3", "x4", "y"   |
-    ##      -4L ,  4L ,  0L , -2L , TRUE  |
-    ##       3L , -5L , -1L , -1L , TRUE  |
-    ##       1L , -3L , -1L , -3L , TRUE  |
-    ##      -5L , -2L , -3L , -5L , TRUE  |
-    ##       4L , -3L ,  1L , -5L , FALSE |
-    ##      -1L ,  3L ,  2L , -3L , TRUE  |
-    ##       2L ,  2L , -2L , -2L , FALSE |
-    ##      -5L ,  3L , -3L ,  5L , TRUE  |
-    ##       5L ,  5L , -1L , -1L , FALSE |
-    ##      -2L , -5L ,  2L , -4L , FALSE )
+    ##    "x1"  , "x2", "y"   |
+    ##       4L ,  4L , FALSE |
+    ##      -4L ,  6L , TRUE  |
+    ##      10L , -5L , FALSE |
+    ##      -9L , -8L , FALSE |
+    ##       6L ,  0L , FALSE |
+    ##       3L , -8L , TRUE  |
+    ##      -7L ,  6L , TRUE  |
+    ##       6L ,  9L , FALSE |
+    ##       5L , -1L , FALSE |
+    ##       9L ,  8L , FALSE )
 
 ``` r
 knitr::kable(d_ex)
 ```
 
-|  x1 |  x2 |  x3 |  x4 | y     |
-|----:|----:|----:|----:|:------|
-|  -4 |   4 |   0 |  -2 | TRUE  |
-|   3 |  -5 |  -1 |  -1 | TRUE  |
-|   1 |  -3 |  -1 |  -3 | TRUE  |
-|  -5 |  -2 |  -3 |  -5 | TRUE  |
-|   4 |  -3 |   1 |  -5 | FALSE |
-|  -1 |   3 |   2 |  -3 | TRUE  |
-|   2 |   2 |  -2 |  -2 | FALSE |
-|  -5 |   3 |  -3 |   5 | TRUE  |
-|   5 |   5 |  -1 |  -1 | FALSE |
-|  -2 |  -5 |   2 |  -4 | FALSE |
+|  x1 |  x2 | y     |
+|----:|----:|:------|
+|   4 |   4 | FALSE |
+|  -4 |   6 | TRUE  |
+|  10 |  -5 | FALSE |
+|  -9 |  -8 | FALSE |
+|   6 |   0 | FALSE |
+|   3 |  -8 | TRUE  |
+|  -7 |   6 | TRUE  |
+|   6 |   9 | FALSE |
+|   5 |  -1 | FALSE |
+|   9 |   8 | FALSE |
 
 ``` r
 frame <- build_traj(d_ex)
