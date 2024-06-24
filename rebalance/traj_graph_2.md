@@ -71,7 +71,7 @@ frame <- build_traj(d_ex)
 
 ``` r
 want_frame <- function(frame) {
-  check_eps = 0.02
+  check_eps = 0.03
   n_f_rows <- nrow(frame)
   have_cross <- FALSE
   have_increasing <- FALSE
@@ -102,7 +102,7 @@ mk_example <- function() {
   n_rows <- 10
   while(TRUE) {
     d_ex <- data.frame(matrix(
-      sample(seq(-10, 10), size = length(d_cols) * n_rows, replace = TRUE),
+      sample(seq(-20, 20), size = length(d_cols) * n_rows, replace = TRUE),
       ncol=length(d_cols)))
     colnames(d_ex) <- d_cols
     d_ex['y'] = d_ex['y'] >= 0
@@ -124,16 +124,16 @@ cat(wrapr::draw_frame(d_ex))
 
     ## d_ex <- wrapr::build_frame(
     ##    "x1"  , "x2", "y"   |
-    ##       4L ,  4L , FALSE |
-    ##      -4L ,  6L , TRUE  |
-    ##      10L , -5L , FALSE |
-    ##      -9L , -8L , FALSE |
-    ##       6L ,  0L , FALSE |
-    ##       3L , -8L , TRUE  |
-    ##      -7L ,  6L , TRUE  |
-    ##       6L ,  9L , FALSE |
-    ##       5L , -1L , FALSE |
-    ##       9L ,  8L , FALSE )
+    ##      -12L,   8L, TRUE  |
+    ##       10L, -17L, TRUE  |
+    ##        8L, -13L, TRUE  |
+    ##       18L,  -9L, FALSE |
+    ##       17L,  13L, FALSE |
+    ##      -20L, -11L, FALSE |
+    ##        0L,  12L, FALSE |
+    ##       15L, -12L, FALSE |
+    ##       17L, -16L, FALSE |
+    ##      -12L,  14L, TRUE  )
 
 ``` r
 knitr::kable(d_ex)
@@ -141,16 +141,16 @@ knitr::kable(d_ex)
 
 |  x1 |  x2 | y     |
 |----:|----:|:------|
-|   4 |   4 | FALSE |
-|  -4 |   6 | TRUE  |
-|  10 |  -5 | FALSE |
-|  -9 |  -8 | FALSE |
-|   6 |   0 | FALSE |
-|   3 |  -8 | TRUE  |
-|  -7 |   6 | TRUE  |
-|   6 |   9 | FALSE |
-|   5 |  -1 | FALSE |
-|   9 |   8 | FALSE |
+| -12 |   8 | TRUE  |
+|  10 | -17 | TRUE  |
+|   8 | -13 | TRUE  |
+|  18 |  -9 | FALSE |
+|  17 |  13 | FALSE |
+| -20 | -11 | FALSE |
+|   0 |  12 | FALSE |
+|  15 | -12 | FALSE |
+|  17 | -16 | FALSE |
+| -12 |  14 | TRUE  |
 
 ``` r
 frame <- build_traj(d_ex)

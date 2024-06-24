@@ -70,7 +70,7 @@ frame <- build_traj(d_ex)
 
 ```{r}
 want_frame <- function(frame) {
-  check_eps = 0.02
+  check_eps = 0.03
   n_f_rows <- nrow(frame)
   have_cross <- FALSE
   have_increasing <- FALSE
@@ -104,7 +104,7 @@ mk_example <- function() {
   n_rows <- 10
   while(TRUE) {
     d_ex <- data.frame(matrix(
-      sample(seq(-10, 10), size = length(d_cols) * n_rows, replace = TRUE),
+      sample(seq(-20, 20), size = length(d_cols) * n_rows, replace = TRUE),
       ncol=length(d_cols)))
     colnames(d_ex) <- d_cols
     d_ex['y'] = d_ex['y'] >= 0
