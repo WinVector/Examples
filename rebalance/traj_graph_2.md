@@ -170,3 +170,59 @@ ggplot(
 ```
 
 ![](traj_graph_2_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+lambda <- 0
+model <- glm(
+  y ~ x1 + x2, 
+  family=binomial(), 
+  data=d_ex, 
+  weights = 1 + lambda * d_ex$y)
+soln_1 <- coef(model)
+
+soln_1
+```
+
+    ## (Intercept)          x1          x2 
+    ## -0.23785437 -0.05733315 -0.01072208
+
+``` r
+eps <- 1e-5
+model_2 <- glm(
+  y ~ x1 + x2, 
+  family=binomial(), 
+  data=d_ex, 
+  weights = 1 + (lambda + eps) * d_ex$y)
+soln_2 <- coef(model_2)
+
+soln_2
+```
+
+    ## (Intercept)          x1          x2 
+    ## -0.23784424 -0.05733338 -0.01072231
+
+``` r
+diff <- (soln_2 - soln_1) / eps
+
+diff / sqrt(sum(diff * diff))
+```
+
+    ## (Intercept)          x1          x2 
+    ##  0.99946603 -0.02294855 -0.02325961
+
+``` r
+p <- predict(model, type='response', newdata=d_ex)
+y <- as.numeric(d_ex[['y']])
+sum_M = matrix(0, nrow=3, ncol=3)
+sum_V = rep(0, 3)
+for(i in seq(nrow(d_ex))){
+  x_i <- c(1, as.numeric(d_ex[i, c('x1', 'x2')]))
+  sum_M <- sum_M + (1 - lambda*y[[i]]) * (x_i %*% t(x_i))
+  sum_V <- sum_V + y[[i]] * (y[[i]] - p[[i]]) * x_i
+}
+b <- solve(sum_M, sum_V)
+
+b / sqrt(sum(b * b))
+```
+
+    ## [1]  0.99951755 -0.02411705 -0.01957120
