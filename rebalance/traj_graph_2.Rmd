@@ -7,24 +7,74 @@ date: "2024-06-23"
 ```{r}
 library(ggplot2)
 library(data.table)
+library(wrapr)
 set.seed(2024)
 ```
 
 
+
+
 ```{r}
-d_ex <- wrapr::build_frame(
+build_traj <- function(d_ex, lambda_max = 3, length.out = 100) {
+    frame <- list()
+    model_coefs <- NULL
+    suppressWarnings(
+      for(lambda in seq(0, lambda_max, length.out = length.out)) {
+        model <- glm(y ~ x1 + x2, family=binomial(), data=d_ex, weights = 1 + lambda * d_ex$y)
+        model_coefs <- coef(model)
+        preds <- predict(model, type='response', newdata=d_ex)
+        row_frame <- as.data.frame(t(as.matrix(preds)))
+        row_frame['lambda'] <- lambda
+        frame <- c(frame, list(row_frame))
+      }
+    )
+    frame <- do.call(rbind, frame)
+    return(list(frame=frame, model_coefs=model_coefs))
+}
+```
+
+
+```{r}
+plot_traj_graph <- function(d_ex, ..., lambda_max = 3, title = '') {
+  to[frame, model_coefs] <- build_traj(d_ex, lambda_max = lambda_max)
+  plot_dat <- data.frame(data.table::melt(
+    data.table(frame), 
+    variable.name = 'row',
+    value.name = 'score',
+    id.vars='lambda'))
+  g <- ggplot(
+    data=plot_dat,
+    mapping=aes(x=lambda, y=score, color=row, shape=row)
+  ) +
+    geom_line(alpha=0.5) +
+    geom_point(alpha=0.5) +
+    ggtitle(title)
+  return(list(plot=g, model_coefs=model_coefs))
+}
+```
+
+
+
+```{r}
+d_ex_1 <- wrapr::build_frame(
    "x1"  , "x2", "y" |
      0   , 0   , 0   |
      1   , 0   , 1   |
-     -2   , 0   , 0   |
+     -2  , 0   , 0   |
      0   , 2   , 1   |
      1   , 2   , 1   |
      1   , 1   , 0   )
 ```
 
+```{r}
+to[plot, model_coefs] <- plot_traj_graph(d_ex_1, title='ex_1')
+print(model_coefs)
+plot
+```
+
 
 ```{r}
- d_ex <- wrapr::build_frame(
+ d_ex_2 <- wrapr::build_frame(
     "x1"  , "x2", "x3", "x4", "y"   |
       -4L ,  4L ,  0L , -2L , TRUE  |
        3L , -5L , -1L , -1L , TRUE  |
@@ -39,32 +89,31 @@ d_ex <- wrapr::build_frame(
 ```
 
 
-
 ```{r}
-build_traj <- function(d_ex, lambda_max = 3, length.out = 100) {
-    frame <- list()
-    suppressWarnings(
-      for(lambda in seq(0, lambda_max, length.out = length.out)) {
-        model <- glm(y ~ x1 + x2, family=binomial(), data=d_ex, weights = 1 + lambda * d_ex$y)
-        preds <- predict(model, type='response', newdata=d_ex)
-        row_frame <- as.data.frame(t(as.matrix(preds)))
-        row_frame['lambda'] <- lambda
-        frame <- c(frame, list(row_frame))
-      }
-    )
-    frame <- do.call(rbind, frame)
-    return(frame)
-}
+to[plot, model_coefs] <- plot_traj_graph(d_ex_2, title='ex_2')
+print(model_coefs)
+plot
 ```
 
 
+
 ```{r}
-logit <- function(x) {log(x/(1-x))}
+d_ex_3 <- wrapr::build_frame(
+   "x1"  , "x2", "y" |
+     0   , 0   , 0   |
+     1   , 0   , 1   |
+     0   , 1   , 1   |
+     1   , 1   , 0   |
+     -1  , 1   , 0   |
+     1   , -1  , 0   )
 ```
 
 
+
 ```{r}
-frame <- build_traj(d_ex)
+to[plot, model_coefs] <- plot_traj_graph(d_ex_3, lambda_max = 1000, title='ex_3')
+print(model_coefs)
+plot
 ```
 
 
@@ -108,7 +157,7 @@ mk_example <- function() {
       ncol=length(d_cols)))
     colnames(d_ex) <- d_cols
     d_ex['y'] = d_ex['y'] >= 0
-    frame <- build_traj(d_ex)
+    to[frame, model_coefs] <- build_traj(d_ex)
     if(want_frame(frame)) {
       return(d_ex)
     }
@@ -130,24 +179,13 @@ cat(wrapr::draw_frame(d_ex))
 knitr::kable(d_ex)
 ```
 
-```{r}
-frame <- build_traj(d_ex)
-plot_dat <- data.frame(data.table::melt(
-  data.table(frame), 
-  variable.name = 'row',
-  value.name = 'score',
-  id.vars='lambda'))
-```
-
-
 
 ```{r}
-ggplot(
-  data=plot_dat,
-  mapping=aes(x=lambda, y=score, color=row)
-) +
-  geom_line()
+to[plot, model_coefs] <- plot_traj_graph(d_ex, title='ex')
+print(model_coefs)
+plot
 ```
+
 
 ```{r}
 w_1 <- rep(1, nrow(d_ex))
