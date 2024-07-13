@@ -1,0 +1,290 @@
+---
+title: "Transferring Coefficients of Linear Models"
+author: "Nina Zumel"
+date: "2024-07-09"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+Even in this era of deep learning and large language models, models with linear
+structure still have advantages for certain applications. They are relatively 
+interpretable, generally robust, easy to describe, lightweight and fast to run, 
+once they are fit.
+
+A quick glance through the [`scikit-learn`documentation on linear models](https://scikit-learn.org/stable/modules/linear_model.html),
+or the [CRAN task view on Mixed, Multilevel, and Hierarchical Models in R](https://cran.r-project.org/web/views/MixedModels.html)
+reveals a number of different procedures for fitting models with linear structure. 
+Each of these procedures meet different needs and constraints, and some of them can
+be computationally intensive to compute. But in the end, they all have the
+same underlying structure: outcome is modelled as a linear combination of input features.
+
+However the existence of so many different algorithms, and their associated software,
+can obscure the fact that just because two models were *fit* differently, they
+don't have to be *run* differently. The *fitting implementation* and the *deployment implementation*
+can be distinct. In this note, we'll talk about transferring the coefficients
+of a linear model to a fresh model, without a full retraining.
+
+## But Why?
+
+There are various reasons why you might want to port a model. We once had a client
+who was moving from one model development and deployment framework (SAS) to another 
+(Python). They had a number of linear and generalized linear models running in production that
+were developed in SAS. They wanted to move the *exact* models to Python for business
+continuity reasons, but no longer had the data they used to train the model. We 
+had to port the models to `scikit-learn`, without the training data.
+
+Or, sometimes, you can't fit the model in the framework you want to run it in. 
+For example, you may use [STAN](https://mc-stan.org/) to fit a model
+with linear structure using Bayesian methods, because you have priors on the
+coefficients that you want the model to respect. However, once you have a model 
+(assuming you are willing to use point estimates for the coefficents), and you
+want to apply it into a production system, you may find that the software that you
+used to produce the model is difficult to deploy. It may actually be better to port
+your model to a more production-friendly framework, like `scikit-learn`, `ONNX`,
+or even Pytorch or Tensorflow.
+
+Similarly, the framework you use for deployment may not have implementations for,
+say, quantile regression, or non-negative linear regression, or linear mixed models.
+So you need to fit the model one place, then transfer it to your preferred deployment framework.
+
+You may want to train the model in one language, like R, but deploy it in another,
+like Python or Rust. You may prefer to fit linear models using `statsmodels` in Python,
+but want to use the `scikit-learn` interface to run them, for compatibility with 
+the rest of your workflow.
+
+If you are an R programmer, you might want to "lighten up" your model. Models in R
+often carry their training data and fitting diagnostic data around with them. This
+can get fairly heavyweight when you have a lot of data. While there are ways to
+turn off saving the training data, or to delete the artifacts, you can also just create
+a fresh version of the model, with lighter artifacts.
+
+## Ok, So How?
+
+The nice thing about linear models is that, once you have a model that returns
+acceptable predictions, it's easy to fit another model with the exact same coefficients,
+with just a few linearly independent rows of data. The data you use *does not
+have to come from the training data*; it doesn't even have to be realistic.
+The new model doesn't have to be fit with the same fitting algorithm: in particular
+you can reproduce a linear regression model with standard ordinary least squares (OLS), 
+*even if you didn't use OLS to fit the original model*. 
+A similar statement applies to generalized linear models, like logistic regression.
+
+Suppose you have an outcome $y$ that you've modelled as a linear combination of continuous inputs $x_1$ and $x_2$:
+
+$$
+y_{pred} = \beta_0 + \beta_1 * x_1 + \beta_2 * x_2
+$$
+
+It doesn't matter how you fit the $\beta$s, but you want to transfer them to a fresh model. This can be done with
+ordinary least squares on $n_{params}$ linearly independent data rows, where $n_{params}$ is the number of 
+coefficients you have to determine. In this case, $n_{params}$ = 3, so you need three equations.
+
+Let's call the original model $m$. Then we can set up the simultaneous equations to be solved:
+
+\begin{align*}
+\beta_0 + \beta_1 * u11 + \beta2 * u12  &= m(u11, u12) \\ 
+\beta_0 + \beta_1 * u21 + \beta2 * u22  &= m(u21, u22) \\
+\beta_0 + \beta_1 * u31 + \beta2 * u32  &= m(u31, u32) \\
+\end{align*}
+
+or, in matrix notation:
+
+$$
+U \mathbf{b} = Y
+$$
+
+where 
+
+* $\mathbf{b}$ is the column vector of coefficients $(\beta_0, \beta_1, \beta_2)$, 
+* $Y$ is the column vector of model predictions $( m(u11, u12),\  m(u21, u22),\  m(u31, u32))$, 
+
+and U is the matrix
+
+```{r results="asis"}
+
+U = matrix(
+  c(1, "u11", "u12",
+  1, "u21", "u22",
+  1, "u31", "u32"),
+  ncol=3,
+  byrow=TRUE
+)
+
+# from https://stackoverflow.com/questions/45591286/for-r-markdown-how-do-i-display-a-matrix-from-r-variable/54088015#54088015
+# you need the results="asis" in the block definition
+write_matex <- function(x) {
+  begin <- "$$\\begin{bmatrix}"
+  end <- "\\end{bmatrix}$$"
+  X <-
+    apply(x, 1, function(x) {
+      paste(
+        paste(x, collapse = "&"),
+        "\\\\"
+      )
+    })
+  writeLines(c(begin, X, end))
+}
+
+write_matex(U)
+```
+
+If $U$ is full rank, then solving $U \mathbf{b} = Y$ for $\mathbf{b}$ will uniquely recover the coeffients of the model $m$. Remember, it *doesn't matter* whether the rows of $U$ are realistic with respect to the original problem domain; we're not doing statistics anymore,
+we're just doing linear algebra. So a handy candidate for $U$ is
+
+```{r results="asis"}
+write_matex(
+  matrix(c(1, 0, 0,
+         1, 1, 0,
+         1, 0, 1),
+       ncol=3, byrow=TRUE)
+)
+```
+
+In the problem domain, this translates to three exemplars: 
+
+* $(x_1 = 0 \ ,x_2 = 0)$,  
+* $(x_1 = 1 \ ,x_2 = 0)$, 
+* $(x_1 = 0 \ ,x_2 = 1)$. 
+
+In other words, we've turned each variable "on" one at a time, and also turned both of them off.
+If you are using a modeling framework that implicitly adds the intercept (`lm` in R, `sklearn.linear_model.LinearRegression` in Python),
+you don't need to add the intercept column when you create your evaluation frame $U$. If your framework requires you
+to add the intercept column explicitly (`statsmodels.api.OLS` in Python), then you should do so.
+
+Once you've created $U$ and $Y$, all you have to do is use your preferred linear modeling framework to 
+fit the new model. Here's an example in R:
+
+```{r echo=TRUE}
+# make some data, and fit the original model
+N = 100
+traindata = data.frame(x1 = runif(N), x2 = runif(N))
+traindata = transform(traindata,
+                      y = 1 + 2*x1 + 3*x2 + runif(N))
+# fit a linear model
+model0 = lm(y ~ x1 + x2, data=traindata)
+# print the coefficients
+coef(model0)
+
+# to reproduce the model, create an evaluation frame
+U = data.frame(
+  x1 = c(0, 1, 0),
+  x2 = c(0, 0, 1)
+)
+# add the outcomes
+U$y = predict(model0, newdata=U)
+
+# print out U (and the outcome)
+U
+
+# fit the new model
+model_new = lm(y ~ x1 + x2, data=U)
+# print the coefficients of this model and the original
+# side by side
+data.frame(
+  original = coef(model0),
+  new_model = coef(model_new)
+)
+```
+
+The above procedure works directly when all the variables are continuous or binary (0/1) variables. The notebook below shows an 
+extended example of transferring the coefficients of quantile regression models (linear models that predict medians and other percentiles) to a "standard" linear regression model object (an `lm` model) in R.
+
+* [Port a quantile regression model to an OLS framework](https://github.com/WinVector/scratch/blob/main/linear_model_transfer/linear_model_transfer_linear_logical.md) 
+
+### Interactions and Categorical Variables
+
+An important point is that when we say we need $U$ to have a full rank set of rows, we mean in *model space*, not the *domain space*. When all the variables are continuous or binary, the two spaces have the same size. However, when some of the variables are categorical,
+then a categorical variable $xc$ that takes on $k$ possible values adds an extra $k-1$ coefficients to the model, and hence an additional $k-1$ rows to $U$.
+
+Similarly, if you are fitting a model with interactions, then every interaction term adds an additional coefficient to the model, and hence an additional row to $U$.
+
+Let's try fitting a model with an interaction term to the training data we created above.
+
+```{r echo=TRUE}
+modelX = lm(y ~ x1 + x2 + x1*x2, data=traindata)
+coef(modelX)
+```
+
+Now there's an extra coefficient for the term `x1*x2`. To fit such a model in `scikit-learn`, you'd have to reify the interaction columns anyway (that is, construct them explicitly), so the problem reduces to the case above. In R, you could construct the evaluation frame as follows:
+
+```{r echo=TRUE}
+U = data.frame(
+  x1 = c(0, 1, 0, 1),
+  x2 = c(0, 0, 1, 1)
+)
+# add the outcomes
+U$y = predict(modelX, newdata=U)
+
+# print out U (and outcomes)
+U
+
+# look at the model matrix
+# (that is, look at the data in "model space")
+m = model.matrix(y ~ x1 + x2 + x1*x2, U)
+m
+# assert that the model is full rank
+stopifnot(Matrix::rankMatrix(m)[1] == nrow(m))
+
+# fit a new model and compare the coefficients to the original
+model_new = lm(y ~ x1 + x2 + x1*x2, data=U)
+
+data.frame(
+  original = coef(modelX),
+  new_model = coef(model_new)
+)
+```
+
+A similar procedure works when dealing with categorical variables. For brevity, we've put that in a separate worksheet:
+
+* [Porting linear models with categorical variables](https://github.com/WinVector/scratch/blob/main/linear_model_transfer/linear_model_transfer_categorical.md) 
+
+### Generalized Linear Models
+
+For generalized linear models, the linear relationship is
+
+\begin{align*}
+f(y_{pred}) &= \beta_0 + \beta_1 * x_1 + \beta_2 * x_2, \\
+\mbox{or} &  \\
+y_{pred} &= f^{-1}(\beta_0 + \beta_1 * x_1 + \beta_2 * x_2)
+\end{align*}
+
+where $f()$ is the so-called *link function*, and $f^{-1}()$ is the *inverse link function*. 
+
+For logistic regression, the link function is the *logit*: 
+
+\begin{align*}
+f(p) &= \ln(\displaystyle \frac{p}{1-p}), \\
+\mbox{so} &\\
+\ln(\displaystyle \frac{p}{1-p}) &= \beta_0 + \beta_1 * x_1 + \beta_2 * x_2
+\end{align*}
+
+and the inverse link function is the *sigmoid*: 
+
+\begin{align*}
+s(x) &= \displaystyle \frac{\exp(x)}{1 + \exp(x)}, \\
+\mbox{so} & \\
+p &= s(\beta_0 + \beta_1 * x_1 + \beta_2 * x_2)
+\end{align*}
+
+Fortunately, whichever generalized linear model fitter you want to port to probably handles all the link function-foo automatically, so to port your original generalized linear model, you only need to build a full-rank evaluation frame $U$ as described above, set $Y$ to be the corresponding set of predictions, then call the fitter.
+
+Note that since you are using the actual generalized linear model fitter to re-fit a model to $U$, you want to make sure that you construct $Y$ using $y_{pred}$ (in R, the "response"), **NOT** $f_{ypred}$ (in R, the "link"). For logistic regression, this means you construct $Y$ from your original model's probability predictions, not the logit of the probabilities.
+
+This is probably not a serious issue for anyone except R users, where generalized linear models tend to return the link values by default rather than the response. Other frameworks likely return the response, which is what you actually want.
+But I thought I'd mention it. 
+
+The below notebook shows an extended example of transferring the coefficients from a L2-regularized logistic regression model (fit with the `glmnet` package) to a "standard" (`glm`) logistic regression model in R. I've noted some issues and caveats that will also be relevant to Python users.
+
+* [Porting a logistic regression model from one framework to another](https://github.com/WinVector/scratch/blob/main/linear_model_transfer/logistic_model_transfer.md) TODO add link
+
+## Conclusion
+
+I need one.
+
+
+
