@@ -23,7 +23,7 @@ Each of these procedures meet different needs and constraints, and some of them 
 be computationally intensive to compute. But in the end, they all have the
 same underlying structure: outcome is modelled as a linear combination of input features.
 
-However the existence of so many different algorithms, and their associated software,
+But the existence of so many different algorithms, and their associated software,
 can obscure the fact that just because two models were *fit* differently, they
 don't have to be *run* differently. The *fitting implementation* and the *deployment implementation*
 can be distinct. In this note, we'll talk about transferring the coefficients
@@ -31,26 +31,27 @@ of a linear model to a fresh model, without a full retraining.
 
 ## But Why?
 
-There are various reasons why you might want to port a model. We once had a client
+There are various reasons why you might want to port a model. For instance, we once had a client
 who was moving from one model development and deployment framework (SAS) to another 
 (Python). They had a number of linear and generalized linear models running in production that
 were developed in SAS. They wanted to move the *exact* models to Python for business
 continuity reasons, but no longer had the data they used to train the model. We 
 had to port the models to `scikit-learn`, without the training data.
 
-Or, sometimes, you can't fit the model in the framework you want to run it in. 
+Or sometimes, you can't fit the model in the framework you want to run it in. 
 For example, you may use [STAN](https://mc-stan.org/) to fit a model
 with linear structure using Bayesian methods, because you have priors on the
 coefficients that you want the model to respect. However, once you have a model 
 (assuming you are willing to use point estimates for the coefficents), and you
-want to apply it into a production system, you may find that the software that you
+want to run it in a production system, you may find that the software that you
 used to produce the model is difficult to deploy. It may actually be better to port
 your model to a more production-friendly framework, like `scikit-learn`, `ONNX`,
 or even Pytorch or Tensorflow.
 
 Similarly, the framework you use for deployment may not have implementations for,
 say, quantile regression, or non-negative linear regression, or linear mixed models.
-So you need to fit the model one place, then transfer it to your preferred deployment framework.
+So you want to use any of these techniques, you need to fit the model in one framework, 
+then transfer it to your preferred deployment framework.
 
 You may want to train the model in one language, like R, but deploy it in another,
 like Python or Rust. You may prefer to fit linear models using `statsmodels` in Python,
@@ -58,10 +59,12 @@ but want to use the `scikit-learn` interface to run them, for compatibility with
 the rest of your workflow.
 
 If you are an R programmer, you might want to "lighten up" your model. Models in R
-often carry their training data and fitting diagnostic data around with them. This
-can get fairly heavyweight when you have a lot of data. While there are ways to
-turn off saving the training data, or to delete the artifacts, you can also just create
-a fresh version of the model, with lighter artifacts.
+often carry their training data and fitting diagnostic data around with them, and they
+have a *lot* of reference leaks, due to capturing the formula environment.
+This can get fairly heavyweight when you have a lot of data. 
+In fact, a long time age, [we wrote about how to work around this issue](https://win-vector.com/2014/05/30/trimming-the-fat-from-glm-models-in-r/) by deleting
+selected items out of the modeling objects. The model transfer methodology that
+we're going to describe now is a much more principled way to achieve the same workaround.
 
 ## Ok, So How?
 
@@ -69,7 +72,7 @@ The nice thing about linear models is that, once you have a model that returns
 acceptable predictions, it's easy to fit another model with the exact same coefficients,
 with just a few linearly independent rows of data. The data you use *does not
 have to come from the training data*; it doesn't even have to be realistic.
-The new model doesn't have to be fit with the same fitting algorithm: in particular
+The new model doesn't have to be fit with the same fitting algorithm: in particular,
 you can reproduce a linear regression model with standard ordinary least squares (OLS), 
 *even if you didn't use OLS to fit the original model*. 
 A similar statement applies to generalized linear models, like logistic regression.
@@ -133,8 +136,7 @@ write_matex <- function(x) {
 write_matex(U)
 ```
 
-If $U$ is full rank, then solving $U \mathbf{b} = Y$ for $\mathbf{b}$ will uniquely recover the coeffients of the model $m$. Remember, it *doesn't matter* whether the rows of $U$ are realistic with respect to the original problem domain; we're not doing statistics anymore,
-we're just doing linear algebra. So a handy candidate for $U$ is
+If $U$ is full rank, then solving $U \mathbf{b} = Y$ for $\mathbf{b}$ will uniquely recover the coeffients of the model $m$. Remember, it *doesn't matter* whether the rows of $U$ are realistic with respect to the original problem domain; we're not doing statistics anymore, we're just doing linear algebra. So a handy candidate for $U$ is
 
 ```{r results="asis"}
 write_matex(
@@ -194,7 +196,7 @@ data.frame(
 The above procedure works directly when all the variables are continuous or binary (0/1) variables. The notebook below shows an 
 extended example of transferring the coefficients of quantile regression models (linear models that predict medians and other percentiles) to a "standard" linear regression model object (an `lm` model) in R.
 
-* [Port a quantile regression model to an OLS framework](https://github.com/WinVector/scratch/blob/main/linear_model_transfer/linear_model_transfer_linear_logical.md) 
+* [Port a quantile regression model to an OLS framework](https://github.com/WinVector/Examples/blob/main/LinearModelTransfer/linear_model_transfer.md) 
 
 ### Interactions and Categorical Variables
 
@@ -241,7 +243,7 @@ data.frame(
 
 A similar procedure works when dealing with categorical variables. For brevity, we've put that in a separate worksheet:
 
-* [Porting linear models with categorical variables](https://github.com/WinVector/scratch/blob/main/linear_model_transfer/linear_model_transfer_categorical.md) 
+* [Porting linear models with categorical variables](https://github.com/WinVector/Examples/blob/main/LinearModelTransfer/linear_model_transfer_categorical.md) 
 
 ### Generalized Linear Models
 
@@ -253,7 +255,7 @@ f(y_{pred}) &= \beta_0 + \beta_1 * x_1 + \beta_2 * x_2, \\
 y_{pred} &= f^{-1}(\beta_0 + \beta_1 * x_1 + \beta_2 * x_2)
 \end{align*}
 
-where $f()$ is the so-called *link function*, and $f^{-1}()$ is the *inverse link function*. 
+where $f()$ is the so-called *link function*, and $f^{-1}()$ is the *inverse link function*. The link predictions are linearly related, just as with the earlier linear models. So if we work with links it can be made clear that the same transfer method should work. Then the predictions are 1-1 monotone functions of the links, so knowing them also implies the coefficients can be recovered (up to co-linearities).
 
 For logistic regression, the link function is the *logit*: 
 
@@ -273,18 +275,20 @@ p &= s(\beta_0 + \beta_1 * x_1 + \beta_2 * x_2)
 
 Fortunately, whichever generalized linear model fitter you want to port to probably handles all the link function-foo automatically, so to port your original generalized linear model, you only need to build a full-rank evaluation frame $U$ as described above, set $Y$ to be the corresponding set of predictions, then call the fitter.
 
-Note that since you are using the actual generalized linear model fitter to re-fit a model to $U$, you want to make sure that you construct $Y$ using $y_{pred}$ (in R, the "response"), **NOT** $f_{ypred}$ (in R, the "link"). For logistic regression, this means you construct $Y$ from your original model's probability predictions, not the logit of the probabilities.
+Note that since you are using the actual generalized linear model fitter to re-fit a model to $U$, you want to make sure that you construct $Y$ using $y_{pred}$ (in R, the "response"), **NOT** $f(y_{pred})$ (in R, the "link"). For logistic regression, this means you construct $Y$ from your original model's probability predictions, not the logit of the probabilities.
 
 This is probably not a serious issue for anyone except R users, where generalized linear models tend to return the link values by default rather than the response. Other frameworks likely return the response, which is what you actually want.
 But I thought I'd mention it. 
 
-The below notebook shows an extended example of transferring the coefficients from a L2-regularized logistic regression model (fit with the `glmnet` package) to a "standard" (`glm`) logistic regression model in R. I've noted some issues and caveats that will also be relevant to Python users.
+Another caveat with logistic regression is that not all solvers will allow you to set up a logistic regression with fractional targets. That means (unlike with OLS), you may not be able to use the predicted probabilities from your original model directly. You can work around this either by using a weighting vector, or by "expanding" the data: For example, you could express a 0.3 probability as 3 rows of data with positive outcome, and 7 rows of data with negative outcome, where all ten rows have the same `X` values. 
 
-* [Porting a logistic regression model from one framework to another](https://github.com/WinVector/scratch/blob/main/linear_model_transfer/logistic_model_transfer.md) TODO add link
+The below notebook shows an extended example of transferring the coefficients from a L2-regularized logistic regression model (fit with the `glmnet` package) to a "standard" (`glm`) logistic regression model in R. I demonstrate fitting to probabilities directly, and also using a weighted representation. I've also noted some other issues that will be relevant to Python users.
+
+* [Porting a logistic regression model from one framework to another](https://github.com/WinVector/Examples/blob/main/LinearModelTransfer/logistic_model_transfer.md) 
 
 ## Conclusion
 
-I need one.
+Linear model replication or transfer is surprisingly useful. Sometimes, the data scientist cannot maintain all the original training data, or they are using a model implementation/development framework that is not practical for deployment. In these situations, constructing a synthetic data set that forces the fit coefficients to be replicated can be very useful in future proofing projects, and transferring models from one system to another. Obviously the diagnostics, such as p-values, are not preserved by such a transfer--but the functional model is.
 
 
 
