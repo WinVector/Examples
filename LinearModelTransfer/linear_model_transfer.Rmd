@@ -38,7 +38,7 @@ newmammals = Mammals[101:107, ]
 
 We'll use `rq()` to fit models for the 10th and 90th percentile of log speed as a function of log weight, and whether or not the animal is a hopper (like a kangaroo) or "special": animals with "lifestyles in which speed does not figure as an important factor". Examples of "special" animals include the porcupine, the skunk, and the raccoon.
 
-Note that, as discussed [here](http://www.econ.uiuc.edu/~roger/research/rq/FAQ), calculated percentile predictions aren't necessarily unique, but they are correct. Hence you may get a "non-uniqueness" warning when running `rq`.
+Note that, as discussed [here](http://www.econ.uiuc.edu/~roger/research/rq/FAQ), the calculated percentile predictions from the model aren't necessarily unique, but they are correct. Hence you may get a "non-uniqueness" warning when running `rq`.
 
 
 ```{r}
@@ -84,11 +84,12 @@ ggplot(mammals, aes(x=logwt, y=logspeed)) +
 
 ## Transfer the quantile model to the `lm` framework
 
-Now let's transfer the coefficients from the `qr` models to `lm` models. As discussed in our main article (LINK TODO), all we need to do is evaluate our quantile models on a full rank set of rows. Since all the variables here are numeric or logical (0/1), we only need 4 independent rows: one for each variable, plus the intercept. 
+Now let's transfer the coefficients from the `qr` models to `lm` models. As discussed in our main article, we can
+do this by evaluating the quantile models on a full rank set of rows. Since all the variables here are numeric or logical (0/1), this only requires 4 independent rows: one for each variable, plus the intercept. 
 
-Note that in our representation below, the intercept column is implicit, so you can think of `evalframe` having an invisible intercept column `c(1, 1, 1, 1)`, making `evalframe` a 4 by 4 full rank matrix.
+Note that in the representation below, the intercept column is implicit, so you can think of `evalframe` having an invisible intercept column `c(1, 1, 1, 1)`, making `evalframe` a 4 by 4 full rank matrix.
 
-First, we'll transfer the 90th percentile model.
+First, transfer the 90th percentile model.
 
 ```{r}
 meanlogwt = mean(mammals$logwt) # not strictly necessary, but nice to keep the value in range

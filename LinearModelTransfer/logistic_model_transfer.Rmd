@@ -58,7 +58,7 @@ This singularity is clearly an issue when the data scientist is interested in co
 If you are more interested in stable prediction of outcome, rather than correct inference
 of parameters, regularizing the regression is a recommended procedure. 
 
-So we will try fitting a logistic model to this data with L2 regularization (AKA ridge regression), to manage the collinearity We'll use `cv.glmnet` to automatically pick a good value for the regularization parameter, and return the appropriate model.
+So we will try fitting a logistic model to this data with L2 regularization (AKA ridge regression), to manage the collinearity. We'll use `cv.glmnet` to automatically pick a good value for the regularization parameter, and return the appropriate model.
 
 ```{r}
 library(glmnet)
@@ -103,9 +103,9 @@ Note that the unregularized model returns much larger link values, leading the p
 
 If the resulting model is good enough for your needs, and you are willing to work with your data as matrices and factors, then you're done. But you might want to keep the data as a data frame for other reasons (for example, compatibility with the rest of the workflow). In this case, you might find it useful to port the `glmnet` model to `glm` for ease of use.
 
-As discussed in our main article (LINK TODO), all we need to do is evaluate the `glmnet` model on a full rank set of rows. Since all the variables here are numeric, we only need 4 independent rows: one for each variable, plus the intercept. 
+As discussed in our main article, this only requires evaluating the `glmnet` model on a full rank set of rows. Since all the variables here are numeric, we only need 4 independent rows: one for each variable, plus the intercept. 
 
-Note that in our representation below, the intercept column is implicit, so you can think of `evalframe` having an invisible intercept column `c(1, 1, 1, 1)`, making `evalframe` a 4 by 4 full rank matrix.
+Note that in the representation below, the intercept column is implicit, so you can think of `evalframe` having an invisible intercept column `c(1, 1, 1, 1)`, making `evalframe` a 4 by 4 full rank matrix.
 
 ```{r}
 
@@ -118,8 +118,10 @@ evalframe = wrapr::build_frame(
     0,    0,    1
 )
 
+# attach predictions from glmnet model
 emat = as.matrix(evalframe)
 evalframe$y = as.numeric(predict(modglmn, emat, type='response'))
+
 evalframe
 
 ```

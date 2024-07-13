@@ -9,7 +9,7 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-In our main article (LINK TODO), we showed an example of transferring the weights from one linear model to another one, without retraining on the original data. In order to do that, we fit a new model to a full rank set of rows, using the predictions of the original model on our new evaluation set as the outcome.
+In our main article, we showed an example of transferring the weights from one linear model to another one, without retraining on the original data. In order to do that, we fit a new model to a full rank set of rows, using the predictions of the original model on our new evaluation set as the outcome.
 
 When all the variables are continuous, then the number of rows we need is the number of variables plus one, for the intercept. This is the number of coefficients in the model. If $n_{var}$ is the number of variables, then an easy evaluation matrix to use is the $n_{var}$-dimensional identity matrix, with a row of all zeros appended to "represent" the intercept. This representation assumes an implicit all ones column for the intercept; if you are transferring the model to a framework that needs the intercept column explicitly, you'd need to add a column of all ones explicitly.
 
@@ -64,6 +64,7 @@ evalframe = wrapr::build_frame(
               0,              0,  'virginica'
 )
 
+# attach predictions from the original model
 evalframe$Sepal.Length = predict(model, newdata=evalframe)
 
 # look at the model matrix and confirm it's full rank.
@@ -89,7 +90,7 @@ The coefficients are the same as the original model fit to the iris data.
 
 ## More than one categorical variable
 
-In this example, we'll predict the ascorbic acid (vitamin C) content of cabbages as a function of their weight (continuous variable), their cultivar (categorical with two values: `c39` and `c52`) and their planting date (categorical with three values: `d16`, `d20`, `d21`).
+In this example, we'll predict the ascorbic acid (vitamin C) content of cabbages as a function of: their weight (continuous variable), their cultivar (categorical with two values: `c39` and `c52`) and their planting date (categorical with three values: `d16`, `d20`, `d21`).
 
 ```{r}
 library(MASS) # to get the data
@@ -120,6 +121,7 @@ evalframe = wrapr::build_frame(
     'c39', 'd21',   0    # Dated21 is 1, everything else is "0"
 )
 
+# attach predictions from the original model
 evalframe$VitC = predict(model, newdata=evalframe)
 
 # look at the model matrix and confirm it's full rank.
