@@ -2,7 +2,9 @@
 title: "Transferring Coefficients of Linear Models"
 author: "Nina Zumel"
 date: "2024-07-09"
-output: html_document
+output:
+  html_document:
+    pandoc_args: ["--wrap=none"]
 ---
 
 
