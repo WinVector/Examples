@@ -338,7 +338,6 @@ def plot_hidden_state_estimate(
     hs_frame = hs_frame.loc[:, ['time_tick', 'y']].groupby(['time_tick']).quantile(plotting_quantiles).reset_index(drop=False)
     hs_frame.rename(columns={'level_1': 'quantile'}, inplace=True)
     hs_frame['quantile'] = [str(v) for v in hs_frame['quantile']]
-    hs_frame['time_tick'] = hs_frame['time_tick'] + d_train.loc[0, 'time_tick']
     min_tick = 1 + 2 * np.max(d_train['time_tick']) - np.max(hs_frame['time_tick'])
     hs_frame = hs_frame.loc[hs_frame['time_tick'] >= min_tick, :].reset_index(drop=True, inplace=False)
     d_train_p = d_train.loc[d_train['time_tick'] >= min_tick, :].reset_index(drop=True, inplace=False)
