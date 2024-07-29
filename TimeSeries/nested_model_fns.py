@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import Ridge
 from cmdstanpy import CmdStanModel
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import root_mean_squared_error, r2_score
 
 from plotnine import *
 
@@ -396,10 +396,10 @@ def plot_model_quality(
         *,
         result_name: str,
 ):
-    rmse = np.sqrt(mean_squared_error(
+    rmse = root_mean_squared_error(
         y_true=d_test['y'],
         y_pred=d_test[result_name],
-    ))
+    )
     r2 = r2_score(
         y_true=d_test['y'],
         y_pred=d_test[result_name], 
@@ -451,10 +451,10 @@ def plot_model_quality_by_prefix(
     pf = pd.DataFrame({
         'max(time_tick)': [d_test.loc[prefix_len, 'time_tick']
                      for prefix_len in range(stan_preds.shape[0])],
-        'rmse': [np.sqrt(mean_squared_error(
+        'rmse': [root_mean_squared_error(
                 y_true=d_test.loc[range(prefix_len + 1),'y'],
                 y_pred=stan_preds[range(prefix_len + 1)],
-            )) for prefix_len in range(stan_preds.shape[0])],
+            ) for prefix_len in range(stan_preds.shape[0])],
     })
     return (
         ggplot(
@@ -518,34 +518,107 @@ def plot_recent_state_distribution(
     )
 
 
-def apply_linear_model_bundle_method(
+def fit_external_regressors(
     *,
     modeling_lags: Iterable[int],
-    external_regressors = Optional[Iterable[str]],
+    external_regressors: Iterable[str],
     d_train: pd.DataFrame,
-    d_apply: pd.DataFrame,
-    pull_off_external_effects: bool = False      
+    verbose: bool = False,
 ):
     # copy data
     modeling_lags = list(modeling_lags)
-    if external_regressors is None:
-        external_regressors = []
-        pull_off_external_effects = False
-    else:
-        external_regressors = list(external_regressors)
+    external_regressors = list(external_regressors)
     train_frame = d_train.loc[:, ['y'] + external_regressors].reset_index(drop=True, inplace=False)  # copy, no side effects
-    apply_frame = d_apply.loc[:, ['y'] + external_regressors].reset_index(drop=True, inplace=False)  # copy, no side effects
-    # pull of external regressors
-    if pull_off_external_effects:
-        model_vars = []
+    orig_train_y = np.array(train_frame['y'])
+    external_regressor_effect_estimate = np.zeros(train_frame.shape[0], dtype=float)
+    lagged_variable_effect_estimate = np.zeros(train_frame.shape[0], dtype=float)
+    best_ext_model = None
+    best_rmse = np.inf
+    for rep in range(5):
+        # estimate external regressors
+        # prepare adjusted y, pull off lagged regressors
+        train_frame['y'] = orig_train_y - lagged_variable_effect_estimate
         ext_model = Ridge(alpha=1e-3)
         ext_model.fit(train_frame.loc[:, external_regressors], train_frame['y'])
-        train_frame['y'] = train_frame['y'] - ext_model.predict(train_frame.loc[:, external_regressors])
-        external_apply_effects = ext_model.predict(apply_frame.loc[:, external_regressors])
-        apply_frame['y'] = apply_frame['y'] - external_apply_effects
+        external_regressor_effect_estimate = ext_model.predict(train_frame.loc[:, external_regressors])
+        # estimated auto/lagged regressors
+        # prepare adjusted y, pull of external regressors
+        train_frame['y'] = orig_train_y - external_regressor_effect_estimate
+        # get observable lags of outcome
+        lagged_variables = []
+        for lag_i, lag in enumerate(modeling_lags):
+            v_name = f'y_lag_{lag_i}_{lag}'
+            lagged_variables.append(v_name)
+            train_frame[v_name] = train_frame['y'].shift(lag)  # move past forward for observable variables
+        auto_model = Ridge(alpha=1e-3)
+        complete_cases_auto = train_frame.loc[:, lagged_variables].notna().all(axis='columns')
+        auto_model.fit(train_frame.loc[complete_cases_auto, lagged_variables], train_frame.loc[complete_cases_auto, 'y'])
+        lagged_variable_effect_estimate = np.zeros(train_frame.shape[0], dtype=float)
+        lagged_variable_effect_estimate[complete_cases_auto] = auto_model.predict(
+            train_frame.loc[complete_cases_auto, lagged_variables])
+        # continue to next pass
+        rmse = root_mean_squared_error(
+            y_true=orig_train_y,
+            y_pred=external_regressor_effect_estimate + lagged_variable_effect_estimate,
+        )
+        mean_ext_effect = root_mean_squared_error(
+            y_true=np.zeros(train_frame.shape[0], dtype=float),
+            y_pred=external_regressor_effect_estimate,
+        )
+        mean_auto_effect = root_mean_squared_error(
+            y_true=np.zeros(train_frame.shape[0], dtype=float),
+            y_pred=lagged_variable_effect_estimate,
+        )
+        if (rep <= 0) or (rmse < best_rmse):
+            best_ext_model = ext_model
+            best_rmse = rmse
+        if verbose:
+            coef_dict = {k: v for k, v in zip(external_regressors, ext_model.coef_)}
+            print(f'pass({rep})')
+            print(f'   rmse: {rmse}, mean_ext_effect: {mean_ext_effect}, mean_auto_effect: {mean_auto_effect}')
+            print(f'   {coef_dict}')
+    return best_ext_model
+
+
+def apply_linear_model_bundle_method(
+    *,
+    modeling_lags: Iterable[int],
+    durable_external_regressors: Optional[Iterable[str]] = None,
+    impermanent_external_regressors: Optional[Iterable[str]] = None,
+    d_train: pd.DataFrame,
+    d_apply: pd.DataFrame,
+):
+    # copy data
+    modeling_lags = list(modeling_lags)
+    if durable_external_regressors is None:
+        durable_external_regressors = []
     else:
-        model_vars = list(external_regressors)
-        external_apply_effects = np.zeros(apply_frame.shape[0])
+        durable_external_regressors = list(durable_external_regressors)
+    if impermanent_external_regressors is None:
+        impermanent_external_regressors = []
+    else:
+        impermanent_external_regressors = list(impermanent_external_regressors)
+    train_frame = d_train.loc[
+        :, 
+        ['y'] + sorted(set(durable_external_regressors + impermanent_external_regressors))].reset_index(
+            drop=True, inplace=False)  # copy, no side effects
+    apply_frame = d_apply.loc[
+        :, 
+        ['y'] + sorted(set(durable_external_regressors + impermanent_external_regressors))].reset_index(
+            drop=True, inplace=False)  # copy, no side effects
+    # pull of impermanent regressors
+    if len(impermanent_external_regressors) > 0:
+        ext_model = fit_external_regressors(
+            modeling_lags=modeling_lags,
+            external_regressors=impermanent_external_regressors,
+            d_train=d_train, 
+        )
+        external_train_effects = ext_model.predict(train_frame.loc[:, impermanent_external_regressors])
+        train_frame['y'] = train_frame['y'] - external_train_effects
+        external_apply_effects = ext_model.predict(apply_frame.loc[:, impermanent_external_regressors])
+        apply_frame['y'] = apply_frame['y'] - external_apply_effects
+    # model the auto correlated or lags section of the problem
+    model_vars = list(durable_external_regressors)
     # get observable lags of outcome
     for lag_i, lag in enumerate(modeling_lags):
         v_name = f'y_lag_{lag_i}_{lag}'
@@ -565,11 +638,11 @@ def apply_linear_model_bundle_method(
             model = Ridge(alpha=1e-3)
             model.fit(x_train_frame.loc[complete_train_cases, model_vars], y_vec[complete_train_cases])
             apply_row = x_apply_frame.loc[[first_complete_apply_index], model_vars].reset_index(drop=True, inplace=False)  # copy
-            if not pull_off_external_effects:
+            if len(durable_external_regressors) > 0:
                 # get in-time external regressor values
-                for v in external_regressors:
+                for v in durable_external_regressors:
                     apply_row[v] = x_apply_frame.loc[apply_i, v]
             preds[apply_i] = model.predict(apply_row)[0]
-    if pull_off_external_effects:
+    if len(impermanent_external_regressors) > 0:
         preds = preds + external_apply_effects
     return preds
