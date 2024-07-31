@@ -143,7 +143,7 @@ model {{
 def _build_Stan_model_from_src(
         nested_model_stan_str: str
 ):
-    stan_file = 'nested_model.stan'
+    stan_file = 'nested_model_tmp.stan'
     with open(stan_file, 'w', encoding='utf8') as file:
         file.write(nested_model_stan_str)
     # instantiate the model object
@@ -199,7 +199,7 @@ def solve_forecast_by_Stan(
     else:
         durable_external_regressors = []
     # specify data file
-    data_file = 'nested_model.data.json'
+    data_file = 'nested_model_tmp.data.json'
     # write data
     nested_model_data_str = (
         "{" 
