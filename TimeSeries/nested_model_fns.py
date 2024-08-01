@@ -325,11 +325,12 @@ def evolve_fwd_est(
     idx = np.max(recent_indexes) + 1
     last_idx = np.max(d_both['time_tick'])
     while idx <= last_idx:
+        # apply auto regressive step
         e_state = fwd_est['b_auto_intercept']
         for lag_i, lag_dist in enumerate(generating_lags):
             e_state = e_state + fwd_est[f'b_auto[{lag_i}]'] * fwd_est[f'y_auto[{idx - lag_dist }]']
         fwd_est[f'y_auto[{idx}]'] = e_state
-        # add in external regressors
+        # add in impermanent external regressors
         d_row = d_both.loc[d_both['time_tick'] == idx, :].reset_index(drop=True, inplace=False)
         fwd_est[f'y_est[{idx}]'] = (
             e_state + d_row.loc[0, 'x_0'] * fwd_est[f'b_x_imp[0]']
