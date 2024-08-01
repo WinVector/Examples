@@ -246,11 +246,19 @@ def plot_forecast(
         *,
         model_name: str,
         enforce_nonnegative: bool = False,
+        external_regressors: Optional[Iterable[str]] = None,
         ):
+    d_test = d_test.reset_index(drop=True, inplace=False)  # copy for no side effects
+    d_test['external_regressors'] = ''
+    if external_regressors is not None:
+        external_regressors = list(external_regressors)
+        d_test['external_regressors'] = [
+            str({k: d_test.loc[i, k] for k in external_regressors}) for i in range(d_test.shape[0])
+        ]
     # set some plotting controls
     plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
     plotting_colors = {
-        '0.05': '#66c2a4', 
+        '0.05': '#66c2a4',
         '0.1': '#2ca25f', 
         '0.25': '#006d2c', 
         '0.5': '#005824', 
@@ -298,7 +306,7 @@ def plot_forecast(
         )
         + geom_point(
             data=d_test,
-            mapping=aes(x='time_tick', y='y', shape='x_0_value')
+            mapping=aes(x='time_tick', y='y', shape='external_regressors')
         )
         + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"{model_name} out of sample forecast\ndots are actuals, lines are predictions")
@@ -348,7 +356,15 @@ def plot_state_estimate(
         state_name: str,
         model_name: str,
         vline_location: Optional[float] = None,
+        external_regressors: Optional[Iterable[str]] = None,
         ):
+    d_ref = d_ref.reset_index(drop=True, inplace=False)
+    d_ref['external_regressors'] = ''
+    if external_regressors is not None:
+        external_regressors = list(external_regressors)
+        d_ref['external_regressors'] = [
+            str({k: d_ref.loc[i, k] for k in external_regressors}) for i in range(d_ref.shape[0])
+        ]
     # set some plotting controls
     plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
     plotting_colors = {
@@ -399,7 +415,7 @@ def plot_state_estimate(
         )
         + geom_point(
             data=d_ref.loc[(d_ref['time_tick'] >= min_tick) & (d_ref['time_tick'] <= max_tick), :],
-            mapping=aes(x='time_tick', y='y', shape='x_0_value')
+            mapping=aes(x='time_tick', y='y', shape='external_regressors')
         )
         + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"{model_name} {state_name}\n(lines are estimate, dots are observations)")
@@ -431,7 +447,15 @@ def plot_model_quality(
         d_test: pd.DataFrame,
         *,
         result_name: str,
+        external_regressors: Optional[Iterable[str]] = None,
 ):
+    d_test = d_test.reset_index(drop=True, inplace=False)
+    d_test['external_regressors'] = ''
+    if external_regressors is not None:
+        external_regressors = list(external_regressors)
+        d_test['external_regressors'] = [
+            str({k: d_test.loc[i, k] for k in external_regressors}) for i in range(d_test.shape[0])
+        ]
     rmse = root_mean_squared_error(
         y_true=d_test['y'],
         y_pred=d_test[result_name],
@@ -453,7 +477,7 @@ def plot_model_quality(
     return (
         ggplot(
             data=d_test,
-            mapping=aes(x=result_name, y='y', shape='x_0_value')
+            mapping=aes(x=result_name, y='y', shape='external_regressors')
         )
         + geom_abline(
             intercept=0, 
@@ -477,7 +501,7 @@ def plot_model_quality_by_prefix(
         result_name: str,
 ):
     stan_preds = s_frame.loc[
-        s_frame['quantile'] == '0.5', 
+        s_frame['quantile'] == '0.5',
         ['time_tick', 'y']]
     stan_preds.sort_values(
         ['time_tick'], 
