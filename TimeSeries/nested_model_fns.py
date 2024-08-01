@@ -306,13 +306,47 @@ def plot_forecast(
     return plt, sf_frame
 
 
-def plot_hidden_state_estimate(
-        forecast_soln: pd.DataFrame,
+def evolve_fwd_est(
         *,
-        d_train: pd.DataFrame,
-        d_test: pd.DataFrame,
+        generating_lags: Iterable[int],
+        forecast_soln: pd.DataFrame,
+        recent_indexes: Iterable[int],
+        d_both: pd.DataFrame,
+        ):
+    generating_lags = list(generating_lags)
+    recent_indexes = list(recent_indexes)
+    fwd_est = forecast_soln.loc[
+        :,
+        ['b_auto_intercept', 'b_auto[0]', 'b_auto[1]', 'b_x_imp[0]']
+        + [f'y_auto[{i}]' for i in recent_indexes]
+    ].reset_index(drop=True, inplace=False)
+    # evolve estimate forward with usual time series "plug in expected value of 1 step"
+    fwd_est = dict(fwd_est)
+    idx = np.max(recent_indexes) + 1
+    last_idx = np.max(d_both['time_tick'])
+    while idx <= last_idx:
+        e_state = fwd_est['b_auto_intercept']
+        for lag_i, lag_dist in enumerate(generating_lags):
+            e_state = e_state + fwd_est[f'b_auto[{lag_i}]'] * fwd_est[f'y_auto[{idx - lag_dist }]']
+        fwd_est[f'y_auto[{idx}]'] = e_state
+        # add in external regressors
+        d_row = d_both.loc[d_both['time_tick'] == idx, :].reset_index(drop=True, inplace=False)
+        fwd_est[f'y_est[{idx}]'] = (
+            e_state + d_row.loc[0, 'x_0'] * fwd_est[f'b_x_imp[0]']
+        )
+        # prepare for next iteration
+        idx = idx + 1
+    fwd_est = pd.DataFrame(fwd_est)
+    return fwd_est
+
+
+def plot_state_estimate(
+        *,
+        forecast_soln: pd.DataFrame,
+        d_ref: pd.DataFrame,
+        state_name: str,
         model_name: str,
-        enforce_nonnegative: bool = False,
+        vline_location: Optional[float] = None,
         ):
     # set some plotting controls
     plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
@@ -329,18 +363,15 @@ def plot_hidden_state_estimate(
     # arrange forecast solution for plotting
     hs_frame = forecast_soln.loc[
         :, 
-        [c for c in forecast_soln.columns if c.startswith('y_auto[')]].reset_index(drop=True, inplace=False)
-    if enforce_nonnegative:
-        hs_frame[hs_frame < 0] = 0.0
+        [c for c in forecast_soln.columns if c.startswith(f'{state_name}[')]].reset_index(drop=True, inplace=False)
     hs_frame['trajectory_id'] = range(hs_frame.shape[0])
     hs_frame = hs_frame.melt(id_vars=['trajectory_id'], var_name='time_tick', value_name='y')
-    hs_frame['time_tick'] = [int(c.replace('y_auto[', '').replace(']', '')) for c in hs_frame['time_tick']]
+    hs_frame['time_tick'] = [int(c.replace(f'{state_name}[', '').replace(']', '')) for c in hs_frame['time_tick']]
     hs_frame = hs_frame.loc[:, ['time_tick', 'y']].groupby(['time_tick']).quantile(plotting_quantiles).reset_index(drop=False)
     hs_frame.rename(columns={'level_1': 'quantile'}, inplace=True)
+    min_tick = np.min(hs_frame['time_tick'])
+    max_tick = np.max(hs_frame['time_tick'])
     hs_frame['quantile'] = [str(v) for v in hs_frame['quantile']]
-    min_tick = 1 + 2 * np.max(d_train['time_tick']) - np.max(hs_frame['time_tick'])
-    hs_frame = hs_frame.loc[hs_frame['time_tick'] >= min_tick, :].reset_index(drop=True, inplace=False)
-    d_train_p = d_train.loc[d_train['time_tick'] >= min_tick, :].reset_index(drop=True, inplace=False)
     hs_p = hs_frame.pivot(index='time_tick', columns='quantile')
     hs_p.columns = [c[1] for c in hs_p.columns]
     hs_p = hs_p.reset_index(drop=False, inplace=False)
@@ -366,17 +397,21 @@ def plot_hidden_state_estimate(
             color='#005824',
         )
         + geom_point(
-            data=d_train_p,
-            mapping=aes(x='time_tick', y='y', shape='x_0_value')
-        )
-        + geom_point(
-            data=d_test,
+            data=d_ref.loc[(d_ref['time_tick'] >= min_tick) & (d_ref['time_tick'] <= max_tick), :],
             mapping=aes(x='time_tick', y='y', shape='x_0_value')
         )
         + guides(shape=guide_legend(reverse=True))
-        + geom_vline(xintercept=np.max(d_train['time_tick']) + 0.5, linetype='dashed')
-        + ggtitle(f"{model_name} hidden state estimate\n(dots are observations)")
+        + ggtitle(f"{model_name} {state_name}\n(lines are estimate, dots are observations)")
     )
+    if vline_location is not None:
+        plt = (plt + 
+               geom_vline(
+                   xintercept=vline_location,
+                   color='blue',
+                   alpha=0.8,
+                   linetype='dashed',
+                )
+        )
     return plt
 
 
