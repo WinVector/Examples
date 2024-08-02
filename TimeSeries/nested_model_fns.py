@@ -318,6 +318,7 @@ def evolve_fwd_est(
         *,
         generating_lags: Iterable[int],
         forecast_soln: pd.DataFrame,
+        n_external_regressors: int,
         recent_indexes: Iterable[int],
         d_both: pd.DataFrame,
         ):
@@ -325,7 +326,7 @@ def evolve_fwd_est(
     recent_indexes = list(recent_indexes)
     fwd_est = forecast_soln.loc[
         :,
-        ['b_auto_intercept', 'b_auto[0]', 'b_auto[1]', 'b_x_imp[0]']
+        ['b_auto_intercept'] + [f'b_auto[{i}]' for i in range(len(generating_lags))] + [f'b_x_imp[{i}]' for i in range(n_external_regressors)]
         + [f'y_auto[{i}]' for i in recent_indexes]
     ].reset_index(drop=True, inplace=False)
     # evolve estimate forward with usual time series "plug in expected value of 1 step"
@@ -340,9 +341,9 @@ def evolve_fwd_est(
         fwd_est[f'y_auto[{idx}]'] = e_state
         # add in impermanent external regressors
         d_row = d_both.loc[d_both['time_tick'] == idx, :].reset_index(drop=True, inplace=False)
-        fwd_est[f'y_est[{idx}]'] = (
-            e_state + d_row.loc[0, 'x_0'] * fwd_est[f'b_x_imp[0]']
-        )
+        for i in range(n_external_regressors):
+            e_state =  e_state + d_row.loc[0, f'x_{i}'] * fwd_est[f'b_x_imp[{i}]']
+        fwd_est[f'y_est[{idx}]'] = e_state
         # prepare for next iteration
         idx = idx + 1
     fwd_est = pd.DataFrame(fwd_est)
@@ -497,9 +498,10 @@ def plot_model_quality(
 def plot_model_quality_by_prefix(
         *,
         s_frame: pd.DataFrame,
-        d_test: pd.DataFrame,  # alters
+        d_test: pd.DataFrame,
         result_name: str,
 ):
+    d_test = d_test.reset_index(drop=True, inplace=False)
     stan_preds = s_frame.loc[
         s_frame['quantile'] == '0.5',
         ['time_tick', 'y']]
@@ -523,6 +525,7 @@ def plot_model_quality_by_prefix(
         ) 
         + geom_line()
         + geom_point()
+        + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"{result_name}\nquality by forecast horizon")
     )
 
@@ -534,6 +537,7 @@ def plot_recent_state_distribution(
     generating_lags,
     result_name:str,
 ):
+    """not generic (specialzed to to lags and one external regressor)"""
     assert len(generating_lags) == 2
     t_l0 = d_train.shape[0] - generating_lags[0]
     t_l1 = d_train.shape[0] - generating_lags[1]
