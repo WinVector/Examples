@@ -1,0 +1,154 @@
+---
+title: "ts_example"
+output: github_document
+date: "2024-08-03"
+---
+
+Show README example.
+
+
+```{r}
+# http://fable.tidyverts.org
+library(fable)
+library(tsibble)
+library(tsibbledata)
+library(lubridate)
+library(dplyr)
+aus_retail %>%
+  filter(
+    State %in% c("New South Wales", "Victoria"),
+    Industry == "Department stores"
+  ) %>% 
+  model(
+    ets = ETS(box_cox(Turnover, 0.3)),
+    arima = ARIMA(log(Turnover)),
+    snaive = SNAIVE(Turnover)
+  ) %>%
+  forecast(h = "2 years") %>% 
+  autoplot(filter(aus_retail, year(Month) > 2010), level = NULL)
+```
+
+
+Show fitting with an external regressor.
+
+```{r}
+library(ggplot2)
+# https://otexts.com/fpp3/regarima.html
+d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
+d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
+
+preds <- (
+  d_train %>%
+    tsibble(index=time_tick) %>%
+    model(
+      ARIMA(y ~ 
+              1  # turn off must specify constant warning
+            + x_0   # external regressor (can also use xreg(x_0)
+            + pdq(2, 0, 2)   # AR=MA=2, I=0
+            + PDQ(0, 0, 0)   # turn off seasonality (help(ARIMA))
+            )
+    ) %>%
+    forecast(new_data=tsibble(d_test, index=time_tick)) 
+  )
+d_test['ARIMA prediction'] = preds['.mean']
+
+(
+  ggplot(
+    data=d_test,
+    mapping=aes(x=time_tick)
+  )
+  + geom_step(mapping=aes(y=`ARIMA prediction`), direction='mid', color='blue')
+  + geom_point(mapping=aes(y=y, shape=as.character(x_0)))
+) 
+```
+
+```{r}
+# Rsquared
+sse = sum((d_test[['y']] - d_test[['ARIMA prediction']])**2)
+sey = sum((d_test[['y']] - mean(d_test[['y']]))**2)
+1 - sse/sey
+```
+
+```{r}
+# RMSE
+sqrt(mean((d_test[['y']] - d_test[['ARIMA prediction']])**2))
+```
+
+Show can fit sin(x).
+
+```{r}
+d_train <- data.frame(time_tick=seq(0, 949))
+d_train['y'] = sin(0.23 * d_train['time_tick'])
+d_test <- data.frame(time_tick=seq(950, 999))
+d_test['y'] = sin(0.23 * d_test['time_tick'])
+
+(
+    d_train %>%
+    tsibble(index=time_tick) %>%
+    model(
+      arima = ARIMA(y ~ 1 + pdq(2, 0, 2) + PDQ(0, 0, 0))
+    ) %>%
+    forecast(new_data=tsibble(d_test, index=time_tick)) %>%
+    autoplot()
+)
+
+preds <- (
+  d_train %>%
+    tsibble(index=time_tick) %>%
+    model(
+      arima = ARIMA(y ~ 1 + pdq(2, 0, 2) + PDQ(0, 0, 0))
+    ) %>%
+    forecast(new_data=tsibble(d_test, index=time_tick)) 
+  )
+d_test['ARIMA prediction'] = preds['.mean']
+
+(
+  ggplot(
+    data=d_test,
+    mapping=aes(x=time_tick)
+  )
+  + geom_step(mapping=aes(y=`ARIMA prediction`), direction='mid', color='blue')
+  + geom_point(mapping=aes(y=y))
+) 
+```
+
+Try again with external regressor.
+
+```{r}
+set.seed(2024)
+d_train <- data.frame(time_tick=seq(0, 949))
+d_train['x_0'] <- rbinom(n=nrow(d_train), size=1, prob=0.3)
+d_train['y'] = sin(0.23 * d_train['time_tick']) + 0.2 * d_train['x_0']
+d_test <- data.frame(time_tick=seq(950, 999))
+d_test['x_0'] <- rbinom(n=nrow(d_test), size=1, prob=0.3)
+d_test['y'] = sin(0.23 * d_test['time_tick']) + 0.2 * d_test['x_0']
+
+(
+    d_train %>%
+    tsibble(index=time_tick) %>%
+    model(
+      arima = ARIMA(y ~ 1 + x_0 + pdq(2, 0, 2) + PDQ(0, 0, 0))
+    ) %>%
+    forecast(new_data=tsibble(d_test, index=time_tick)) %>%
+    autoplot()
+)
+
+preds <- (
+  d_train %>%
+    tsibble(index=time_tick) %>%
+    model(
+      arima = ARIMA(y ~ 1 + x_0 + pdq(2, 0, 2) + PDQ(0, 0, 0))
+    ) %>%
+    forecast(new_data=tsibble(d_test, index=time_tick)) 
+  )
+d_test['ARIMA prediction'] = preds['.mean']
+
+(
+  ggplot(
+    data=d_test,
+    mapping=aes(x=time_tick)
+  )
+  + geom_step(mapping=aes(y=`ARIMA prediction`), direction='mid', color='blue')
+  + geom_point(mapping=aes(y=y))
+) 
+```
