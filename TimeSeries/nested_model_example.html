@@ -8962,7 +8962,7 @@ dtype: float64</pre>
 <li>Projections or applications of the model for future <code>time_tick</code>s 950 through 999.</li>
 <li>Good inferences of the most recent unobserved states <code>y_auto[948]</code> and <code>y_auto[949]</code> in the training period.</li>
 </ul>
-<p>The third item provides a much more useful estimate of then hidden state (based on evaluation of trajectories through the entire training period) than the simple single point estimate <code>y_auto[i] ~ y[i] - b_x_impl[0] - x_0[i]</code>. One can evolve estimates forward from these inferences, and that is not always the case for the simple expected value estimates.</p>
+<p>The third item provides a much more useful estimate of then hidden state (based on evaluation of trajectories through the entire training period) than the simple single point estimate <code>y_auto[i] ~ y[i] * b_x_impl[0] - x_0[i]</code>. One can evolve estimates forward from these inferences, and that is not always the case for the simple expected value estimates.</p>
 <p>The issue with the simple (or naive) estimates being: they are single value point estimates, not necessarily compatible with <em>any</em> of the estimate sampling trajectories. Plugging in the naive estimates often does not allow one to evolve the prediction trajectories forward in a sensible manner. The detailed estimates from the Stan sampler do allow such forward evolution of estimates (either inside the Stan sampler as shown, or as a simple external procedure).</p>
 </div>
 </div>
