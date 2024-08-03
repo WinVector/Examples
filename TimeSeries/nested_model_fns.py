@@ -547,7 +547,7 @@ def plot_recent_state_distribution(
         for i in range(d_train.shape[0] - np.max(generating_lags), d_train.shape[0])]]
     est_h_state = pd.DataFrame({
         f'y[{i}] - f(x)':
-        forecast_soln[f'y[{i}]'] -  (forecast_soln['b_x_imp[0]'] * d_train.loc[i, 'x_0'])
+        d_train.loc[i, 'y'] -  (forecast_soln['b_x_imp[0]'] * d_train.loc[i, 'x_0'])
         for i in range(d_train.shape[0] - np.max(generating_lags), d_train.shape[0])})
     recent_hidden_state = recent_hidden_state.melt(id_vars=[])
     compare_colors = {f'y_auto[{t_l1}]': '#ff7f00', f'y_auto[{t_l0}]': '#7570b3'}
@@ -567,13 +567,13 @@ def plot_recent_state_distribution(
         + scale_color_manual(values=compare_colors) 
         + scale_fill_manual(values=compare_colors) 
         + geom_vline(
-            xintercept=est_h_state[f'y[{t_l1}] - f(x)'].mean(), 
+            xintercept=est_h_state[f'y[{t_l1}] - f(x)'].mean(),
             color=compare_colors[f'y_auto[{t_l1}]'],
             linetype=compare_linetypes[f'y_auto[{t_l1}]'],
             size=1,
         )
         + geom_vline(
-            xintercept=est_h_state[f'y[{t_l0}] - f(x)'].mean(), 
+            xintercept=est_h_state[f'y[{t_l0}] - f(x)'].mean(),
             color=compare_colors[f'y_auto[{t_l0}]'],
             linetype=compare_linetypes[f'y_auto[{t_l0}]'],
             size=1,
