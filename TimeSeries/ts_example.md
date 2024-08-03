@@ -270,3 +270,56 @@ d_test['ARIMA prediction'] = preds['.mean']
 ```
 
 ![](ts_example_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+``` r
+library(forecast)
+```
+
+    ## Warning: package 'forecast' was built under R version 4.3.3
+
+    ## Registered S3 method overwritten by 'quantmod':
+    ##   method            from
+    ##   as.zoo.data.frame zoo
+
+``` r
+library(ggplot2)
+# https://otexts.com/fpp3/regarima.html
+d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
+d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
+model <- Arima(
+  ts(d_train[['y']], start=d_train[['time_tick']][1]), 
+  order=c(2, 0, 2), 
+  xreg=ts(d_train[['x_0']], start=d_train[['time_tick']][1])
+  )
+preds <- forecast(model, xreg=ts(d_test[['x_0']], start=d_test[['time_tick']][1]))
+d_test['forecast ARIMAX'] <- as.numeric(preds$mean)
+```
+
+``` r
+(
+  ggplot(
+    data=d_test,
+    mapping=aes(x=time_tick)
+  )
+  + geom_step(mapping=aes(y=`forecast ARIMAX`), direction='mid', color='blue')
+  + geom_point(mapping=aes(y=y, shape=as.character(x_0)))
+) 
+```
+
+![](ts_example_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+# Rsquared
+sse = sum((d_test[['y']] - d_test[['forecast ARIMAX']])**2)
+sey = sum((d_test[['y']] - mean(d_test[['y']]))**2)
+1 - sse/sey
+```
+
+    ## [1] 0.9322298
+
+``` r
+# RMSE
+sqrt(mean((d_test[['y']] - d_test[['forecast ARIMAX']])**2))
+```
+
+    ## [1] 2.476357

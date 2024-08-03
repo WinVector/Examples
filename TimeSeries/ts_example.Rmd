@@ -152,3 +152,42 @@ d_test['ARIMA prediction'] = preds['.mean']
   + geom_point(mapping=aes(y=y))
 ) 
 ```
+
+
+```{r}
+library(forecast)
+library(ggplot2)
+# https://otexts.com/fpp3/regarima.html
+d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
+d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
+model <- Arima(
+  ts(d_train[['y']], start=d_train[['time_tick']][1]), 
+  order=c(2, 0, 2), 
+  xreg=ts(d_train[['x_0']], start=d_train[['time_tick']][1])
+  )
+preds <- forecast(model, xreg=ts(d_test[['x_0']], start=d_test[['time_tick']][1]))
+d_test['forecast ARIMAX'] <- as.numeric(preds$mean)
+```
+
+```{r}
+(
+  ggplot(
+    data=d_test,
+    mapping=aes(x=time_tick)
+  )
+  + geom_step(mapping=aes(y=`forecast ARIMAX`), direction='mid', color='blue')
+  + geom_point(mapping=aes(y=y, shape=as.character(x_0)))
+) 
+```
+
+```{r}
+# Rsquared
+sse = sum((d_test[['y']] - d_test[['forecast ARIMAX']])**2)
+sey = sum((d_test[['y']] - mean(d_test[['y']]))**2)
+1 - sse/sey
+```
+
+```{r}
+# RMSE
+sqrt(mean((d_test[['y']] - d_test[['forecast ARIMAX']])**2))
+```
