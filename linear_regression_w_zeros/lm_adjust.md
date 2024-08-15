@@ -89,7 +89,7 @@ rmse = function(y, ypred) {
 
 # we'll also calculate bias: the mean value of (y - ypred)
 bias = function(y, ypred) {
-  err = y - ypred
+  err = ypred - y   # bias is estimate - actual, opposite of residual which is actual - estimate
   b = mean(err)
   # let's round down to zero for small numbers
   b = ifelse(abs(b) < 1e-12, 0, b)
@@ -407,11 +407,11 @@ knitr::kable(errframe, caption = "Model RMSE and bias on holdout data", row.name
 
 | prediction_type | description            |      RMSE |       bias |
 |:----------------|:-----------------------|----------:|-----------:|
-| initial         | initial model          | 0.3043739 | -0.0046863 |
-| pred0           | zero-thresholded model | 0.2518775 | -0.0642282 |
-| linscale        | scale-adjusted model   | 0.2486353 | -0.0982720 |
-| linadj          | linear-adjusted model  | 0.1219682 | -0.0335343 |
-| gamadj          | GAM-adjusted model     | 0.0694896 |  0.0018866 |
+| initial         | initial model          | 0.3043739 |  0.0046863 |
+| pred0           | zero-thresholded model | 0.2518775 |  0.0642282 |
+| linscale        | scale-adjusted model   | 0.2486353 |  0.0982720 |
+| linadj          | linear-adjusted model  | 0.1219682 |  0.0335343 |
+| gamadj          | GAM-adjusted model     | 0.0694896 | -0.0018866 |
 
 Model RMSE and bias on holdout data
 
