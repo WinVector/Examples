@@ -670,7 +670,7 @@ def apply_linear_model_bundle_method(
         :, 
         ['y'] + sorted(set(durable_external_regressors + impermanent_external_regressors))].reset_index(
             drop=True, inplace=False)  # copy, no side effects
-    # pull of impermanent regressors
+    # pull off impermanent regressors
     if len(impermanent_external_regressors) > 0:
         ext_model = fit_external_regressors(
             modeling_lags=modeling_lags,
