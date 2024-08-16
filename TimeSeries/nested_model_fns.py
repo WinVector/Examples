@@ -75,6 +75,7 @@ def _generate_Stan_model_def(
     b_x_imp_dist = ''
     b_x_dur_decl = ''
     b_x_dur_dist = ''
+    b_x_joint_dist = ''
     ext_terms_imp = ''
     ext_terms_dur = ''
     x_data_decls = ''
@@ -98,6 +99,11 @@ def _generate_Stan_model_def(
         x_data_decls = x_data_decls + "  ".join([f"""
   vector[N_y_observed + N_y_future] x_dur_{i+1};  // observed durable external regressor"""
                 for i in range(n_durable_external_regressors)])
+    # TODO: move to variable names, now assuming all are common
+    if (n_impermanent_external_regressors == n_durable_external_regressors) and (n_durable_external_regressors > 0):
+        b_x_joint_dist = f"""
+  b_x_imp .* b_x_dur ~ normal(0, 1e-2);       // punish picking both variables
+"""
     nested_model_stan_str = ("""
 data {
   int<lower=1> N_y_observed;                  // number of observed y outcomes
@@ -125,7 +131,7 @@ model {{
   b_var_y ~ chi_square(1);                    // prior for y (impermanent) noise variance
         // priors for parameter estimates
   b_auto_intercept ~ normal(0, 10);
-  b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}
+  b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
     b_auto_intercept 
