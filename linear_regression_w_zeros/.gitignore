@@ -1,4 +1,5 @@
 *.html
 tobit_tmp
 *_tmp.*
+*.tmp
 
