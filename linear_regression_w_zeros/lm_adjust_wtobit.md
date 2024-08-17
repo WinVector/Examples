@@ -431,20 +431,48 @@ ggplot(traind, aes(x=x)) +
 
 ## Attempt 4: Tobit on ypred0
 
-We can also use Tobit to correct ypred0 (instead of properly using
-Tobit).
-
-[You can find a discussion of Tobit models
-here.](https://stats.oarc.ucla.edu/r/dae/tobit-models/)
+We can also use Tobit to adjust the initial linear model (instead of
+properly using Tobit). The results (for this example) are essentially
+identical to fitting directly on x.
 
 ``` r
-tobit_model_ypred0 <- vglm(y ~ ypred0, tobit(Lower = 0), data = traind)
-summary(tobit_model_ypred0)
+# make the adjustment function/model analogous to the previous ones
+fit_tobit = function(initial_model, outcome, data) {
+  ypred0 = predict(initial_model, newdata=data)
+  df = data.frame(ypred0 = ypred0, y=data[[outcome]])
+  
+  # reduce the data to non-negative predictions
+  df = subset(df, ypred0 > 0)
+  
+  # now fit the new model
+  tobitmodel = vglm(y ~ ypred0, tobit(Lower = 0), data = df)
+  
+  # return a list: initial model, adjustment model
+  list(initial_model=initial_model, adjustment=tobitmodel)
+}
+
+# needs a slightly different do_predict
+do_predict_tobit = function(model, newdata) {
+  mod0 = model$initial_model
+  adjmod = model$adjustment
+  
+  df = data.frame(ypred0 = predict(mod0, newdata=newdata))
+  yadj = pmax(0, predict(adjmod, df)[, 'mu'])
+  
+  # if linear model predicts a negative number,
+  # predict 0, else use adjusted model
+  ypred = ifelse(df$ypred0  <= 0, 0, yadj)
+  ypred
+}
+
+
+tobit_adj_model = fit_tobit(initial_model, "y", traind)
+summary(tobit_adj_model$adjustment)
 ```
 
     ## 
     ## Call:
-    ## vglm(formula = y ~ ypred0, family = tobit(Lower = 0), data = traind)
+    ## vglm(formula = y ~ ypred0, family = tobit(Lower = 0), data = df)
     ## 
     ## Coefficients: 
     ##               Estimate Std. Error z value Pr(>|z|)    
@@ -456,27 +484,25 @@ summary(tobit_model_ypred0)
     ## 
     ## Names of linear predictors: mu, loglink(sd)
     ## 
-    ## Log-likelihood: 405.6109 on 1997 degrees of freedom
+    ## Log-likelihood: 405.6109 on 1589 degrees of freedom
     ## 
     ## Number of Fisher scoring iterations: 5 
     ## 
     ## No Hauck-Donner effect found in any of the estimates
 
 ``` r
-# prediction output is a matrix
-# tobit projects over the full range *as if* the data isn't censored
-traind$ypred_tobit_ypred0 = pmax(0, predict(tobit_model_ypred0, traind)[,'mu'])  
+traind$ypred_tobitadj = do_predict_tobit(tobit_adj_model, newdata=traind)
 
-loss = with(traind, rmse(y, ypred_tobit_ypred0))
+loss = with(traind, rmse(y, ypred_tobitadj))
 loss_str = format(loss, digits=3)
-err = with(traind, bias(y, ypred_tobit_ypred0))
+err = with(traind, bias(y, ypred_tobitadj))
 err_str = format(err, digits=3)
 subtitle = paste("training loss =", loss_str, "; bias =", err_str)
 
 ggplot(traind, aes(x=x)) + 
   geom_point(aes(y=y), color="gray") + 
-  geom_line(aes(y=ypred_tobit_ypred0), color="darkblue") + 
-  ggtitle("indirect Tobit model (with thresholding)", subtitle=subtitle)
+  geom_line(aes(y=ypred_tobitadj), color="darkblue") + 
+  ggtitle("Tobit-adjusted linear model", subtitle=subtitle)
 ```
 
 ![](lm_adjust_wtobit_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
@@ -495,12 +521,13 @@ testd$y_linscale = do_predict(scaling_model, newdata=testd)
 testd$y_linadj = do_predict(linadj_model, newdata=testd)
 testd$y_gamadj = do_predict(gamadj_model, newdata=testd)
 testd$y_tobit = pmax(0, predict(tobit_model, testd)[,'mu']) 
+testd$y_tobitadj = do_predict_tobit(tobit_adj_model, newdata=testd)
 
 
 # pivot data into a form better for plotting and summarizing
 testdlong = pivot_longer(
   testd,
-  c("y_initial", "y_pred0", "y_linscale", "y_linadj", "y_gamadj", "y_tobit"),
+  c("y_initial", "y_pred0", "y_linscale", "y_linadj", "y_gamadj", "y_tobit", "y_tobitadj"),
   names_to = "prediction_type",
   names_prefix = "y_",
   values_to = "prediction"
@@ -515,30 +542,26 @@ errframe = testdlong |>
 
 # descriptions
 descv = c("initial model", "zero-thresholded model", "scale-adjusted model", "linear-adjusted model", 
-          "GAM-adjusted model", "Tobit model")
-names(descv) = c("initial", "pred0", "linscale", "linadj", "gamadj", "tobit")
+          "GAM-adjusted model", "Tobit model on x", "Tobit-adjusted model")
+names(descv) = c("initial", "pred0", "linscale", "linadj", "gamadj", "tobit", "tobitadj")
 
 # a little rearrangement for good presentation
 rownames(errframe) = errframe$prediction_type
-```
-
-    ## Warning: Setting row names on a tibble is deprecated.
-
-``` r
 errframe$description = descv[errframe$prediction_type]
 errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
 
 knitr::kable(errframe, caption = "Model RMSE and bias on holdout data", row.names=FALSE) 
 ```
 
-| prediction_type | description | RMSE | bias |
-|:----------------|:------------|-----:|-----:|
-| NA              | NA          |   NA |   NA |
-| NA              | NA          |   NA |   NA |
-| NA              | NA          |   NA |   NA |
-| NA              | NA          |   NA |   NA |
-| NA              | NA          |   NA |   NA |
-| NA              | NA          |   NA |   NA |
+| prediction_type | description            |      RMSE |       bias |
+|:----------------|:-----------------------|----------:|-----------:|
+| initial         | initial model          | 0.3043739 |  0.0046863 |
+| pred0           | zero-thresholded model | 0.2518775 |  0.0642282 |
+| linscale        | scale-adjusted model   | 0.2486353 |  0.0982720 |
+| linadj          | linear-adjusted model  | 0.1219682 |  0.0335343 |
+| gamadj          | GAM-adjusted model     | 0.0694896 | -0.0018866 |
+| tobit           | Tobit model on x       | 0.0695431 | -0.0042344 |
+| tobitadj        | Tobit-adjusted model   | 0.0695431 | -0.0042344 |
 
 Model RMSE and bias on holdout data
 
@@ -553,7 +576,7 @@ take a look:
 # https://personal.sron.nl/~pault/#sec:qualitative
 
 palette = c(initial = "#BBBBBB", pred0 = "#AA3377", linscale = "#228833", 
-            linadj = "#4477AA",  gamadj = "#EE6677", tobit = "#66CCEE")
+            linadj = "#4477AA",  gamadj = "#EE6677", tobit = "#66CCEE", "tobitadj" = "#CCBB44")
 
 ggplot(testdlong, aes(x=x)) + 
   geom_point(aes(y=y), color="gray", alpha = 0.1) + 
