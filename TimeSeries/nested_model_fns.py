@@ -58,6 +58,7 @@ def _generate_Stan_model_def(
         application_lags: Iterable[int],
         n_impermanent_external_regressors: int = 0,
         n_durable_external_regressors: int = 0,
+        n_joint_external_regressors: int = 0,
 ):
     application_lags = list(application_lags)
     n_lags = len(application_lags)
@@ -65,6 +66,8 @@ def _generate_Stan_model_def(
     assert n_lags > 0
     assert n_impermanent_external_regressors >= 0
     assert n_durable_external_regressors >= 0
+    assert n_joint_external_regressors >= 0
+    assert n_joint_external_regressors <= np.min([n_impermanent_external_regressors, n_durable_external_regressors])
     max_lag = np.max(application_lags)
     # specify Stan program file
     auto_terms = [
@@ -99,11 +102,9 @@ def _generate_Stan_model_def(
         x_data_decls = x_data_decls + "  ".join([f"""
   vector[N_y_observed + N_y_future] x_dur_{i+1};  // observed durable external regressor"""
                 for i in range(n_durable_external_regressors)])
-    # TODO: move to variable names, now assuming all are common
-    if (n_impermanent_external_regressors == n_durable_external_regressors) and (n_durable_external_regressors > 0):
+    if n_joint_external_regressors > 0:
         b_x_joint_dist = f"""
-  b_x_imp .* b_x_dur ~ normal(0, 1e-2);       // punish picking both variables
-"""
+  b_x_imp[1:{n_joint_external_regressors}] .* b_x_dur[1:{n_joint_external_regressors}] ~ normal(0, 0.1);       // punish picking both variables"""
     nested_model_stan_str = ("""
 data {
   int<lower=1> N_y_observed;                  // number of observed y outcomes
@@ -166,11 +167,13 @@ def define_Stan_model_with_forecast_period(
         application_lags: Iterable[int],
         n_impermanent_external_regressors: int = 0,
         n_durable_external_regressors: int = 0,
+        n_joint_external_regressors: int = 0,
 ):
     nested_model_stan_str = _generate_Stan_model_def(
         application_lags=application_lags,
         n_impermanent_external_regressors=n_impermanent_external_regressors,
         n_durable_external_regressors=n_durable_external_regressors,
+        n_joint_external_regressors=n_joint_external_regressors,
     )
     return _build_Stan_model_from_src(nested_model_stan_str), nested_model_stan_str
 
