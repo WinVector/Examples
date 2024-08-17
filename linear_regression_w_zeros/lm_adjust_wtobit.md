@@ -369,7 +369,7 @@ approximation of the ideal shape. The function gives a good estimate of
 the data slope in the linear region, and identified the region of the
 inflection point fairly accurately.
 
-## Attempt 4: Tobit
+## Attempt 4: Tobit on x
 
 This is actually a regression directly on the original data. Tobit
 predicts over the full range (meaning it still predicts negative values,
@@ -429,6 +429,58 @@ ggplot(traind, aes(x=x)) +
 
 ![](lm_adjust_wtobit_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
+## Attempt 4: Tobit on ypred0
+
+We can also use Tobit to correct ypred0 (instead of properly using
+Tobit).
+
+[You can find a discussion of Tobit models
+here.](https://stats.oarc.ucla.edu/r/dae/tobit-models/)
+
+``` r
+tobit_model_ypred0 <- vglm(y ~ ypred0, tobit(Lower = 0), data = traind)
+summary(tobit_model_ypred0)
+```
+
+    ## 
+    ## Call:
+    ## vglm(formula = y ~ ypred0, family = tobit(Lower = 0), data = traind)
+    ## 
+    ## Coefficients: 
+    ##               Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept):1 -0.79853    0.01148  -69.55   <2e-16 ***
+    ## (Intercept):2 -2.28746    0.03085  -74.14   <2e-16 ***
+    ## ypred0         1.95636    0.01332  146.92   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Names of linear predictors: mu, loglink(sd)
+    ## 
+    ## Log-likelihood: 405.6109 on 1997 degrees of freedom
+    ## 
+    ## Number of Fisher scoring iterations: 5 
+    ## 
+    ## No Hauck-Donner effect found in any of the estimates
+
+``` r
+# prediction output is a matrix
+# tobit projects over the full range *as if* the data isn't censored
+traind$ypred_tobit_ypred0 = pmax(0, predict(tobit_model_ypred0, traind)[,'mu'])  
+
+loss = with(traind, rmse(y, ypred_tobit_ypred0))
+loss_str = format(loss, digits=3)
+err = with(traind, bias(y, ypred_tobit_ypred0))
+err_str = format(err, digits=3)
+subtitle = paste("training loss =", loss_str, "; bias =", err_str)
+
+ggplot(traind, aes(x=x)) + 
+  geom_point(aes(y=y), color="gray") + 
+  geom_line(aes(y=ypred_tobit_ypred0), color="darkblue") + 
+  ggtitle("indirect Tobit model (with thresholding)", subtitle=subtitle)
+```
+
+![](lm_adjust_wtobit_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
 ## Holdout evaluation
 
 Let’s compare all the models we’ve discussed on holdout data.
@@ -468,20 +520,25 @@ names(descv) = c("initial", "pred0", "linscale", "linadj", "gamadj", "tobit")
 
 # a little rearrangement for good presentation
 rownames(errframe) = errframe$prediction_type
+```
+
+    ## Warning: Setting row names on a tibble is deprecated.
+
+``` r
 errframe$description = descv[errframe$prediction_type]
 errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
 
 knitr::kable(errframe, caption = "Model RMSE and bias on holdout data", row.names=FALSE) 
 ```
 
-| prediction_type | description            |      RMSE |       bias |
-|:----------------|:-----------------------|----------:|-----------:|
-| initial         | initial model          | 0.3043739 |  0.0046863 |
-| pred0           | zero-thresholded model | 0.2518775 |  0.0642282 |
-| linscale        | scale-adjusted model   | 0.2486353 |  0.0982720 |
-| linadj          | linear-adjusted model  | 0.1219682 |  0.0335343 |
-| gamadj          | GAM-adjusted model     | 0.0694896 | -0.0018866 |
-| tobit           | Tobit model            | 0.0695431 | -0.0042344 |
+| prediction_type | description | RMSE | bias |
+|:----------------|:------------|-----:|-----:|
+| NA              | NA          |   NA |   NA |
+| NA              | NA          |   NA |   NA |
+| NA              | NA          |   NA |   NA |
+| NA              | NA          |   NA |   NA |
+| NA              | NA          |   NA |   NA |
+| NA              | NA          |   NA |   NA |
 
 Model RMSE and bias on holdout data
 
@@ -505,7 +562,7 @@ ggplot(testdlong, aes(x=x)) +
   scale_color_manual(breaks = names(descv), values=palette)
 ```
 
-![](lm_adjust_wtobit_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](lm_adjust_wtobit_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ## Conclusion
 

@@ -304,7 +304,7 @@ This is the best fit to the training data of all the models we've observed. We'v
 
 A GAM can't truly replicate the ideal process, since a hockey stick is a non smooth function (the derivative doesn't exist at the "elbow"). However, the algorithm has managed to fit a very good smooth approximation of the ideal shape. The function gives a good estimate of the data slope in the linear region, and identified the region of the inflection point fairly accurately.
 
-## Attempt 4: Tobit
+## Attempt 4: Tobit on x
 
 This is actually a regression directly on the original data. Tobit predicts over the full range (meaning it still predicts negative values, even fron non-negative training data). This is useful if the zeros are from a censoring process. This is a bit different from our situation, where the zeros are essential (an actual physical effect to be respected, such as an object count never being negative). 
 
@@ -332,8 +332,33 @@ ggplot(traind, aes(x=x)) +
   geom_point(aes(y=y), color="gray") + 
   geom_line(aes(y=ypred_tobit), color="darkblue") + 
   ggtitle("Tobit model (with thresholding)", subtitle=subtitle)
+```
 
+## Attempt 4: Tobit on ypred0
 
+We can also use Tobit to correct ypred0 (instead of properly using Tobit).
+
+[You can find a discussion of Tobit models here.](https://stats.oarc.ucla.edu/r/dae/tobit-models/)
+
+```{r warning=FALSE}
+
+tobit_model_ypred0 <- vglm(y ~ ypred0, tobit(Lower = 0), data = traind)
+summary(tobit_model_ypred0)
+
+# prediction output is a matrix
+# tobit projects over the full range *as if* the data isn't censored
+traind$ypred_tobit_ypred0 = pmax(0, predict(tobit_model_ypred0, traind)[,'mu'])  
+
+loss = with(traind, rmse(y, ypred_tobit_ypred0))
+loss_str = format(loss, digits=3)
+err = with(traind, bias(y, ypred_tobit_ypred0))
+err_str = format(err, digits=3)
+subtitle = paste("training loss =", loss_str, "; bias =", err_str)
+
+ggplot(traind, aes(x=x)) + 
+  geom_point(aes(y=y), color="gray") + 
+  geom_line(aes(y=ypred_tobit_ypred0), color="darkblue") + 
+  ggtitle("indirect Tobit model (with thresholding)", subtitle=subtitle)
 ```
 
 ## Holdout evaluation
