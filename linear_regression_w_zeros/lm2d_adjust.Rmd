@@ -1,5 +1,5 @@
 ---
-title: "Followup: GAM-adjusting Multivariate Linear Models"
+title: "Followup: Adjusting Saturated Multivariate Linear Models"
 author: "Nina Zumel"
 date: "2024-08-13"
 output: html_document
@@ -7,28 +7,40 @@ output: html_document
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 ```
 
 ```{r}
 library(ggplot2) # for plotting
 library(poorman) # for data wrangling
 library(mgcv)    # for GAM
-# library(lattice)
+library(VGAM)    # for Tobit
+library(lattice) # for levelplot/heatmap
+library(akima)   # for interpolating a 3-d grid from irregular data
+library(viridisLite) # for levelplot colors
 
 set.seed(20240812)
 ```
 
-This is a followup on the article [*Post-hoc Adjustment for Zero-Thresholded Linear Models*](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust.md), in which I
+This is a followup to the article [*Post-hoc Adjustment for Zero-Thresholded Linear Models*](https://win-vector.com/2024/08/16/post-hoc-adjustment-for-zero-thresholded-linear-models/), in which I
 showed how to use a one-variable GAM (e.g., a spline) to adjust a linear model in a problem space 
 where outcomes are strictly nonnegative. If you haven't read that article, I suggest you check it out, first.
 
 > When you don’t expect to see too many zeros in practice, modeling the process as linear and thresholding negative predictions at zero is not unreasonable. But the more zeros (saturations) you expect to see, the less well a linear model will perform.
 
-To motivate the process, I used an example of a linear model that was fit to a one-dimensional saturated proceess. This was so I could
-plot the resulting "hockey stick" function, and show what happens with different model adjustments. These model adjustments
-are inherently a one-dimensional procedure: find a function that adjusts the outputs of the initial model to make better predictions. So it doesn't matter what dimensionality the original problem was in. But people tend not to believe statements like that until they
-see them, so here I'll apply the same procedures to a linear model with two variables, instead, just to prove my point.
+The original motivation for the work we did here was to help a client who had built a fairly complex multivariate linear model to predict count data. Their underlying assumption was that in their domain, a count of zero is a rare event. Their model training and deployment process was automated and put into production across multiple sites. 
+
+Unfortunately, zero-counts are not so rare as they originally believed, at some of their sites. Because coming up with and deploying a new model design is not necessarily feasible at this stage (at least not in the immediate term), they wanted to figure out how to adjust their existing models to operate even at high zero-count sites. Note that this adjustment is a *one-dimensional* process: mapping the output of one model to a prediction that is closer to the actual outcomes.
+
+To motivate this adjustment process in the previous article, I used an example of a linear model that was fit to a one-dimensional saturated proceess. This was so I could plot the resulting "hockey stick" function, and show what happens with different model adjustments. But it's been my experience that people won't believe that this procedure will generalize to multivariate linear models, unless I show them that it works on such models. So in this article, I'll apply the same procedures to a linear model that was fit to two variables, just to prove the point.
+
+I'll also add an additional adjustment that wasn't in the original article: adjustment using a Tobit model. You can see more details of that in a revised version of the article on github, [here](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust_wtobit.md). Tobit adjustments work nearly as well as GAM adjustments, and do have the (potential) advantage of having a stronger inductive bias, if you believe that your process is truly linear in it's non-saturated regions [^1].
+
+[^1]: Statisticians generally use the word "censored" when talking about processes that threshold out to a minimum or maximum value (or both). Often, the assumption is that the measurements are censored because of limitations of the measurement itself: for example, you can't track a subject for more than five years, so the longest lifetime you can expect to measure is 5, even if the subject lives for decades longer. So models like Tobit try to predict *as if* the data isn't censored: they can predict a lifetime longer than 5 years, even though those lifetimes can't be measured. I am using the word "saturated" to indicate that the outcome being measured literally cannot go beyond the threshold: counts can never be negative. A possibly useful analogy is the image from a digital camera: too much light "blows out" the photo. If you are trying to predict the intensity of the light that hit the camera sensor using the image pixels as the outcome data, then the data is censored. If you are trying to predict *the values of the pixels*, then the data is saturated.
+
+In the second part of the article, I'll try fitting a model directly to the input data, using both GAM and Tobit, since ideally, that's what you'd do if you were approaching this problem *de novo*.
+
+For legibility, I'm going to hide a lot of the code when generating this article, but you can find the original R Markdown source code on github as well, [here](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm2d_adjust.Rmd).
 
 ## Example Problem
 
@@ -37,10 +49,10 @@ Here are the characteristics of our example problem:
 * The feature `u` positively correlates with outcome, while `v` negatively correlates.
 * The outcome `y` is constrained to be nonnegative; in other words, it "saturates" at zero.
 * Both features `u` and `v` are bounded between 0 and 1 uniformly.
-* There is a fairly large noise process on top of it.
+* There is a moderate noise process on top of it.
 
 
-```{r}
+```{r echo=TRUE}
 trueprocess = function(N) {
   u = runif(N)
   v = runif(N)
@@ -48,6 +60,10 @@ trueprocess = function(N) {
   y = pmax(0, 4 * u - 3 * v + noise)
   data.frame(u = u, v = v, y = y)
 }
+
+```
+
+```{r}
 
 # take a slice of the ideal function
 # for a fixed u
@@ -78,7 +94,7 @@ bias = function(y, ypred) {
 
 ```
 
-We'll also define the procedures for model adjustment and for adjusted prediction that we showed in the previous article:
+We will also define the procedures for model adjustment and for adjusted prediction that we showed in the previous article; but for legibility, I'll hide this part of the code.
 
 ```{r}
 #
@@ -142,6 +158,24 @@ fit_gammod = function(initial_model, outcome, data) {
 }
 
 #
+# tobit adjustment wasn't in the original post, but it is here:
+# https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust_wtobit.md
+#
+fit_tobit = function(initial_model, outcome, data) {
+  ypred0 = predict(initial_model, newdata=data)
+  df = data.frame(ypred0 = ypred0, y=data[[outcome]])
+  
+  # reduce the data to non-negative predictions
+  df = subset(df, ypred0 > 0)
+  
+  # now fit the new model
+  tobitmodel = vglm(y ~ ypred0, tobit(Lower = 0), data = df)
+  
+  # return a list: initial model, adjustment model
+  list(initial_model=initial_model, adjustment=tobitmodel)
+}
+
+#
 # Make predictions using any of the above adjusted models
 #
 
@@ -152,25 +186,44 @@ do_predict = function(model, newdata) {
   
   df = data.frame(ypred0 = predict(mod0, newdata=newdata))
   # if the adjustment model makes negative predictions, threshold to 0
-  yadj = pmax(0, predict(adjmod, newdata=df))
+  if(class(adjmod)[1] =="vglm") { # the tobit model
+    yadj = pmax(0, predict(adjmod, df)[, 'mu'])
+  } else {
+    yadj = pmax(0, predict(adjmod, newdata=df))
+  }
 
   # if linear model predicts a negative number,
   # predict 0, else use adjusted model
   ypred = ifelse(df$ypred0  <= 0, 0, yadj)
   ypred
 }
+
+
+
+
 ```
 
 ## The Data
 
-Let's generate some training data
+Let's generate some training data.
 
-```{r}
+```{r echo=TRUE}
 traind = trueprocess(1000)
 head(traind)
 ```
 
-We're going to use all the data to train our models, but it's not easy to show comparison plots in three dimensions in a way that's legible. So we'll also look at a slice of the data, by holding `u` fixed to 0.5 (or close to 0.5, at least).
+Let's plot a heatmap of the training data. Note that there's lots of saturation.
+
+```{r}
+# https://stackoverflow.com/questions/7536577/using-color-as-the-3rd-dimension
+ak.interp = with(traind, interp(u, v, y, duplicate="mean")) # list (x, y, z)
+
+palette <- viridis(100)
+levelplot(ak.interp$z, main="True process", col.regions=palette, contour=FALSE)
+                 
+```
+
+We're going to use all the data to train our models, but it's not easy to show comparison plots in three dimensions in a way that's legible. So we'll also look at a slice of the data, by holding `u` fixed to 0.5 (or close to 0.5, at least). 
 
 ```{r}
 # the ideal process
@@ -191,16 +244,18 @@ ggplot(mapping=aes(x=v, y=y)) +
           subtitle="Dashed line is ideal process")
 ```
 
-As you can see, the data is quite noisy, in addition to being quite saturated. 
+As you can see, the data is fairly noisy, in addition to being quite saturated. 
 Now let's train a linear model on the data, as well as all our adjusted models.
 
-## Train the initial model, and all the adjustments
+## Part I: Adjustments to a Linear Model
+
+### Train the initial model, and all the adjustments
 
 We'll fit the model, make the naive adjustment of thresholding the data at zero,
 then fit all the candidate adjustment models. Note that only the inital model ever
 makes reference to the input variables.
 
-```{r}
+```{r echo=TRUE}
 # train the initial model, 
 # get the initial predictions and thresholded predictions
 
@@ -209,22 +264,28 @@ traind$y_initial= predict(initial_model, newdata=traind)
 traind$y_pred0 = pmax(0, traind$y_initial)
 
 # fit the adjustment models
+# (function definitions in R markdown document)
 scaling_model = fit_scaler(initial_model, "y", traind)
 linadj_model = fit_linmod(initial_model, "y", traind)
 gamadj_model = fit_gammod(initial_model, "y", traind)
+tobitadj_model = fit_tobit(initial_model, "y", traind)
 
-adjustments = list(scaling_model, linadj_model, gamadj_model)
-names(adjustments) = c("y_linscale", "y_linadj", "y_gamadj")
+adjustments = list(scaling_model, linadj_model, gamadj_model, tobitadj_model)
+names(adjustments) = c("y_linscale", "y_linadj", "y_gamadj", "y_tobitadj")
 
 # make the predictions
 for(adj in names(adjustments)) {
   traind[[adj]] = do_predict(adjustments[[adj]], newdata=traind)
 }
+```
 
+Let's look at the RMSE and bias of each model.
+
+```{r}
 # pivot to a form that's better for plotting and summarization
 traindlong = pivot_longer(
   traind,
-  c("y_initial", "y_pred0", "y_linscale", "y_linadj", "y_gamadj"),
+  c("y_initial", "y_pred0", "y_linscale", "y_linadj", "y_gamadj", "y_tobitadj"),
   names_to = "prediction_type",
   names_prefix = "y_",
   values_to = "prediction"
@@ -238,16 +299,19 @@ errframe = traindlong |>
 rownames(errframe) = errframe$prediction_type
 
 # reorder, for presentation
-morder =  c("initial", "pred0", "linscale", "linadj", "gamadj")
+morder =  c("initial", "pred0", "linscale", "linadj", "gamadj", "tobitadj")
 errframe = errframe[morder, ]
 knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
 
 ```
 
-As expected (if you've read the previous article), the GAM-adjusted model has the lowest training RMSE, and also lower bias than the other adjusted models. We can try to visualize what's happening, by holding `u` constant at different values and looking at slices of the prediction surfaces. 
+As expected (if you've read the previous article), the GAM-adjusted model has the lowest training RMSE, and also lower bias than the other adjusted models. The Tobit-adjusted model has comparable RMSE, and slightly more bias.
+
+We can try to visualize what's happening, by holding `u` constant at different values and looking at slices of the prediction surfaces. 
+We'll just compare the original linear model, GAM-adjustment, and Tobit-adjustment.
 
 ```{r fig.width=8, fig.height=7}
-uvals = c(0.1, 0.25, 0.5, 0.6, 0.75, 1)
+uvals = c(0.1, 0.25, 0.5, 1)
 v = seq(from=0, to=1, by=0.01)
 
 # holding u and label fixed, return a slice
@@ -274,7 +338,9 @@ make_uslices = function(u, vvec, labelsvec) {
   bind_rows(slices)
 }
 
-slices = lapply(uvals, function(u) {make_uslices(u, vvec, morder)})
+# let's just look at initial, gamadj, and tobitadj
+models = c("initial", "gamadj", "tobitadj")
+slices = lapply(uvals, function(u) {make_uslices(u, vvec, models)})
 slices = bind_rows(slices)
 
 # the ideal slices
@@ -289,8 +355,9 @@ datums = lapply(uvals, function(u) {
   })
 datums = bind_rows(datums)
 
-# todo - make the other colors a bit lighter, so gamadj pops. Maybe linadj, also
-palette = c(initial = "#BBBBBB", pred0 = "#AA3377", linscale = "#228833", linadj = "#4477AA",  gamadj = "#EE6677")
+
+palette = c(initial = "#BBBBBB", pred0 = "#AA3377", linscale = "#228833", 
+            linadj = "#4477AA",  gamadj = "#EE6677", tobitadj = "#66CCEE")
 
 ggplot() + 
   geom_point(data=datums, mapping=aes(x=v, y=y), color="gray", alpha=0.5) +
@@ -304,15 +371,14 @@ ggplot() +
 
 
 
-
 ```
 
 
-## Test on holdout
+### Test on holdout
 
-Let's compare the models on holdout data. For this example the performances are about the same.
+Let's compare the models on holdout data. For this example the holdout performances are similar to training.
 
-```{r}
+```{r echo=TRUE}
 testd = trueprocess(5000)
 
 testd$y_initial= predict(initial_model, newdata=testd)
@@ -321,10 +387,13 @@ for(adj in names(adjustments)) {
   testd[[adj]] = do_predict(adjustments[[adj]], newdata=testd)
 }
 
+```
+
+```{r}
 # pivot to a form that's better for plotting and summarization
 testdlong = pivot_longer(
   testd,
-  c("y_initial", "y_pred0", "y_linscale", "y_linadj", "y_gamadj"),
+  c("y_initial", "y_pred0", "y_linscale", "y_linadj", "y_gamadj", "y_tobitadj"),
   names_to = "prediction_type",
   names_prefix = "y_",
   values_to = "prediction"
@@ -338,7 +407,7 @@ errframe = testdlong |>
 rownames(errframe) = errframe$prediction_type
 
 # reorder, for presentation
-morder =  c("initial", "pred0", "linscale", "linadj", "gamadj")
+morder =  c("initial", "pred0", "linscale", "linadj", "gamadj", "tobitadj")
 errframe = errframe[morder, ]
 knitr::kable(errframe, caption="Model RMSE and bias on holdout data", row.names=FALSE)
 ```
