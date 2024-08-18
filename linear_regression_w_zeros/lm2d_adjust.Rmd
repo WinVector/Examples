@@ -326,32 +326,48 @@ We'll just compare the original linear model, GAM-adjustment, and Tobit-adjustme
 uvals = c(0.1, 0.25, 0.5, 1)
 v = seq(from=0, to=1, by=0.01)
 
-# holding u and label fixed, return a slice
-# need to add the ideal
-make_slice = function(ufixed, vvec, label) {
+
+make_uslices = function(u, vvec, modellist) {
+  slices = lapply(names(modellist),
+                        function(label) {make_slice(u, vvec, modellist[label])})
+  bind_rows(slices)
+}
+
+# note onemodel is a length-1 list (so a labelled model)
+make_slice = function(ufixed, vvec, onemodel) {
+  label = names(onemodel)[1]
+  model = onemodel[[1]]
+
   df = data.frame(label=label, u=ufixed, v=v)
+  
+  # we don't want to threshold this one
   if (label=="initial") {
     df$ypred = predict(initial_model, newdata=df)
     return(df)
   }
-  if (label=="pred0") {
-    df$ypred = pmax(0, predict(initial_model, newdata=df))
+  
+  # predict on adjusted models
+  if(class(model)[1] == "list") {
+    df$ypred = do_predict(model, newdata=df)
     return(df)
   }
-  model = adjustments[[paste0("y_",label)]]
-  df$ypred = do_predict(model, newdata=df)
+  
+  # predict on a full tobit model
+  if(class(model)[1] == "vglm") {
+    df$ypred = pmax(0, predict(model, df)[, 'mu'])
+    return(df)
+  } 
+
+  # the other (thresholded) models
+  df$ypred = pmax(0, predict(model, newdata=df))
   df
 }
 
-# holding u fixed, return a dataframe of slices
-make_uslices = function(u, vvec, labelsvec) {
-  slices = lapply(labelsvec, 
-                  function(label) {make_slice(u, vvec, label)})
-  bind_rows(slices)
-}
 
 # let's just look at initial, gamadj, and tobitadj
-models = c("initial", "gamadj", "tobitadj")
+models = list(initial_model, gamadj_model, tobitadj_model)
+names(models) = c("initial", "gamadj", "tobitadj")
+
 slices = lapply(uvals, function(u) {make_uslices(u, vvec, models)})
 slices = bind_rows(slices)
 
