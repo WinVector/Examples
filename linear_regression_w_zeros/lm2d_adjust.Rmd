@@ -1,7 +1,7 @@
 ---
 title: "Followup: Adjusting Saturated Multivariate Linear Models"
 author: "Nina Zumel"
-date: "2024-08-13"
+date: "`r Sys.Date()`"
 output: html_document
 ---
 
@@ -32,7 +32,7 @@ The original motivation for the work we did here was to help a client who had bu
 
 Unfortunately, zero-counts are not so rare as they originally believed, at some of their sites. Because coming up with and deploying a new model design is not necessarily feasible at this stage (at least not in the immediate term), they wanted to figure out how to adjust their existing models to operate even at high zero-count sites. Note that this adjustment is a *one-dimensional* process: mapping the output of one model to a prediction that is closer to the actual outcomes.
 
-To motivate this adjustment process in the previous article, I used an example of a linear model that was fit to a one-dimensional saturated proceess. This was so I could plot the resulting "hockey stick" function, and show what happens with different model adjustments. But it's been my experience that people won't believe that this procedure will generalize to multivariate linear models, unless I show them that it works on such models. So in this article, I'll apply the same procedures to a linear model that was fit to two variables, just to prove the point.
+To motivate this adjustment process in the previous article, I used an example of a linear model that was fit to a one-dimensional saturated process. This was so I could plot the resulting "hockey stick" function, and show what happens with different model adjustments. But it's been my experience that people won't believe that this procedure will generalize to multivariate linear models, unless I show them that it works on such models. So in this article, I'll apply the same procedures to a linear model that was fit to two variables, just to prove the point.
 
 I'll also add an additional adjustment that wasn't in the original article: adjustment using a Tobit model. You can see more details of that in a revised version of the article on github, [here](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust_wtobit.md). Tobit adjustments work nearly as well as GAM adjustments, and do have the (potential) advantage of having a stronger inductive bias, if you believe that your process is truly linear in it's non-saturated regions [^1].
 
@@ -94,9 +94,14 @@ bias = function(y, ypred) {
 
 ```
 
-We will also define the procedures for model adjustment and for adjusted prediction that we showed in the previous article; but for legibility, I'll hide this part of the code.
 
 ```{r}
+#
+# We will also define the procedures for model adjustment and for adjusted prediction that we showed in the previous article; 
+# but for legibility, I'll hide this part of the code.
+#
+
+
 #
 # Rescale the slope of the original model's positive region
 #
@@ -299,8 +304,15 @@ errframe = traindlong |>
 rownames(errframe) = errframe$prediction_type
 
 # reorder, for presentation
-morder =  c("initial", "pred0", "linscale", "linadj", "gamadj", "tobitadj")
-errframe = errframe[morder, ]
+# descriptions
+descv = c("initial model", "zero-thresholded model", "scale-adjusted model", "linear-adjusted model", 
+          "GAM-adjusted model", "Tobit-adjusted model")
+names(descv) = c("initial", "pred0", "linscale", "linadj", "gamadj", "tobitadj")
+
+# a little rearrangement for good presentation
+rownames(errframe) = errframe$prediction_type
+errframe$description = descv[errframe$prediction_type]
+errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
 knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
 
 ```
@@ -407,12 +419,13 @@ errframe = testdlong |>
 rownames(errframe) = errframe$prediction_type
 
 # reorder, for presentation
-morder =  c("initial", "pred0", "linscale", "linadj", "gamadj", "tobitadj")
-errframe = errframe[morder, ]
-knitr::kable(errframe, caption="Model RMSE and bias on holdout data", row.names=FALSE)
+rownames(errframe) = errframe$prediction_type
+errframe$description = descv[errframe$prediction_type]
+errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
+knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
 ```
 
 
-
+## Part II : Fitting directly to the input data
 
 
