@@ -28,7 +28,7 @@ where outcomes are strictly nonnegative. If you haven't read that article, I sug
 
 > When you don’t expect to see too many zeros in practice, modeling the process as linear and thresholding negative predictions at zero is not unreasonable. But the more zeros (saturations) you expect to see, the less well a linear model will perform.
 
-The original motivation for the work we did here was to help a client who had built a fairly complex multivariate linear model to predict count data. Their underlying assumption was that in their domain, a count of zero is a rare event. Their model training and deployment process was automated and put into production across multiple sites. 
+The original motivation for the work we did here was to help a client who had built a fairly complex multivariate model to predict count data. Their underlying assumption was that in their domain, a count of zero is a rare event. Their model training and deployment process was automated and put into production across multiple sites. 
 
 Unfortunately, zero-counts are not so rare as they originally believed, at some of their sites. Because coming up with and deploying a new model design is not necessarily feasible at this stage (at least not in the immediate term), they wanted to figure out how to adjust their existing models to operate even at high zero-count sites. Note that this adjustment is a *one-dimensional* process: mapping the output of one model to a prediction that is closer to the actual outcomes.
 
@@ -377,7 +377,7 @@ ggplot() +
   geom_line(data=slices, aes(x=v, y = ypred, color=label)) + 
   facet_wrap(~u, ncol=2, scales="free_y", labeller=label_both) +
   scale_color_manual(breaks=names(palette), values=palette) + 
-  ggtitle("A comparison of the adjusted model across various slices of the prediction surface",
+  ggtitle("A comparison of model adjustments across various slices of the prediction surface",
           subtitle="Ideal process as dashed line") + 
   theme(legend.position="bottom")
 
@@ -427,5 +427,147 @@ knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names
 
 
 ## Part II : Fitting directly to the input data
+
+Now let's try both Tobit and GAM directly on the input data. There are, of course, other methods we could try, like Poisson or Zero-inflated Poisson regression. But since we've been focusing on Tobit and GAM as adjustments, we'll just stick to those.
+
+Note that since neither of these models are restricted to positive predictions, we still have to threshold to zero.
+
+Let's fit to our training data.
+```{r echo=TRUE}
+
+gam_model = gam(y ~ s(u) + s(v), data=traind)
+traind$y_gam = pmax(0, predict(gam_model, newdata=traind))
+
+tobit_model = vglm(y ~ u + v, tobit(Lower=0), data=traind)
+# we still have to threshold the tobit model at 0
+traind$y_tobit = pmax(0, predict(tobit_model, traind)[, "mu"])
+
+```
+
+We'll compare the full model fits to the GAM-adjusted and Tobit-adjusted linear models.
+
+```{r}
+# pivot to a form that's better for plotting and summarization
+traindlong = pivot_longer(
+  select(traind, u, v, y, y_gamadj, y_tobitadj, y_gam, y_tobit),
+  c("y_gamadj", "y_tobitadj", "y_gam", "y_tobit"),
+  names_to = "prediction_type",
+  names_prefix = "y_",
+  values_to = "prediction"
+)
+
+errframe = traindlong |>
+  group_by(prediction_type) |>
+  summarize(RMSE = rmse(y, prediction),
+            bias = bias(y, prediction)) |>
+  ungroup()
+rownames(errframe) = errframe$prediction_type
+
+# reorder, for presentation
+# descriptions
+descv = c("GAM-adjusted model", "Tobit-adjusted model", "Full GAM model", "Full Tobit model")
+names(descv) = c("gamadj", "tobitadj",  "gam", "tobit")
+
+# a little rearrangement for good presentation
+rownames(errframe) = errframe$prediction_type
+errframe$description = descv[errframe$prediction_type]
+errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
+knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
+
+```
+
+The full (thresholded) Tobit model does slightly better than the Tobit-adjusted linear model, but the thresholded GAM doesn't do so well. Since this problem is truly linear, the stronger inductive bias of the Tobit model serves us well.
+
+We can also evaluate these models on holdout data.
+
+
+```{r}
+testd$y_gam = pmax(0, predict(gam_model, newdata=testd))
+testd$y_tobit = pmax(0, predict(tobit_model, testd)[, "mu"])
+
+# pivot to a form that's better for plotting and summarization
+testdlong = pivot_longer(
+  select(testd, u, v, y, y_gamadj, y_tobitadj, y_gam, y_tobit),
+  c("y_gamadj", "y_tobitadj", "y_gam", "y_tobit"),
+  names_to = "prediction_type",
+  names_prefix = "y_",
+  values_to = "prediction"
+)
+
+errframe = testdlong |>
+  group_by(prediction_type) |>
+  summarize(RMSE = rmse(y, prediction),
+            bias = bias(y, prediction)) |>
+  ungroup()
+rownames(errframe) = errframe$prediction_type
+
+# reorder, for presentation
+# descriptions
+descv = c("GAM-adjusted model", "Tobit-adjusted model", "Full GAM model", "Full Tobit model")
+names(descv) = c("gamadj", "tobitadj",  "gam", "tobit")
+
+# a little rearrangement for good presentation
+rownames(errframe) = errframe$prediction_type
+errframe$description = descv[errframe$prediction_type]
+errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
+knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
+```
+
+We get similar results. Let's plot some slices to get an idea of what's happening.
+
+```{r}
+# new make_slice functions
+make_uslices2 = function(u, vvec, modellist) {
+  slices = lapply(names(modellist),
+                        function(label) {make_slice2(u, vvec, modellist[label])})
+  bind_rows(slices)
+}
+
+# note onemodel is a length-1 list (so a labelled model)
+make_slice2 = function(ufixed, vvec, onemodel) {
+  label = names(onemodel)[1]
+  model = onemodel[[1]]
+  
+  df = data.frame(label=label, u=ufixed, v=v)
+  if(class(model)[1] == "vglm") {
+    df$ypred = pmax(0, predict(model, df)[, 'mu'])
+  } else {
+    df$ypred = pmax(0, predict(model, newdata=df))
+  }
+  df
+}
+  
+# let's just look at initial, gamadj, and tobitadj
+modellist = list(initial_model, gam_model, tobit_model)
+names(modellist) = c("initial", "gam", "tobit")
+slices = lapply(uvals, function(u) {make_uslices2(u, vvec, modellist)})
+slices = bind_rows(slices)
+
+# the ideal slices
+ideal = lapply(uvals, function(u) {data.frame(u=u, v=v, y=ideal_uslice(u, v))})
+ideal = bind_rows(ideal)
+
+# we can also superimpose approximate slices of the training data
+datums = lapply(uvals, function(u) {
+  slice = uslice(u, traind)
+  slice$u = u # I need this for plotting
+  slice
+  })
+datums = bind_rows(datums)
+
+
+palette = c(initial = "#BBBBBB",  gam = "#EE6677", tobit = "#66CCEE")
+
+ggplot() + 
+  geom_point(data=datums, mapping=aes(x=v, y=y), color="gray", alpha=0.5) +
+  geom_line(data=ideal, mapping=aes(x=v, y=y), linetype="dashed", color="black") + 
+  geom_line(data=slices, aes(x=v, y = ypred, color=label)) + 
+  facet_wrap(~u, ncol=2, scales="free_y", labeller=label_both) +
+  scale_color_manual(breaks=names(palette), values=palette) + 
+  ggtitle("A comparison of Thresholded Linear, GAM and Tobit models across various slices of the prediction surface",
+          subtitle="Ideal process as dashed line") + 
+  theme(legend.position="bottom")
+
+```
 
 
