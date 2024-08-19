@@ -28,13 +28,15 @@ where outcomes are strictly nonnegative. If you haven't read that article, I sug
 
 > When you don’t expect to see too many zeros in practice, modeling the process as linear and thresholding negative predictions at zero is not unreasonable. But the more zeros (saturations) you expect to see, the less well a linear model will perform.
 
-The original motivation for the work we did here was to help a client who had built a fairly complex multivariate model to predict count data. Their underlying assumption was that in their domain, a count of zero is a rare event. Their model training and deployment process was automated and put into production across multiple sites. 
+## Some Background
+
+The original motivation for the work we did here was to help a client who had built a fairly complex multivariate model to predict expected count data. Their underlying assumption was that in their domain, a count of zero is a rare event. Their model training and deployment process was automated and put into production across multiple sites. 
 
 Unfortunately, zero-counts are not so rare as they originally believed, at some of their sites. Because coming up with and deploying a new model design is not necessarily feasible at this stage (at least not in the immediate term), they wanted to figure out how to adjust their existing models to operate even at high zero-count sites. Note that this adjustment is a *one-dimensional* process: mapping the output of one model to a prediction that is closer to the actual outcomes.
 
 To motivate this adjustment process in the previous article, I used an example of a linear model that was fit to a one-dimensional saturated process. This was so I could plot the resulting "hockey stick" function, and show what happens with different model adjustments. But it's been my experience that people won't believe that this procedure will generalize to multivariate linear models, unless I show them that it works on such models. So in this article, I'll apply the same procedures to a linear model that was fit to two variables, just to prove the point.
 
-I'll also add an additional adjustment that wasn't in the original article, but was suggested by Neal Fultz: adjustment using a Tobit model. You can see more details of that in a revised version of the article on github, [here](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust_wtobit.md). Tobit adjustments work nearly as well as GAM adjustments, and do have the (potential) advantage of having a stronger inductive bias, if you believe that your process is truly linear in it's non-saturated regions [^1].
+I'll also add an additional adjustment that wasn't in the original article, but was suggested by Neal Fultz: adjustment using a Tobit model. You can see more details of that in a revised version of the article on github, [here](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust_wtobit.md). Tobit adjustments work nearly as well as GAM adjustments, and do have the (potential) advantage of having a stronger inductive bias, if you believe that your process is truly linear in its non-saturated regions [^1].
 
 [^1]: Statisticians generally use the word "censored" when talking about processes that threshold out to a minimum or maximum value (or both). Often, the assumption is that the measurements are censored because of limitations of the measurement itself: for example, you can't track a subject for more than five years, so the longest lifetime you can expect to measure is 5, even if the subject lives for decades longer. So models like Tobit try to predict *as if* the data isn't censored: they can predict a lifetime longer than 5 years, even though those lifetimes can't be measured. I am using the word "saturated" to indicate that the outcome being measured literally cannot go beyond the threshold: counts can never be negative. A possibly useful analogy is the image from a digital camera: too much light "blows out" the photo. If you are trying to predict the intensity of the light that hit the camera sensor using the image pixels as the outcome data, then the data is censored. If you are trying to predict *the values of the pixels*, then the data is saturated.
 
@@ -64,19 +66,9 @@ trueprocess = function(N) {
 ```
 
 ```{r}
-
-# take a slice of the ideal function
-# for a fixed u
-ideal_uslice = function(ufixed, v) {
-  pmax(0, 4*ufixed - 3*v)
-}
-
-# take a rough slice of the data
-# around a fixed u
-uslice = function(ufixed, processdata) {
-  in_slice = abs(processdata$u - ufixed) < 0.05
-  subset(processdata, in_slice)
-}
+#
+# Metrics: rmse and bias
+#
 
 rmse = function(y, ypred) {
   err = y - ypred
@@ -225,13 +217,28 @@ Let's plot a heatmap of the training data. Note that there's lots of saturation.
 ak.interp = with(traind, interp(u, v, y, duplicate="mean")) # list (x, y, z)
 
 palette <- viridis(100)
-levelplot(ak.interp$z, main="True process", col.regions=palette, contour=FALSE)
+levelplot(ak.interp$z, main="True process", xlab="u", ylab="v", col.regions=palette, contour=FALSE)
                  
 ```
 
-We're going to use all the data to train our models, but it's not easy to show comparison plots in three dimensions in a way that's legible. So we'll also look at a slices of the data, by holding `u` restricted to a narrow range around a nominal value. Here's a slice with `u` fixed to near  0.5. 
+We're going to use all the data to train our models, but it's not easy to show comparison plots in three dimensions in a way that's legible. So we'll also look at slices of the data, by holding `u` restricted to a narrow range around a nominal value. Here's a slice with `u` fixed to near 0.5. 
 
 ```{r}
+
+# take a slice of the ideal function
+# for a fixed u
+ideal_uslice = function(ufixed, v) {
+  pmax(0, 4*ufixed - 3*v)
+}
+
+# take a rough slice of the data
+# around a fixed u
+uslice = function(ufixed, processdata) {
+  in_slice = abs(processdata$u - ufixed) < 0.05
+  subset(processdata, in_slice)
+}
+
+
 # the ideal process
 ufixed = 0.5
 v = seq(from=0, to=1, by=0.01)
@@ -439,7 +446,7 @@ rownames(errframe) = errframe$prediction_type
 rownames(errframe) = errframe$prediction_type
 errframe$description = descv[errframe$prediction_type]
 errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
-knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
+knitr::kable(errframe, caption="Model RMSE and bias on holdout data", row.names=FALSE)
 ```
 
 
@@ -456,7 +463,6 @@ gam_model = gam(y ~ s(u) + s(v), data=traind)
 traind$y_gam = pmax(0, predict(gam_model, newdata=traind))
 
 tobit_model = vglm(y ~ u + v, tobit(Lower=0), data=traind)
-# we still have to threshold the tobit model at 0
 traind$y_tobit = pmax(0, predict(tobit_model, traind)[, "mu"])
 
 ```
@@ -493,7 +499,7 @@ knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names
 
 ```
 
-The full (thresholded) Tobit model does slightly better than the Tobit-adjusted linear model, but the thresholded GAM doesn't do so well. Since this problem is truly linear, the stronger inductive bias of the Tobit model serves us well.
+The full (thresholded) Tobit model does essentially as well as the Tobit-adjusted linear model, but the thresholded GAM doesn't do so well. Since this problem is truly linear, the stronger inductive bias of the Tobit model serves us well.
 
 ### Test on holdout
 
@@ -529,33 +535,13 @@ names(descv) = c("gamadj", "tobitadj",  "gam", "tobit")
 rownames(errframe) = errframe$prediction_type
 errframe$description = descv[errframe$prediction_type]
 errframe = errframe[names(descv), c("prediction_type", "description", "RMSE", "bias")]
-knitr::kable(errframe, caption="Model RMSE and bias on training data", row.names=FALSE)
+knitr::kable(errframe, caption="Model RMSE and bias on holdout data", row.names=FALSE)
 ```
 
 We get similar results. Let's plot some slices to get an idea of what's happening.
 
 ```{r fig.width=8, fig.height=7}
-# # new make_slice functions
-# make_uslices2 = function(u, vvec, modellist) {
-#   slices = lapply(names(modellist),
-#                         function(label) {make_slice2(u, vvec, modellist[label])})
-#   bind_rows(slices)
-# }
-# 
-# # note onemodel is a length-1 list (so a labelled model)
-# make_slice2 = function(ufixed, vvec, onemodel) {
-#   label = names(onemodel)[1]
-#   model = onemodel[[1]]
-#   
-#   df = data.frame(label=label, u=ufixed, v=v)
-#   if(class(model)[1] == "vglm") {
-#     df$ypred = pmax(0, predict(model, df)[, 'mu'])
-#   } else {
-#     df$ypred = pmax(0, predict(model, newdata=df))
-#   }
-#   df
-# }
-#   
+ 
 # let's just look at initial, gamadj, and tobitadj
 modellist = list(initial_model, gam_model, tobit_model)
 names(modellist) = c("initial", "gam", "tobit")
@@ -566,9 +552,9 @@ slices = bind_rows(slices)
 ideal = lapply(uvals, function(u) {data.frame(u=u, v=v, y=ideal_uslice(u, v))})
 ideal = bind_rows(ideal)
 
-# we can also superimpose approximate slices of the training data
+# we can also superimpose approximate slices of the holdout data
 datums = lapply(uvals, function(u) {
-  slice = uslice(u, traind)
+  slice = uslice(u, testd)
   slice$u = u # I need this for plotting
   slice
   })
@@ -591,5 +577,7 @@ ggplot() +
 
 ## Conclusions
 
-For our original problem---post-hoc adjustments of an already established modeling procedure---a GAM adjustment seems to be the best way to adapt our modeling to higher-than-anticipated saturation frequency; however, Tobit adjustment is competitive. If you have the opportunity to design the modeling procedure *de novo*, GAM may not be the best option; though I admit, I didn't spend any time trying to tune the model. If the process you are modeling is well-approximated as linear in its inputs in the non-saturated region, then a thresholded Tobit model appears to be a good choice.
+For our original problem---post-hoc adjustments of an already established modeling procedure---a GAM adjustment seems to be the best way to adapt our modeling to higher-than-anticipated saturation frequency. However, Tobit adjustment is competitive. If you have the opportunity to design the modeling procedure *de novo*, GAM may not be the best option; though I admit, I didn't spend any time trying to tune the model. If the process you are modeling is well-approximated as linear in the non-saturated region, then a thresholded Tobit model appears to be a good choice.
+
+Obviously, to fit a full model (or even an adjustment), one can try many more methods: Poisson regression, trees, MARS, boosting, random forest, and so on. A typical task for the data scientist is to try many plausible methods on the client's data and pick the one that appears to be the best practical trade-off for the given client.
 

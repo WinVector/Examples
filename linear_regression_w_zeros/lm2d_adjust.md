@@ -1,7 +1,7 @@
 Followup: Adjusting Saturated Multivariate Linear Models
 ================
 Nina Zumel
-2024-08-18
+2024-08-19
 
 This is a followup to the article [*Post-hoc Adjustment for
 Zero-Thresholded Linear
@@ -16,11 +16,13 @@ out, first.
 > unreasonable. But the more zeros (saturations) you expect to see, the
 > less well a linear model will perform.
 
+## Some Background
+
 The original motivation for the work we did here was to help a client
-who had built a fairly complex multivariate model to predict count data.
-Their underlying assumption was that in their domain, a count of zero is
-a rare event. Their model training and deployment process was automated
-and put into production across multiple sites.
+who had built a fairly complex multivariate model to predict expected
+count data. Their underlying assumption was that in their domain, a
+count of zero is a rare event. Their model training and deployment
+process was automated and put into production across multiple sites.
 
 Unfortunately, zero-counts are not so rare as they originally believed,
 at some of their sites. Because coming up with and deploying a new model
@@ -46,7 +48,7 @@ article on github,
 [here](https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/lm_adjust_wtobit.md).
 Tobit adjustments work nearly as well as GAM adjustments, and do have
 the (potential) advantage of having a stronger inductive bias, if you
-believe that your process is truly linear in it’s non-saturated regions
+believe that your process is truly linear in its non-saturated regions
 [^1].
 
 In the second part of the article, I’ll try fitting a model directly to
@@ -103,7 +105,7 @@ saturation.
 
 We’re going to use all the data to train our models, but it’s not easy
 to show comparison plots in three dimensions in a way that’s legible. So
-we’ll also look at a slices of the data, by holding `u` restricted to a
+we’ll also look at slices of the data, by holding `u` restricted to a
 narrow range around a nominal value. Here’s a slice with `u` fixed to
 near 0.5.
 
@@ -194,7 +196,7 @@ for(adj in names(adjustments)) {
 | gamadj          | GAM-adjusted model     | 0.2285600 |  0.0043918 |
 | tobitadj        | Tobit-adjusted model   | 0.2300590 | -0.0064108 |
 
-Model RMSE and bias on training data
+Model RMSE and bias on holdout data
 
 ## Part II : Fitting directly to the input data
 
@@ -213,7 +215,6 @@ gam_model = gam(y ~ s(u) + s(v), data=traind)
 traind$y_gam = pmax(0, predict(gam_model, newdata=traind))
 
 tobit_model = vglm(y ~ u + v, tobit(Lower=0), data=traind)
-# we still have to threshold the tobit model at 0
 traind$y_tobit = pmax(0, predict(tobit_model, traind)[, "mu"])
 ```
 
@@ -229,7 +230,7 @@ linear models.
 
 Model RMSE and bias on training data
 
-The full (thresholded) Tobit model does slightly better than the
+The full (thresholded) Tobit model does essentially as well as the
 Tobit-adjusted linear model, but the thresholded GAM doesn’t do so well.
 Since this problem is truly linear, the stronger inductive bias of the
 Tobit model serves us well.
@@ -245,7 +246,7 @@ We can also evaluate these models on holdout data.
 | gam             | Full GAM model       | 0.3574985 |  0.0658623 |
 | tobit           | Full Tobit model     | 0.2280260 | -0.0072236 |
 
-Model RMSE and bias on training data
+Model RMSE and bias on holdout data
 
 We get similar results. Let’s plot some slices to get an idea of what’s
 happening.
@@ -256,13 +257,19 @@ happening.
 
 For our original problem—post-hoc adjustments of an already established
 modeling procedure—a GAM adjustment seems to be the best way to adapt
-our modeling to higher-than-anticipated saturation frequency; however,
+our modeling to higher-than-anticipated saturation frequency. However,
 Tobit adjustment is competitive. If you have the opportunity to design
 the modeling procedure *de novo*, GAM may not be the best option; though
 I admit, I didn’t spend any time trying to tune the model. If the
-process you are modeling is well-approximated as linear in its inputs in
-the non-saturated region, then a thresholded Tobit model appears to be a
+process you are modeling is well-approximated as linear in the
+non-saturated region, then a thresholded Tobit model appears to be a
 good choice.
+
+Obviously, to fit a full model (or even an adjustment), one can try many
+more methods: Poisson regression, trees, MARS, boosting, random forest,
+and so on. A typical task for the data scientist is to try many
+plausible methods on the client’s data and pick the one that appears to
+be the best practical trade-off for the given client.
 
 [^1]: Statisticians generally use the word “censored” when talking about
     processes that threshold out to a minimum or maximum value (or
