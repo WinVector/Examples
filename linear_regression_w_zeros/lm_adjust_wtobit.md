@@ -204,13 +204,19 @@ that the initial model returns a negative prediction.
 
 ``` r
 # "model" is a list (initial_model, adjustment)
+
 do_predict = function(model, newdata) {
   mod0 = model$initial_model
   adjmod = model$adjustment
   
   df = data.frame(ypred0 = predict(mod0, newdata=newdata))
   # if the adjustment model makes negative predictions, threshold to 0
-  yadj = pmax(0, predict(adjmod, newdata=df))
+  if(class(adjmod)[1] =="vglm") { 
+    # the tobit model, which we'll get to later
+    yadj = pmax(0, predict(adjmod, df)[, 'mu'])
+  } else {
+    yadj = pmax(0, predict(adjmod, newdata=df))
+  }
 
   # if linear model predicts a negative number,
   # predict 0, else use adjusted model
@@ -451,20 +457,6 @@ fit_tobit = function(initial_model, outcome, data) {
   list(initial_model=initial_model, adjustment=tobitmodel)
 }
 
-# needs a slightly different do_predict
-do_predict_tobit = function(model, newdata) {
-  mod0 = model$initial_model
-  adjmod = model$adjustment
-  
-  df = data.frame(ypred0 = predict(mod0, newdata=newdata))
-  yadj = pmax(0, predict(adjmod, df)[, 'mu'])
-  
-  # if linear model predicts a negative number,
-  # predict 0, else use adjusted model
-  ypred = ifelse(df$ypred0  <= 0, 0, yadj)
-  ypred
-}
-
 
 tobit_adj_model = fit_tobit(initial_model, "y", traind)
 summary(tobit_adj_model$adjustment)
@@ -491,7 +483,7 @@ summary(tobit_adj_model$adjustment)
     ## No Hauck-Donner effect found in any of the estimates
 
 ``` r
-traind$ypred_tobitadj = do_predict_tobit(tobit_adj_model, newdata=traind)
+traind$ypred_tobitadj = do_predict(tobit_adj_model, newdata=traind)
 
 loss = with(traind, rmse(y, ypred_tobitadj))
 loss_str = format(loss, digits=3)
@@ -521,7 +513,7 @@ testd$y_linscale = do_predict(scaling_model, newdata=testd)
 testd$y_linadj = do_predict(linadj_model, newdata=testd)
 testd$y_gamadj = do_predict(gamadj_model, newdata=testd)
 testd$y_tobit = pmax(0, predict(tobit_model, testd)[,'mu']) 
-testd$y_tobitadj = do_predict_tobit(tobit_adj_model, newdata=testd)
+testd$y_tobitadj = do_predict(tobit_adj_model, newdata=testd)
 
 
 # pivot data into a form better for plotting and summarizing
