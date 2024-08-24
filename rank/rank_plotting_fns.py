@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
+import sklearn.metrics
 from scipy.stats import spearmanr
 from IPython.display import display
 from cmdstanpy import CmdStanModel
@@ -47,6 +48,14 @@ def build_line_frame(df: pd.DataFrame, *, xcol: str, ycol: str) -> pd.DataFrame:
     })
     fit_frame[ycol] = fit_line_model.predict(fit_frame[[xcol]])
     return fit_frame
+
+
+def calc_auc(*, y_true, y_score) -> float:
+    fpr, tpr, _ = sklearn.metrics.roc_curve(
+        y_true=y_true, 
+        y_score=y_score,
+    )
+    return sklearn.metrics.auc(fpr, tpr)
 
 
 def plot_rank_performance(
@@ -159,6 +168,14 @@ def plot_rank_performance(
             plotvars=("precision", "recall"),
             title=f'{example_name} {estimate_name}\nprecision recall tradeoffs',
         )
+    pick_auc = calc_auc(
+        y_true=pick_frame['was pick'], 
+        y_score=pick_frame['pick probability estimate'],
+    )
+    pick_spearmanr = spearmanr(
+        pick_frame['was pick'],
+        pick_frame['pick probability estimate'],
+    )
     score_compare_frame[estimate_name] = estimated_item_scores
     spearman_all = spearmanr(
         score_compare_frame[estimate_name],
@@ -200,8 +217,10 @@ def plot_rank_performance(
     return pd.DataFrame({
         'example_name': [example_name],
         'estimate_name': [estimate_name],
-        'spearman_all': [spearman_all.statistic],
-        'spearman_test': [spearman_test.statistic],
+        'SpearmanR_all': [spearman_all.statistic],
+        'SpearmanR_test': [spearman_test.statistic],
+        'pick_SpearmanR': [pick_spearmanr.statistic],
+        'pick_auc': [pick_auc],
         'data_size': [features_frame.shape[0]],
         'test_size': [len(unobserved_ids)],
         })
