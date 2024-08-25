@@ -1,4 +1,5 @@
 import os
+import json
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
@@ -8,6 +9,200 @@ from IPython.display import display
 from cmdstanpy import CmdStanModel
 from plotnine import *
 from wvu.util import plot_roc, threshold_plot
+
+
+def sort_observations_frame(
+    observations: pd.DataFrame,
+):
+    # swap all observed alternatives selections into picked position
+    m_examples = observations.shape[0]
+    n_alternatives = len([c for c in observations if c.startswith("item_id_")])
+    observations_sorted = observations.copy()
+    for passed_i in range(1, n_alternatives):
+        for row_i in range(m_examples):
+            if observations_sorted.loc[row_i, f"pick_value_{passed_i}"] > 0:
+                # swap where data is stored in row
+                for dest_col, source_col in (
+                    ("display_position_0", f"display_position_{passed_i}"),
+                    ("item_id_0", f"item_id_{passed_i}"),
+                    ("pick_value_0", f"pick_value_{passed_i}"),
+                ):
+                    v_source = observations_sorted.loc[row_i, source_col]
+                    v_dest = observations_sorted.loc[row_i, dest_col]
+                    observations_sorted.loc[row_i, source_col] = v_dest
+                    observations_sorted.loc[row_i, dest_col] = v_source
+    observations_sorted.rename(
+        columns={
+            f"display_position_{i}": f"encoding_{i}" for i in range(n_alternatives)
+        },
+        inplace=True,
+    )
+    return observations_sorted
+
+
+def define_Stan_panel_src(
+    n_alternatives: int,
+):
+    stan_model_panel_src = (
+        """
+data {
+  int<lower=1> n_vars;                     // number of variables per alternative
+  int<lower=1> m_examples;                 // number of examples
+  matrix[m_examples, n_vars] x_picked;     // character of picked examples
+"""
+        + "".join(
+            [
+                f"""  matrix[m_examples, n_vars] x_passed_{i};   // character of passed examples
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """}
+parameters {
+  vector[n_vars] beta;                      // model parameters
+  vector[m_examples] error_picked;          // reified noise term on picks (the secret sauce!)
+}
+transformed parameters {
+  vector[m_examples] expect_picked;
+  vector[m_examples] v_picked;
+"""
+        + "".join(
+            [
+                f"""  vector[m_examples] expect_passed_{i};
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """  expect_picked = x_picked * beta;          // modeled expected score of picked item
+  v_picked = expect_picked + error_picked;  // reified actual score of picked item
+"""
+        + "".join(
+            [
+                f"""  expect_passed_{i} = x_passed_{i} * beta;      // modeled expected score of passed item
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """}
+model {
+    // basic priors
+  beta ~ normal(0, 10);
+  error_picked ~ normal(0, 10);
+    // log probability of observed ordering as a function of parameters
+    // terms are independent conditioned on knowing value of v_picked!
+"""
+        + "".join(
+            [
+                f"""  target += normal_lcdf( v_picked | expect_passed_{i}, 10);
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """}
+"""
+    )
+    return stan_model_panel_src
+
+
+def define_Stan_choice_src(
+    n_alternatives: int,
+):
+    stan_model_comparison_src = (
+        """
+data {
+  int<lower=1> n_vars;                     // number of variables per alternative
+  int<lower=1> m_examples;                 // number of examples
+  matrix[m_examples, n_vars] x_picked;     // character of picked examples
+"""
+        + "".join(
+            [
+                f"""  matrix[m_examples, n_vars] x_passed_{i};   // character of passed examples
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """}
+parameters {
+  vector[n_vars] beta;                      // model parameters
+}
+transformed parameters {
+  vector[m_examples] expect_picked;
+"""
+        + "".join(
+            [
+                f"""  vector[m_examples] expect_passed_{i};
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """  expect_picked = x_picked * beta;          // modeled expected score of picked item
+"""
+        + "".join(
+            [
+                f"""  expect_passed_{i} = x_passed_{i} * beta;      // modeled expected score of passed item
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """}
+model {
+    // basic priors
+  beta ~ normal(0, 10);
+    // log probability of observed ordering as a function of parameters
+"""
+        + "".join(
+            [
+                f"""  target += normal_lcdf( 0 | expect_passed_{i} - expect_picked, sqrt(2) * 10);
+"""
+                for i in range(1, n_alternatives)
+            ]
+        )
+        + """}
+"""
+    )
+    return stan_model_comparison_src
+
+
+def format_Stan_data(
+    observations_sorted: pd.DataFrame,
+    *,
+    features_frame: pd.DataFrame,
+):
+    m_examples = observations_sorted.shape[0]
+    n_alternatives = len([c for c in observations_sorted if c.startswith("item_id_")])
+    n_vars = features_frame.shape[1] + n_alternatives
+    def fmt_array(a) -> str:
+        return json.dumps([v for v in a])
+
+    def mk_posn_indicator(posn: int) -> str:
+        posn_indicators = [0] * n_alternatives
+        posn_indicators[posn] = 1
+        return posn_indicators
+
+    def f_i(sel_i: int) -> str:
+        id_seq = observations_sorted[f"item_id_{sel_i}"]
+        posn_seq = observations_sorted[f"encoding_{sel_i}"]
+        return fmt_array(
+            [
+                list(features_frame.loc[int(id), :]) + mk_posn_indicator(int(posn))
+                for id, posn in zip(id_seq, posn_seq)
+            ]
+        )
+
+    data_str = (f"""
+{{
+ "n_vars" : {n_vars},
+ "m_examples" : {m_examples},
+ "x_picked" : {f_i(0)},
+"""
+    + """,
+""".join(
+        [f""" "x_passed_{i}" : {f_i(i)}""" for i in range(1, n_alternatives)]
+    )
+    + """
+}
+""")
+    return data_str
 
 
 def run_stan_model(
