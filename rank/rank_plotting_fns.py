@@ -11,6 +11,36 @@ from plotnine import *
 from wvu.util import plot_roc, threshold_plot
 
 
+def estimate_model_from_scores(
+    observations: pd.DataFrame,
+    *,
+    features_frame: pd.DataFrame,
+):
+    # get a perfect model for comparison
+    n_alternatives = len([c for c in observations if c.startswith("item_id_")])
+    x = []
+    y = []
+    for row_i in range(observations.shape[0]):
+        for sel_i in range(n_alternatives):
+            item_id = observations.loc[row_i, f'item_id_{sel_i}']
+            score_v = observations.loc[row_i, f'score_value_{sel_i}']
+            posn_details = [0] * n_alternatives
+            posn_details[sel_i] = 1
+            x_i = list(features_frame.loc[item_id, :]) + posn_details
+            x.append(np.array(x_i))
+            y.append(score_v)
+    x = pd.DataFrame(x)
+    new_names = list(features_frame.columns) + [f'posn_{i}' for i in range(n_alternatives)]
+    x.columns = new_names
+    y = np.array(y)
+    direct_model = LinearRegression()
+    direct_model.fit(
+        x,
+        y,
+    )
+    return np.array(direct_model.coef_)
+
+
 def sort_observations_frame(
     observations: pd.DataFrame,
 ):
@@ -383,10 +413,6 @@ def plot_rank_performance(
         y_true=pick_frame["was pick"],
         y_score=pick_frame["pick probability estimate"],
     )
-    pick_spearmanr = spearmanr(
-        pick_frame["was pick"],
-        pick_frame["pick probability estimate"],
-    )
     score_compare_frame[estimate_name] = estimated_item_scores
     spearman_all = spearmanr(
         score_compare_frame[estimate_name],
@@ -445,7 +471,6 @@ def plot_rank_performance(
             "estimate_name": [estimate_name],
             "SpearmanR_all": [spearman_all.statistic],
             "SpearmanR_test": [spearman_test.statistic],
-            "pick_SpearmanR": [pick_spearmanr.statistic],
             "pick_auc": [pick_auc],
             "data_size": [features_frame.shape[0]],
             "test_size": [len(unobserved_ids)],
