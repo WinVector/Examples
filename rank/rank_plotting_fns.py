@@ -11,6 +11,48 @@ from plotnine import *
 from wvu.util import plot_roc, threshold_plot
 
 
+def mk_example(
+    features_frame: pd.DataFrame,
+    *,
+    features_scores: pd.DataFrame,
+    position_penalties,
+    m_examples: int,
+    score_name: str,
+    noise_scale: float,
+    rng,
+) -> pd.DataFrame:
+    # assemble panels of observations with top scoring entry picked
+    n_alternatives = len(position_penalties)
+    observations = dict()
+    for sel_i in range(n_alternatives):
+        observations[f"display_position_{sel_i}"] = [sel_i] * m_examples
+        selected_examples = rng.choice(
+            features_frame.shape[0], size=m_examples, replace=True
+        )
+        observations[f"item_id_{sel_i}"] = selected_examples
+        observations[f"score_value_{sel_i}"] = (
+            [  # noisy observation of score plus position penalty
+                features_scores.loc[int(selected_examples[i]), score_name]  # item score
+                + position_penalties[sel_i]  # positional penalty
+                + noise_scale * rng.normal(size=1)[0]  # observation noise
+                for i in range(m_examples)
+            ]
+        )
+        observations[f"pick_value_{sel_i}"] = [0] * m_examples
+    observations = pd.DataFrame(observations)
+    # mark selections
+    for i in range(m_examples):
+        best_j = 0
+        for j in range(1, n_alternatives):
+            if (
+                observations[f"score_value_{j}"][i]
+                > observations[f"score_value_{best_j}"][i]
+            ):
+                best_j = j
+        observations.loc[i, f"pick_value_{best_j}"] = 1
+    return observations
+
+
 def estimate_model_from_scores(
     observations: pd.DataFrame,
     *,
@@ -288,7 +330,8 @@ def plot_rank_performance(
     n_vars: int,  # number of variables (including position variables)
     n_alternatives: int,  # size of panels
     features_frame,  # features by row id
-    observations,  # observation layout frame
+    observations_train: pd.DataFrame,  # training observations layout frame
+    observations_test: pd.DataFrame,  # evaluation observations layout frame
     estimate_name: str,  # display name of estimate
     position_quantiles=None,  # quantiles of estimated positions
     position_penalties=None,  # ideal position penalties
@@ -343,7 +386,7 @@ def plot_rank_performance(
         n_draws: int = 10000
         est_row = [
             estimated_item_scores[
-                int(observations.loc[row_i, f"item_id_{sel_i}"])
+                int(observations_test.loc[row_i, f"item_id_{sel_i}"])
             ]  # estimated per item score
             + position_effects_frame.loc[
                 sel_i, "estimated effect"
@@ -365,7 +408,7 @@ def plot_rank_performance(
         draws = draws.sum(axis=0)
         draws = draws / np.sum(draws)
         train_pick = [
-            observations.loc[row_i, f"pick_value_{sel_i}"] == 1
+            observations_test.loc[row_i, f"pick_value_{sel_i}"] == 1
             for sel_i in range(n_alternatives)
         ]
         return pd.DataFrame(
@@ -377,7 +420,7 @@ def plot_rank_performance(
             }
         )
 
-    pick_frame = [p_select(row_i) for row_i in range(observations.shape[0])]
+    pick_frame = [p_select(row_i) for row_i in range(observations_test.shape[0])]
     pick_frame = pd.concat(pick_frame, ignore_index=True)
     pick_auc = calc_auc(
         y_true=pick_frame["was pick"],
@@ -436,8 +479,8 @@ def plot_rank_performance(
             )
         ).show()
     observed_ids = set(
-        observations.loc[
-            :, [c for c in observations.columns if c.startswith("item_id_")]
+        observations_train.loc[
+            :, [c for c in observations_train.columns if c.startswith("item_id_")]
         ].values.flatten()
     )
     unobserved_ids = [
@@ -475,7 +518,8 @@ def plot_rank_performance(
             "SpearmanR_test": [spearman_test.statistic],
             "pick_auc": [pick_auc],
             "mean pick KL divergence": [mean_pick_kl_divergence],
-            "training panels": [observations.shape[0]],
+            "training panels": [observations_train.shape[0]],
+            "test panels": [observations_test.shape[0]],
             "data_size": [features_frame.shape[0]],
             "test_size": [len(unobserved_ids)],
         }
