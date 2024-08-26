@@ -9,7 +9,7 @@ if __name__ == '__main__':
     rng = np.random.default_rng(2024)
 
     results = []
-    for i in range(100):
+    for i in range(20):
         seed_i = rng.choice(2**31)
         result_fname = f'rankresult_tmp_{i}_{seed_i}.csv'
         task = JTask(
