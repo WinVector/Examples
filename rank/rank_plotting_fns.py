@@ -379,6 +379,12 @@ def plot_rank_performance(
 
     pick_frame = [p_select(row_i) for row_i in range(observations.shape[0])]
     pick_frame = pd.concat(pick_frame, ignore_index=True)
+    pick_auc = calc_auc(
+        y_true=pick_frame["was pick"],
+        y_score=pick_frame["pick probability estimate"],
+    )
+    kl_divergence = -np.sum(np.log(pick_frame.loc[pick_frame["was pick"] == True, "pick probability estimate"])) / np.log(2.0)
+    mean_pick_kl_divergence = kl_divergence / pick_frame.shape[0]  # average per panel
     if show_plots:
         print("picks")
         display(pick_frame.head(10))
@@ -400,7 +406,7 @@ def plot_rank_performance(
             prediction=pick_frame["pick probability estimate"],
             istrue=pick_frame["was pick"],
             ideal_line_color="lightgrey",
-            title=f"{example_name} {estimate_name}\nROC of pick selection",
+            title=f"{example_name} {estimate_name}\nROC of pick selection (mean KL div.: {mean_pick_kl_divergence:.2f})",
         )
         threshold_plot(
             pick_frame,
@@ -409,10 +415,6 @@ def plot_rank_performance(
             plotvars=("precision", "recall"),
             title=f"{example_name} {estimate_name}\nprecision recall tradeoffs",
         )
-    pick_auc = calc_auc(
-        y_true=pick_frame["was pick"],
-        y_score=pick_frame["pick probability estimate"],
-    )
     score_compare_frame[estimate_name] = estimated_item_scores
     spearman_all = spearmanr(
         score_compare_frame[estimate_name],
@@ -472,6 +474,8 @@ def plot_rank_performance(
             "SpearmanR_all": [spearman_all.statistic],
             "SpearmanR_test": [spearman_test.statistic],
             "pick_auc": [pick_auc],
+            "mean pick KL divergence": [mean_pick_kl_divergence],
+            "training panels": [observations.shape[0]],
             "data_size": [features_frame.shape[0]],
             "test_size": [len(unobserved_ids)],
         }
