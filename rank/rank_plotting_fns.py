@@ -1,3 +1,4 @@
+
 import os
 import json
 import numpy as np
@@ -6,9 +7,33 @@ from sklearn.linear_model import LinearRegression
 import sklearn.metrics
 from scipy.stats import spearmanr
 from IPython.display import display
+import xgboost as xgb
 from cmdstanpy import CmdStanModel
 from plotnine import *
 from wvu.util import plot_roc, threshold_plot
+
+
+def logit(v):
+    v = np.array(v)
+    return np.log(v/(1-v))
+
+
+def predict_score(
+    d,
+    *,
+    model,
+    model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
+):
+    if model_type == 'classifier':
+        preds = model.predict_proba(d)
+        eval_scores = logit(np.array(preds)[:, 1])
+    elif model_type == 'regression':
+        eval_scores = model.predict(d)
+    elif model_type == 'coef':
+        eval_scores = d @ np.array(model)
+    else:
+        raise(f"unexpected model type {model_type}")
+    return np.array(eval_scores)
 
 
 def mk_example(
@@ -323,36 +348,66 @@ def calc_auc(*, y_true, y_score) -> float:
     return sklearn.metrics.auc(fpr, tpr)
 
 
-def plot_rank_performance(
-    estimated_beta,  # estimated coefficients
+def est_position_effect(
+    i: int,
     *,
+    model,  # score predicting model
+    model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
+    n_alternatives: int,  # size of panels
+    features_frame,  # features by row id
+) -> float:
+    eval_frame = pd.concat([
+        features_frame,
+        pd.DataFrame({
+            f'position_{pi}': [0] * features_frame.shape[0] 
+            for pi in range(n_alternatives)
+        })
+    ], axis=1)
+    eval_frame[f'position_{i}'] = 1
+    estimated_item_scores = predict_score(
+        eval_frame,
+        model=model,
+        model_type=model_type,
+    )
+    return np.mean(estimated_item_scores)
+
+
+def plot_rank_performance(
+    model,  # score predicting model
+    *,
+    model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
     example_name: str,  # name of data set
-    n_vars: int,  # number of variables (including position variables)
     n_alternatives: int,  # size of panels
     features_frame,  # features by row id
     observations_train: pd.DataFrame,  # training observations layout frame
     observations_test: pd.DataFrame,  # evaluation observations layout frame
     estimate_name: str,  # display name of estimate
-    position_quantiles=None,  # quantiles of estimated positions
     position_penalties=None,  # ideal position penalties
     score_compare_frame,  # score comparison frame (altered by call)
     rng,  # pseudo random source
     show_plots: bool = True,  # show plots
 ) -> pd.DataFrame:
     simulation_sigma = 10
-    estimated_beta = np.array(estimated_beta)
-    position_effects_frame = pd.DataFrame(
-        {
+
+    position_effects_frame = pd.DataFrame({
             "position": [f"posn_{i}" for i in range(len(position_penalties))],
-            "estimated effect": estimated_beta[features_frame.shape[1] : n_vars],
-        }
+            "estimated effect": [
+                est_position_effect(
+                    i=i,
+                    model=model,
+                    model_type=model_type,
+                    n_alternatives=n_alternatives,
+                    features_frame=features_frame,
+                )
+                for i in range(n_alternatives)
+            ]
+        })
+    position_effects_frame["estimated effect"] = (
+        position_effects_frame["estimated effect"]
+        - np.max(position_effects_frame["estimated effect"])
     )
     if show_plots and (position_penalties is not None):
         position_effects_frame["actual effect"] = position_penalties
-        if position_quantiles is not None:
-            position_effects_frame = pd.concat(
-                [position_effects_frame, position_quantiles], axis=1
-            )
         plt_posns = (
             ggplot(
                 data=position_effects_frame,
@@ -370,16 +425,18 @@ def plot_rank_performance(
         )
         print("estimated position influences")
         display(position_effects_frame)
-        if position_quantiles is not None:
-            plt_posns = plt_posns + geom_segment(
-                mapping=aes(yend="actual effect", x="0.25", xend="0.75"),
-                color="blue",
-                size=4,
-                alpha=0.5,
-            )
         plt_posns.show()
-    estimated_item_scores = (
-        features_frame @ estimated_beta[range(features_frame.shape[1])]
+    eval_frame = pd.concat([
+        features_frame,
+        pd.DataFrame({
+            f'position_{i}': [1/n_alternatives] * features_frame.shape[0] 
+            for i in range(n_alternatives)
+        })
+    ], axis=1)
+    estimated_item_scores = predict_score(
+        eval_frame,
+        model=model,
+        model_type=model_type,
     )
 
     def p_select(row_i: int):
@@ -524,3 +581,61 @@ def plot_rank_performance(
             "test_size": [len(unobserved_ids)],
         }
     )
+
+
+class xgboost_classifier():
+    bst_ = None
+    rng_ = None
+
+    def __init__(self, *, rng):
+        self.rng = rng
+
+    def fit(
+        self,
+        X,
+        y,
+    ):
+        y = np.array(y)
+        # conda install -c conda-forge xgboost 
+        # pip install xgboost
+        # https://xgboost.readthedocs.io/en/stable/python/python_intro.html
+        param = {
+            'max_depth': 5, 
+            'eta': 1, 
+            'objective': 'binary:logistic',
+            'nthread': 4,
+            'eval_metric': ['logloss', 'auc']
+            }
+        num_round = 100
+        train_group = self.rng_.choice(3, size=X.shape[0], replace=True)
+        X_train_data = X.loc[train_group != 2, :].reset_index(drop=True, inplace=False)
+        X_train_label = y[train_group != 2]
+        dtrain = xgb.DMatrix(
+            X_train_data,
+            label=X_train_label,
+        )
+        X_test_data = X.loc[train_group == 2, :].reset_index(drop=True, inplace=False)
+        X_test_label = y[train_group == 2]
+        dtest = xgb.DMatrix(
+            X_test_data,
+            label=X_test_label,
+        )
+        evallist = [(dtrain, 'train'), (dtest, 'eval')]
+        self.bst_ = xgb.train(
+            params=param, 
+            dtrain=dtrain, 
+            num_boost_round=num_round, 
+            early_stopping_rounds=10, 
+            evals=evallist,
+        )
+        return self
+
+    def predict_proba(
+        self,
+        X,
+    ):
+        preds = self.bst_.predict(
+            xgb.DMatrix(X), 
+            iteration_range=(0, bst.best_iteration + 1),
+        )
+        return np.array([[1-pi, pi] for pi in preds])
