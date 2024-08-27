@@ -390,7 +390,7 @@ def plot_rank_performance(
     simulation_sigma = 10
 
     position_effects_frame = pd.DataFrame({
-            "position": [f"posn_{i}" for i in range(len(position_penalties))],
+            "position": [f"posn_{i}" for i in range(n_alternatives)],
             "estimated effect": [
                 est_position_effect(
                     i=i,
@@ -583,12 +583,12 @@ def plot_rank_performance(
     )
 
 
-class xgboost_classifier():
+class XgboostClassifier():
     bst_ = None
     rng_ = None
 
     def __init__(self, *, rng):
-        self.rng = rng
+        self.rng_ = rng
 
     def fit(
         self,
@@ -636,6 +636,6 @@ class xgboost_classifier():
     ):
         preds = self.bst_.predict(
             xgb.DMatrix(X), 
-            iteration_range=(0, bst.best_iteration + 1),
+            iteration_range=(0, self.bst_.best_iteration + 1),
         )
         return np.array([[1-pi, pi] for pi in preds])
