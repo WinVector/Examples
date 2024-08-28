@@ -629,6 +629,7 @@ def define_Stan_reading_panel_src(
 data {{
   int<lower=1> n_vars;                              // number of variables per alternative
   int<lower=1> m_examples;                          // number of examples
+  real<lower=0, upper=1> p_continue;                // modeled probability of reading on
   array[m_examples] int<lower=1, upper={n_alternatives}> picked_index;   // which position was picked
 """
         + "".join(
@@ -641,7 +642,7 @@ data {{
         + f"""}}
 parameters {{
   vector[n_vars] beta;                              // model parameters
-  vector[m_examples] error_picked;                  // reified noise term on picks (the secret sauce!)
+  vector[m_examples] error_picked;                  // reified noise term on picks
 }}
 transformed parameters {{
   array[{n_alternatives}] vector[m_examples] expected_value;             // modeled expected score of item
@@ -658,8 +659,8 @@ transformed parameters {{
         + f"""  for (ex_i in 1:m_examples) {{
     v_picked[ex_i] = expected_value[picked_index[ex_i]][ex_i] + error_picked[ex_i];
   }}
-  for (alt_j in 1:{n_alternatives}) {{
-    for (ex_i in 1:m_examples) {{
+  for (ex_i in 1:m_examples) {{
+    for (alt_j in 1:{n_alternatives}) {{
       if (alt_j != picked_index[ex_i]) {{
         exceeded_prob[alt_j][ex_i] = normal_cdf( v_picked[ex_i] | expected_value[alt_j][ex_i], 10);
       }} else {{
@@ -672,13 +673,14 @@ transformed parameters {{
 model {{
     // basic priors
   beta ~ normal(0, 10);
+  p_continue ~ beta(0.5, 0.5);
   error_picked ~ normal(0, 10);
     // log probability of observed selection as a function of parameters
     // TODO: add positional terms
-  for (alt_j in 1:{n_alternatives}) {{
-    for (ex_i in 1:m_examples) {{
+  for (ex_i in 1:m_examples) {{
+    for (alt_j in 1:{n_alternatives}) {{
       if (alt_j != picked_index[ex_i]) {{
-            target += log(exceeded_prob[alt_j][ex_i]);
+            target += log1m(pow(p_continue, alt_j - 1) * (1 - exceeded_prob[alt_j][ex_i]));
       }}
     }}
   }}
@@ -691,6 +693,7 @@ model {{
 def format_Stan_reading_data(
     observations: pd.DataFrame,
     *,
+    p_continue: float,
     features_frame: pd.DataFrame,
 ):
     m_examples = observations.shape[0]
@@ -719,6 +722,7 @@ def format_Stan_reading_data(
 {{
  "n_vars" : {n_vars},
  "m_examples" : {m_examples},
+ "p_continue" : {p_continue},
  "picked_index" : {fmt_array(picks)},
 """
     + """,
