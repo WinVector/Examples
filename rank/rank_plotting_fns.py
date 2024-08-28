@@ -582,7 +582,7 @@ def plot_rank_performance(
         }
     )
 
-
+# https://xgboost.readthedocs.io/en/latest/tutorials/learning_to_rank.html
 class XgboostClassifier():
     bst_ = None
     rng_ = None
