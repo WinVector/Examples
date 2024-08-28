@@ -40,14 +40,14 @@ def mk_example(
     features_frame: pd.DataFrame,
     *,
     features_scores: pd.DataFrame,
-    position_penalties,
+    continue_reading_probability: float,
+    n_alternatives: int,
     m_examples: int,
     score_name: str,
     noise_scale: float,
     rng,
 ) -> pd.DataFrame:
     # assemble panels of observations with top scoring entry picked
-    n_alternatives = len(position_penalties)
     observations = dict()
     for sel_i in range(n_alternatives):
         observations[f"display_position_{sel_i}"] = [sel_i] * m_examples
@@ -55,20 +55,21 @@ def mk_example(
             features_frame.shape[0], size=m_examples, replace=True
         )
         observations[f"item_id_{sel_i}"] = selected_examples
+        observations[f"pick_value_{sel_i}"] = [0] * m_examples
         observations[f"score_value_{sel_i}"] = (
-            [  # noisy observation of score plus position penalty
+            [  # noisy observation of score/utility
                 features_scores.loc[int(selected_examples[i]), score_name]  # item score
-                + position_penalties[sel_i]  # positional penalty
-                + noise_scale * rng.normal(size=1)[0]  # observation noise
+                + noise_scale * rng.normal(size=1)[0]  # score noise
                 for i in range(m_examples)
             ]
         )
-        observations[f"pick_value_{sel_i}"] = [0] * m_examples
     observations = pd.DataFrame(observations)
     # mark selections
     for i in range(m_examples):
         best_j = 0
         for j in range(1, n_alternatives):
+            if rng.binomial(size=1, n=1, p=continue_reading_probability)[0] <= 0:
+                break  # abort reading
             if (
                 observations[f"score_value_{j}"][i]
                 > observations[f"score_value_{best_j}"][i]
@@ -382,7 +383,6 @@ def plot_rank_performance(
     observations_train: pd.DataFrame,  # training observations layout frame
     observations_test: pd.DataFrame,  # evaluation observations layout frame
     estimate_name: str,  # display name of estimate
-    position_penalties=None,  # ideal position penalties
     score_compare_frame,  # score comparison frame (altered by call)
     rng,  # pseudo random source
     show_plots: bool = True,  # show plots
@@ -406,26 +406,6 @@ def plot_rank_performance(
         position_effects_frame["estimated effect"]
         - np.max(position_effects_frame["estimated effect"])
     )
-    if show_plots and (position_penalties is not None):
-        position_effects_frame["actual effect"] = position_penalties
-        plt_posns = (
-            ggplot(
-                data=position_effects_frame,
-                mapping=aes(
-                    x="estimated effect",
-                    y="actual effect",
-                    label="position",
-                ),
-            )
-            + geom_label(ha="left", va="top")
-            + geom_point()
-            + ggtitle(
-                f"{example_name} {estimate_name}\nactual position effect as a function estimated effect"
-            )
-        )
-        print("estimated position influences")
-        display(position_effects_frame)
-        plt_posns.show()
     eval_frame = pd.concat([
         features_frame,
         pd.DataFrame({
