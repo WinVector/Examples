@@ -8,6 +8,18 @@ from wvpy.jtools import JTask
 if __name__ == '__main__':
     rng = np.random.default_rng(2024)
 
+    # display examples
+    for m_examples in [100, 1000]:
+        for score_name in ["quality", "linear_score"]:
+            task = JTask(
+                sheet_name='learning_to_rank.ipynb',
+                sheet_vars={
+                    'm_examples': m_examples,
+                    'score_name': score_name,
+                    },
+                output_suffix=f'_display_{score_name}_{m_examples}',
+            )
+            task.render_as_html()
     results = []
     for i in range(20):
         seed_i = rng.choice(2**31)
