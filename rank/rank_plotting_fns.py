@@ -406,18 +406,24 @@ def plot_rank_performance(
         position_effects_frame["estimated effect"]
         - np.max(position_effects_frame["estimated effect"])
     )
-    eval_frame = pd.concat([
-        features_frame,
-        pd.DataFrame({  # TODO: replace this with averaging over all the selection vectors
-            f'position_{i}': [1/n_alternatives] * features_frame.shape[0] 
-            for i in range(n_alternatives)
-        })
-    ], axis=1)
-    estimated_item_scores = predict_score(
-        eval_frame,
-        model=model,
-        model_type=model_type,
-    )
+    # try to get value of item by evaluating in all positions
+    est_item_frames = []
+    for posn in range(n_alternatives):
+        eval_frame_i = pd.concat([
+            features_frame,
+            pd.DataFrame({
+                f'position_{i}': [0.0] * features_frame.shape[0] 
+                for i in range(n_alternatives)
+            })
+        ], axis=1)
+        eval_frame_i[f'position_{posn}'] = 1.0
+        estimated_item_scores_i = predict_score(
+            eval_frame_i,
+            model=model,
+            model_type=model_type,
+        )
+        est_item_frames.append(estimated_item_scores_i)
+    estimated_item_scores = np.array(est_item_frames).mean(axis=0)
 
     def p_select(row_i: int):
         n_draws: int = 10000
@@ -673,14 +679,15 @@ transformed parameters {{
 model {{
     // basic priors
   beta ~ normal(0, 10);
-  p_continue ~ beta(0.5, 0.5);
   error_picked ~ normal(0, 10);
     // log probability of observed selection as a function of parameters
-    // TODO: add positional terms
   for (ex_i in 1:m_examples) {{
     for (alt_j in 1:{n_alternatives}) {{
-      if (alt_j != picked_index[ex_i]) {{
-            target += log1m(pow(p_continue, alt_j - 1) * (1 - exceeded_prob[alt_j][ex_i]));
+      if (alt_j < picked_index[ex_i]) {{
+            target += log(exceeded_prob[alt_j][ex_i]);
+      }}
+      if (alt_j > picked_index[ex_i]) {{
+            target += log1m(pow(p_continue, alt_j - picked_index[ex_i]) * (1 - exceeded_prob[alt_j][ex_i]));
       }}
     }}
   }}
@@ -693,8 +700,8 @@ model {{
 def format_Stan_reading_data(
     observations: pd.DataFrame,
     *,
-    p_continue: float,
     features_frame: pd.DataFrame,
+    p_continue: float,
 ):
     m_examples = observations.shape[0]
     n_alternatives = len([c for c in observations if c.startswith("item_id_")])
