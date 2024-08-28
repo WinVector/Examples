@@ -619,3 +619,113 @@ class XgboostClassifier():
             iteration_range=(0, self.bst_.best_iteration + 1),
         )
         return np.array([[1-pi, pi] for pi in preds])
+
+
+def define_Stan_reading_panel_src(
+    n_alternatives: int,
+):
+    stan_model_panel_src = (
+        f"""
+data {{
+  int<lower=1> n_vars;                              // number of variables per alternative
+  int<lower=1> m_examples;                          // number of examples
+  array[m_examples] int<lower=1, upper={n_alternatives}> picked_index;   // which position was picked
+"""
+        + "".join(
+            [
+                f"""  matrix[m_examples, n_vars] x_{i};                   // features examples
+"""
+                for i in range(1, n_alternatives + 1)
+            ]
+        )
+        + f"""}}
+parameters {{
+  vector[n_vars] beta;                              // model parameters
+  vector[m_examples] error_picked;                  // reified noise term on picks (the secret sauce!)
+}}
+transformed parameters {{
+  array[{n_alternatives}] vector[m_examples] expected_value;             // modeled expected score of item
+"""
+  + f"""  vector[m_examples] v_picked;                      // actual score assigned to picked item
+  array[{n_alternatives}] vector[m_examples] exceeded_prob;              // probability item is not higher than picked score
+"""        + "".join(
+            [
+                f"""  expected_value[{i}] = x_{i} * beta;
+"""
+                for i in range(1, n_alternatives + 1)
+            ]
+        )
+        + f"""  for (ex_i in 1:m_examples) {{
+    v_picked[ex_i] = expected_value[picked_index[ex_i]][ex_i] + error_picked[ex_i];
+  }}
+  for (alt_j in 1:{n_alternatives}) {{
+    for (ex_i in 1:m_examples) {{
+      if (alt_j != picked_index[ex_i]) {{
+        exceeded_prob[alt_j][ex_i] = normal_cdf( v_picked[ex_i] | expected_value[alt_j][ex_i], 10);
+      }} else {{
+        exceeded_prob[alt_j][ex_i] = 1.0;  // we don't use this value, default it to 1
+      }}
+    }}
+  }}
+"""
+        + f"""}}
+model {{
+    // basic priors
+  beta ~ normal(0, 10);
+  error_picked ~ normal(0, 10);
+    // log probability of observed selection as a function of parameters
+    // TODO: add positional terms
+  for (alt_j in 1:{n_alternatives}) {{
+    for (ex_i in 1:m_examples) {{
+      if (alt_j != picked_index[ex_i]) {{
+            target += log(exceeded_prob[alt_j][ex_i]);
+      }}
+    }}
+  }}
+}}
+"""
+    )
+    return stan_model_panel_src
+
+
+def format_Stan_reading_data(
+    observations: pd.DataFrame,
+    *,
+    features_frame: pd.DataFrame,
+):
+    m_examples = observations.shape[0]
+    n_alternatives = len([c for c in observations if c.startswith("item_id_")])
+    n_vars = features_frame.shape[1]
+    picks = [None] * m_examples
+    for row_i in range(m_examples):
+        for sel_j in range(n_alternatives):
+            if observations.loc[row_i, f'pick_value_{sel_j}'] == 1:
+                picks[row_i] = sel_j + 1
+                break
+
+    def fmt_array(a) -> str:
+        return json.dumps([v for v in list(a)])
+    
+    def fmt_matrix(a) -> str:
+        return json.dumps([list(v) for v in list(a)])
+    
+    def mk_x_vec(sel_j: int):
+        v = np.zeros((m_examples, n_vars), dtype=float)
+        for row_i in range(m_examples):
+            v[row_i, :] = features_frame.loc[int(observations.loc[row_i, f'item_id_{sel_j}']), :]
+        return v
+
+    data_str = (f"""
+{{
+ "n_vars" : {n_vars},
+ "m_examples" : {m_examples},
+ "picked_index" : {fmt_array(picks)},
+"""
+    + """,
+""".join(
+        [f""" "x_{sel_j+1}" : {fmt_matrix(mk_x_vec(sel_j))}""" for sel_j in range(n_alternatives)]
+    )
+    + """
+}
+""")
+    return data_str
