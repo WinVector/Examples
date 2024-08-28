@@ -1,0 +1,42 @@
+---
+title: "rstan"
+output: github_document
+date: "2024-08-28"
+---
+
+```{r}
+library(rstan)
+library(jsonlite)
+```
+
+```{r}
+data <- fromJSON("rank_data_utility_model_tmp.json")
+```
+
+```{r}
+fit1 <- stan(
+  file = "rank_src_utility_model_tmp.stan",  # Stan program
+  data = data,    # named list of data
+  chains = 4,             # number of Markov chains
+  warmup = 1000,          # number of warmup iterations per chain
+  iter = 2000,            # total number of iterations per chain
+  cores = 4,              # number of cores (could use one per chain)
+  refresh = 0             # no progress shown
+  )
+```
+
+```{r}
+res <- as.data.frame(fit1)
+dim(res)
+```
+
+```{r}
+colnames(res)
+```
+
+```{r}
+t(res[1:3, ])
+```
+
+
+

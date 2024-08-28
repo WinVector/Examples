@@ -307,11 +307,13 @@ def run_stan_model(
     stan_model_src: str,
     *,
     data_str: str,
+    clean_up: bool = True,
+    model_note: str = '',
 ):
     # build model
     # export source and data
-    stan_file = "rank_src_tmp.stan"
-    data_file = "rank_data_tmp.json"
+    stan_file = f"rank_src_{model_note}_tmp.stan"
+    data_file = f"rank_data_{model_note}_tmp.json"
     with open(stan_file, "w", encoding="utf8") as file:
         file.write(stan_model_src)
     with open(data_file, "w", encoding="utf8") as file:
@@ -324,8 +326,9 @@ def run_stan_model(
         show_progress=False,
         show_console=False,
     )
-    os.remove(stan_file)
-    os.remove(data_file)
+    if clean_up:
+        os.remove(stan_file)
+        os.remove(data_file)
     return fit
 
 
