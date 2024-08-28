@@ -408,7 +408,7 @@ def plot_rank_performance(
     )
     eval_frame = pd.concat([
         features_frame,
-        pd.DataFrame({
+        pd.DataFrame({  # TODO: replace this with averaging over all the selection vectors
             f'position_{i}': [1/n_alternatives] * features_frame.shape[0] 
             for i in range(n_alternatives)
         })
