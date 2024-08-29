@@ -659,9 +659,11 @@ transformed parameters {{
   + f"""  real v_picked;                      // actual score assigned to picked item
   vector[{n_alternatives}] exceeded_prob;              // probability item is not higher than picked score
   vector[{n_alternatives}] continue_prob;              // probability of continuing inspection
-  vector[{n_alternatives}] inspection_mass;            // probability surviving at inspection point
+  vector[{n_alternatives+1}] inspection_mass;          // probability surviving at inspection point
   vector[{n_alternatives}] fail_rate;                  // conditioned probability of events contrary to observation
+  real total_observation_mass;                         // mass of all observation states
   vector[m_examples] p_contrary;                       // sum of contrary event probabilities
+      // work out expected score values by position
 """        + "".join(
             [
                 f"""  expected_value[{i}] = x_{i} * beta;
@@ -676,24 +678,27 @@ transformed parameters {{
     for (alt_j in 1:{n_alternatives}) {{
       if (alt_j != picked_index[ex_i]) {{
         exceeded_prob[alt_j] = normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
-        continue_prob[alt_j] = p_continue;
-        fail_rate[alt_j] = 0;
-      }} else {{
-        exceeded_prob[alt_j] = 1.0;  // we don't use this value, default it to 1
         continue_prob[alt_j] = p_continue * exceeded_prob[alt_j];
         fail_rate[alt_j] = 1 - p_continue * exceeded_prob[alt_j];
+      }} else {{
+        exceeded_prob[alt_j] = 1.0;  // we don't use this value, default it to 1
+        continue_prob[alt_j] = p_continue;
+        fail_rate[alt_j] = 0;
       }}
     }}
       // amount of probability at step for succeed/fail/continue inspection
     inspection_mass[1] = 1.0;
-    for (alt_j in 2:{n_alternatives}) {{
+    for (alt_j in 2:{n_alternatives+1}) {{
       inspection_mass[alt_j] = inspection_mass[alt_j-1] * continue_prob[alt_j-1];
     }}
       // sum up probabilities of all events contrary to observation
+    total_observation_mass = inspection_mass[{n_alternatives+1}];
     p_contrary[ex_i] = 0;
     for (alt_j in 1:{n_alternatives}) {{
+      total_observation_mass = total_observation_mass + inspection_mass[alt_j];
       p_contrary[ex_i] = p_contrary[ex_i] + inspection_mass[alt_j] * fail_rate[alt_j];
     }}
+    p_contrary[ex_i] = p_contrary[ex_i] / total_observation_mass;
   }}
 }}
 """
