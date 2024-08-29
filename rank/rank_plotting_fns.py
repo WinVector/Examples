@@ -694,13 +694,16 @@ transformed parameters {{
       inspection_mass[alt_j] = inspection_mass[alt_j-1] * continue_prob[alt_j-1];
     }}
       // sum up probabilities of all events contrary to observation
-    total_observation_mass = inspection_mass[{n_alternatives+1}];
+    total_observation_mass = inspection_mass[{n_alternatives+1}] + 1.0e-5;  // Cromwell's rule
     p_contrary[ex_i] = 0;
     for (alt_j in 1:{n_alternatives}) {{
       total_observation_mass = total_observation_mass + inspection_mass[alt_j];
       p_contrary[ex_i] = p_contrary[ex_i] + inspection_mass[alt_j] * fail_rate[alt_j];
     }}
     p_contrary[ex_i] = p_contrary[ex_i] / total_observation_mass;
+    if ((p_contrary[ex_i] < 0) || (p_contrary[ex_i] >= 1)) {{
+        reject("p_contrary[ex_i] out of range", p_contrary[ex_i]);
+    }}
   }}
 }}
 """
