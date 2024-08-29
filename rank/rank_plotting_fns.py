@@ -694,7 +694,7 @@ transformed parameters {{
       inspection_mass[alt_j] = inspection_mass[alt_j-1] * continue_prob[alt_j-1];
     }}
       // sum up probabilities of all events contrary to observation
-    total_observation_mass = inspection_mass[{n_alternatives+1}] + 1.0e-5;  // Cromwell's rule
+    total_observation_mass = inspection_mass[{n_alternatives+1}] + 1.0e-7;  // Cromwell's rule
     p_contrary[ex_i] = 0;
     for (alt_j in 1:{n_alternatives}) {{
       total_observation_mass = total_observation_mass + inspection_mass[alt_j];
