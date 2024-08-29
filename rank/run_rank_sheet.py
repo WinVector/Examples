@@ -6,6 +6,10 @@ import pandas as pd
 from wvpy.jtools import JTask
 
 if __name__ == '__main__':
+    # shut up the "Debugger warning: It seems that frozen modules are being used, which may"
+    # warning coming in through debugging checks in nbconvert
+    os.environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
+
     rng = np.random.default_rng(2024)
 
     # display examples
