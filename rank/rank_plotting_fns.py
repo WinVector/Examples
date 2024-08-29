@@ -656,8 +656,12 @@ parameters {{
 transformed parameters {{
   array[{n_alternatives}] vector[m_examples] expected_value;             // modeled expected score of item
 """
-  + f"""  vector[m_examples] v_picked;                      // actual score assigned to picked item
-  array[{n_alternatives}] vector[m_examples] exceeded_prob;              // probability item is not higher than picked score
+  + f"""  real v_picked;                      // actual score assigned to picked item
+  vector[{n_alternatives}] exceeded_prob;              // probability item is not higher than picked score
+  vector[{n_alternatives}] continue_prob;              // probability of continuing inspection
+  vector[{n_alternatives}] inspection_mass;            // probability surviving at inspection point
+  vector[{n_alternatives}] fail_rate;                  // conditioned probability of events contrary to observation
+  vector[m_examples] p_contrary;                       // sum of contrary event probabilities
 """        + "".join(
             [
                 f"""  expected_value[{i}] = x_{i} * beta;
@@ -666,34 +670,39 @@ transformed parameters {{
             ]
         )
         + f"""  for (ex_i in 1:m_examples) {{
-    v_picked[ex_i] = expected_value[picked_index[ex_i]][ex_i] + error_picked[ex_i];
-  }}
-  for (ex_i in 1:m_examples) {{
+      // modeled actual value of picked draw
+    v_picked = expected_value[picked_index[ex_i]][ex_i] + error_picked[ex_i];
+      // probability of alternative alt_j exceeding picked item in ex_i'th example (counter to observations)
     for (alt_j in 1:{n_alternatives}) {{
       if (alt_j != picked_index[ex_i]) {{
-        exceeded_prob[alt_j][ex_i] = normal_cdf( v_picked[ex_i] | expected_value[alt_j][ex_i], 10);
+        exceeded_prob[alt_j] = normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
+        continue_prob[alt_j] = p_continue;
+        fail_rate[alt_j] = 0;
       }} else {{
-        exceeded_prob[alt_j][ex_i] = 1.0;  // we don't use this value, default it to 1
+        exceeded_prob[alt_j] = 1.0;  // we don't use this value, default it to 1
+        continue_prob[alt_j] = p_continue * exceeded_prob[alt_j];
+        fail_rate[alt_j] = 1 - p_continue * exceeded_prob[alt_j];
       }}
     }}
+      // amount of probability at step for succeed/fail/continue inspection
+    inspection_mass[1] = 1.0;
+    for (alt_j in 2:{n_alternatives}) {{
+      inspection_mass[alt_j] = inspection_mass[alt_j-1] * continue_prob[alt_j-1];
+    }}
+      // sum up probabilities of all events contrary to observation
+    p_contrary[ex_i] = 0;
+    for (alt_j in 1:{n_alternatives}) {{
+      p_contrary[ex_i] = p_contrary[ex_i] + inspection_mass[alt_j] * fail_rate[alt_j];
+    }}
   }}
+}}
 """
-        + f"""}}
-model {{
+        + f"""model {{
     // basic priors
   beta ~ normal(0, 10);
   error_picked ~ normal(0, 10);
     // log probability of observed selection as a function of parameters
-  for (ex_i in 1:m_examples) {{
-    for (alt_j in 1:{n_alternatives}) {{
-      if (alt_j < picked_index[ex_i]) {{
-            target += log(exceeded_prob[alt_j][ex_i]);
-      }}
-      if (alt_j > picked_index[ex_i]) {{
-            target += log1m(pow(p_continue, alt_j - picked_index[ex_i]) * (1 - exceeded_prob[alt_j][ex_i]));
-      }}
-    }}
-  }}
+  target += log1m(p_contrary);
 }}
 """
     )
