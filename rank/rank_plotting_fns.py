@@ -640,7 +640,6 @@ def define_Stan_inspection_src(
 data {{
   int<lower=1> n_vars;                              // number of variables per alternative
   int<lower=1> m_examples;                          // number of examples
-  real<lower=0, upper=1> p_continue;                // modeled probability of inspecting on
   array[m_examples] int<lower=1, upper={n_alternatives}> picked_index;   // which position was picked
 """
         + "".join(
@@ -652,6 +651,7 @@ data {{
         )
         + f"""}}
 parameters {{
+  real<lower=0, upper=1> p_continue;                // modeled probability of inspecting on
   vector[n_vars] beta;                              // model parameters
   vector[m_examples] error_picked;                  // reified noise term on picks
 }}
@@ -665,7 +665,9 @@ transformed parameters {{
   vector[{n_alternatives}] fail_rate;                  // conditioned probability of events contrary to observation
   real total_observation_mass;                         // mass of all observation states
   vector[m_examples] p_contrary;                       // sum of contrary event probabilities
+  real total_position_effect;                          // how hard it is to see observations this far out
       // work out expected score values by position
+  total_position_effect = 0;
 """        + "".join(
             [
                 f"""  expected_value[{i}] = x_{i} * beta;
@@ -704,18 +706,25 @@ transformed parameters {{
     if ((p_contrary[ex_i] < 0) || (p_contrary[ex_i] >= 1)) {{
         reject("p_contrary[ex_i] out of range", p_contrary[ex_i]);
     }}
+      // log probability of seeing an observation chain this long
+    if (picked_index[ex_i] < {n_alternatives}) {{
+        total_position_effect = total_position_effect + picked_index[ex_i] * log(p_continue) + log(1 - p_continue);  // presumed stop (not known to be true)
+    }} else {{
+        total_position_effect = total_position_effect + picked_index[ex_i] * log(p_continue);  // presumed ran to end
+    }}
   }}
 }}
-"""
-        + f"""model {{
+model {{
     // basic priors
+  p_continue ~ beta(1.0, 1.0);
   beta ~ normal(0, 10);
   error_picked ~ normal(0, 10);
     // log probability of observed selection as a function of parameters
   target += log1m(p_contrary);
+    // log probability of seeing an observation chain this long
+  target += total_position_effect;
 }}
-"""
-    )
+""")
     return stan_model_list_src
 
 
@@ -723,7 +732,6 @@ def format_Stan_inspection_data(
     observations: pd.DataFrame,
     *,
     features_frame: pd.DataFrame,
-    p_continue: float,
 ):
     m_examples = observations.shape[0]
     n_alternatives = len([c for c in observations if c.startswith("item_id_")])
@@ -751,7 +759,6 @@ def format_Stan_inspection_data(
 {{
  "n_vars" : {n_vars},
  "m_examples" : {m_examples},
- "p_continue" : {p_continue},
  "picked_index" : {fmt_array(picks)},
 """
     + """,

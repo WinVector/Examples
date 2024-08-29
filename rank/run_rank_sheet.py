@@ -23,7 +23,6 @@ if __name__ == '__main__':
                     'm_examples': m_examples,
                     'score_name': score_name,
                     'clean_up': True,
-                    'show_console': True,
                     },
                 output_suffix=f'_display_{score_name}_{m_examples}',
             )
@@ -39,7 +38,6 @@ if __name__ == '__main__':
                     'result_fname': result_fname,
                     'do_display': False,
                     'clean_up': True,
-                    'show_console': True,
                     },
                 output_suffix=f'_rankresult_tmp_{i}_{seed_i}',
             )
