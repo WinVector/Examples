@@ -309,6 +309,8 @@ def run_stan_model(
     data_str: str,
     clean_up: bool = True,
     model_note: str = '',
+    show_progress: bool = False,
+    show_console: bool = False,
 ):
     # build model
     # export source and data
@@ -323,8 +325,8 @@ def run_stan_model(
     # fit to data
     fit = model_comp.sample(
         data=data_file,
-        show_progress=False,
-        show_console=False,
+        show_progress=show_progress,
+        show_console=show_console,
     )
     if clean_up:
         os.remove(stan_file)

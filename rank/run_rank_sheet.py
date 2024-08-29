@@ -11,12 +11,15 @@ if __name__ == '__main__':
     # display examples
     for m_examples in [100, 1000]:
         for score_name in ["quality", "linear_score"]:
+            seed_i = rng.choice(2**31)
             task = JTask(
                 sheet_name='learning_to_rank.ipynb',
                 sheet_vars={
+                    'rand_seed': seed_i,
                     'm_examples': m_examples,
                     'score_name': score_name,
                     'clean_up': True,
+                    'show_console': True,
                     },
                 output_suffix=f'_display_{score_name}_{m_examples}',
             )
@@ -32,6 +35,7 @@ if __name__ == '__main__':
                     'result_fname': result_fname,
                     'do_display': False,
                     'clean_up': True,
+                    'show_console': True,
                     },
                 output_suffix=f'_rankresult_tmp_{i}_{seed_i}',
             )
