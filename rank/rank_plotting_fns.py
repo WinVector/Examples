@@ -40,14 +40,14 @@ def mk_example(
     features_frame: pd.DataFrame,
     *,
     features_scores: pd.DataFrame,
-    continue_reading_probability: float,
+    continue_inspection_probability: float,
     n_alternatives: int,
     m_examples: int,
     score_name: str,
     noise_scale: float,
     rng,
 ) -> pd.DataFrame:
-    # assemble panels of observations with top scoring entry picked
+    # assemble lists of observations with top scoring entry picked
     observations = dict()
     for sel_i in range(n_alternatives):
         observations[f"display_position_{sel_i}"] = [sel_i] * m_examples
@@ -68,8 +68,8 @@ def mk_example(
     for i in range(m_examples):
         best_j = 0
         for j in range(1, n_alternatives):
-            if rng.binomial(size=1, n=1, p=continue_reading_probability)[0] <= 0:
-                break  # abort reading
+            if rng.binomial(size=1, n=1, p=continue_inspection_probability)[0] <= 0:
+                break  # abort sequential inspection
             if (
                 observations[f"score_value_{j}"][i]
                 > observations[f"score_value_{best_j}"][i]
@@ -138,10 +138,10 @@ def sort_observations_frame(
     return observations_sorted
 
 
-def define_Stan_panel_src(
+def define_Stan_list_src(
     n_alternatives: int,
 ):
-    stan_model_panel_src = (
+    stan_model_list_src = (
         """
 data {
   int<lower=1> n_vars;                     // number of variables per alternative
@@ -199,7 +199,7 @@ model {
         + """}
 """
     )
-    return stan_model_panel_src
+    return stan_model_list_src
 
 
 def define_Stan_choice_src(
@@ -357,7 +357,7 @@ def est_position_effect(
     *,
     model,  # score predicting model
     model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
-    n_alternatives: int,  # size of panels
+    n_alternatives: int,  # size of lists
     features_frame,  # features by row id
 ) -> float:
     eval_frame = pd.concat([
@@ -381,7 +381,7 @@ def plot_rank_performance(
     *,
     model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
     example_name: str,  # name of data set
-    n_alternatives: int,  # size of panels
+    n_alternatives: int,  # size of lists
     features_frame,  # features by row id
     observations_train: pd.DataFrame,  # training observations layout frame
     observations_test: pd.DataFrame,  # evaluation observations layout frame
@@ -473,7 +473,7 @@ def plot_rank_performance(
         y_score=pick_frame["pick probability estimate"],
     )
     kl_divergence = -np.sum(np.log(pick_frame.loc[pick_frame["was pick"] == True, "pick probability estimate"])) / np.log(2.0)
-    mean_pick_kl_divergence = kl_divergence / pick_frame.shape[0]  # average per panel
+    mean_pick_kl_divergence = kl_divergence / pick_frame.shape[0]  # average per list
     if show_plots:
         print("picks")
         display(pick_frame.head(10))
@@ -564,8 +564,8 @@ def plot_rank_performance(
             "SpearmanR_test": [spearman_test.statistic],
             "pick_auc": [pick_auc],
             "mean pick KL divergence": [mean_pick_kl_divergence],
-            "training panels": [observations_train.shape[0]],
-            "test panels": [observations_test.shape[0]],
+            "training lists": [observations_train.shape[0]],
+            "test lists": [observations_test.shape[0]],
             "data_size": [features_frame.shape[0]],
             "test_size": [len(unobserved_ids)],
         }
@@ -630,15 +630,15 @@ class XgboostClassifier():
         return np.array([[1-pi, pi] for pi in preds])
 
 
-def define_Stan_reading_panel_src(
+def define_Stan_inspection_src(
     n_alternatives: int,
 ):
-    stan_model_panel_src = (
+    stan_model_list_src = (
         f"""
 data {{
   int<lower=1> n_vars;                              // number of variables per alternative
   int<lower=1> m_examples;                          // number of examples
-  real<lower=0, upper=1> p_continue;                // modeled probability of reading on
+  real<lower=0, upper=1> p_continue;                // modeled probability of inspecting on
   array[m_examples] int<lower=1, upper={n_alternatives}> picked_index;   // which position was picked
 """
         + "".join(
@@ -711,10 +711,10 @@ transformed parameters {{
 }}
 """
     )
-    return stan_model_panel_src
+    return stan_model_list_src
 
 
-def format_Stan_reading_data(
+def format_Stan_inspection_data(
     observations: pd.DataFrame,
     *,
     features_frame: pd.DataFrame,
