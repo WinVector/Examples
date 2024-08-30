@@ -659,49 +659,57 @@ transformed parameters {{
   array[{n_alternatives}] vector[m_examples] expected_value;             // modeled expected score of item
 """
   + f"""  real v_picked;                      // actual score assigned to picked item
-  vector[{n_alternatives}] exceeded_prob;              // probability item is not higher than picked score
-  vector[{n_alternatives}] continue_prob;              // probability of continuing inspection
-  vector[{n_alternatives+1}] inspection_mass;          // probability surviving at inspection point
-  vector[{n_alternatives}] fail_rate;                  // conditioned probability of events contrary to observation
-  real total_observation_mass;                         // mass of all observation states
-  vector[m_examples] p_contrary;                       // sum of contrary event probabilities
-"""        + "".join(
-            [
+  vector[{n_alternatives}] supporting_stop_rate;     // fraction of mass stopping consistent with observations
+  vector[{n_alternatives}] countering_stop_rate;     // fraction of mass stopping inconsistent with observations
+  real running_mass;                       // mass we are analyzing
+  real supporting_mass;                       // mass of all supporting observation states
+  real countering_mass;                       // mass of all countering observation states
+  vector[m_examples] p_supporting;                     // sum of supporting event probabilities
+      // modeled expected utility values
+"""        + "".join([
                 f"""  expected_value[{i}] = x_{i} * beta;
 """
                 for i in range(1, n_alternatives + 1)
-            ]
-        )
+            ])
         + f"""  for (ex_i in 1:m_examples) {{
       // modeled actual value of picked draw
     v_picked = expected_value[picked_index[ex_i]][ex_i] + error_picked[ex_i];
       // probability of alternative alt_j exceeding picked item in ex_i'th example (counter to observations)
+    if (1 <= (picked_index[ex_i]-1)) {{
+        for (alt_j in 1:(picked_index[ex_i]-1)) {{
+            supporting_stop_rate[alt_j] = 0;
+            // stop if stop inspecting or score exceeds selection score (independent events)
+            // expand "or" using: P[p or n] = (1-p) + (1-n) - (1-p)*(1-n) = 1 - p*n  (for independent events)
+            countering_stop_rate[alt_j] = 1 - p_continue * normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
+        }}
+    }}
+    if (picked_index[ex_i] < {n_alternatives}) {{
+        supporting_stop_rate[picked_index[ex_i]] = 1 - p_continue;
+        countering_stop_rate[picked_index[ex_i]] = 0;
+        if ((picked_index[ex_i]+1) <= {n_alternatives-1}) {{
+            for (alt_j in (picked_index[ex_i]+1):{n_alternatives-1}) {{
+                countering_stop_rate[alt_j] = 1 - normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
+                supporting_stop_rate[alt_j] = (1 - countering_stop_rate[alt_j]) * (1 - p_continue);
+            }}
+        }}
+        countering_stop_rate[{n_alternatives}] = 1 - normal_cdf( v_picked | expected_value[{n_alternatives}][ex_i], 10);
+        supporting_stop_rate[{n_alternatives}] = 1 - countering_stop_rate[{n_alternatives}];
+    }} else {{
+        supporting_stop_rate[{n_alternatives}] = 1;
+        countering_stop_rate[{n_alternatives}] = 0;
+    }}
+      // sum up probabilities of all events supporting or countering the observation
+    supporting_mass = 0.0;
+    countering_mass = 0.0;  
+    running_mass = 1.0;
     for (alt_j in 1:{n_alternatives}) {{
-      if (alt_j != picked_index[ex_i]) {{
-        exceeded_prob[alt_j] = normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
-        continue_prob[alt_j] = p_continue * exceeded_prob[alt_j];
-        fail_rate[alt_j] = 1 - p_continue * exceeded_prob[alt_j];
-      }} else {{
-        exceeded_prob[alt_j] = 1.0;  // we don't use this value, default it to 1
-        continue_prob[alt_j] = p_continue;
-        fail_rate[alt_j] = 0;
-      }}
+        supporting_mass = supporting_mass + running_mass * supporting_stop_rate[alt_j];
+        countering_mass = countering_mass + running_mass * countering_stop_rate[alt_j];
+        running_mass = running_mass * (1.0 - (supporting_stop_rate[alt_j] + countering_stop_rate[alt_j]));
     }}
-      // amount of probability at step for succeed/fail/continue inspection
-    inspection_mass[1] = 1.0;
-    for (alt_j in 2:{n_alternatives+1}) {{
-      inspection_mass[alt_j] = inspection_mass[alt_j-1] * continue_prob[alt_j-1];
-    }}
-      // sum up probabilities of all events contrary to observation
-    total_observation_mass = inspection_mass[{n_alternatives+1}] + 1.0e-7;  // Cromwell's rule
-    p_contrary[ex_i] = 0;
-    for (alt_j in 1:{n_alternatives}) {{
-      total_observation_mass = total_observation_mass + inspection_mass[alt_j];
-      p_contrary[ex_i] = p_contrary[ex_i] + inspection_mass[alt_j] * fail_rate[alt_j];
-    }}
-    p_contrary[ex_i] = p_contrary[ex_i] / total_observation_mass;
-    if ((p_contrary[ex_i] < 0) || (p_contrary[ex_i] >= 1)) {{
-        reject("p_contrary[ex_i] out of range", p_contrary[ex_i]);
+    p_supporting[ex_i] = (supporting_mass + 1.0e-7)/ (supporting_mass + 1.0e-7 + countering_mass + 1.0e-7);  // Cromwell's rule smoothing
+    if ((p_supporting[ex_i] <= 0) || (p_supporting[ex_i] > 1)) {{
+        reject("p_supporting[ex_i] out of range", p_supporting[ex_i]);
     }}
   }}
 }}
@@ -710,7 +718,7 @@ model {{
   beta ~ normal(0, 10);
   error_picked ~ normal(0, 10);
     // log probability of observed selection as a function of parameters
-  target += log1m(p_contrary);
+  target += log(p_supporting);
 }}
 """)
     return stan_model_list_src
