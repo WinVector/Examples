@@ -250,7 +250,7 @@ model {
 """
         + "".join(
             [
-                f"""  target += normal_lcdf( 0 | expect_passed_{i} - expect_picked, sqrt(2) * 10);
+                f"""  target += normal_lcdf( expect_picked | expect_passed_{i}, sqrt(2) * 10);
 """
                 for i in range(1, n_alternatives)
             ]
