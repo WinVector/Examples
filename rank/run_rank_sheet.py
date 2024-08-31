@@ -13,7 +13,9 @@ if __name__ == '__main__':
     rng = np.random.default_rng(2024)
 
     # display examples
-    for m_examples in [200, 1000]:
+    m_examples_small = 100
+    m_examples_large = 1000
+    for m_examples in [m_examples_small, m_examples_large]:
         for score_name in ["quality", "linear_score"]:
             seed_i = rng.choice(2**31)
             task = JTask(
@@ -34,7 +36,8 @@ if __name__ == '__main__':
         task = JTask(
                 sheet_name='learning_to_rank.ipynb',
                 sheet_vars={
-                    'rand_seed': seed_i, 
+                    'rand_seed': seed_i,
+                    'm_examples': m_examples_small,
                     'result_fname': result_fname,
                     'do_display': False,
                     'clean_up': True,

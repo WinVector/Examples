@@ -570,6 +570,7 @@ def plot_rank_performance(
             "test lists": [observations_test.shape[0]],
             "data_size": [features_frame.shape[0]],
             "test_size": [len(unobserved_ids)],
+            "extra_info": [""],
         }
     )
 
@@ -640,7 +641,6 @@ def define_Stan_inspection_src(
 data {{
   int<lower=1> n_vars;                              // number of variables per alternative
   int<lower=1> m_examples;                          // number of examples
-  real<lower=0, upper=1> p_continue;                // modeled probability of inspecting on
   array[m_examples] int<lower=1, upper={n_alternatives}> picked_index;   // which position was picked
 """
         + "".join(
@@ -652,6 +652,7 @@ data {{
         )
         + f"""}}
 parameters {{
+  real<lower=0, upper=1> p_continue;                // modeled probability of inspecting on
   vector[n_vars] beta;                              // model parameters
   vector[m_examples] error_picked;                  // reified noise term on picks
 }}
@@ -715,6 +716,7 @@ transformed parameters {{
 }}
 model {{
     // basic priors
+  p_continue ~ beta(1.0, 1.0);
   beta ~ normal(0, 10);
   error_picked ~ normal(0, 10);
     // log probability of observed selection as a function of parameters
@@ -728,7 +730,6 @@ def format_Stan_inspection_data(
     observations: pd.DataFrame,
     *,
     features_frame: pd.DataFrame,
-    p_continue: float,
 ):
     m_examples = observations.shape[0]
     n_alternatives = len([c for c in observations if c.startswith("item_id_")])
@@ -756,7 +757,6 @@ def format_Stan_inspection_data(
 {{
  "n_vars" : {n_vars},
  "m_examples" : {m_examples},
- "p_continue": {p_continue},
  "picked_index" : {fmt_array(picks)},
 """
     + """,
