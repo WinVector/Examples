@@ -680,7 +680,7 @@ transformed parameters {{
             supporting_stop_rate[alt_j] = 0;
             // stop if stop inspecting or score exceeds selection score (independent events)
             // expand "or" using: P[p or n] = (1-p) + (1-n) - (1-p)*(1-n) = 1 - p*n  (for independent events)
-            countering_stop_rate[alt_j] = 1 - p_continue * normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
+            countering_stop_rate[alt_j] = 1 - normal_cdf( v_picked | expected_value[alt_j][ex_i], 10) * p_continue;
         }}
     }}
     if (picked_index[ex_i] < {n_alternatives}) {{
@@ -688,19 +688,19 @@ transformed parameters {{
         countering_stop_rate[picked_index[ex_i]] = 0;
         if ((picked_index[ex_i]+1) <= {n_alternatives-1}) {{
             for (alt_j in (picked_index[ex_i]+1):{n_alternatives-1}) {{
+                supporting_stop_rate[alt_j] = normal_cdf( v_picked | expected_value[alt_j][ex_i], 10) * (1 - p_continue);
                 countering_stop_rate[alt_j] = 1 - normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
-                supporting_stop_rate[alt_j] = (1 - countering_stop_rate[alt_j]) * (1 - p_continue);
             }}
         }}
-        countering_stop_rate[{n_alternatives}] = 1 - normal_cdf( v_picked | expected_value[{n_alternatives}][ex_i], 10);
-        supporting_stop_rate[{n_alternatives}] = 1 - countering_stop_rate[{n_alternatives}];
+        supporting_stop_rate[{n_alternatives}] = normal_cdf( v_picked | expected_value[{n_alternatives}][ex_i], 10);
+        countering_stop_rate[{n_alternatives}] = 1 - supporting_stop_rate[{n_alternatives}];
     }} else {{
         supporting_stop_rate[{n_alternatives}] = 1;
         countering_stop_rate[{n_alternatives}] = 0;
     }}
       // sum up probabilities of all events supporting or countering the observation
     supporting_mass = 0.0;
-    countering_mass = 0.0;  
+    countering_mass = 0.0;
     running_mass = 1.0;
     for (alt_j in 1:{n_alternatives}) {{
         supporting_mass = supporting_mass + running_mass * supporting_stop_rate[alt_j];
@@ -708,7 +708,7 @@ transformed parameters {{
         running_mass = running_mass * (1.0 - (supporting_stop_rate[alt_j] + countering_stop_rate[alt_j]));
     }}
     p_supporting[ex_i] = (supporting_mass + 1.0e-7)/ (supporting_mass + 1.0e-7 + countering_mass + 1.0e-7);  // Cromwell's rule smoothing
-    if ((p_supporting[ex_i] <= 0) || (p_supporting[ex_i] > 1)) {{
+    if ((p_supporting[ex_i] <= 0) || (p_supporting[ex_i] >= 1)) {{
         reject("p_supporting[ex_i] out of range", p_supporting[ex_i]);
     }}
   }}
