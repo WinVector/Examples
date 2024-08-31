@@ -5,6 +5,16 @@ import numpy as np
 import pandas as pd
 from wvpy.jtools import JTask
 
+def try_run_k_times(task: JTask, *, k: int = 3):
+    """Work around non-determinism in Apple file system"""
+    for retry in range(3):
+        try:
+            task.render_as_html()
+            return
+        except Exception:
+            pass
+
+
 if __name__ == '__main__':
     # shut up the "Debugger warning: It seems that frozen modules are being used, which may"
     # warning coming in through debugging checks in nbconvert
@@ -15,20 +25,6 @@ if __name__ == '__main__':
     # display examples
     m_examples_small = 100
     m_examples_large = 1000
-    for m_examples in [m_examples_small, m_examples_large]:
-        for score_name in ["quality", "linear_score"]:
-            seed_i = rng.choice(2**31)
-            task = JTask(
-                sheet_name='learning_to_rank.ipynb',
-                sheet_vars={
-                    'rand_seed': seed_i,
-                    'm_examples': m_examples,
-                    'score_name': score_name,
-                    'clean_up': True,
-                    },
-                output_suffix=f'_display_{score_name}_{m_examples}',
-            )
-            task.render_as_html()
     results = []
     for i in range(50):
         seed_i = rng.choice(2**31)
@@ -44,7 +40,7 @@ if __name__ == '__main__':
                     },
                 output_suffix=f'_rankresult_tmp_{i}_{seed_i}',
             )
-        task.render_as_html()
+        try_run_k_times(task)
         result_i = pd.read_csv(result_fname)
         result_i['run_i'] = i
         result_i['rand_seed'] = seed_i
@@ -54,3 +50,17 @@ if __name__ == '__main__':
         os.remove(html_result_name)
     results = pd.concat(results, ignore_index=True)
     results.to_csv('rank_runs_summary.csv', index=False)
+    for m_examples in [m_examples_small, m_examples_large]:
+        for score_name in ["quality", "linear_score"]:
+            seed_i = rng.choice(2**31)
+            task = JTask(
+                sheet_name='learning_to_rank.ipynb',
+                sheet_vars={
+                    'rand_seed': seed_i,
+                    'm_examples': m_examples,
+                    'score_name': score_name,
+                    'clean_up': True,
+                    },
+                output_suffix=f'_display_{score_name}_{m_examples}',
+            )
+            try_run_k_times(task)
