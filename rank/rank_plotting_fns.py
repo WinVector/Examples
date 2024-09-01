@@ -363,7 +363,7 @@ def estimate_selection_probs(
     continue_inspection_probability: float,
     rng,
 ):
-    n_draws = 1000
+    n_draws = 100
     n_alternatives = len(est_row)
     draws = pd.DataFrame({
             f"est_{j}": rng.normal(

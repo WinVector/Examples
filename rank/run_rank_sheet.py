@@ -26,7 +26,7 @@ if __name__ == '__main__':
     m_examples_small = 100
     m_examples_large = 1000
     results = []
-    for i in range(50):
+    for i in range(20):
         seed_i = rng.choice(2**31)
         result_fname = f'rankresult_tmp_{i}_{seed_i}.csv'
         task = JTask(
