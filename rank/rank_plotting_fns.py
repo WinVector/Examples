@@ -30,7 +30,9 @@ def predict_score(
     elif model_type == 'regression':
         eval_scores = model.predict(d)
     elif model_type == 'coef':
-        eval_scores = d @ np.array(model)
+        model = np.array(model)
+        assert d.shape[1] == len(model)
+        eval_scores = d @ model
     else:
         raise(f"unexpected model type {model_type}")
     return np.array(eval_scores)
@@ -354,28 +356,37 @@ def calc_auc(*, y_true, y_score) -> float:
     return sklearn.metrics.auc(fpr, tpr)
 
 
-def est_position_effect(
-    i: int,
+def estimate_selection_probs(
     *,
-    model,  # score predicting model
-    model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
-    n_alternatives: int,  # size of lists
-    features_frame,  # features by row id
-) -> float:
-    eval_frame = pd.concat([
-        features_frame,
-        pd.DataFrame({
-            f'position_{pi}': [0] * features_frame.shape[0] 
-            for pi in range(n_alternatives)
+    est_row, 
+    simulation_sigma: float,
+    continue_inspection_probability: float,
+    rng,
+):
+    n_draws = 1000
+    n_alternatives = len(est_row)
+    draws = pd.DataFrame({
+            f"est_{j}": rng.normal(
+                loc=est_row[j], scale=simulation_sigma, size=n_draws
+            )
+            for j in range(n_alternatives)
         })
-    ], axis=1)
-    eval_frame[f'position_{i}'] = 1
-    estimated_item_scores = predict_score(
-        eval_frame,
-        model=model,
-        model_type=model_type,
-    )
-    return np.mean(estimated_item_scores)
+    picks = pd.DataFrame({
+            f"pick_{j}": [0.0] * n_draws
+            for j in range(n_alternatives)
+        })
+    # simulate sequential inspection
+    for draw_i in range(n_draws):
+        best_j = 0
+        for j in range(1, n_alternatives):
+            if rng.binomial(size=1, n=1, p=continue_inspection_probability)[0] <= 0:
+                break  # abort sequential inspection
+            if draws.loc[draw_i, f'est_{j}'] > draws.loc[draw_i, f'est_{best_j}']:
+                best_j = j
+        picks.loc[draw_i, f'pick_{best_j}'] = 1.0
+    picks = np.array(picks.sum(axis=0)) + 1e-5
+    picks = picks / np.sum(picks)
+    return picks
 
 
 def plot_rank_performance(
@@ -384,6 +395,8 @@ def plot_rank_performance(
     model_type: 'str',  # type of model ('classifier', 'regression', 'coef')
     example_name: str,  # name of data set
     n_alternatives: int,  # size of lists
+    simulation_sigma: float,  # noise level in utility/score
+    continue_inspection_probability: float,  # probability of inspecting next element
     features_frame,  # features by row id
     observations_train: pd.DataFrame,  # training observations layout frame
     observations_test: pd.DataFrame,  # evaluation observations layout frame
@@ -392,69 +405,25 @@ def plot_rank_performance(
     rng,  # pseudo random source
     show_plots: bool = True,  # show plots
 ) -> pd.DataFrame:
-    simulation_sigma = 10
-
-    position_effects_frame = pd.DataFrame({
-            "position": [f"posn_{i}" for i in range(n_alternatives)],
-            "estimated effect": [
-                est_position_effect(
-                    i=i,
-                    model=model,
-                    model_type=model_type,
-                    n_alternatives=n_alternatives,
-                    features_frame=features_frame,
-                )
-                for i in range(n_alternatives)
-            ]
-        })
-    position_effects_frame["estimated effect"] = (
-        position_effects_frame["estimated effect"]
-        - np.max(position_effects_frame["estimated effect"])
+    estimated_item_scores = predict_score(
+        features_frame,
+        model=model,
+        model_type=model_type,
     )
-    # try to get value of item by evaluating in all positions
-    est_item_frames = []
-    for posn in range(n_alternatives):
-        eval_frame_i = pd.concat([
-            features_frame,
-            pd.DataFrame({
-                f'position_{i}': [0.0] * features_frame.shape[0] 
-                for i in range(n_alternatives)
-            })
-        ], axis=1)
-        eval_frame_i[f'position_{posn}'] = 1.0
-        estimated_item_scores_i = predict_score(
-            eval_frame_i,
-            model=model,
-            model_type=model_type,
-        )
-        est_item_frames.append(estimated_item_scores_i)
-    estimated_item_scores = np.array(est_item_frames).mean(axis=0)
 
     def p_select(row_i: int):
-        n_draws: int = 10000
         est_row = [
             estimated_item_scores[
-                int(observations_test.loc[row_i, f"item_id_{sel_i}"])
+                int(observations_test.loc[row_i, f"item_id_{sel_j}"])
             ]  # estimated per item score
-            + position_effects_frame.loc[
-                sel_i, "estimated effect"
-            ]  # estimated position effect
-            for sel_i in range(n_alternatives)
+            for sel_j in range(n_alternatives)
         ]
-        est_picks = [0] * n_alternatives
-        est_picks[np.argmax(est_row)] = 1
-        draws = pd.DataFrame(
-            {
-                f"est_{i}": rng.normal(
-                    loc=est_row[i], scale=simulation_sigma, size=n_draws
-                )
-                for i in range(n_alternatives)
-            }
+        probs = estimate_selection_probs(
+            est_row=est_row, 
+            simulation_sigma=simulation_sigma,
+            continue_inspection_probability=continue_inspection_probability,
+            rng=rng,
         )
-        draws_maxes = draws.max(axis=1)
-        draws = pd.DataFrame({k: draws[k] >= draws_maxes for k in draws.columns})
-        draws = draws.sum(axis=0)
-        draws = draws / np.sum(draws)
         train_pick = [
             observations_test.loc[row_i, f"pick_value_{sel_i}"] == 1
             for sel_i in range(n_alternatives)
@@ -463,7 +432,7 @@ def plot_rank_performance(
             {
                 "row": row_i,
                 "position": range(n_alternatives),
-                "pick probability estimate": draws,
+                "pick probability estimate": probs,
                 "was pick": train_pick,
             }
         )
@@ -555,7 +524,7 @@ def plot_rank_performance(
                 + geom_point(alpha=0.2)
                 + geom_line(data=fit_frame_test, color="blue")
                 + ggtitle(
-                    f"{example_name} {estimate_name} Spearman R: {spearman_test.statistic:.2f} (out of sample data)\noriginal score as a function of recovered evaluation function"
+                    f"{example_name} {estimate_name} Spearman R: {spearman_test.statistic:.2f}\n(out of sample data)\noriginal score as a function of recovered evaluation function"
                 )
             ).show()
     return pd.DataFrame(
@@ -564,10 +533,10 @@ def plot_rank_performance(
             "estimate_name": [estimate_name],
             "SpearmanR_all": [spearman_all.statistic],
             "SpearmanR_test": [spearman_test.statistic],
-            "pick_auc": [pick_auc],
-            "mean pick KL divergence": [mean_pick_kl_divergence],
-            "training lists": [observations_train.shape[0]],
-            "test lists": [observations_test.shape[0]],
+            "pick_auc_test": [pick_auc],
+            "pick_KL_div_test": [mean_pick_kl_divergence],
+            "training_lists": [observations_train.shape[0]],
+            "test_lists": [observations_test.shape[0]],
             "data_size": [features_frame.shape[0]],
             "test_size": [len(unobserved_ids)],
             "extra_info": [""],
