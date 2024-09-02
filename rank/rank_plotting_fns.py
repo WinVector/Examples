@@ -47,33 +47,38 @@ def mk_example(
     m_examples: int,
     score_name: str,
     noise_scale: float,
+    price_limit_shape: float,
+    price_limit_scale: float,
     rng,
 ) -> pd.DataFrame:
     # assemble lists of observations with top scoring entry picked
     observations = dict()
-    for sel_i in range(n_alternatives):
-        observations[f"display_position_{sel_i}"] = [sel_i] * m_examples
+    for sel_j in range(n_alternatives):
+        observations[f"display_position_{sel_j}"] = [sel_j] * m_examples
         selected_examples = rng.choice(
             features_frame.shape[0], size=m_examples, replace=True
         )
-        observations[f"item_id_{sel_i}"] = selected_examples
-        observations[f"pick_value_{sel_i}"] = [0] * m_examples
-        observations[f"score_value_{sel_i}"] = (
+        observations[f"item_id_{sel_j}"] = selected_examples
+        observations[f"pick_value_{sel_j}"] = [0] * m_examples
+        observations[f"score_value_{sel_j}"] = (
             [  # noisy observation of score/utility
-                features_scores.loc[int(selected_examples[i]), score_name]  # item score
-                + noise_scale * rng.normal(size=1)[0]  # score noise
-                for i in range(m_examples)
+                features_scores.loc[int(selected_examples[row_i]), score_name]  # item score
+                    + noise_scale * rng.normal(size=1)[0]  # score noise
+                for row_i in range(m_examples)
             ]
         )
+        observations[f'price_{sel_j}'] = [features_frame.loc[int(selected_examples[row_i]), 'price'] for row_i in range(m_examples)]
+        observations['price_limit'] = rng.gamma(shape=price_limit_shape, scale=price_limit_scale, size=m_examples)
     observations = pd.DataFrame(observations)
     # mark selections
     for row_i in range(m_examples):
         best_j = None
         for sel_j in range(n_alternatives):
-            if (best_j is None) or (observations[f"score_value_{sel_j}"][row_i] > observations[f"score_value_{best_j}"][row_i]):
-                best_j = sel_j
-            if rng.binomial(size=1, n=1, p=continue_inspection_probability)[0] <= 0:
-                break  # abort sequential inspection
+            if observations[f"price_{sel_j}"][row_i] <= observations['price_limit'][row_i]:
+                if (best_j is None) or (observations[f"score_value_{sel_j}"][row_i] > observations[f"score_value_{best_j}"][row_i]):
+                    best_j = sel_j
+            if rng.binomial(n=1, p=continue_inspection_probability) <= 0:
+                break  # end inspection prefix
         if best_j is not None:
             observations.loc[row_i, f"pick_value_{best_j}"] = 1
     return observations
@@ -89,11 +94,11 @@ def estimate_model_from_scores(
     x = []
     y = []
     for row_i in range(observations.shape[0]):
-        for sel_i in range(n_alternatives):
-            item_id = observations.loc[row_i, f'item_id_{sel_i}']
-            score_v = observations.loc[row_i, f'score_value_{sel_i}']
+        for sel_j in range(n_alternatives):
+            item_id = observations.loc[row_i, f'item_id_{sel_j}']
+            score_v = observations.loc[row_i, f'score_value_{sel_j}']
             posn_details = [0] * n_alternatives
-            posn_details[sel_i] = 1
+            posn_details[sel_j] = 1
             x_i = list(features_frame.loc[item_id, :]) + posn_details
             x.append(np.array(x_i))
             y.append(score_v)
@@ -277,9 +282,9 @@ def format_Stan_data(
         posn_indicators[posn] = 1
         return posn_indicators
 
-    def f_i(sel_i: int) -> str:
-        id_seq = observations_sorted[f"item_id_{sel_i}"]
-        posn_seq = observations_sorted[f"encoding_{sel_i}"]
+    def f_i(sel_j: int) -> str:
+        id_seq = observations_sorted[f"item_id_{sel_j}"]
+        posn_seq = observations_sorted[f"encoding_{sel_j}"]
         return fmt_array(
             [
                 list(features_frame.loc[int(id), :]) + mk_posn_indicator(int(posn))
@@ -423,8 +428,8 @@ def plot_rank_performance(
             rng=rng,
         )
         train_pick = [
-            observations_test.loc[row_i, f"pick_value_{sel_i}"] == 1
-            for sel_i in range(n_alternatives)
+            observations_test.loc[row_i, f"pick_value_{sel_j}"] == 1
+            for sel_j in range(n_alternatives)
         ]
         return pd.DataFrame(
             {
@@ -604,91 +609,128 @@ def define_Stan_inspection_src(
     n_alternatives: int,
 ):
     stan_model_list_src = (
-        f"""
-data {{
-  int<lower=1> n_vars;                              // number of variables per alternative
-  int<lower=1> m_examples;                          // number of examples
-  array[m_examples] int<lower=1, upper={n_alternatives}> picked_index;   // which position was picked
+        """
+data {
+  int<lower=1> n_vars;  // number of variables per alternative"""
+  + f"""
+  int<lower={n_alternatives}, upper={n_alternatives}> n_alternatives;  // number of alternatives"""
+  + """
+  int<lower=1> m_examples;  // number of examples
+  array[m_examples, n_alternatives] real<lower=0> price; // price of each item
+  array[m_examples, n_alternatives] int<lower=0, upper=1> picked_indicator;  // picked position indicator
+  array[m_examples] int<lower=0, upper=1> n_picks_seen;  // number marked picks per alternative
 """
         + "".join(
             [
-                f"""  matrix[m_examples, n_vars] x_{i};                   // features examples
+                f"""  matrix[m_examples, n_vars] x_{j};  // features examples
 """
-                for i in range(1, n_alternatives + 1)
+                for j in range(1, n_alternatives + 1)
             ]
         )
-        + f"""}}
-parameters {{
-  real<lower=0, upper=1> p_continue;                // modeled probability of inspecting on
-  vector[n_vars] beta;                              // model parameters
-  vector[m_examples] error_picked;                  // reified noise term on picks
-}}
-transformed parameters {{
-  array[{n_alternatives}] vector[m_examples] expected_value;             // modeled expected score of item
+        + """}
+parameters {
+  real<lower=0, upper=1> p_continue;  // modeled probability of inspecting on
+  vector[n_vars] beta;  // model parameter
+  vector[m_examples] price_limit;  // upper bound on price willing to spend
+  array[n_alternatives] vector[m_examples] error_picked;  // reified noise term on picks
+}
+transformed parameters {
+  array[n_alternatives] vector[m_examples] drawn_value;  // modeled realized score of item
 """
-  + f"""  real v_picked;                      // actual score assigned to picked item
-  vector[{n_alternatives}] supporting_stop_rate;     // fraction of mass stopping consistent with observations
-  vector[{n_alternatives}] countering_stop_rate;     // fraction of mass stopping inconsistent with observations
-  real running_mass;                       // mass we are analyzing
-  real supporting_mass;                       // mass of all supporting observation states
-  real countering_mass;                       // mass of all countering observation states
-  vector[m_examples] p_supporting;                     // sum of supporting event probabilities
+  + """  real running_mass;   // mass we are analyzing
+  real best_j_seen;  // best j seen up until now
+  real best_draw_value_seen;  // best draw value until now
+  real choice_was_a_pick;  // if best choice is in the pick data
+  real supporting_mass;  // mass of all supporting observation states
+  real countering_mass;  // mass of all countering observation states
+  real stop_here_prob;  // probability of stopping at current inspection index
+  vector[m_examples] p_supporting;  // sum of supporting event probabilities
       // modeled expected utility values
 """        + "".join([
-                f"""  expected_value[{i}] = x_{i} * beta;
+                f"""  drawn_value[{j}] = x_{j} * beta + error_picked[{j}];
+"""
+                for j in range(1, n_alternatives + 1)
+            ])
+        + """  for (ex_i in 1:m_examples) {
+    running_mass = 1.0;
+    supporting_mass = 0.0;
+    countering_mass = 0.0;
+    best_j_seen = 0;
+    best_draw_value_seen = 0;
+    choice_was_a_pick = 0;
+    if (n_picks_seen[ex_i] < 1) { // nothing picked case
+      for (alt_j in 1:n_alternatives) {
+        if (alt_j < n_alternatives) {
+          stop_here_prob = running_mass * (1 - p_continue);
+        } else {
+          stop_here_prob = running_mass;
+        }
+        if (price[ex_i, alt_j] <= price_limit[ex_i]) {
+          if ((best_j_seen <= 0) || 
+            (drawn_value[alt_j][ex_i] >= best_draw_value_seen)) {
+            best_j_seen = alt_j;
+            best_draw_value_seen = drawn_value[alt_j][ex_i];
+          }
+        }
+        if (best_j_seen >= 0) {
+          countering_mass = countering_mass + stop_here_prob;
+        }
+        if (alt_j < n_alternatives) {
+          running_mass = running_mass * p_continue;
+        }
+      }
+      supporting_mass = supporting_mass + running_mass;
+    } else {  // something picked case
+      for (alt_j in 1:n_alternatives) {
+        if (alt_j < n_alternatives) {
+          stop_here_prob = running_mass * (1 - p_continue);
+        } else {
+          stop_here_prob = running_mass;
+        }
+        if (price[ex_i, alt_j] <= price_limit[ex_i]) {
+          if ((best_j_seen <= 0) || 
+            (drawn_value[alt_j][ex_i] >= best_draw_value_seen)) {
+            best_j_seen = alt_j;
+            best_draw_value_seen = drawn_value[alt_j][ex_i];
+            choice_was_a_pick = 0;
+            if (picked_indicator[ex_i, alt_j] > 0) {
+              choice_was_a_pick = 1;
+            }
+          }
+        }
+        if (best_j_seen >= 0) {
+          if (choice_was_a_pick > 0) {
+            supporting_mass = supporting_mass + stop_here_prob;
+          } else {
+            countering_mass = countering_mass + stop_here_prob;
+          }
+        }
+        if (alt_j < n_alternatives) {
+          running_mass = running_mass * p_continue;
+        }
+      }
+      countering_mass = countering_mass + running_mass;
+    }
+    p_supporting[ex_i] = (supporting_mass + 1.0e-7) / (supporting_mass + 1.0e-7 + countering_mass + 1.0e-7);  // Cromwell's rule smoothing
+    if ((p_supporting[ex_i] <= 0) || (p_supporting[ex_i] >= 1)) {
+        reject("p_supporting[ex_i] out of range", p_supporting[ex_i]);
+    }
+  }
+}
+model {
+    // basic priors
+  price_limit ~ normal(30, 30);
+  p_continue ~ beta(1.0, 1.0);
+  beta ~ normal(0, 10);
+"""
+  + "".join([
+                f"""  error_picked[{i}] ~ normal(0, 10);
 """
                 for i in range(1, n_alternatives + 1)
             ])
-        + f"""  for (ex_i in 1:m_examples) {{
-      // modeled actual value of picked draw
-    v_picked = expected_value[picked_index[ex_i]][ex_i] + error_picked[ex_i];
-      // probability of alternative alt_j exceeding picked item in ex_i'th example (counter to observations)
-    if (1 <= (picked_index[ex_i]-1)) {{
-        for (alt_j in 1:(picked_index[ex_i]-1)) {{
-            supporting_stop_rate[alt_j] = 0;
-            // stop if stop inspecting or score exceeds selection score (independent events)
-            // expand "or" using: P[p or n] = (1-p) + (1-n) - (1-p)*(1-n) = 1 - p*n  (for independent events)
-            countering_stop_rate[alt_j] = 1 - normal_cdf( v_picked | expected_value[alt_j][ex_i], 10) * p_continue;
-        }}
-    }}
-    if (picked_index[ex_i] < {n_alternatives}) {{
-        supporting_stop_rate[picked_index[ex_i]] = 1 - p_continue;
-        countering_stop_rate[picked_index[ex_i]] = 0;
-        if ((picked_index[ex_i]+1) <= {n_alternatives-1}) {{
-            for (alt_j in (picked_index[ex_i]+1):{n_alternatives-1}) {{
-                supporting_stop_rate[alt_j] = normal_cdf( v_picked | expected_value[alt_j][ex_i], 10) * (1 - p_continue);
-                countering_stop_rate[alt_j] = 1 - normal_cdf( v_picked | expected_value[alt_j][ex_i], 10);
-            }}
-        }}
-        supporting_stop_rate[{n_alternatives}] = normal_cdf( v_picked | expected_value[{n_alternatives}][ex_i], 10);
-        countering_stop_rate[{n_alternatives}] = 1 - supporting_stop_rate[{n_alternatives}];
-    }} else {{
-        supporting_stop_rate[{n_alternatives}] = 1;
-        countering_stop_rate[{n_alternatives}] = 0;
-    }}
-      // sum up probabilities of all events supporting or countering the observation
-    supporting_mass = 0.0;
-    countering_mass = 0.0;
-    running_mass = 1.0;
-    for (alt_j in 1:{n_alternatives}) {{
-        supporting_mass = supporting_mass + running_mass * supporting_stop_rate[alt_j];
-        countering_mass = countering_mass + running_mass * countering_stop_rate[alt_j];
-        running_mass = running_mass * (1.0 - (supporting_stop_rate[alt_j] + countering_stop_rate[alt_j]));
-    }}
-    p_supporting[ex_i] = (supporting_mass + 1.0e-7)/ (supporting_mass + 1.0e-7 + countering_mass + 1.0e-7);  // Cromwell's rule smoothing
-    if ((p_supporting[ex_i] <= 0) || (p_supporting[ex_i] >= 1)) {{
-        reject("p_supporting[ex_i] out of range", p_supporting[ex_i]);
-    }}
-  }}
-}}
-model {{
-    // basic priors
-  p_continue ~ beta(1.0, 1.0);
-  beta ~ normal(0, 10);
-  error_picked ~ normal(0, 10);
-    // log probability of observed selection as a function of parameters
+  + """    // log probability of observed selection as a function of parameters
   target += log(p_supporting);
-}}
+}
 """)
     return stan_model_list_src
 
@@ -701,12 +743,10 @@ def format_Stan_inspection_data(
     m_examples = observations.shape[0]
     n_alternatives = len([c for c in observations if c.startswith("item_id_")])
     n_vars = features_frame.shape[1]
-    picks = [None] * m_examples
-    for row_i in range(m_examples):
-        for sel_j in range(n_alternatives):
-            if observations.loc[row_i, f'pick_value_{sel_j}'] == 1:
-                picks[row_i] = sel_j + 1
-                break
+    picks = observations.loc[:, [f'pick_value_{sel_j}' for sel_j in range(n_alternatives)]].reset_index(drop=True, inplace=False)
+    n_picks_seen = np.array(picks.sum(axis=1), dtype=int).tolist()
+    picks = np.array(picks, dtype=int).tolist()
+    price = np.array(observations.loc[:, [f'price_{sel_j}' for sel_j in range(n_alternatives)]].reset_index(drop=True, inplace=False), dtype=float).tolist()
 
     def fmt_array(a) -> str:
         return json.dumps([v for v in list(a)])
@@ -723,8 +763,11 @@ def format_Stan_inspection_data(
     data_str = (f"""
 {{
  "n_vars" : {n_vars},
+ "n_alternatives" : {n_alternatives},
  "m_examples" : {m_examples},
- "picked_index" : {fmt_array(picks)},
+ "picked_indicator" : {fmt_matrix(picks)},
+ "n_picks_seen" : {fmt_array(n_picks_seen)},
+ "price": {fmt_matrix(price)},
 """
     + """,
 """.join(
