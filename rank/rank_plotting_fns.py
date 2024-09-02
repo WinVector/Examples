@@ -67,17 +67,15 @@ def mk_example(
         )
     observations = pd.DataFrame(observations)
     # mark selections
-    for i in range(m_examples):
-        best_j = 0
-        for j in range(1, n_alternatives):
+    for row_i in range(m_examples):
+        best_j = None
+        for sel_j in range(n_alternatives):
+            if (best_j is None) or (observations[f"score_value_{sel_j}"][row_i] > observations[f"score_value_{best_j}"][row_i]):
+                best_j = sel_j
             if rng.binomial(size=1, n=1, p=continue_inspection_probability)[0] <= 0:
                 break  # abort sequential inspection
-            if (
-                observations[f"score_value_{j}"][i]
-                > observations[f"score_value_{best_j}"][i]
-            ):
-                best_j = j
-        observations.loc[i, f"pick_value_{best_j}"] = 1
+        if best_j is not None:
+            observations.loc[row_i, f"pick_value_{best_j}"] = 1
     return observations
 
 
