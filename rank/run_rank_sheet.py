@@ -33,7 +33,7 @@ if __name__ == '__main__':
                 sheet_name='learning_to_rank.ipynb',
                 sheet_vars={
                     'rand_seed': seed_i,
-                    'm_examples': m_examples_small,
+                    'm_train_examples': m_examples_small,
                     'result_fname': result_fname,
                     'do_display': False,
                     'clean_up': True,
@@ -50,17 +50,17 @@ if __name__ == '__main__':
         os.remove(html_result_name)
     results = pd.concat(results, ignore_index=True)
     results.to_csv('rank_runs_summary.csv', index=False)
-    for m_examples in [m_examples_small, m_examples_large]:
+    for m_train_examples in [m_examples_small, m_examples_large]:
         for score_name in ["quality", "linear_score"]:
             seed_i = rng.choice(2**31)
             task = JTask(
                 sheet_name='learning_to_rank.ipynb',
                 sheet_vars={
                     'rand_seed': seed_i,
-                    'm_examples': m_examples,
+                    'm_train_examples': m_train_examples,
                     'score_name': score_name,
                     'clean_up': True,
                     },
-                output_suffix=f'_display_{score_name}_{m_examples}',
+                output_suffix=f'_display_{score_name}_{m_train_examples}',
             )
             try_run_k_times(task)

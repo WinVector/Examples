@@ -332,6 +332,8 @@ def run_stan_model(
         data=data_file,
         show_progress=show_progress,
         show_console=show_console,
+        iter_warmup=4000,
+        iter_sampling=4000,
     )
     if clean_up:
         os.remove(stan_file)
@@ -672,14 +674,13 @@ transformed parameters {
             best_draw_value_seen = drawn_value[alt_j][ex_i];
           }
         }
-        if (best_j_seen >= 0) {
+        if (best_j_seen > 0) {
           countering_mass = countering_mass + stop_here_prob;
+        } else {
+          supporting_mass = supporting_mass + stop_here_prob;
         }
-        if (alt_j < n_alternatives) {
-          running_mass = running_mass * p_continue;
-        }
+        running_mass = running_mass * p_continue;
       }
-      supporting_mass = supporting_mass + running_mass;
     } else {  // something picked case
       for (alt_j in 1:n_alternatives) {
         if (alt_j < n_alternatives) {
@@ -698,18 +699,13 @@ transformed parameters {
             }
           }
         }
-        if (best_j_seen >= 0) {
-          if (choice_was_a_pick > 0) {
+        if ((best_j_seen > 0) && (choice_was_a_pick > 0)) {
             supporting_mass = supporting_mass + stop_here_prob;
-          } else {
+        } else {
             countering_mass = countering_mass + stop_here_prob;
-          }
         }
-        if (alt_j < n_alternatives) {
-          running_mass = running_mass * p_continue;
-        }
+        running_mass = running_mass * p_continue;
       }
-      countering_mass = countering_mass + running_mass;
     }
     p_supporting[ex_i] = (supporting_mass + 1.0e-7) / (supporting_mass + 1.0e-7 + countering_mass + 1.0e-7);  // Cromwell's rule smoothing
     if ((p_supporting[ex_i] <= 0) || (p_supporting[ex_i] >= 1)) {
@@ -719,7 +715,7 @@ transformed parameters {
 }
 model {
     // basic priors
-  price_limit ~ normal(30, 30);
+  price_limit ~ normal(30, 5);
   p_continue ~ beta(1.0, 1.0);
   beta ~ normal(0, 10);
 """
