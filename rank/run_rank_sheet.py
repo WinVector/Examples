@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # display examples
     m_examples_small = 100
-    m_examples_large = 1000
+    m_examples_large = 500
     results = []
     for i in range(20):
         seed_i = rng.choice(2**31)
