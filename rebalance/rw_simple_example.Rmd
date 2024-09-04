@@ -9,6 +9,8 @@ Support code for the article ["Tailored Models are Not The Same as Simple Correc
 ```{r}
 # attach our packages
 library(wrapr)
+set.seed(2024)
+
 
 # build our example data
 # modeling y as a function of x1 and x2 (plus intercept)
@@ -78,5 +80,67 @@ mean(d$y) - mean(d$pred_m_0.29)
 
 (sum(d$w2 * d$y) / sum(d$w2))  -  (sum(d$w2 * d$pred_m_0.50) / sum(d$w2))
 ```
+
+
+A censoring process that doesn't change the prevalance tends not to show the above effect.
+
+```{r}
+# replicate data frame by weights
+d_expanded <- lapply(
+  seq(nrow(d)),
+  function(row_i) {
+    do.call(rbind, rep(list(d[row_i, c('x1', 'x2', 'y')]), d[row_i, 'w2']))
+  })
+d_expanded <- do.call(rbind, d_expanded)
+rownames(d_expanded) <- NULL
+```
+
+```{r}
+large_size <- 1000000
+d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
+d_large_censored <- d_large
+d_large_censored$y <- d_large_censored$y * rbinom(n=large_size, prob=0.1, size=1)
+```
+
+```{r}
+# fit on large sample
+m_large <- glm(
+  y ~ x1 + x2,
+  data = d_large,
+  family = binomial())
+
+summary(m_large)
+```
+
+```{r}
+p_large <- predict(m_large, newdata=d, type='response')
+
+```
+
+
+
+```{r}
+# fit on large censored sample
+m_large_censored <- glm(
+  y ~ x1 + x2,
+  data = d_large_censored,
+  family = binomial())
+
+summary(m_large_censored)
+```
+
+```{r}
+p_large_censored <- predict(m_large_censored, newdata=d, type='response')
+
+```
+
+```{r}
+c_large <- data.frame(
+  p_large=p_large, 
+  p_large_censored=p_large_censored)
+
+knitr::kable(c_large)
+```
+
 
 

@@ -8,6 +8,8 @@ Corrections”](https://win-vector.com/2020/10/11/tailored-models-are-not-the-sa
 ``` r
 # attach our packages
 library(wrapr)
+set.seed(2024)
+
 
 # build our example data
 # modeling y as a function of x1 and x2 (plus intercept)
@@ -121,3 +123,110 @@ mean(d$y) - mean(d$pred_m_0.29)
 ```
 
     ## [1] -2.88658e-15
+
+A censoring process that doesn’t change the prevalance tends not to show
+the above effect.
+
+``` r
+# replicate data frame by weights
+d_expanded <- lapply(
+  seq(nrow(d)),
+  function(row_i) {
+    do.call(rbind, rep(list(d[row_i, c('x1', 'x2', 'y')]), d[row_i, 'w2']))
+  })
+d_expanded <- do.call(rbind, d_expanded)
+rownames(d_expanded) <- NULL
+```
+
+``` r
+large_size <- 1000000
+d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
+d_large_censored <- d_large
+d_large_censored$y <- d_large_censored$y * rbinom(n=large_size, prob=0.1, size=1)
+```
+
+``` r
+# fit on large sample
+m_large <- glm(
+  y ~ x1 + x2,
+  data = d_large,
+  family = binomial())
+
+summary(m_large)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large)
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.549798   0.004118 -133.50   <2e-16 ***
+    ## x1           0.119643   0.004630   25.84   <2e-16 ***
+    ## x2           1.430469   0.004934  289.91   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 1386294  on 999999  degrees of freedom
+    ## Residual deviance: 1285089  on 999997  degrees of freedom
+    ## AIC: 1285095
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+``` r
+p_large <- predict(m_large, newdata=d, type='response')
+```
+
+``` r
+# fit on large censored sample
+m_large_censored <- glm(
+  y ~ x1 + x2,
+  data = d_large_censored,
+  family = binomial())
+
+summary(m_large_censored)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored)
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error  z value Pr(>|z|)    
+    ## (Intercept) -3.25698    0.00958 -339.964  < 2e-16 ***
+    ## x1           0.07536    0.01007    7.481 7.39e-14 ***
+    ## x2           0.65602    0.01008   65.103  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 397154  on 999999  degrees of freedom
+    ## Residual deviance: 392553  on 999997  degrees of freedom
+    ## AIC: 392559
+    ## 
+    ## Number of Fisher Scoring iterations: 6
+
+``` r
+p_large_censored <- predict(m_large_censored, newdata=d, type='response')
+```
+
+``` r
+c_large <- data.frame(
+  p_large=p_large, 
+  p_large_censored=p_large_censored)
+
+knitr::kable(c_large)
+```
+
+|   p_large | p_large_censored |
+|----------:|-----------------:|
+| 0.3659113 |        0.0370770 |
+| 0.3659113 |        0.0370770 |
+| 0.7069613 |        0.0690766 |
+| 0.3940895 |        0.0398633 |
+| 0.3940895 |        0.0398633 |
+| 0.3940895 |        0.0398633 |
+| 0.7311204 |        0.0740828 |
