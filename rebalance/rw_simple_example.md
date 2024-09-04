@@ -88,12 +88,18 @@ reversed in model `m_0.50` relative to the order given by model
 `m_0.29`.
 
 ``` r
-d[c(1, 5), qc(pred_m_0.29, pred_m_0.50)]
+comps <- d[c(1, 5), qc(pred_m_0.29, pred_m_0.50)]
+stopifnot(comps[1, 'pred_m_0.29'] != comps[2, 'pred_m_0.29'])
+stopifnot(comps[1, 'pred_m_0.50'] != comps[2, 'pred_m_0.50'])
+stopifnot((comps[1, 'pred_m_0.29'] >= comps[2, 'pred_m_0.29']) != (comps[1, 'pred_m_0.50'] >= comps[2, 'pred_m_0.50']))
+
+knitr::kable(comps)
 ```
 
-    ##   pred_m_0.29 pred_m_0.50
-    ## 1   0.2304816   0.3655679
-    ## 5   0.1796789   0.3930810
+|     | pred_m_0.29 | pred_m_0.50 |
+|:----|------------:|------------:|
+| 1   |   0.2304816 |   0.3655679 |
+| 5   |   0.1796789 |   0.3930810 |
 
 This means no monotone correction that looks only at the predictions can
 make the same adaptations as these two prevalence tailored models. And
