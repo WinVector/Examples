@@ -153,6 +153,8 @@ d_sel$sample_positive <- c(
   d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)])
 d_large$sample_positive = FALSE
 d_large$sample_positive[d_sel$row_id[d_sel$sample_positive]] = TRUE
+
+write.csv(d_large, file='d_large.csv', row.names = FALSE)
 ```
 
 ``` r
