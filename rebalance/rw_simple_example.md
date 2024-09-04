@@ -14,34 +14,31 @@ set.seed(2024)
 # build our example data
 # modeling y as a function of x1 and x2 (plus intercept)
 d <- wrapr::build_frame(
-  "x1"  , "x2", "y", "w2" |
-    0   , 0   , 0  , 2    |
-    0   , 0   , 0  , 2    |
-    0   , 1   , 1  , 5    |
-    1   , 0   , 0  , 2    |
-    1   , 0   , 0  , 2    |
-    1   , 0   , 1  , 5    |
-    1   , 1   , 0  , 2    )
+  "x1"  , "x2", "y", "w1", "w2" |
+    0   , 0   , 0  , 2   , 4    |
+    0   , 1   , 1  , 1   , 5    |
+    1   , 0   , 0  , 2   , 4    |
+    1   , 0   , 1  , 1   , 5    |
+    1   , 1   , 0  , 1   , 2    )
 
 # display table
 knitr::kable(d)
 ```
 
-|  x1 |  x2 |   y |  w2 |
-|----:|----:|----:|----:|
-|   0 |   0 |   0 |   2 |
-|   0 |   0 |   0 |   2 |
-|   0 |   1 |   1 |   5 |
-|   1 |   0 |   0 |   2 |
-|   1 |   0 |   0 |   2 |
-|   1 |   0 |   1 |   5 |
-|   1 |   1 |   0 |   2 |
+|  x1 |  x2 |   y |  w1 |  w2 |
+|----:|----:|----:|----:|----:|
+|   0 |   0 |   0 |   2 |   4 |
+|   0 |   1 |   1 |   1 |   5 |
+|   1 |   0 |   0 |   2 |   4 |
+|   1 |   0 |   1 |   1 |   5 |
+|   1 |   1 |   0 |   1 |   2 |
 
 ``` r
 # fit a model at prevalence 0.2857143
 m_0.29 <- glm(
   y ~ x1 + x2,
   data = d,
+  weights = w1,
   family = binomial())
 # add in predictions
 d$pred_m_0.29 <- predict(
@@ -75,22 +72,20 @@ coef(m_0.50)
 knitr::kable(d)
 ```
 
-|  x1 |  x2 |   y |  w2 | pred_m_0.29 | pred_m_0.50 |
-|----:|----:|----:|----:|------------:|------------:|
-|   0 |   0 |   0 |   2 |   0.2304816 |   0.3655679 |
-|   0 |   0 |   0 |   2 |   0.2304816 |   0.3655679 |
-|   0 |   1 |   1 |   5 |   0.5390367 |   0.7075457 |
-|   1 |   0 |   0 |   2 |   0.1796789 |   0.3930810 |
-|   1 |   0 |   0 |   2 |   0.1796789 |   0.3930810 |
-|   1 |   0 |   1 |   5 |   0.1796789 |   0.3930810 |
-|   1 |   1 |   0 |   2 |   0.4609633 |   0.7311357 |
+|  x1 |  x2 |   y |  w1 |  w2 | pred_m_0.29 | pred_m_0.50 |
+|----:|----:|----:|----:|----:|------------:|------------:|
+|   0 |   0 |   0 |   2 |   4 |   0.2304816 |   0.3655679 |
+|   0 |   1 |   1 |   1 |   5 |   0.5390367 |   0.7075457 |
+|   1 |   0 |   0 |   2 |   4 |   0.1796789 |   0.3930810 |
+|   1 |   0 |   1 |   1 |   5 |   0.1796789 |   0.3930810 |
+|   1 |   1 |   0 |   1 |   2 |   0.4609633 |   0.7311357 |
 
 Now notice the relative order of the predictions in rows 1 and 5 are
 reversed in model `m_0.50` relative to the order given by model
 `m_0.29`.
 
 ``` r
-comps <- d[c(1, 5), qc(pred_m_0.29, pred_m_0.50)]
+comps <- d[c(1, 3), qc(pred_m_0.29, pred_m_0.50)]
 stopifnot(comps[1, 'pred_m_0.29'] != comps[2, 'pred_m_0.29'])
 stopifnot(comps[1, 'pred_m_0.50'] != comps[2, 'pred_m_0.50'])
 stopifnot((comps[1, 'pred_m_0.29'] >= comps[2, 'pred_m_0.29']) != (comps[1, 'pred_m_0.50'] >= comps[2, 'pred_m_0.50']))
@@ -101,7 +96,7 @@ knitr::kable(comps)
 |     | pred_m_0.29 | pred_m_0.50 |
 |:----|------------:|------------:|
 | 1   |   0.2304816 |   0.3655679 |
-| 5   |   0.1796789 |   0.3930810 |
+| 3   |   0.1796789 |   0.3930810 |
 
 This means no monotone correction that looks only at the predictions can
 make the same adaptations as these two prevalence tailored models. And
@@ -116,19 +111,19 @@ models](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homo
 mean(d$y) - mean(d$pred_m_0.29)
 ```
 
-    ## [1] -1.165734e-14
+    ## [1] 0.08203211
 
 ``` r
 (sum(d$w2 * d$y) / sum(d$w2))  -  (sum(d$w2 * d$pred_m_0.50) / sum(d$w2))
 ```
 
-    ## [1] -2.88658e-15
+    ## [1] 1.110223e-16
 
 A censoring process that doesn’t change the prevalance tends not to show
 the above effect.
 
 ``` r
-# replicate data frame by weights
+# replicate data frame by w2 weights
 d_expanded <- lapply(
   seq(nrow(d)),
   function(row_i) {
@@ -136,9 +131,7 @@ d_expanded <- lapply(
   })
 d_expanded <- do.call(rbind, d_expanded)
 rownames(d_expanded) <- NULL
-```
-
-``` r
+# expand to a large re-sampling
 large_size <- 1000000
 group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
@@ -277,15 +270,13 @@ knitr::kable(c_large)
 |   p_large | p_large_censored |
 |----------:|-----------------:|
 | 0.3659113 |        0.2261510 |
-| 0.3659113 |        0.2261510 |
 | 0.7069613 |        0.5324082 |
-| 0.3940895 |        0.1746368 |
 | 0.3940895 |        0.1746368 |
 | 0.3940895 |        0.1746368 |
 | 0.7311204 |        0.4518680 |
 
 ``` r
-comps_censored <- d[c(2, 3), c('pred_m_0.29', 'pred_m_0.50')]
+comps_censored <- c_large[c(1, 2), , drop=FALSE]
 stopifnot(comps_censored[1, 'p_large'] != comps_censored[2, 'p_large'])
 stopifnot(comps_censored[1, 'p_large_censored'] != comps_censored[2, 'p_large_censored'])
 stopifnot((comps_censored[1, 'p_large'] >= comps_censored[2, 'p_large_censored']) != (comps_censored[1, 'pred_m_0.50'] >= comps_censored[2, 'p_large_censored']))
@@ -293,7 +284,7 @@ stopifnot((comps_censored[1, 'p_large'] >= comps_censored[2, 'p_large_censored']
 knitr::kable(comps_censored)
 ```
 
-|     | pred_m_0.29 | pred_m_0.50 |
-|:----|------------:|------------:|
-| 2   |   0.2304816 |   0.3655679 |
-| 3   |   0.5390367 |   0.7075457 |
+|   p_large | p_large_censored |
+|----------:|-----------------:|
+| 0.3659113 |        0.2261510 |
+| 0.7069613 |        0.5324082 |
