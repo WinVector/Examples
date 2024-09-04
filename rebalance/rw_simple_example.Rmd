@@ -102,25 +102,32 @@ d_large$presentaiton_group <- do.call(
     seq(large_size / group_size), 
     function(group_i) {rep(group_i, group_size)}
     ))
+d_large$row_id <- seq(large_size)
 rownames(d_large) <- NULL
 # mark random positive per group
 d_sel <- d_large
 d_sel$random_order <- runif(n=large_size)
-d_sel$row_id <- seq(large_size)
 d_sel <- d_sel[d_sel$y==1, , drop=FALSE]
 d_sel <- d_sel[order(d_sel$presentaiton_group, d_sel$random_order), , drop=FALSE]
-d_sel <- d_sel[
-  c(TRUE, d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)]),
-  , drop=FALSE]
-# limit down to at most one positive per group by censoring out some positive rows
-selected_indices <- sort(unique(c(d_sel$row_id, seq(large_size)[d_large$y == 0])))
-d_large_censored <- d_large[selected_indices, , drop=FALSE]
-rownames(d_large_censored) <- NULL
+d_sel$sample_positive <- c(
+  TRUE, 
+  d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)])
+d_large$sample_positive = FALSE
+d_large$sample_positive[d_sel$row_id[d_sel$sample_positive]] = TRUE
 ```
+
 
 ```{r}
 knitr::kable(d_large[seq(10), , drop=FALSE])
 ```
+
+```{r}
+# limit down to at most one positive per group by censoring out some positive rows
+d_large_censored <- d_large[d_large$sample_positive | (d_large$y == 0), , drop=FALSE]
+rownames(d_large_censored) <- NULL
+```
+
+
 
 ```{r}
 knitr::kable(d_large_censored[seq(10), , drop=FALSE])

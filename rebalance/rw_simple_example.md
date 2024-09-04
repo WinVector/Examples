@@ -141,55 +141,59 @@ d_large$presentaiton_group <- do.call(
     seq(large_size / group_size), 
     function(group_i) {rep(group_i, group_size)}
     ))
+d_large$row_id <- seq(large_size)
 rownames(d_large) <- NULL
 # mark random positive per group
 d_sel <- d_large
 d_sel$random_order <- runif(n=large_size)
-d_sel$row_id <- seq(large_size)
 d_sel <- d_sel[d_sel$y==1, , drop=FALSE]
 d_sel <- d_sel[order(d_sel$presentaiton_group, d_sel$random_order), , drop=FALSE]
-d_sel <- d_sel[
-  c(TRUE, d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)]),
-  , drop=FALSE]
-# limit down to at most one positive per group by censoring out some positive rows
-selected_indices <- sort(unique(c(d_sel$row_id, seq(large_size)[d_large$y == 0])))
-d_large_censored <- d_large[selected_indices, , drop=FALSE]
-rownames(d_large_censored) <- NULL
+d_sel$sample_positive <- c(
+  TRUE, 
+  d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)])
+d_large$sample_positive = FALSE
+d_large$sample_positive[d_sel$row_id[d_sel$sample_positive]] = TRUE
 ```
 
 ``` r
 knitr::kable(d_large[seq(10), , drop=FALSE])
 ```
 
-|  x1 |  x2 |   y | presentaiton_group |
-|----:|----:|----:|-------------------:|
-|   0 |   0 |   0 |                  1 |
-|   0 |   1 |   1 |                  1 |
-|   1 |   0 |   0 |                  1 |
-|   1 |   0 |   1 |                  1 |
-|   1 |   0 |   0 |                  1 |
-|   0 |   1 |   1 |                  2 |
-|   0 |   0 |   0 |                  2 |
-|   1 |   0 |   0 |                  2 |
-|   1 |   0 |   1 |                  2 |
-|   1 |   0 |   1 |                  2 |
+|  x1 |  x2 |   y | presentaiton_group | row_id | sample_positive |
+|----:|----:|----:|-------------------:|-------:|:----------------|
+|   0 |   0 |   0 |                  1 |      1 | FALSE           |
+|   0 |   1 |   1 |                  1 |      2 | TRUE            |
+|   1 |   0 |   0 |                  1 |      3 | FALSE           |
+|   1 |   0 |   1 |                  1 |      4 | FALSE           |
+|   1 |   0 |   0 |                  1 |      5 | FALSE           |
+|   0 |   1 |   1 |                  2 |      6 | FALSE           |
+|   0 |   0 |   0 |                  2 |      7 | FALSE           |
+|   1 |   0 |   0 |                  2 |      8 | FALSE           |
+|   1 |   0 |   1 |                  2 |      9 | FALSE           |
+|   1 |   0 |   1 |                  2 |     10 | TRUE            |
+
+``` r
+# limit down to at most one positive per group by censoring out some positive rows
+d_large_censored <- d_large[d_large$sample_positive | (d_large$y == 0), , drop=FALSE]
+rownames(d_large_censored) <- NULL
+```
 
 ``` r
 knitr::kable(d_large_censored[seq(10), , drop=FALSE])
 ```
 
-|  x1 |  x2 |   y | presentaiton_group |
-|----:|----:|----:|-------------------:|
-|   0 |   0 |   0 |                  1 |
-|   0 |   1 |   1 |                  1 |
-|   1 |   0 |   0 |                  1 |
-|   1 |   0 |   0 |                  1 |
-|   0 |   0 |   0 |                  2 |
-|   1 |   0 |   0 |                  2 |
-|   1 |   0 |   1 |                  2 |
-|   0 |   0 |   0 |                  3 |
-|   1 |   0 |   0 |                  3 |
-|   1 |   0 |   1 |                  3 |
+|  x1 |  x2 |   y | presentaiton_group | row_id | sample_positive |
+|----:|----:|----:|-------------------:|-------:|:----------------|
+|   0 |   0 |   0 |                  1 |      1 | FALSE           |
+|   0 |   1 |   1 |                  1 |      2 | TRUE            |
+|   1 |   0 |   0 |                  1 |      3 | FALSE           |
+|   1 |   0 |   0 |                  1 |      5 | FALSE           |
+|   0 |   0 |   0 |                  2 |      7 | FALSE           |
+|   1 |   0 |   0 |                  2 |      8 | FALSE           |
+|   1 |   0 |   1 |                  2 |     10 | TRUE            |
+|   0 |   0 |   0 |                  3 |     11 | FALSE           |
+|   1 |   0 |   0 |                  3 |     12 | FALSE           |
+|   1 |   0 |   1 |                  3 |     13 | TRUE            |
 
 ``` r
 # fit on large sample
