@@ -97,10 +97,38 @@ rownames(d_expanded) <- NULL
 
 ```{r}
 large_size <- 1000000
+group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
-d_large_censored <- d_large
-d_large_censored$y <- d_large_censored$y * rbinom(n=large_size, prob=0.1, size=1)
+d_large$presentaiton_group <- do.call(
+  c, 
+  lapply(
+    seq(large_size / group_size), 
+    function(group_i) {rep(group_i, group_size)}
+    ))
+rownames(d_large) <- NULL
+# mark random positive per group
+d_sel <- d_large
+d_sel$random_order <- runif(n=large_size)
+d_sel$row_id <- seq(large_size)
+d_sel <- d_sel[d_sel$y==1, , drop=FALSE]
+d_sel <- d_sel[order(d_sel$presentaiton_group, d_sel$random_order), , drop=FALSE]
+d_sel <- d_sel[
+  c(TRUE, d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)]),
+  , drop=FALSE]
+# limit down to at most one positive per group by censoring out some positive rows
+selected_indices <- sort(unique(c(d_sel$row_id, seq(large_size)[d_large$y == 0])))
+d_large_censored <- d_large[selected_indices, , drop=FALSE]
+rownames(d_large_censored) <- NULL
 ```
+
+```{r}
+knitr::kable(d_large[seq(10), , drop=FALSE])
+```
+
+```{r}
+knitr::kable(d_large_censored[seq(10), , drop=FALSE])
+```
+
 
 ```{r}
 # fit on large sample
@@ -143,4 +171,12 @@ knitr::kable(c_large)
 ```
 
 
+```{r}
+comps_censored <- d[c(2, 3), c('pred_m_0.29', 'pred_m_0.50')]
+stopifnot(comps_censored[1, 'p_large'] != comps_censored[2, 'p_large'])
+stopifnot(comps_censored[1, 'p_large_censored'] != comps_censored[2, 'p_large_censored'])
+stopifnot((comps_censored[1, 'p_large'] >= comps_censored[2, 'p_large_censored']) != (comps_censored[1, 'pred_m_0.50'] >= comps_censored[2, 'p_large_censored']))
+
+knitr::kable(comps_censored)
+```
 
