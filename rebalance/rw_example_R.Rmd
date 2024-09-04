@@ -11,7 +11,7 @@ Here is an example of how re-weighting data as function of the training outcome 
 
 [Nina Zumel had some interesting comments on the ideas](https://ninazumel.com/2015/02/27/balancing-classes-before-training-classifiers-addressing-a-folk-theorem/) which lead us to conclude: if re-balancing does anything better than moving your threshold, this is in fact evidence of a missed interaction.
 
-It is our thesis that their is little benefit to re-balancing data and if there appears to be such a benefit it means you failed to use numeric scores (converted to a classification rule too early) or missed an interaction in your data (which can be fixed by a bit more feature engineering, the non-montone change suggests some interactions that can be introduced).
+It is our thesis that their is little benefit to re-balancing data and if there appears to be such a benefit it means you failed to use numeric scores (converted to a classification rule too early) or missed an interaction in your data (which can be fixed by a bit more feature engineering, the non-monotone change suggests some interactions that can be introduced).
 
 ## Example 
 

@@ -36,6 +36,10 @@ m_0.29 <- glm(
 d$pred_m_0.29 <- predict(
   m_0.29, newdata = d, type = 'response')
 
+coef(m_0.29)
+```
+
+```{r}
 # fit a model at prevalence 0.5
 m_0.50 <- glm(
   y ~ x1 + x2,
@@ -46,6 +50,10 @@ m_0.50 <- glm(
 d$pred_m_0.50 <- predict(
   m_0.50, newdata = d, type = 'response')
 
+coef(m_0.50)
+```
+
+```{r}
 # display table
 knitr::kable(d)
 ```
