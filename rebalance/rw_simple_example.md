@@ -119,7 +119,7 @@ mean(d$y) - mean(d$pred_m_0.29)
 
     ## [1] 1.110223e-16
 
-A censoring process that doesn’t change the prevalance tends not to show
+A censoring process that doesn’t change the prevalence tends not to show
 the above effect.
 
 ``` r
@@ -135,7 +135,7 @@ rownames(d_expanded) <- NULL
 large_size <- 1000000
 group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
-d_large$presentaiton_group <- do.call(
+d_large$presentation_group <- do.call(
   c, 
   lapply(
     seq(large_size / group_size), 
@@ -147,12 +147,12 @@ rownames(d_large) <- NULL
 d_sel <- d_large
 d_sel$random_order <- runif(n=large_size)
 d_sel <- d_sel[d_sel$y==1, , drop=FALSE]
-d_sel <- d_sel[order(d_sel$presentaiton_group, d_sel$random_order), , drop=FALSE]
-d_sel$sample_positive <- c(
+d_sel <- d_sel[order(d_sel$presentation_group, d_sel$random_order), , drop=FALSE]
+d_sel$sampled_positive <- c(
   TRUE, 
-  d_sel$presentaiton_group[seq(2, nrow(d_sel))] != d_sel$presentaiton_group[seq(nrow(d_sel)-1)])
-d_large$sample_positive = FALSE
-d_large$sample_positive[d_sel$row_id[d_sel$sample_positive]] = TRUE
+  d_sel$presentation_group[seq(2, nrow(d_sel))] != d_sel$presentation_group[seq(nrow(d_sel)-1)])
+d_large$sampled_positive = FALSE
+d_large$sampled_positive[d_sel$row_id[d_sel$sampled_positive]] = TRUE
 
 write.csv(d_large, file='d_large.csv', row.names = FALSE)
 ```
@@ -161,41 +161,44 @@ write.csv(d_large, file='d_large.csv', row.names = FALSE)
 knitr::kable(d_large[seq(10), , drop=FALSE])
 ```
 
-|  x1 |  x2 |   y | presentaiton_group | row_id | sample_positive |
-|----:|----:|----:|-------------------:|-------:|:----------------|
-|   0 |   0 |   0 |                  1 |      1 | FALSE           |
-|   0 |   1 |   1 |                  1 |      2 | TRUE            |
-|   1 |   0 |   0 |                  1 |      3 | FALSE           |
-|   1 |   0 |   1 |                  1 |      4 | FALSE           |
-|   1 |   0 |   0 |                  1 |      5 | FALSE           |
-|   0 |   1 |   1 |                  2 |      6 | FALSE           |
-|   0 |   0 |   0 |                  2 |      7 | FALSE           |
-|   1 |   0 |   0 |                  2 |      8 | FALSE           |
-|   1 |   0 |   1 |                  2 |      9 | FALSE           |
-|   1 |   0 |   1 |                  2 |     10 | TRUE            |
+|  x1 |  x2 |   y | presentation_group | row_id | sampled_positive |
+|----:|----:|----:|-------------------:|-------:|:-----------------|
+|   0 |   0 |   0 |                  1 |      1 | FALSE            |
+|   0 |   1 |   1 |                  1 |      2 | TRUE             |
+|   1 |   0 |   0 |                  1 |      3 | FALSE            |
+|   1 |   0 |   1 |                  1 |      4 | FALSE            |
+|   1 |   0 |   0 |                  1 |      5 | FALSE            |
+|   0 |   1 |   1 |                  2 |      6 | FALSE            |
+|   0 |   0 |   0 |                  2 |      7 | FALSE            |
+|   1 |   0 |   0 |                  2 |      8 | FALSE            |
+|   1 |   0 |   1 |                  2 |      9 | FALSE            |
+|   1 |   0 |   1 |                  2 |     10 | TRUE             |
+
+Effect if we supress some positives by changing them to negatives
+(independently).
 
 ``` r
-# limit down to at most one positive per group by censoring out some positive rows
-d_large_censored <- d_large[d_large$sample_positive | (d_large$y == 0), , drop=FALSE]
-rownames(d_large_censored) <- NULL
+# limit down to at most one positive per group by changing outcomes (indpendently)
+d_large_censored_changed <- d_large
+d_large_censored_changed$y = d_large_censored_changed$y * d_large_censored_changed$sampled_positive
 ```
 
 ``` r
-knitr::kable(d_large_censored[seq(10), , drop=FALSE])
+knitr::kable(d_large_censored_changed[seq(10), , drop=FALSE])
 ```
 
-|  x1 |  x2 |   y | presentaiton_group | row_id | sample_positive |
-|----:|----:|----:|-------------------:|-------:|:----------------|
-|   0 |   0 |   0 |                  1 |      1 | FALSE           |
-|   0 |   1 |   1 |                  1 |      2 | TRUE            |
-|   1 |   0 |   0 |                  1 |      3 | FALSE           |
-|   1 |   0 |   0 |                  1 |      5 | FALSE           |
-|   0 |   0 |   0 |                  2 |      7 | FALSE           |
-|   1 |   0 |   0 |                  2 |      8 | FALSE           |
-|   1 |   0 |   1 |                  2 |     10 | TRUE            |
-|   0 |   0 |   0 |                  3 |     11 | FALSE           |
-|   1 |   0 |   0 |                  3 |     12 | FALSE           |
-|   1 |   0 |   1 |                  3 |     13 | TRUE            |
+|  x1 |  x2 |   y | presentation_group | row_id | sampled_positive |
+|----:|----:|----:|-------------------:|-------:|:-----------------|
+|   0 |   0 |   0 |                  1 |      1 | FALSE            |
+|   0 |   1 |   1 |                  1 |      2 | TRUE             |
+|   1 |   0 |   0 |                  1 |      3 | FALSE            |
+|   1 |   0 |   0 |                  1 |      4 | FALSE            |
+|   1 |   0 |   0 |                  1 |      5 | FALSE            |
+|   0 |   1 |   0 |                  2 |      6 | FALSE            |
+|   0 |   0 |   0 |                  2 |      7 | FALSE            |
+|   1 |   0 |   0 |                  2 |      8 | FALSE            |
+|   1 |   0 |   0 |                  2 |      9 | FALSE            |
+|   1 |   0 |   1 |                  2 |     10 | TRUE             |
 
 ``` r
 # fit on large sample
@@ -233,17 +236,139 @@ p_large <- predict(m_large, newdata=d, type='response')
 
 ``` r
 # fit on large censored sample
-m_large_censored <- glm(
+m_large_censored_changed <- glm(
   y ~ x1 + x2,
-  data = d_large_censored,
+  data = d_large_censored_changed,
   family = binomial())
 
-summary(m_large_censored)
+summary(m_large_censored_changed)
 ```
 
     ## 
     ## Call:
-    ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored)
+    ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored_changed)
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -1.788274   0.005262 -339.85   <2e-16 ***
+    ## x1           0.068115   0.005616   12.13   <2e-16 ***
+    ## x2           0.806707   0.005633  143.22   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 983147  on 999999  degrees of freedom
+    ## Residual deviance: 960218  on 999997  degrees of freedom
+    ## AIC: 960224
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+``` r
+p_large_censored_changed <- predict(m_large_censored_changed, newdata=d, type='response')
+```
+
+``` r
+c_large_censored_changed <- data.frame(
+  p_large=p_large, 
+  p_large_censored_changed=p_large_censored_changed)
+
+knitr::kable(c_large_censored_changed)
+```
+
+|   p_large | p_large_censored_changed |
+|----------:|-------------------------:|
+| 0.3659113 |                0.1432844 |
+| 0.7069613 |                0.2725809 |
+| 0.3940895 |                0.1518506 |
+| 0.3940895 |                0.1518506 |
+| 0.7311204 |                0.2862939 |
+
+``` r
+comps_censored_changed <- c_large_censored_changed[c(1, 2), , drop=FALSE]
+stopifnot(comps_censored_changed[1, 'p_large'] != comps_censored_changed[2, 'p_large'])
+stopifnot(comps_censored_changed[1, 'p_large_censored_changed'] != comps_censored_changed[2, 'p_large_censored_changed'])
+stopifnot((comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large_censored_changed']) != (comps_censored_changed[1, 'pred_m_0.50'] >= comps_censored_changed[2, 'p_large_censored_changed']))
+
+knitr::kable(comps_censored_changed)
+```
+
+|   p_large | p_large_censored_changed |
+|----------:|-------------------------:|
+| 0.3659113 |                0.1432844 |
+| 0.7069613 |                0.2725809 |
+
+Effect if we suppress some positives by deletign rows (independently).
+
+``` r
+# limit down to at most one positive per group by censoring out some positive rows
+d_large_censored_deleted <- d_large[d_large$sampled_positive | (d_large$y == 0), , drop=FALSE]
+```
+
+``` r
+knitr::kable(d_large_censored_deleted[seq(10), , drop=FALSE])
+```
+
+|     |  x1 |  x2 |   y | presentation_group | row_id | sampled_positive |
+|:----|----:|----:|----:|-------------------:|-------:|:-----------------|
+| 1   |   0 |   0 |   0 |                  1 |      1 | FALSE            |
+| 2   |   0 |   1 |   1 |                  1 |      2 | TRUE             |
+| 3   |   1 |   0 |   0 |                  1 |      3 | FALSE            |
+| 5   |   1 |   0 |   0 |                  1 |      5 | FALSE            |
+| 7   |   0 |   0 |   0 |                  2 |      7 | FALSE            |
+| 8   |   1 |   0 |   0 |                  2 |      8 | FALSE            |
+| 10  |   1 |   0 |   1 |                  2 |     10 | TRUE             |
+| 11  |   0 |   0 |   0 |                  3 |     11 | FALSE            |
+| 12  |   1 |   0 |   0 |                  3 |     12 | FALSE            |
+| 13  |   1 |   0 |   1 |                  3 |     13 | TRUE             |
+
+``` r
+# fit on large sample
+m_large <- glm(
+  y ~ x1 + x2,
+  data = d_large,
+  family = binomial())
+
+summary(m_large)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large)
+    ## 
+    ## Coefficients:
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.549798   0.004118 -133.50   <2e-16 ***
+    ## x1           0.119643   0.004630   25.84   <2e-16 ***
+    ## x2           1.430469   0.004934  289.91   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 1386294  on 999999  degrees of freedom
+    ## Residual deviance: 1285089  on 999997  degrees of freedom
+    ## AIC: 1285095
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+``` r
+p_large <- predict(m_large, newdata=d, type='response')
+```
+
+``` r
+# fit on large censored sample
+m_large_censored_deleted <- glm(
+  y ~ x1 + x2,
+  data = d_large_censored_deleted,
+  family = binomial())
+
+summary(m_large_censored_deleted)
+```
+
+    ## 
+    ## Call:
+    ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored_deleted)
     ## 
     ## Coefficients:
     ##              Estimate Std. Error z value Pr(>|z|)    
@@ -262,35 +387,35 @@ summary(m_large_censored)
     ## Number of Fisher Scoring iterations: 4
 
 ``` r
-p_large_censored <- predict(m_large_censored, newdata=d, type='response')
+p_large_censored_deleted <- predict(m_large_censored_deleted, newdata=d, type='response')
 ```
 
 ``` r
-c_large <- data.frame(
+c_large_censored_deleted <- data.frame(
   p_large=p_large, 
-  p_large_censored=p_large_censored)
+  p_large_censored_deleted=p_large_censored_deleted)
 
-knitr::kable(c_large)
+knitr::kable(c_large_censored_deleted)
 ```
 
-|   p_large | p_large_censored |
-|----------:|-----------------:|
-| 0.3659113 |        0.2261510 |
-| 0.7069613 |        0.5324082 |
-| 0.3940895 |        0.1746368 |
-| 0.3940895 |        0.1746368 |
-| 0.7311204 |        0.4518680 |
+|   p_large | p_large_censored_deleted |
+|----------:|-------------------------:|
+| 0.3659113 |                0.2261510 |
+| 0.7069613 |                0.5324082 |
+| 0.3940895 |                0.1746368 |
+| 0.3940895 |                0.1746368 |
+| 0.7311204 |                0.4518680 |
 
 ``` r
-comps_censored <- c_large[c(1, 2), , drop=FALSE]
-stopifnot(comps_censored[1, 'p_large'] != comps_censored[2, 'p_large'])
-stopifnot(comps_censored[1, 'p_large_censored'] != comps_censored[2, 'p_large_censored'])
-stopifnot((comps_censored[1, 'p_large'] >= comps_censored[2, 'p_large_censored']) != (comps_censored[1, 'pred_m_0.50'] >= comps_censored[2, 'p_large_censored']))
+comps_censored_deleted <- c_large_censored_deleted[c(1, 2), , drop=FALSE]
+stopifnot(comps_censored_deleted[1, 'p_large'] != comps_censored_deleted[2, 'p_large'])
+stopifnot(comps_censored_deleted[1, 'p_large_censored_deleted'] != comps_censored_deleted[2, 'p_large_censored_deleted'])
+stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large_censored_deleted']) != (comps_censored_deleted[1, 'pred_m_0.50'] >= comps_censored_deleted[2, 'p_large_censored_deleted']))
 
-knitr::kable(comps_censored)
+knitr::kable(comps_censored_deleted)
 ```
 
-|   p_large | p_large_censored |
-|----------:|-----------------:|
-| 0.3659113 |        0.2261510 |
-| 0.7069613 |        0.5324082 |
+|   p_large | p_large_censored_deleted |
+|----------:|-------------------------:|
+| 0.3659113 |                0.2261510 |
+| 0.7069613 |                0.5324082 |
