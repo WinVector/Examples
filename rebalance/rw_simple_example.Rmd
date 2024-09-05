@@ -107,7 +107,7 @@ d_expanded <- lapply(
 d_expanded <- do.call(rbind, d_expanded)
 rownames(d_expanded) <- NULL
 # expand to a large re-sampling
-large_size <- 100000
+large_size <- 1000000
 group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
 d_large$presentation_group <- do.call(
@@ -131,7 +131,7 @@ summary(m_large)
 ```
 
 ```{r}
-p_large <- predict(m_large, newdata=d, type='response')
+
 d_large$sort_order <- -predict(m_large, newdata=d_large, type='response')
 ```
 
@@ -186,18 +186,14 @@ m_large_censored_changed <- glm(
 summary(m_large_censored_changed)
 ```
 
-```{r}
-p_large_censored_changed <- predict(m_large_censored_changed, newdata=d, type='response')
-
-```
 
 ```{r}
 c_large_censored_changed <- data.frame(
   x1=d$x1,
   x2=d$x2,
   y=d$y,
-  p_large=p_large, 
-  p_large_censored_changed=p_large_censored_changed)
+  p_large=predict(m_large, newdata=d, type='response'), 
+  p_large_censored_changed=predict(m_large_censored_changed, newdata=d, type='response'))
 
 knitr::kable(c_large_censored_changed)
 ```
@@ -227,12 +223,6 @@ knitr::kable(d_large_censored_deleted[seq(10), , drop=FALSE])
 ```
 
 
-```{r}
-p_large <- predict(m_large, newdata=d, type='response')
-
-```
-
-
 
 ```{r}
 # fit on large censored sample
@@ -244,18 +234,15 @@ m_large_censored_deleted <- glm(
 summary(m_large_censored_deleted)
 ```
 
-```{r}
-p_large_censored_deleted <- predict(m_large_censored_deleted, newdata=d, type='response')
 
-```
 
 ```{r}
 c_large_censored_deleted <- data.frame(
   x1=d$x1,
   x2=d$x2,
   y=d$y,
-  p_large=p_large, 
-  p_large_censored_deleted=p_large_censored_deleted)
+  p_large=predict(m_large, newdata=d, type='response'),
+  p_large_censored_deleted=predict(m_large_censored_deleted, newdata=d, type='response'))
 
 knitr::kable(c_large_censored_deleted)
 ```
@@ -269,6 +256,18 @@ stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_
             (comps_censored_deleted[1, 'p_large_censored_deleted'] >= comps_censored_deleted[2, 'p_large_censored_deleted']))
 
 knitr::kable(comps_censored_deleted)
+```
+
+
+Show all our predictions.
+
+```{r}
+
+d$pred_all <- predict(m_large, newdata=d, type='response')
+d$pred_all <- predict(m_large_censored_changed, newdata=d, type='response')
+d$pred_all <- predict(m_large_censored_deleted, newdata=d, type='response')
+
+knitr::kable(d)
 ```
 
 

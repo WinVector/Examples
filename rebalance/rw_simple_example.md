@@ -144,7 +144,7 @@ d_expanded <- lapply(
 d_expanded <- do.call(rbind, d_expanded)
 rownames(d_expanded) <- NULL
 # expand to a large re-sampling
-large_size <- 100000
+large_size <- 1000000
 group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
 d_large$presentation_group <- do.call(
@@ -172,23 +172,22 @@ summary(m_large)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large)
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -0.57495    0.01304  -44.08   <2e-16 ***
-    ## x1           0.15270    0.01469   10.39   <2e-16 ***
-    ## x2           1.46331    0.01570   93.19   <2e-16 ***
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.556363   0.004122 -134.98   <2e-16 ***
+    ## x1           0.124915   0.004636   26.94   <2e-16 ***
+    ## x2           1.443117   0.004944  291.88   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 138629  on 99999  degrees of freedom
-    ## Residual deviance: 128249  on 99997  degrees of freedom
-    ## AIC: 128255
+    ##     Null deviance: 1386294  on 999999  degrees of freedom
+    ## Residual deviance: 1283664  on 999997  degrees of freedom
+    ## AIC: 1283670
     ## 
     ## Number of Fisher Scoring iterations: 4
 
 ``` r
-p_large <- predict(m_large, newdata=d, type='response')
 d_large$sort_order <- -predict(m_large, newdata=d_large, type='response')
 ```
 
@@ -212,16 +211,16 @@ knitr::kable(d_large[seq(10), , drop=FALSE])
 
 |  x1 |  x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
 |----:|----:|----:|-------------------:|-------:|-----------:|:-----------------|
-|   1 |   0 |   1 |                  1 |      1 | -0.3959788 | FALSE            |
-|   0 |   1 |   1 |                  1 |      2 | -0.7085520 | TRUE             |
-|   0 |   1 |   1 |                  1 |      3 | -0.7085520 | FALSE            |
-|   1 |   0 |   0 |                  1 |      4 | -0.3959788 | FALSE            |
-|   0 |   0 |   0 |                  1 |      5 | -0.3600963 | FALSE            |
-|   0 |   1 |   1 |                  2 |      6 | -0.7085520 | TRUE             |
-|   1 |   1 |   0 |                  2 |      7 | -0.7390544 | FALSE            |
-|   0 |   1 |   1 |                  2 |      8 | -0.7085520 | FALSE            |
-|   0 |   0 |   0 |                  2 |      9 | -0.3600963 | FALSE            |
-|   0 |   0 |   0 |                  2 |     10 | -0.3600963 | FALSE            |
+|   1 |   0 |   1 |                  1 |      1 | -0.3937807 | FALSE            |
+|   0 |   1 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
+|   0 |   1 |   1 |                  1 |      3 | -0.7082200 | FALSE            |
+|   1 |   0 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
+|   0 |   0 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
+|   0 |   1 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
+|   1 |   1 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
+|   0 |   1 |   1 |                  2 |      8 | -0.7082200 | FALSE            |
+|   0 |   0 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
+|   0 |   0 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
 
 Effect if we suprress some positives by changing them to negatives
 (independently).
@@ -238,16 +237,16 @@ knitr::kable(d_large_censored_changed[seq(10), , drop=FALSE])
 
 |  x1 |  x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
 |----:|----:|----:|-------------------:|-------:|-----------:|:-----------------|
-|   1 |   0 |   0 |                  1 |      1 | -0.3959788 | FALSE            |
-|   0 |   1 |   1 |                  1 |      2 | -0.7085520 | TRUE             |
-|   0 |   1 |   0 |                  1 |      3 | -0.7085520 | FALSE            |
-|   1 |   0 |   0 |                  1 |      4 | -0.3959788 | FALSE            |
-|   0 |   0 |   0 |                  1 |      5 | -0.3600963 | FALSE            |
-|   0 |   1 |   1 |                  2 |      6 | -0.7085520 | TRUE             |
-|   1 |   1 |   0 |                  2 |      7 | -0.7390544 | FALSE            |
-|   0 |   1 |   0 |                  2 |      8 | -0.7085520 | FALSE            |
-|   0 |   0 |   0 |                  2 |      9 | -0.3600963 | FALSE            |
-|   0 |   0 |   0 |                  2 |     10 | -0.3600963 | FALSE            |
+|   1 |   0 |   0 |                  1 |      1 | -0.3937807 | FALSE            |
+|   0 |   1 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
+|   0 |   1 |   0 |                  1 |      3 | -0.7082200 | FALSE            |
+|   1 |   0 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
+|   0 |   0 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
+|   0 |   1 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
+|   1 |   1 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
+|   0 |   1 |   0 |                  2 |      8 | -0.7082200 | FALSE            |
+|   0 |   0 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
+|   0 |   0 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
 
 ``` r
 # fit on large censored sample
@@ -264,43 +263,39 @@ summary(m_large_censored_changed)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored_changed)
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -2.02353    0.01881 -107.60   <2e-16 ***
-    ## x1          -1.23131    0.02085  -59.04   <2e-16 ***
-    ## x2           2.10010    0.02038  103.06   <2e-16 ***
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -2.002649   0.005914  -338.6   <2e-16 ***
+    ## x1          -1.217440   0.006549  -185.9   <2e-16 ***
+    ## x2           2.063792   0.006405   322.2   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 98192  on 99999  degrees of freedom
-    ## Residual deviance: 74209  on 99997  degrees of freedom
-    ## AIC: 74215
+    ##     Null deviance: 983224  on 999999  degrees of freedom
+    ## Residual deviance: 748604  on 999997  degrees of freedom
+    ## AIC: 748610
     ## 
     ## Number of Fisher Scoring iterations: 5
-
-``` r
-p_large_censored_changed <- predict(m_large_censored_changed, newdata=d, type='response')
-```
 
 ``` r
 c_large_censored_changed <- data.frame(
   x1=d$x1,
   x2=d$x2,
   y=d$y,
-  p_large=p_large, 
-  p_large_censored_changed=p_large_censored_changed)
+  p_large=predict(m_large, newdata=d, type='response'), 
+  p_large_censored_changed=predict(m_large_censored_changed, newdata=d, type='response'))
 
 knitr::kable(c_large_censored_changed)
 ```
 
 |  x1 |  x2 |   y |   p_large | p_large_censored_changed |
 |----:|----:|----:|----------:|-------------------------:|
-|   0 |   0 |   0 | 0.3600963 |                0.1167543 |
-|   0 |   1 |   1 | 0.7085520 |                0.5191327 |
-|   1 |   0 |   0 | 0.3959788 |                0.0371533 |
-|   1 |   0 |   1 | 0.3959788 |                0.0371533 |
-|   1 |   1 |   0 | 0.7390544 |                0.2396241 |
+|   0 |   0 |   0 | 0.3643895 |                0.1189251 |
+|   0 |   1 |   1 | 0.7082200 |                0.5152810 |
+|   1 |   0 |   0 | 0.3937807 |                0.0384167 |
+|   1 |   0 |   1 | 0.3937807 |                0.0384167 |
+|   1 |   1 |   0 | 0.7333468 |                0.2393409 |
 
 ``` r
 comps_censored_changed <- c_large_censored_changed[c(1, 4), , drop=FALSE]
@@ -314,8 +309,8 @@ knitr::kable(comps_censored_changed)
 
 |     |  x1 |  x2 |   y |   p_large | p_large_censored_changed |
 |:----|----:|----:|----:|----------:|-------------------------:|
-| 1   |   0 |   0 |   0 | 0.3600963 |                0.1167543 |
-| 4   |   1 |   0 |   1 | 0.3959788 |                0.0371533 |
+| 1   |   0 |   0 |   0 | 0.3643895 |                0.1189251 |
+| 4   |   1 |   0 |   1 | 0.3937807 |                0.0384167 |
 
 Effect if we suppress some positives by deletign rows (independently).
 
@@ -330,20 +325,16 @@ knitr::kable(d_large_censored_deleted[seq(10), , drop=FALSE])
 
 |     |  x1 |  x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
 |:----|----:|----:|----:|-------------------:|-------:|-----------:|:-----------------|
-| 2   |   0 |   1 |   1 |                  1 |      2 | -0.7085520 | TRUE             |
-| 4   |   1 |   0 |   0 |                  1 |      4 | -0.3959788 | FALSE            |
-| 5   |   0 |   0 |   0 |                  1 |      5 | -0.3600963 | FALSE            |
-| 6   |   0 |   1 |   1 |                  2 |      6 | -0.7085520 | TRUE             |
-| 7   |   1 |   1 |   0 |                  2 |      7 | -0.7390544 | FALSE            |
-| 9   |   0 |   0 |   0 |                  2 |      9 | -0.3600963 | FALSE            |
-| 10  |   0 |   0 |   0 |                  2 |     10 | -0.3600963 | FALSE            |
-| 11  |   0 |   1 |   1 |                  3 |     11 | -0.7085520 | TRUE             |
-| 12  |   1 |   0 |   0 |                  3 |     12 | -0.3959788 | FALSE            |
-| 13  |   0 |   0 |   0 |                  3 |     13 | -0.3600963 | FALSE            |
-
-``` r
-p_large <- predict(m_large, newdata=d, type='response')
-```
+| 2   |   0 |   1 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
+| 4   |   1 |   0 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
+| 5   |   0 |   0 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
+| 6   |   0 |   1 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
+| 7   |   1 |   1 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
+| 9   |   0 |   0 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
+| 10  |   0 |   0 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
+| 11  |   0 |   1 |   1 |                  3 |     11 | -0.7082200 | TRUE             |
+| 12  |   1 |   0 |   0 |                  3 |     12 | -0.3937807 | FALSE            |
+| 13  |   0 |   0 |   0 |                  3 |     13 | -0.3643895 | FALSE            |
 
 ``` r
 # fit on large censored sample
@@ -360,43 +351,39 @@ summary(m_large_censored_deleted)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored_deleted)
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -1.61258    0.01762  -91.52   <2e-16 ***
-    ## x1          -1.92811    0.02404  -80.20   <2e-16 ***
-    ## x2           2.88260    0.02320  124.28   <2e-16 ***
+    ##              Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -1.587150   0.005537  -286.7   <2e-16 ***
+    ## x1          -1.905800   0.007524  -253.3   <2e-16 ***
+    ## x2           2.837217   0.007269   390.3   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 82034  on 69288  degrees of freedom
-    ## Residual deviance: 53024  on 69286  degrees of freedom
-    ## AIC: 53030
+    ##     Null deviance: 821580  on 693455  degrees of freedom
+    ## Residual deviance: 536213  on 693453  degrees of freedom
+    ## AIC: 536219
     ## 
     ## Number of Fisher Scoring iterations: 5
-
-``` r
-p_large_censored_deleted <- predict(m_large_censored_deleted, newdata=d, type='response')
-```
 
 ``` r
 c_large_censored_deleted <- data.frame(
   x1=d$x1,
   x2=d$x2,
   y=d$y,
-  p_large=p_large, 
-  p_large_censored_deleted=p_large_censored_deleted)
+  p_large=predict(m_large, newdata=d, type='response'),
+  p_large_censored_deleted=predict(m_large_censored_deleted, newdata=d, type='response'))
 
 knitr::kable(c_large_censored_deleted)
 ```
 
 |  x1 |  x2 |   y |   p_large | p_large_censored_deleted |
 |----:|----:|----:|----------:|-------------------------:|
-|   0 |   0 |   0 | 0.3600963 |                0.1662304 |
-|   0 |   1 |   1 | 0.7085520 |                0.7807463 |
-|   1 |   0 |   0 | 0.3959788 |                0.0281762 |
-|   1 |   0 |   1 | 0.3959788 |                0.0281762 |
-|   1 |   1 |   0 | 0.7390544 |                0.3411679 |
+|   0 |   0 |   0 | 0.3643895 |                0.1697852 |
+|   0 |   1 |   1 | 0.7082200 |                0.7773115 |
+|   1 |   0 |   0 | 0.3937807 |                0.0295135 |
+|   1 |   0 |   1 | 0.3937807 |                0.0295135 |
+|   1 |   1 |   0 | 0.7333468 |                0.3416988 |
 
 ``` r
 comps_censored_deleted <- c_large_censored_deleted[c(1, 4), , drop=FALSE]
@@ -410,5 +397,23 @@ knitr::kable(comps_censored_deleted)
 
 |     |  x1 |  x2 |   y |   p_large | p_large_censored_deleted |
 |:----|----:|----:|----:|----------:|-------------------------:|
-| 1   |   0 |   0 |   0 | 0.3600963 |                0.1662304 |
-| 4   |   1 |   0 |   1 | 0.3959788 |                0.0281762 |
+| 1   |   0 |   0 |   0 | 0.3643895 |                0.1697852 |
+| 4   |   1 |   0 |   1 | 0.3937807 |                0.0295135 |
+
+Show all our predictions.
+
+``` r
+d$pred_all <- predict(m_large, newdata=d, type='response')
+d$pred_all <- predict(m_large_censored_changed, newdata=d, type='response')
+d$pred_all <- predict(m_large_censored_deleted, newdata=d, type='response')
+
+knitr::kable(d)
+```
+
+|  x1 |  x2 |   y |  w1 |  w2 |  pred_m_a |  pred_m_b |  pred_all |
+|----:|----:|----:|----:|----:|----------:|----------:|----------:|
+|   0 |   0 |   0 |  20 |  20 | 0.2304816 | 0.3655679 | 0.1697852 |
+|   0 |   1 |   1 |  10 |  25 | 0.5390367 | 0.7075457 | 0.7773115 |
+|   1 |   0 |   0 |  20 |  20 | 0.1796789 | 0.3930810 | 0.0295135 |
+|   1 |   0 |   1 |  10 |  25 | 0.1796789 | 0.3930810 | 0.0295135 |
+|   1 |   1 |   0 |  10 |  10 | 0.4609633 | 0.7311357 | 0.3416988 |
