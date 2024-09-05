@@ -75,7 +75,8 @@ Now notice the relative order of the predictions in rows 1 and 5 are reversed in
 comps <- d[c(1, 4), qc(pred_m_a, pred_m_b)]
 stopifnot(comps[1, 'pred_m_a'] != comps[2, 'pred_m_a'])
 stopifnot(comps[1, 'pred_m_b'] != comps[2, 'pred_m_b'])
-stopifnot((comps[1, 'pred_m_a'] >= comps[2, 'pred_m_a']) != (comps[1, 'pred_m_b'] >= comps[2, 'pred_m_b']))
+stopifnot((comps[1, 'pred_m_a'] >= comps[2, 'pred_m_a']) != 
+            (comps[1, 'pred_m_b'] >= comps[2, 'pred_m_b']))
 
 knitr::kable(comps)
 ```
@@ -91,7 +92,10 @@ mean(d$y) - mean(d$pred_m_a)
 ```
 
 
-A censoring process that doesn't change the prevalence tends not to show the above effect.
+
+
+
+Censor to top pick.
 
 ```{r}
 # replicate data frame by w2 weights
@@ -114,11 +118,28 @@ d_large$presentation_group <- do.call(
     ))
 d_large$row_id <- seq(large_size)
 rownames(d_large) <- NULL
+```
+
+```{r}
+# fit on large sample
+m_large <- glm(
+  y ~ x1 + x2,
+  data = d_large,
+  family = binomial())
+
+summary(m_large)
+```
+
+```{r}
+p_large <- predict(m_large, newdata=d, type='response')
+d_large$sort_order <- -predict(m_large, newdata=d_large, type='response')
+```
+
+```{r}
 # mark random positive per group
 d_sel <- d_large
-d_sel$random_order <- runif(n=large_size)
 d_sel <- d_sel[d_sel$y==1, , drop=FALSE]
-d_sel <- d_sel[order(d_sel$presentation_group, d_sel$random_order), , drop=FALSE]
+d_sel <- d_sel[order(d_sel$presentation_group, d_sel$sort_order), , drop=FALSE]
 d_sel$sampled_positive <- c(
   TRUE, 
   d_sel$presentation_group[seq(2, nrow(d_sel))] != d_sel$presentation_group[seq(nrow(d_sel)-1)])
@@ -134,7 +155,10 @@ knitr::kable(d_large[seq(10), , drop=FALSE])
 ```
 
 
-Effect if we supress some positives by changing them to negatives (independently).
+
+
+
+Effect if we suprress some positives by changing them to negatives (independently).
 
 ```{r}
 # limit down to at most one positive per group by changing outcomes (indpendently)
@@ -149,20 +173,6 @@ knitr::kable(d_large_censored_changed[seq(10), , drop=FALSE])
 ```
 
 
-```{r}
-# fit on large sample
-m_large <- glm(
-  y ~ x1 + x2,
-  data = d_large,
-  family = binomial())
-
-summary(m_large)
-```
-
-```{r}
-p_large <- predict(m_large, newdata=d, type='response')
-
-```
 
 
 
@@ -194,12 +204,13 @@ knitr::kable(c_large_censored_changed)
 
 
 ```{r}
-# comps_censored_changed <- c_large_censored_changed[c(1, 2), , drop=FALSE]
-# stopifnot(comps_censored_changed[1, 'p_large'] != comps_censored_changed[2, 'p_large'])
-# stopifnot(comps_censored_changed[1, 'p_large_censored_changed'] != comps_censored_changed[2, 'p_large_censored_changed'])
-# stopifnot((comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large_censored_changed']) != (comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large_censored_changed']))
-# 
-# knitr::kable(comps_censored_changed)
+comps_censored_changed <- c_large_censored_changed[c(1, 4), , drop=FALSE]
+stopifnot(comps_censored_changed[1, 'p_large'] != comps_censored_changed[2, 'p_large'])
+stopifnot(comps_censored_changed[1, 'p_large_censored_changed'] != comps_censored_changed[2, 'p_large_censored_changed'])
+stopifnot((comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large']) != 
+            (comps_censored_changed[1, 'p_large_censored_changed'] >= comps_censored_changed[2, 'p_large_censored_changed']))
+
+knitr::kable(comps_censored_changed)
 ```
 
 
@@ -215,16 +226,6 @@ d_large_censored_deleted <- d_large[d_large$sampled_positive | (d_large$y == 0),
 knitr::kable(d_large_censored_deleted[seq(10), , drop=FALSE])
 ```
 
-
-```{r}
-# fit on large sample
-m_large <- glm(
-  y ~ x1 + x2,
-  data = d_large,
-  family = binomial())
-
-summary(m_large)
-```
 
 ```{r}
 p_large <- predict(m_large, newdata=d, type='response')
@@ -261,12 +262,13 @@ knitr::kable(c_large_censored_deleted)
 
 
 ```{r}
-# comps_censored_deleted <- c_large_censored_deleted[c(1, 2), , drop=FALSE]
-# stopifnot(comps_censored_deleted[1, 'p_large'] != comps_censored_deleted[2, 'p_large'])
-# stopifnot(comps_censored_deleted[1, 'p_large_censored_deleted'] != comps_censored_deleted[2, 'p_large_censored_deleted'])
-# stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large_censored_deleted']) != (comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large_censored_deleted']))
-# 
-# knitr::kable(comps_censored_deleted)
+comps_censored_deleted <- c_large_censored_deleted[c(1, 4), , drop=FALSE]
+stopifnot(comps_censored_deleted[1, 'p_large'] != comps_censored_deleted[2, 'p_large'])
+stopifnot(comps_censored_deleted[1, 'p_large_censored_deleted'] != comps_censored_deleted[2, 'p_large_censored_deleted'])
+stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large']) != 
+            (comps_censored_deleted[1, 'p_large_censored_deleted'] >= comps_censored_deleted[2, 'p_large_censored_deleted']))
+
+knitr::kable(comps_censored_deleted)
 ```
 
 
