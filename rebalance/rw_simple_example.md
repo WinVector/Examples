@@ -210,7 +210,7 @@ for (c in c('x1', 'x2')) {
 ```
 
 ``` r
-write.csv(d_large, file='d_large.csv', row.names = FALSE)
+write.csv(d_large[ , c('x1', 'x2', 'y', 'presentation_group', 'sampled_positive')], file='d_large.csv', row.names = FALSE)
 ```
 
 ``` r
