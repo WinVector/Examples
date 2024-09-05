@@ -62,7 +62,7 @@ knitr::kable(d)
 Now notice the relative order of the predictions in rows 1 and 5 are reversed in model `m_0.50` relative to the order given by model `m_0.29`.
 
 ```{r}
-comps <- d[c(1, 3), qc(pred_m_0.29, pred_m_0.50)]
+comps <- d[c(1, 4), qc(pred_m_0.29, pred_m_0.50)]
 stopifnot(comps[1, 'pred_m_0.29'] != comps[2, 'pred_m_0.29'])
 stopifnot(comps[1, 'pred_m_0.50'] != comps[2, 'pred_m_0.50'])
 stopifnot((comps[1, 'pred_m_0.29'] >= comps[2, 'pred_m_0.29']) != (comps[1, 'pred_m_0.50'] >= comps[2, 'pred_m_0.50']))
@@ -93,7 +93,7 @@ d_expanded <- lapply(
 d_expanded <- do.call(rbind, d_expanded)
 rownames(d_expanded) <- NULL
 # expand to a large re-sampling
-large_size <- 1000000
+large_size <- 100000
 group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
 d_large$presentation_group <- do.call(
@@ -173,6 +173,9 @@ p_large_censored_changed <- predict(m_large_censored_changed, newdata=d, type='r
 
 ```{r}
 c_large_censored_changed <- data.frame(
+  x1=d$x1,
+  x2=d$x2,
+  y=d$y,
   p_large=p_large, 
   p_large_censored_changed=p_large_censored_changed)
 
@@ -237,6 +240,9 @@ p_large_censored_deleted <- predict(m_large_censored_deleted, newdata=d, type='r
 
 ```{r}
 c_large_censored_deleted <- data.frame(
+  x1=d$x1,
+  x2=d$x2,
+  y=d$y,
   p_large=p_large, 
   p_large_censored_deleted=p_large_censored_deleted)
 

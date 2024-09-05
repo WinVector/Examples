@@ -85,7 +85,7 @@ reversed in model `m_0.50` relative to the order given by model
 `m_0.29`.
 
 ``` r
-comps <- d[c(1, 3), qc(pred_m_0.29, pred_m_0.50)]
+comps <- d[c(1, 4), qc(pred_m_0.29, pred_m_0.50)]
 stopifnot(comps[1, 'pred_m_0.29'] != comps[2, 'pred_m_0.29'])
 stopifnot(comps[1, 'pred_m_0.50'] != comps[2, 'pred_m_0.50'])
 stopifnot((comps[1, 'pred_m_0.29'] >= comps[2, 'pred_m_0.29']) != (comps[1, 'pred_m_0.50'] >= comps[2, 'pred_m_0.50']))
@@ -96,7 +96,7 @@ knitr::kable(comps)
 |     | pred_m_0.29 | pred_m_0.50 |
 |:----|------------:|------------:|
 | 1   |   0.2304816 |   0.3655679 |
-| 3   |   0.1796789 |   0.3930810 |
+| 4   |   0.1796789 |   0.3930810 |
 
 This means no monotone correction that looks only at the predictions can
 make the same adaptations as these two prevalence tailored models. And
@@ -132,7 +132,7 @@ d_expanded <- lapply(
 d_expanded <- do.call(rbind, d_expanded)
 rownames(d_expanded) <- NULL
 # expand to a large re-sampling
-large_size <- 1000000
+large_size <- 100000
 group_size <- 5
 d_large <- d_expanded[sample.int(nrow(d_expanded), size=large_size, replace=TRUE) , , drop=FALSE]
 d_large$presentation_group <- do.call(
@@ -164,9 +164,9 @@ knitr::kable(d_large[seq(10), , drop=FALSE])
 |  x1 |  x2 |   y | presentation_group | row_id | sampled_positive |
 |----:|----:|----:|-------------------:|-------:|:-----------------|
 |   0 |   0 |   0 |                  1 |      1 | FALSE            |
-|   0 |   1 |   1 |                  1 |      2 | TRUE             |
+|   0 |   1 |   1 |                  1 |      2 | FALSE            |
 |   1 |   0 |   0 |                  1 |      3 | FALSE            |
-|   1 |   0 |   1 |                  1 |      4 | FALSE            |
+|   1 |   0 |   1 |                  1 |      4 | TRUE             |
 |   1 |   0 |   0 |                  1 |      5 | FALSE            |
 |   0 |   1 |   1 |                  2 |      6 | FALSE            |
 |   0 |   0 |   0 |                  2 |      7 | FALSE            |
@@ -190,9 +190,9 @@ knitr::kable(d_large_censored_changed[seq(10), , drop=FALSE])
 |  x1 |  x2 |   y | presentation_group | row_id | sampled_positive |
 |----:|----:|----:|-------------------:|-------:|:-----------------|
 |   0 |   0 |   0 |                  1 |      1 | FALSE            |
-|   0 |   1 |   1 |                  1 |      2 | TRUE             |
+|   0 |   1 |   0 |                  1 |      2 | FALSE            |
 |   1 |   0 |   0 |                  1 |      3 | FALSE            |
-|   1 |   0 |   0 |                  1 |      4 | FALSE            |
+|   1 |   0 |   1 |                  1 |      4 | TRUE             |
 |   1 |   0 |   0 |                  1 |      5 | FALSE            |
 |   0 |   1 |   0 |                  2 |      6 | FALSE            |
 |   0 |   0 |   0 |                  2 |      7 | FALSE            |
@@ -215,18 +215,18 @@ summary(m_large)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large)
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -0.549798   0.004118 -133.50   <2e-16 ***
-    ## x1           0.119643   0.004630   25.84   <2e-16 ***
-    ## x2           1.430469   0.004934  289.91   <2e-16 ***
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.54007    0.01299 -41.564  < 2e-16 ***
+    ## x1           0.11813    0.01460   8.089 6.04e-16 ***
+    ## x2           1.41084    0.01555  90.740  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 1386294  on 999999  degrees of freedom
-    ## Residual deviance: 1285089  on 999997  degrees of freedom
-    ## AIC: 1285095
+    ##     Null deviance: 138629  on 99999  degrees of freedom
+    ## Residual deviance: 128752  on 99997  degrees of freedom
+    ## AIC: 128758
     ## 
     ## Number of Fisher Scoring iterations: 4
 
@@ -249,18 +249,18 @@ summary(m_large_censored_changed)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored_changed)
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -1.788274   0.005262 -339.85   <2e-16 ***
-    ## x1           0.068115   0.005616   12.13   <2e-16 ***
-    ## x2           0.806707   0.005633  143.22   <2e-16 ***
+    ##             Estimate Std. Error  z value Pr(>|z|)    
+    ## (Intercept) -1.78278    0.01661 -107.356  < 2e-16 ***
+    ## x1           0.06711    0.01773    3.786 0.000153 ***
+    ## x2           0.79587    0.01778   44.762  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 983147  on 999999  degrees of freedom
-    ## Residual deviance: 960218  on 999997  degrees of freedom
-    ## AIC: 960224
+    ##     Null deviance: 98349  on 99999  degrees of freedom
+    ## Residual deviance: 96114  on 99997  degrees of freedom
+    ## AIC: 96120
     ## 
     ## Number of Fisher Scoring iterations: 4
 
@@ -270,19 +270,22 @@ p_large_censored_changed <- predict(m_large_censored_changed, newdata=d, type='r
 
 ``` r
 c_large_censored_changed <- data.frame(
+  x1=d$x1,
+  x2=d$x2,
+  y=d$y,
   p_large=p_large, 
   p_large_censored_changed=p_large_censored_changed)
 
 knitr::kable(c_large_censored_changed)
 ```
 
-|   p_large | p_large_censored_changed |
-|----------:|-------------------------:|
-| 0.3659113 |                0.1432844 |
-| 0.7069613 |                0.2725809 |
-| 0.3940895 |                0.1518506 |
-| 0.3940895 |                0.1518506 |
-| 0.7311204 |                0.2862939 |
+|  x1 |  x2 |   y |   p_large | p_large_censored_changed |
+|----:|----:|----:|----------:|-------------------------:|
+|   0 |   0 |   0 | 0.3681708 |                0.1439606 |
+|   0 |   1 |   1 | 0.7049056 |                0.2715227 |
+|   1 |   0 |   0 | 0.3960512 |                0.1524308 |
+|   1 |   0 |   1 | 0.3960512 |                0.1524308 |
+|   1 |   1 |   0 | 0.7288695 |                0.2849995 |
 
 ``` r
 comps_censored_changed <- c_large_censored_changed[c(1, 2), , drop=FALSE]
@@ -293,10 +296,10 @@ stopifnot((comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_
 knitr::kable(comps_censored_changed)
 ```
 
-|   p_large | p_large_censored_changed |
-|----------:|-------------------------:|
-| 0.3659113 |                0.1432844 |
-| 0.7069613 |                0.2725809 |
+|  x1 |  x2 |   y |   p_large | p_large_censored_changed |
+|----:|----:|----:|----------:|-------------------------:|
+|   0 |   0 |   0 | 0.3681708 |                0.1439606 |
+|   0 |   1 |   1 | 0.7049056 |                0.2715227 |
 
 Effect if we suppress some positives by deletign rows (independently).
 
@@ -312,8 +315,8 @@ knitr::kable(d_large_censored_deleted[seq(10), , drop=FALSE])
 |     |  x1 |  x2 |   y | presentation_group | row_id | sampled_positive |
 |:----|----:|----:|----:|-------------------:|-------:|:-----------------|
 | 1   |   0 |   0 |   0 |                  1 |      1 | FALSE            |
-| 2   |   0 |   1 |   1 |                  1 |      2 | TRUE             |
 | 3   |   1 |   0 |   0 |                  1 |      3 | FALSE            |
+| 4   |   1 |   0 |   1 |                  1 |      4 | TRUE             |
 | 5   |   1 |   0 |   0 |                  1 |      5 | FALSE            |
 | 7   |   0 |   0 |   0 |                  2 |      7 | FALSE            |
 | 8   |   1 |   0 |   0 |                  2 |      8 | FALSE            |
@@ -337,18 +340,18 @@ summary(m_large)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large)
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -0.549798   0.004118 -133.50   <2e-16 ***
-    ## x1           0.119643   0.004630   25.84   <2e-16 ***
-    ## x2           1.430469   0.004934  289.91   <2e-16 ***
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.54007    0.01299 -41.564  < 2e-16 ***
+    ## x1           0.11813    0.01460   8.089 6.04e-16 ***
+    ## x2           1.41084    0.01555  90.740  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 1386294  on 999999  degrees of freedom
-    ## Residual deviance: 1285089  on 999997  degrees of freedom
-    ## AIC: 1285095
+    ##     Null deviance: 138629  on 99999  degrees of freedom
+    ## Residual deviance: 128752  on 99997  degrees of freedom
+    ## AIC: 128758
     ## 
     ## Number of Fisher Scoring iterations: 4
 
@@ -371,18 +374,18 @@ summary(m_large_censored_deleted)
     ## glm(formula = y ~ x1 + x2, family = binomial(), data = d_large_censored_deleted)
     ## 
     ## Coefficients:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -1.230174   0.004742 -259.45   <2e-16 ***
-    ## x1          -0.322941   0.005638  -57.28   <2e-16 ***
-    ## x2           1.359989   0.005778  235.36   <2e-16 ***
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -1.22467    0.01497  -81.81   <2e-16 ***
+    ## x1          -0.32037    0.01781  -17.99   <2e-16 ***
+    ## x2           1.34285    0.01824   73.61   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
-    ##     Null deviance: 821530  on 693457  degrees of freedom
-    ## Residual deviance: 760066  on 693455  degrees of freedom
-    ## AIC: 760072
+    ##     Null deviance: 82125  on 69268  degrees of freedom
+    ## Residual deviance: 76126  on 69266  degrees of freedom
+    ## AIC: 76132
     ## 
     ## Number of Fisher Scoring iterations: 4
 
@@ -392,19 +395,22 @@ p_large_censored_deleted <- predict(m_large_censored_deleted, newdata=d, type='r
 
 ``` r
 c_large_censored_deleted <- data.frame(
+  x1=d$x1,
+  x2=d$x2,
+  y=d$y,
   p_large=p_large, 
   p_large_censored_deleted=p_large_censored_deleted)
 
 knitr::kable(c_large_censored_deleted)
 ```
 
-|   p_large | p_large_censored_deleted |
-|----------:|-------------------------:|
-| 0.3659113 |                0.2261510 |
-| 0.7069613 |                0.5324082 |
-| 0.3940895 |                0.1746368 |
-| 0.3940895 |                0.1746368 |
-| 0.7311204 |                0.4518680 |
+|  x1 |  x2 |   y |   p_large | p_large_censored_deleted |
+|----:|----:|----:|----------:|-------------------------:|
+|   0 |   0 |   0 | 0.3681708 |                0.2271159 |
+|   0 |   1 |   1 | 0.7049056 |                0.5295103 |
+|   1 |   0 |   0 | 0.3960512 |                0.1758033 |
+|   1 |   0 |   1 | 0.3960512 |                0.1758033 |
+|   1 |   1 |   0 | 0.7288695 |                0.4496225 |
 
 ``` r
 comps_censored_deleted <- c_large_censored_deleted[c(1, 2), , drop=FALSE]
@@ -415,7 +421,7 @@ stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_
 knitr::kable(comps_censored_deleted)
 ```
 
-|   p_large | p_large_censored_deleted |
-|----------:|-------------------------:|
-| 0.3659113 |                0.2261510 |
-| 0.7069613 |                0.5324082 |
+|  x1 |  x2 |   y |   p_large | p_large_censored_deleted |
+|----:|----:|----:|----------:|-------------------------:|
+|   0 |   0 |   0 | 0.3681708 |                0.2271159 |
+|   0 |   1 |   1 | 0.7049056 |                0.5295103 |
