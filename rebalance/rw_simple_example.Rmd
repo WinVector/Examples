@@ -141,7 +141,7 @@ summary(m_large)
 Noisily censor to top pick.
 
 ```{r}
-d_large$sort_order <- -predict(m_large, newdata=d_large, type='response') + 0.1 * rnorm(n=nrow(d_large))
+d_large$sort_order <- -predict(m_large, newdata=d_large, type='link') + 0.1 * rnorm(n=nrow(d_large))
 ```
 
 ```{r}
