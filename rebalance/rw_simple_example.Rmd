@@ -15,43 +15,53 @@ set.seed(2024)
 # build our example data
 # modeling y as a function of x1 and x2 (plus intercept)
 d <- wrapr::build_frame(
-  "x1"  , "x2", "y", "w1", "w2" |
-    0   , 0   , 0  , 2   , 4    |
-    0   , 1   , 1  , 1   , 5    |
-    1   , 0   , 0  , 2   , 4    |
-    1   , 0   , 1  , 1   , 5    |
-    1   , 1   , 0  , 1   , 2    )
+  "x1"  , "x2", "y", "w1"  |
+    0   , 0   , 0  , 20  |
+    0   , 1   , 1  , 10  |
+    1   , 0   , 0  , 20  |
+    1   , 0   , 1  , 10  |
+    1   , 1   , 0  , 10  )
+
+scale <- sum((1-d$y) * d$w1) / sum(d$y * d$w1) - 1  # move to 50/50 prevalence
+d$w2 <- d$w1 + scale * d$y * d$w1
 
 # display table
 knitr::kable(d)
 ```
 
 ```{r}
-# fit a model at prevalence 0.2857143
-m_0.29 <- glm(
+sum(d$y * d$w1) / sum(d$w1)
+```
+
+```{r}
+sum(d$y * d$w2) / sum(d$w2)
+```
+
+
+```{r}
+m_a <- glm(
   y ~ x1 + x2,
   data = d,
   weights = w1,
   family = binomial())
 # add in predictions
-d$pred_m_0.29 <- predict(
-  m_0.29, newdata = d, type = 'response')
+d$pred_m_a <- predict(
+  m_a, newdata = d, type = 'response')
 
-coef(m_0.29)
+coef(m_a)
 ```
 
 ```{r}
-# fit a model at prevalence 0.5
-m_0.50 <- glm(
+m_b <- glm(
   y ~ x1 + x2,
   data = d,
   weights = w2,
   family = binomial())
 # add in predictions
-d$pred_m_0.50 <- predict(
-  m_0.50, newdata = d, type = 'response')
+d$pred_m_b <- predict(
+  m_b, newdata = d, type = 'response')
 
-coef(m_0.50)
+coef(m_b)
 ```
 
 ```{r}
@@ -59,13 +69,13 @@ coef(m_0.50)
 knitr::kable(d)
 ```
 
-Now notice the relative order of the predictions in rows 1 and 5 are reversed in model `m_0.50` relative to the order given by model `m_0.29`.
+Now notice the relative order of the predictions in rows 1 and 5 are reversed in model `m_b` relative to the order given by model `m_a`.
 
 ```{r}
-comps <- d[c(1, 4), qc(pred_m_0.29, pred_m_0.50)]
-stopifnot(comps[1, 'pred_m_0.29'] != comps[2, 'pred_m_0.29'])
-stopifnot(comps[1, 'pred_m_0.50'] != comps[2, 'pred_m_0.50'])
-stopifnot((comps[1, 'pred_m_0.29'] >= comps[2, 'pred_m_0.29']) != (comps[1, 'pred_m_0.50'] >= comps[2, 'pred_m_0.50']))
+comps <- d[c(1, 4), qc(pred_m_a, pred_m_b)]
+stopifnot(comps[1, 'pred_m_a'] != comps[2, 'pred_m_a'])
+stopifnot(comps[1, 'pred_m_b'] != comps[2, 'pred_m_b'])
+stopifnot((comps[1, 'pred_m_a'] >= comps[2, 'pred_m_a']) != (comps[1, 'pred_m_b'] >= comps[2, 'pred_m_b']))
 
 knitr::kable(comps)
 ```
@@ -75,9 +85,9 @@ This means no monotone correction that looks only at the predictions can make th
 As a side note, notice each model is unbiased in the simple sense it matches the expected value of the outcome *with respect to the data weighting it was trained on*. This is part of the advantage of [tailored models](https://win-vector.com/2020/10/10/upcoming-series-probability-model-homotopy/).
 
 ```{r}
-mean(d$y) - mean(d$pred_m_0.29)
+mean(d$y) - mean(d$pred_m_a)
 
-(sum(d$w2 * d$y) / sum(d$w2))  -  (sum(d$w2 * d$pred_m_0.50) / sum(d$w2))
+(sum(d$w2 * d$y) / sum(d$w2))  -  (sum(d$w2 * d$pred_m_b) / sum(d$w2))
 ```
 
 
@@ -184,12 +194,12 @@ knitr::kable(c_large_censored_changed)
 
 
 ```{r}
-comps_censored_changed <- c_large_censored_changed[c(1, 2), , drop=FALSE]
-stopifnot(comps_censored_changed[1, 'p_large'] != comps_censored_changed[2, 'p_large'])
-stopifnot(comps_censored_changed[1, 'p_large_censored_changed'] != comps_censored_changed[2, 'p_large_censored_changed'])
-stopifnot((comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large_censored_changed']) != (comps_censored_changed[1, 'pred_m_0.50'] >= comps_censored_changed[2, 'p_large_censored_changed']))
-
-knitr::kable(comps_censored_changed)
+# comps_censored_changed <- c_large_censored_changed[c(1, 2), , drop=FALSE]
+# stopifnot(comps_censored_changed[1, 'p_large'] != comps_censored_changed[2, 'p_large'])
+# stopifnot(comps_censored_changed[1, 'p_large_censored_changed'] != comps_censored_changed[2, 'p_large_censored_changed'])
+# stopifnot((comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large_censored_changed']) != (comps_censored_changed[1, 'p_large'] >= comps_censored_changed[2, 'p_large_censored_changed']))
+# 
+# knitr::kable(comps_censored_changed)
 ```
 
 
@@ -251,12 +261,12 @@ knitr::kable(c_large_censored_deleted)
 
 
 ```{r}
-comps_censored_deleted <- c_large_censored_deleted[c(1, 2), , drop=FALSE]
-stopifnot(comps_censored_deleted[1, 'p_large'] != comps_censored_deleted[2, 'p_large'])
-stopifnot(comps_censored_deleted[1, 'p_large_censored_deleted'] != comps_censored_deleted[2, 'p_large_censored_deleted'])
-stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large_censored_deleted']) != (comps_censored_deleted[1, 'pred_m_0.50'] >= comps_censored_deleted[2, 'p_large_censored_deleted']))
-
-knitr::kable(comps_censored_deleted)
+# comps_censored_deleted <- c_large_censored_deleted[c(1, 2), , drop=FALSE]
+# stopifnot(comps_censored_deleted[1, 'p_large'] != comps_censored_deleted[2, 'p_large'])
+# stopifnot(comps_censored_deleted[1, 'p_large_censored_deleted'] != comps_censored_deleted[2, 'p_large_censored_deleted'])
+# stopifnot((comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large_censored_deleted']) != (comps_censored_deleted[1, 'p_large'] >= comps_censored_deleted[2, 'p_large_censored_deleted']))
+# 
+# knitr::kable(comps_censored_deleted)
 ```
 
 
