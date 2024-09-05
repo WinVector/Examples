@@ -95,7 +95,7 @@ mean(d$y) - mean(d$pred_m_a)
 
 
 
-Censor to top pick.
+Expand data.
 
 ```{r}
 # replicate data frame by w2 weights
@@ -121,6 +121,13 @@ rownames(d_large) <- NULL
 ```
 
 ```{r}
+# fuzz a bit
+for (c in c('x1', 'x2')) {
+    d_large[c] = d_large[c] + 0.1 * rnorm(n=nrow(d_large))
+}
+```
+
+```{r}
 # fit on large sample
 m_large <- glm(
   y ~ x1 + x2,
@@ -130,9 +137,11 @@ m_large <- glm(
 summary(m_large)
 ```
 
-```{r}
 
-d_large$sort_order <- -predict(m_large, newdata=d_large, type='response')
+Noisily censor to top pick.
+
+```{r}
+d_large$sort_order <- -predict(m_large, newdata=d_large, type='response') + 0.1 * rnorm(n=nrow(d_large))
 ```
 
 ```{r}
@@ -147,11 +156,7 @@ d_large$sampled_positive = FALSE
 d_large$sampled_positive[d_sel$row_id[d_sel$sampled_positive]] = TRUE
 ```
 
-```{r}
-for (c in c('x1', 'x2')) {
-    d_large[c] = d_large[c] + 0.1 * rnorm(n=nrow(d_large))
-}
-```
+
 
 ```{r}
 write.csv(d_large[ , c('x1', 'x2', 'y', 'presentation_group', 'sampled_positive')], file='d_large.csv', row.names = FALSE)
