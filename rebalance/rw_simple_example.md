@@ -14,12 +14,12 @@ set.seed(2024)
 # build our example data
 # modeling y as a function of x1 and x2 (plus intercept)
 d <- wrapr::build_frame(
-  "x1"  , "x2", "y", "w1"  |
-    0   , 0   , 0  , 20  |
-    0   , 1   , 1  , 10  |
-    1   , 0   , 0  , 20  |
-    1   , 0   , 1  , 10  |
-    1   , 1   , 0  , 10  )
+  "x1"  , "x2", "y", "w1" |
+    0   , 0   , 0  , 20   |
+    0   , 1   , 1  , 10   |
+    1   , 0   , 0  , 20   |
+    1   , 0   , 1  , 10   |
+    1   , 1   , 0  , 10   )
 
 scale <- sum((1-d$y) * d$w1) / sum(d$y * d$w1) - 1  # move to 50/50 prevalence
 d$w2 <- d$w1 + scale * d$y * d$w1
@@ -201,7 +201,15 @@ d_sel$sampled_positive <- c(
   d_sel$presentation_group[seq(2, nrow(d_sel))] != d_sel$presentation_group[seq(nrow(d_sel)-1)])
 d_large$sampled_positive = FALSE
 d_large$sampled_positive[d_sel$row_id[d_sel$sampled_positive]] = TRUE
+```
 
+``` r
+for (c in c('x1', 'x2')) {
+    d_large[c] = d_large[c] + 0.1 * rnorm(n=nrow(d_large))
+}
+```
+
+``` r
 write.csv(d_large, file='d_large.csv', row.names = FALSE)
 ```
 
@@ -209,24 +217,24 @@ write.csv(d_large, file='d_large.csv', row.names = FALSE)
 knitr::kable(d_large[seq(10), , drop=FALSE])
 ```
 
-|  x1 |  x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
-|----:|----:|----:|-------------------:|-------:|-----------:|:-----------------|
-|   1 |   0 |   1 |                  1 |      1 | -0.3937807 | FALSE            |
-|   0 |   1 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
-|   0 |   1 |   1 |                  1 |      3 | -0.7082200 | FALSE            |
-|   1 |   0 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
-|   0 |   0 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
-|   0 |   1 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
-|   1 |   1 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
-|   0 |   1 |   1 |                  2 |      8 | -0.7082200 | FALSE            |
-|   0 |   0 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
-|   0 |   0 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
+|         x1 |         x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
+|-----------:|-----------:|----:|-------------------:|-------:|-----------:|:-----------------|
+|  1.0386577 |  0.0086633 |   1 |                  1 |      1 | -0.3937807 | FALSE            |
+|  0.0551755 |  0.8276934 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
+| -0.1832702 |  1.0036545 |   1 |                  1 |      3 | -0.7082200 | FALSE            |
+|  1.0488625 | -0.2082705 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
+| -0.1306283 |  0.0941564 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
+|  0.1609292 |  1.0108265 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
+|  1.3039749 |  1.2159358 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
+|  0.0429537 |  1.0221667 |   1 |                  2 |      8 | -0.7082200 | FALSE            |
+|  0.0912462 | -0.0900513 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
+| -0.1133648 | -0.0413047 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
 
-Effect if we suprress some positives by changing them to negatives
-(independently).
+Effect if we suppress some positives by changing them to negatives
+(largest score takes all).
 
 ``` r
-# limit down to at most one positive per group by changing outcomes (indpendently)
+# limit down to at most one positive per group by changing outcomes (largest score takes all)
 d_large_censored_changed <- d_large
 d_large_censored_changed$y = d_large_censored_changed$y * d_large_censored_changed$sampled_positive
 ```
@@ -235,18 +243,18 @@ d_large_censored_changed$y = d_large_censored_changed$y * d_large_censored_chang
 knitr::kable(d_large_censored_changed[seq(10), , drop=FALSE])
 ```
 
-|  x1 |  x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
-|----:|----:|----:|-------------------:|-------:|-----------:|:-----------------|
-|   1 |   0 |   0 |                  1 |      1 | -0.3937807 | FALSE            |
-|   0 |   1 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
-|   0 |   1 |   0 |                  1 |      3 | -0.7082200 | FALSE            |
-|   1 |   0 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
-|   0 |   0 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
-|   0 |   1 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
-|   1 |   1 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
-|   0 |   1 |   0 |                  2 |      8 | -0.7082200 | FALSE            |
-|   0 |   0 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
-|   0 |   0 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
+|         x1 |         x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
+|-----------:|-----------:|----:|-------------------:|-------:|-----------:|:-----------------|
+|  1.0386577 |  0.0086633 |   0 |                  1 |      1 | -0.3937807 | FALSE            |
+|  0.0551755 |  0.8276934 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
+| -0.1832702 |  1.0036545 |   0 |                  1 |      3 | -0.7082200 | FALSE            |
+|  1.0488625 | -0.2082705 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
+| -0.1306283 |  0.0941564 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
+|  0.1609292 |  1.0108265 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
+|  1.3039749 |  1.2159358 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
+|  0.0429537 |  1.0221667 |   0 |                  2 |      8 | -0.7082200 | FALSE            |
+|  0.0912462 | -0.0900513 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
+| -0.1133648 | -0.0413047 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
 
 ``` r
 # fit on large censored sample
@@ -264,17 +272,17 @@ summary(m_large_censored_changed)
     ## 
     ## Coefficients:
     ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -2.002649   0.005914  -338.6   <2e-16 ***
-    ## x1          -1.217440   0.006549  -185.9   <2e-16 ***
-    ## x2           2.063792   0.006405   322.2   <2e-16 ***
+    ## (Intercept) -1.975490   0.005746  -343.8   <2e-16 ***
+    ## x1          -1.188997   0.006347  -187.3   <2e-16 ***
+    ## x2           1.997469   0.006242   320.0   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 983224  on 999999  degrees of freedom
-    ## Residual deviance: 748604  on 999997  degrees of freedom
-    ## AIC: 748610
+    ## Residual deviance: 755319  on 999997  degrees of freedom
+    ## AIC: 755325
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -291,11 +299,11 @@ knitr::kable(c_large_censored_changed)
 
 |  x1 |  x2 |   y |   p_large | p_large_censored_changed |
 |----:|----:|----:|----------:|-------------------------:|
-|   0 |   0 |   0 | 0.3643895 |                0.1189251 |
-|   0 |   1 |   1 | 0.7082200 |                0.5152810 |
-|   1 |   0 |   0 | 0.3937807 |                0.0384167 |
-|   1 |   0 |   1 | 0.3937807 |                0.0384167 |
-|   1 |   1 |   0 | 0.7333468 |                0.2393409 |
+|   0 |   0 |   0 | 0.3643895 |                0.1218004 |
+|   0 |   1 |   1 | 0.7082200 |                0.5054945 |
+|   1 |   0 |   0 | 0.3937807 |                0.0405242 |
+|   1 |   0 |   1 | 0.3937807 |                0.0405242 |
+|   1 |   1 |   0 | 0.7333468 |                0.2373945 |
 
 ``` r
 comps_censored_changed <- c_large_censored_changed[c(1, 4), , drop=FALSE]
@@ -309,8 +317,8 @@ knitr::kable(comps_censored_changed)
 
 |     |  x1 |  x2 |   y |   p_large | p_large_censored_changed |
 |:----|----:|----:|----:|----------:|-------------------------:|
-| 1   |   0 |   0 |   0 | 0.3643895 |                0.1189251 |
-| 4   |   1 |   0 |   1 | 0.3937807 |                0.0384167 |
+| 1   |   0 |   0 |   0 | 0.3643895 |                0.1218004 |
+| 4   |   1 |   0 |   1 | 0.3937807 |                0.0405242 |
 
 Effect if we suppress some positives by deletign rows (independently).
 
@@ -323,18 +331,18 @@ d_large_censored_deleted <- d_large[d_large$sampled_positive | (d_large$y == 0),
 knitr::kable(d_large_censored_deleted[seq(10), , drop=FALSE])
 ```
 
-|     |  x1 |  x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
-|:----|----:|----:|----:|-------------------:|-------:|-----------:|:-----------------|
-| 2   |   0 |   1 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
-| 4   |   1 |   0 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
-| 5   |   0 |   0 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
-| 6   |   0 |   1 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
-| 7   |   1 |   1 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
-| 9   |   0 |   0 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
-| 10  |   0 |   0 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
-| 11  |   0 |   1 |   1 |                  3 |     11 | -0.7082200 | TRUE             |
-| 12  |   1 |   0 |   0 |                  3 |     12 | -0.3937807 | FALSE            |
-| 13  |   0 |   0 |   0 |                  3 |     13 | -0.3643895 | FALSE            |
+|     |         x1 |         x2 |   y | presentation_group | row_id | sort_order | sampled_positive |
+|:----|-----------:|-----------:|----:|-------------------:|-------:|-----------:|:-----------------|
+| 2   |  0.0551755 |  0.8276934 |   1 |                  1 |      2 | -0.7082200 | TRUE             |
+| 4   |  1.0488625 | -0.2082705 |   0 |                  1 |      4 | -0.3937807 | FALSE            |
+| 5   | -0.1306283 |  0.0941564 |   0 |                  1 |      5 | -0.3643895 | FALSE            |
+| 6   |  0.1609292 |  1.0108265 |   1 |                  2 |      6 | -0.7082200 | TRUE             |
+| 7   |  1.3039749 |  1.2159358 |   0 |                  2 |      7 | -0.7333468 | FALSE            |
+| 9   |  0.0912462 | -0.0900513 |   0 |                  2 |      9 | -0.3643895 | FALSE            |
+| 10  | -0.1133648 | -0.0413047 |   0 |                  2 |     10 | -0.3643895 | FALSE            |
+| 11  |  0.0801922 |  0.9208856 |   1 |                  3 |     11 | -0.7082200 | TRUE             |
+| 12  |  0.9241317 |  0.0704743 |   0 |                  3 |     12 | -0.3937807 | FALSE            |
+| 13  | -0.1233697 |  0.0379949 |   0 |                  3 |     13 | -0.3643895 | FALSE            |
 
 ``` r
 # fit on large censored sample
@@ -352,17 +360,17 @@ summary(m_large_censored_deleted)
     ## 
     ## Coefficients:
     ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -1.587150   0.005537  -286.7   <2e-16 ***
-    ## x1          -1.905800   0.007524  -253.3   <2e-16 ***
-    ## x2           2.837217   0.007269   390.3   <2e-16 ***
+    ## (Intercept) -1.576449   0.005463  -288.6   <2e-16 ***
+    ## x1          -1.821052   0.007307  -249.2   <2e-16 ***
+    ## x2           2.747994   0.007167   383.4   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 821580  on 693455  degrees of freedom
-    ## Residual deviance: 536213  on 693453  degrees of freedom
-    ## AIC: 536219
+    ## Residual deviance: 545902  on 693453  degrees of freedom
+    ## AIC: 545908
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -379,11 +387,11 @@ knitr::kable(c_large_censored_deleted)
 
 |  x1 |  x2 |   y |   p_large | p_large_censored_deleted |
 |----:|----:|----:|----------:|-------------------------:|
-|   0 |   0 |   0 | 0.3643895 |                0.1697852 |
-|   0 |   1 |   1 | 0.7082200 |                0.7773115 |
-|   1 |   0 |   0 | 0.3937807 |                0.0295135 |
-|   1 |   0 |   1 | 0.3937807 |                0.0295135 |
-|   1 |   1 |   0 | 0.7333468 |                0.3416988 |
+|   0 |   0 |   0 | 0.3643895 |                0.1712990 |
+|   0 |   1 |   1 | 0.7082200 |                0.7634242 |
+|   1 |   0 |   0 | 0.3937807 |                0.0323737 |
+|   1 |   0 |   1 | 0.3937807 |                0.0323737 |
+|   1 |   1 |   0 | 0.7333468 |                0.3431008 |
 
 ``` r
 comps_censored_deleted <- c_large_censored_deleted[c(1, 4), , drop=FALSE]
@@ -397,8 +405,8 @@ knitr::kable(comps_censored_deleted)
 
 |     |  x1 |  x2 |   y |   p_large | p_large_censored_deleted |
 |:----|----:|----:|----:|----------:|-------------------------:|
-| 1   |   0 |   0 |   0 | 0.3643895 |                0.1697852 |
-| 4   |   1 |   0 |   1 | 0.3937807 |                0.0295135 |
+| 1   |   0 |   0 |   0 | 0.3643895 |                0.1712990 |
+| 4   |   1 |   0 |   1 | 0.3937807 |                0.0323737 |
 
 Show all our predictions.
 
@@ -412,8 +420,8 @@ knitr::kable(d)
 
 |  x1 |  x2 |   y |  w1 |  w2 |  pred_m_a |  pred_m_b |  pred_all |
 |----:|----:|----:|----:|----:|----------:|----------:|----------:|
-|   0 |   0 |   0 |  20 |  20 | 0.2304816 | 0.3655679 | 0.1697852 |
-|   0 |   1 |   1 |  10 |  25 | 0.5390367 | 0.7075457 | 0.7773115 |
-|   1 |   0 |   0 |  20 |  20 | 0.1796789 | 0.3930810 | 0.0295135 |
-|   1 |   0 |   1 |  10 |  25 | 0.1796789 | 0.3930810 | 0.0295135 |
-|   1 |   1 |   0 |  10 |  10 | 0.4609633 | 0.7311357 | 0.3416988 |
+|   0 |   0 |   0 |  20 |  20 | 0.2304816 | 0.3655679 | 0.1712990 |
+|   0 |   1 |   1 |  10 |  25 | 0.5390367 | 0.7075457 | 0.7634242 |
+|   1 |   0 |   0 |  20 |  20 | 0.1796789 | 0.3930810 | 0.0323737 |
+|   1 |   0 |   1 |  10 |  25 | 0.1796789 | 0.3930810 | 0.0323737 |
+|   1 |   1 |   0 |  10 |  10 | 0.4609633 | 0.7311357 | 0.3431008 |

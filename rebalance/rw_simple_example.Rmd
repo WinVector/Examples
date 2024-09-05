@@ -15,12 +15,12 @@ set.seed(2024)
 # build our example data
 # modeling y as a function of x1 and x2 (plus intercept)
 d <- wrapr::build_frame(
-  "x1"  , "x2", "y", "w1"  |
-    0   , 0   , 0  , 20  |
-    0   , 1   , 1  , 10  |
-    1   , 0   , 0  , 20  |
-    1   , 0   , 1  , 10  |
-    1   , 1   , 0  , 10  )
+  "x1"  , "x2", "y", "w1" |
+    0   , 0   , 0  , 20   |
+    0   , 1   , 1  , 10   |
+    1   , 0   , 0  , 20   |
+    1   , 0   , 1  , 10   |
+    1   , 1   , 0  , 10   )
 
 scale <- sum((1-d$y) * d$w1) / sum(d$y * d$w1) - 1  # move to 50/50 prevalence
 d$w2 <- d$w1 + scale * d$y * d$w1
@@ -145,7 +145,15 @@ d_sel$sampled_positive <- c(
   d_sel$presentation_group[seq(2, nrow(d_sel))] != d_sel$presentation_group[seq(nrow(d_sel)-1)])
 d_large$sampled_positive = FALSE
 d_large$sampled_positive[d_sel$row_id[d_sel$sampled_positive]] = TRUE
+```
 
+```{r}
+for (c in c('x1', 'x2')) {
+    d_large[c] = d_large[c] + 0.1 * rnorm(n=nrow(d_large))
+}
+```
+
+```{r}
 write.csv(d_large, file='d_large.csv', row.names = FALSE)
 ```
 
@@ -158,10 +166,10 @@ knitr::kable(d_large[seq(10), , drop=FALSE])
 
 
 
-Effect if we suprress some positives by changing them to negatives (independently).
+Effect if we suppress some positives by changing them to negatives (largest score takes all).
 
 ```{r}
-# limit down to at most one positive per group by changing outcomes (indpendently)
+# limit down to at most one positive per group by changing outcomes (largest score takes all)
 d_large_censored_changed <- d_large
 d_large_censored_changed$y = d_large_censored_changed$y * d_large_censored_changed$sampled_positive
 ```
