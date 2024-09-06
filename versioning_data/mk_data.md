@@ -1,0 +1,21 @@
+mk_data
+================
+2024-09-06
+
+``` r
+set.seed(2024)
+d <- read.csv('Roxie_schedule_original.csv', strip.white = TRUE, stringsAsFactors = FALSE)
+d$EstimatedAttendance <- sample(c(233, 47), size=nrow(d), replace = TRUE)
+d$Attendance <- d$EstimatedAttendance
+is_August <- grepl('-August-', d$Date, fixed=TRUE)
+actual_attendance <- round(d$EstimatedAttendance * runif(n = nrow(d)))
+d$Attendance[is_August] <- actual_attendance[is_August]
+d$PopcornSales <- round(runif(n = nrow(d), min = 0.1, max = 0.2) * actual_attendance)
+d$PopcornSales[is_August == FALSE] = NA
+d_mixed <- d
+d_mixed$EstimatedAttendance <- NULL
+write.csv(d_mixed, 'Roxie_schedule.csv', row.names = FALSE)
+d_est <- d
+d_est$Attendance <- NULL
+write.csv(d_est, 'Roxie_schedule_estimates.csv', row.names = FALSE)
+```
