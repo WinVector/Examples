@@ -212,7 +212,7 @@ ggplot(
     sprintf('%.2f', train_est_R2)))
 ```
 
-Note: using the estimated attendance to train (instead of actual) gives a *vastly* inferior R-squared as measured on training data. However usign the estimated attendane (without corrections) gives us a model that performs *much* better in the future (which *is* the actual project goal)!
+Note: using the estimated attendance to train (instead of actual) gives a *vastly* inferior R-squared as measured on training data. However usign the estimated attendane (without corrections) gives us a model that performs *much* better in the future (which *is* the actual project goal)! The idea is: we expect our model to be applied to rough future inputs, so we need to train it on such (and not on cleaned up values if such are not going to be available during application).
 
 ## Conclusion
 
