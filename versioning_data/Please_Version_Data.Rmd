@@ -1,7 +1,7 @@
 ---
 title: "Please Version Data"
 output: github_document
-date: "2024-09-06"
+date: "2024-09-07"
 ---
 
 ## Introdution
@@ -226,4 +226,7 @@ Data users should *insist* on bitemporal data for forecasting applications. When
 
 
 
+## Appendix
+
+All the code and data to reproduce this example can be found [here](https://github.com/WinVector/Examples/tree/main/versioning_data).
 

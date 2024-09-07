@@ -1,6 +1,6 @@
 Please Version Data
 ================
-2024-09-06
+2024-09-07
 
 ## Introdution
 
@@ -376,3 +376,8 @@ x, using a model trained up through what was known at date y, and taking
 inputs known up through date z?” To even back test such models one needs
 a bitemporal database (to control what data looked like at different
 times).
+
+## Appendix
+
+All the code and data to reproduce this example can be found
+[here](https://github.com/WinVector/Examples/tree/main/versioning_data).
