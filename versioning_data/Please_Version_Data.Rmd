@@ -22,8 +22,11 @@ library(dplyr)
 
 ```{r}
 # read our data
-d <- read.csv('Roxie_schedule.csv', strip.white = TRUE, stringsAsFactors = FALSE)
-d$Date <- as.Date(d$Date, format='%Y-%B-%d')
+d <- read.csv(
+  'Roxie_schedule_as_known_after_August.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
+d$Date <- as.Date(d$Date)
 
 d |>
   head() |>
@@ -42,10 +45,33 @@ The above already has the flaw we are warning about: we have mixed "past attenda
 
 Our next step is to build a model relating past popcorn (unit) purchases to past attendance.
 
+```{r}
+# join in popcorn sales records
+popcorn_sales <- read.csv(
+  'popcorn_sales.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
+popcorn_sales$Date <- as.Date(popcorn_sales$Date)
+
+popcorn_sales |>
+  head() |>
+  knitr::kable()
+
+d_train <- d |>
+  filter(is.na(Attendance) == FALSE) |>
+  group_by(Date) |>
+  summarize(Attendance = sum(Attendance)) |>
+  inner_join(popcorn_sales, by='Date')
+
+d_train |>
+  head() |>
+  knitr::kable()
+```
+
+
 
 ```{r}
-# predict popcorn sales as a function of attendance
-d_train <- d[is.na(d$PopcornSales) == FALSE, , drop=FALSE]
+# model popcorn sales as a function of attendance
 model <- lm(PopcornSales ~ Attendance, data=d_train)
 d$PredictedPopcorn <- round(pmax(0, predict(model, newdata=d)), digits=1)
 train_R2 <- summary(model)$adj.r.squared
@@ -54,29 +80,32 @@ summary(model)
 
 We get what *appears* to be a good result: a *highly* predictive model that shows about a 15% attachment rate from attendance to popcorn purchase.
 
-Let's plot this.
+Let's plot our predictions in the past and future, and actuals in the past.
 
 ```{r, warning=FALSE}
 d_daily <- d |> 
   group_by(Date) |>
-  summarize(PopcornSales = sum(PopcornSales), PredictedPopcorn = sum(PredictedPopcorn)) |>
+  summarize(PredictedPopcorn = sum(PredictedPopcorn)) |>
   ungroup() |>
+  full_join(popcorn_sales, by='Date') |>
   mutate(Month = format(Date, '%B')) |>
   group_by(Month) |>
-  mutate(MeanPopcornSales = mean(PopcornSales), MeanPredictedPopcorn = mean(PredictedPopcorn)) |>
+  mutate(
+    MeanPredictedPopcorn = mean(PredictedPopcorn), 
+    MeanPopcornSales = mean(PopcornSales)) |>
   ungroup()
 ggplot(
   data=d_daily,
   mapping=aes(x=Date)) +
   geom_point(mapping=aes(y=PopcornSales)) +
   geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
-  geom_step(mapping=aes(y=MeanPredictedPopcorn), directon='mid', color='Blue', alpha=0.5, linetype=2) +
+  geom_step(mapping=aes(y=MeanPredictedPopcorn), direction='mid', color='Blue', alpha=0.5, linetype=2) +
   ggtitle(paste(
-    "actual Popcorn sales as points, predited as lines\n(monthly mean as dashed step), train R2: ", 
+    'misusing corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ',
     sprintf('%.2f', train_R2)))
 ```
 
-Now we see the problem. Our model predicts popcorn sales in the presumed future month of September are going to be double what was seen in the past training month of August. As we don't have the future data yet, we don't immediately known this is wrong. But, without a presumed cause it is suspicious.
+Now we really see the problem. Our model predicts popcorn sales in the presumed future month of September are going to be double what was seen in the past training month of August. As we don't have the future data yet, we don't immediately known this is wrong. But, without a presumed cause it is suspicious.
 
 ## Diagnosing
 
@@ -127,11 +156,14 @@ The fix is: we need "versioned", "as of", or "[bitemporal](https://en.wikipedia.
 
 If our vendor supplies versioned data we can then use that. Even though it is "inferior" it is better suited to our application.
 
-Let's see that in action.
+Let's see that in action. To do this we need older projections for attendance that have not been corrected.
 
 ```{r}
 # read our data
-d_est <- read.csv('Roxie_schedule_estimates.csv', strip.white = TRUE, stringsAsFactors = FALSE)
+d_est <- read.csv(
+  'Roxie_schedule_as_known_before_August.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
 d_est$Date <- as.Date(d$Date, format='%Y-%B-%d')
 
 d_est |>
@@ -146,7 +178,12 @@ Let's repeat our modeling effort with the uncorrected (not retouched) data.
 
 ```{r}
 # predict popcorn sales as a function of attendance
-d_est_train <- d_est[is.na(d_est$PopcornSales) == FALSE, , drop=FALSE]
+d_est_train <- d_est |>
+  filter(is.na(EstimatedAttendance) == FALSE) |>
+  group_by(Date) |>
+  summarize(EstimatedAttendance = sum(EstimatedAttendance)) |>
+  inner_join(popcorn_sales, by='Date')
+
 model_est <- lm(PopcornSales ~ EstimatedAttendance, data=d_est_train)
 d_est$PredictedPopcorn <- round(pmax(0, predict(model_est, newdata=d_est)), digits=1)
 train_est_R2 <- summary(model_est)$adj.r.squared
@@ -155,11 +192,14 @@ train_est_R2 <- summary(model_est)$adj.r.squared
 ```{r, warning=FALSE}
 d_est_daily <- d_est |> 
   group_by(Date) |>
-  summarize(PopcornSales = sum(PopcornSales), PredictedPopcorn = sum(PredictedPopcorn)) |>
+  summarize(PredictedPopcorn = sum(PredictedPopcorn)) |>
   ungroup() |>
+  full_join(popcorn_sales, by='Date') |>
   mutate(Month = format(Date, '%B')) |>
   group_by(Month) |>
-  mutate(MeanPopcornSales = mean(PopcornSales), MeanPredictedPopcorn = mean(PredictedPopcorn)) |>
+  mutate(
+    MeanPredictedPopcorn = mean(PredictedPopcorn), 
+    MeanPopcornSales = mean(PopcornSales)) |>
   ungroup()
 ggplot(
   data=d_est_daily,
@@ -168,20 +208,22 @@ ggplot(
   geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
   geom_step(mapping=aes(y=MeanPredictedPopcorn), directon='mid', color='Blue', alpha=0.5, linetype=2) +
   ggtitle(paste(
-    "actual Popcorn sales as points, predited from attendance estimates as lines\n(monthly mean as dashed step), train R2: ", 
+    'correctly using non-corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ', 
     sprintf('%.2f', train_est_R2)))
 ```
 
-Note: using the estimated attendance to train (instead of actual) gives a *vastly* inferior R-squared as measured on training data. However, it gives us a model that performs *much* better in the future (which presumably is the actual project goal)!
+Note: using the estimated attendance to train (instead of actual) gives a *vastly* inferior R-squared as measured on training data. However usign the estimated attendane (without corrections) gives us a model that performs *much* better in the future (which *is* the actual project goal)!
 
 ## Conclusion
 
-The performance of a model on held-out data is only a proxy measure for future model performance. In our example we see that this common proxy idea breaks down when there is a data concept-change between the training and application periods. The fix is: "as of" or bitemporal modeling.
+The performance of a model on held-out data is only a proxy measure for future model performance. In our example we see that this common proxy idea breaks down when there is a data concept-change between the training and application periods. The fix is: using "as of" data or bitemporal modeling.
 
 A common way to achieve a full bitemporal data model is: reversible time stamped audit logging on any field edits. One keeps additional records of the form "at this time this value was changed from A to B in this record." This puts most of the cost of "as of" or "what would this value have looked like if asked about at this date" queries on the modeling system (which wants them) and away from the data production system (which would just like to update records and be done with things).
 
 An engineer unfamiliar with how forecasts are applied may not accept the cost of the audit or roll-back logging. So one needs to turn these engineers into modeling peers and allies.
 
-Data users should *insist* on bitemporal data for forecasting applications.
+Data users should *insist* on bitemporal data for forecasting applications. When date or time enter the picture- it is rare that there is only one key. Most date/time questions unfortunately can not be simplified down to "what is the prediction for date x?" Instead one needs to respect structures such as "what is the best predition for date x, using a model trained up through what was known at date y, and taking inputs known up through date z?" To even back test such models one needs a bitemporal database (to control what data looked like at different times).
+
+
 
 

@@ -30,22 +30,25 @@ library(dplyr)
 
 ``` r
 # read our data
-d <- read.csv('Roxie_schedule.csv', strip.white = TRUE, stringsAsFactors = FALSE)
-d$Date <- as.Date(d$Date, format='%Y-%B-%d')
+d <- read.csv(
+  'Roxie_schedule_as_known_after_August.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
+d$Date <- as.Date(d$Date)
 
 d |>
   head() |>
   knitr::kable()
 ```
 
-| Date       | Movie                                                | Time    | Attendance | PopcornSales |
-|:-----------|:-----------------------------------------------------|:--------|-----------:|-------------:|
-| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |          6 |            1 |
-| 2024-08-01 | Eno                                                  | 6:40 pm |         10 |            1 |
-| 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |           20 |
-| 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |            3 |
-| 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        204 |           39 |
-| 2024-08-02 | Lyd                                                  | 6:30 pm |        213 |           24 |
+| Date       | Movie                                                | Time    | Attendance |
+|:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |          6 |
+| 2024-08-01 | Eno                                                  | 6:40 pm |         10 |
+| 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |
+| 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |
+| 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        204 |
+| 2024-08-02 | Lyd                                                  | 6:30 pm |        213 |
 
 Our business goal is to build a model relating attendance to popcorn
 sales, and then apply this model to future data to predict future
@@ -74,8 +77,50 @@ Our next step is to build a model relating past popcorn (unit) purchases
 to past attendance.
 
 ``` r
-# predict popcorn sales as a function of attendance
-d_train <- d[is.na(d$PopcornSales) == FALSE, , drop=FALSE]
+# join in popcorn sales records
+popcorn_sales <- read.csv(
+  'popcorn_sales.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
+popcorn_sales$Date <- as.Date(popcorn_sales$Date)
+
+popcorn_sales |>
+  head() |>
+  knitr::kable()
+```
+
+| Date       | PopcornSales |
+|:-----------|-------------:|
+| 2024-08-01 |           25 |
+| 2024-08-02 |          102 |
+| 2024-08-03 |           76 |
+| 2024-08-04 |           65 |
+| 2024-08-05 |           13 |
+| 2024-08-06 |           80 |
+
+``` r
+d_train <- d |>
+  filter(is.na(Attendance) == FALSE) |>
+  group_by(Date) |>
+  summarize(Attendance = sum(Attendance)) |>
+  inner_join(popcorn_sales, by='Date')
+
+d_train |>
+  head() |>
+  knitr::kable()
+```
+
+| Date       | Attendance | PopcornSales |
+|:-----------|-----------:|-------------:|
+| 2024-08-01 |        153 |           25 |
+| 2024-08-02 |        648 |          102 |
+| 2024-08-03 |        439 |           76 |
+| 2024-08-04 |        371 |           65 |
+| 2024-08-05 |         91 |           13 |
+| 2024-08-06 |        472 |           80 |
+
+``` r
+# model popcorn sales as a function of attendance
 model <- lm(PopcornSales ~ Attendance, data=d_train)
 d$PredictedPopcorn <- round(pmax(0, predict(model, newdata=d)), digits=1)
 train_R2 <- summary(model)$adj.r.squared
@@ -88,52 +133,56 @@ summary(model)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -11.7391  -0.7127  -0.0614   0.7196   9.0168 
+    ## -11.1726  -2.2676   0.5702   3.2467   7.3703 
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 0.067023   0.440447   0.152    0.879    
-    ## Attendance  0.153416   0.004553  33.694   <2e-16 ***
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -2.684809   1.897652  -1.415    0.171    
+    ## Attendance   0.164917   0.006236  26.445   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 3.014 on 89 degrees of freedom
-    ## Multiple R-squared:  0.9273, Adjusted R-squared:  0.9265 
-    ## F-statistic:  1135 on 1 and 89 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 5.047 on 22 degrees of freedom
+    ## Multiple R-squared:  0.9695, Adjusted R-squared:  0.9681 
+    ## F-statistic: 699.4 on 1 and 22 DF,  p-value: < 2.2e-16
 
 We get what *appears* to be a good result: a *highly* predictive model
 that shows about a 15% attachment rate from attendance to popcorn
 purchase.
 
-Let’s plot this.
+Let’s plot our predictions in the past and future, and actuals in the
+past.
 
 ``` r
 d_daily <- d |> 
   group_by(Date) |>
-  summarize(PopcornSales = sum(PopcornSales), PredictedPopcorn = sum(PredictedPopcorn)) |>
+  summarize(PredictedPopcorn = sum(PredictedPopcorn)) |>
   ungroup() |>
+  full_join(popcorn_sales, by='Date') |>
   mutate(Month = format(Date, '%B')) |>
   group_by(Month) |>
-  mutate(MeanPopcornSales = mean(PopcornSales), MeanPredictedPopcorn = mean(PredictedPopcorn)) |>
+  mutate(
+    MeanPredictedPopcorn = mean(PredictedPopcorn), 
+    MeanPopcornSales = mean(PopcornSales)) |>
   ungroup()
 ggplot(
   data=d_daily,
   mapping=aes(x=Date)) +
   geom_point(mapping=aes(y=PopcornSales)) +
   geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
-  geom_step(mapping=aes(y=MeanPredictedPopcorn), directon='mid', color='Blue', alpha=0.5, linetype=2) +
+  geom_step(mapping=aes(y=MeanPredictedPopcorn), direction='mid', color='Blue', alpha=0.5, linetype=2) +
   ggtitle(paste(
-    "actual Popcorn sales as points, predited as lines\n(monthly mean as dashed step), train R2: ", 
+    'misusing corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ',
     sprintf('%.2f', train_R2)))
 ```
 
-![](Please_Version_Data_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](Please_Version_Data_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-Now we see the problem. Our model predicts popcorn sales in the presumed
-future month of September are going to be double what was seen in the
-past training month of August. As we don’t have the future data yet, we
-don’t immediately known this is wrong. But, without a presumed cause it
-is suspicious.
+Now we really see the problem. Our model predicts popcorn sales in the
+presumed future month of September are going to be double what was seen
+in the past training month of August. As we don’t have the future data
+yet, we don’t immediately known this is wrong. But, without a presumed
+cause it is suspicious.
 
 ## Diagnosing
 
@@ -153,7 +202,7 @@ ggplot(
   ggtitle("distribution of attendance by month")
 ```
 
-![](Please_Version_Data_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](Please_Version_Data_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 The months look nothing alike. The estimated future attendances (which
 we purchased from our data supplier) look nothing like what the data
@@ -167,14 +216,14 @@ d |>
   knitr::kable()
 ```
 
-|     | Date       | Movie                                                                      | Time    | Attendance | PopcornSales | PredictedPopcorn |
-|:----|:-----------|:---------------------------------------------------------------------------|:--------|-----------:|-------------:|-----------------:|
-| 189 | 2024-09-26 | Girls Will Be Girls                                                        | 6:30 pm |        233 |           NA |             35.8 |
-| 190 | 2024-09-26 | To Be Destroyed / It’s Okay with Dave Eggers                               | 6:30 pm |        233 |           NA |             35.8 |
-| 191 | 2024-09-26 | LeatherWeek: Puppies and Leather and Boys!                                 | 8:40 pm |        233 |           NA |             35.8 |
-| 192 | 2024-09-27 | Floating Features: Pirates of the Caribbean – The Curse of the Black Pearl | 6:30 pm |        233 |           NA |             35.8 |
-| 193 | 2024-09-27 | All Shall Be Well                                                          | 6:30 pm |         47 |           NA |              7.3 |
-| 194 | 2024-09-28 | BloodSisters                                                               | 4:00 pm |        233 |           NA |             35.8 |
+|     | Date       | Movie                                                                      | Time    | Attendance | PredictedPopcorn |
+|:----|:-----------|:---------------------------------------------------------------------------|:--------|-----------:|-----------------:|
+| 189 | 2024-09-26 | Girls Will Be Girls                                                        | 6:30 pm |        233 |             35.7 |
+| 190 | 2024-09-26 | To Be Destroyed / It’s Okay with Dave Eggers                               | 6:30 pm |        233 |             35.7 |
+| 191 | 2024-09-26 | LeatherWeek: Puppies and Leather and Boys!                                 | 8:40 pm |        233 |             35.7 |
+| 192 | 2024-09-27 | Floating Features: Pirates of the Caribbean – The Curse of the Black Pearl | 6:30 pm |        233 |             35.7 |
+| 193 | 2024-09-27 | All Shall Be Well                                                          | 6:30 pm |         47 |              5.1 |
+| 194 | 2024-09-28 | BloodSisters                                                               | 4:00 pm |        233 |             35.7 |
 
 This looks like only a few different attendance values are reported.
 Let’s dig deeper into that.
@@ -220,11 +269,15 @@ are estimates, just like the future application data will be.
 If our vendor supplies versioned data we can then use that. Even though
 it is “inferior” it is better suited to our application.
 
-Let’s see that in action.
+Let’s see that in action. To do this we need older projections for
+attendance that have not been corrected.
 
 ``` r
 # read our data
-d_est <- read.csv('Roxie_schedule_estimates.csv', strip.white = TRUE, stringsAsFactors = FALSE)
+d_est <- read.csv(
+  'Roxie_schedule_as_known_before_August.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
 d_est$Date <- as.Date(d$Date, format='%Y-%B-%d')
 
 d_est |>
@@ -232,14 +285,14 @@ d_est |>
   knitr::kable()
 ```
 
-| Date       | Movie                                                | Time    | EstimatedAttendance | PopcornSales |
-|:-----------|:-----------------------------------------------------|:--------|--------------------:|-------------:|
-| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |                  47 |            1 |
-| 2024-08-01 | Eno                                                  | 6:40 pm |                 233 |            1 |
-| 2024-08-01 | Longlegs                                             | 8:35 pm |                 233 |           20 |
-| 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |                  47 |            3 |
-| 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |                 233 |           39 |
-| 2024-08-02 | Lyd                                                  | 6:30 pm |                 233 |           24 |
+| Date       | Movie                                                | Time    | EstimatedAttendance |
+|:-----------|:-----------------------------------------------------|:--------|--------------------:|
+| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |                  47 |
+| 2024-08-01 | Eno                                                  | 6:40 pm |                 233 |
+| 2024-08-01 | Longlegs                                             | 8:35 pm |                 233 |
+| 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |                  47 |
+| 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |                 233 |
+| 2024-08-02 | Lyd                                                  | 6:30 pm |                 233 |
 
 We now have the older estimates are just as bad as the future estimates-
 so learning to work with them will help us in the future. For our
@@ -250,7 +303,12 @@ data.
 
 ``` r
 # predict popcorn sales as a function of attendance
-d_est_train <- d_est[is.na(d_est$PopcornSales) == FALSE, , drop=FALSE]
+d_est_train <- d_est |>
+  filter(is.na(EstimatedAttendance) == FALSE) |>
+  group_by(Date) |>
+  summarize(EstimatedAttendance = sum(EstimatedAttendance)) |>
+  inner_join(popcorn_sales, by='Date')
+
 model_est <- lm(PopcornSales ~ EstimatedAttendance, data=d_est_train)
 d_est$PredictedPopcorn <- round(pmax(0, predict(model_est, newdata=d_est)), digits=1)
 train_est_R2 <- summary(model_est)$adj.r.squared
@@ -259,11 +317,14 @@ train_est_R2 <- summary(model_est)$adj.r.squared
 ``` r
 d_est_daily <- d_est |> 
   group_by(Date) |>
-  summarize(PopcornSales = sum(PopcornSales), PredictedPopcorn = sum(PredictedPopcorn)) |>
+  summarize(PredictedPopcorn = sum(PredictedPopcorn)) |>
   ungroup() |>
+  full_join(popcorn_sales, by='Date') |>
   mutate(Month = format(Date, '%B')) |>
   group_by(Month) |>
-  mutate(MeanPopcornSales = mean(PopcornSales), MeanPredictedPopcorn = mean(PredictedPopcorn)) |>
+  mutate(
+    MeanPredictedPopcorn = mean(PredictedPopcorn), 
+    MeanPopcornSales = mean(PopcornSales)) |>
   ungroup()
 ggplot(
   data=d_est_daily,
@@ -272,24 +333,25 @@ ggplot(
   geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
   geom_step(mapping=aes(y=MeanPredictedPopcorn), directon='mid', color='Blue', alpha=0.5, linetype=2) +
   ggtitle(paste(
-    "actual Popcorn sales as points, predited from attendance estimates as lines\n(monthly mean as dashed step), train R2: ", 
+    'correctly using non-corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ', 
     sprintf('%.2f', train_est_R2)))
 ```
 
-![](Please_Version_Data_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](Please_Version_Data_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Note: using the estimated attendance to train (instead of actual) gives
-a *vastly* inferior R-squared as measured on training data. However, it
-gives us a model that performs *much* better in the future (which
-presumably is the actual project goal)!
+a *vastly* inferior R-squared as measured on training data. However
+usign the estimated attendane (without corrections) gives us a model
+that performs *much* better in the future (which *is* the actual project
+goal)!
 
 ## Conclusion
 
 The performance of a model on held-out data is only a proxy measure for
 future model performance. In our example we see that this common proxy
 idea breaks down when there is a data concept-change between the
-training and application periods. The fix is: “as of” or bitemporal
-modeling.
+training and application periods. The fix is: using “as of” data or
+bitemporal modeling.
 
 A common way to achieve a full bitemporal data model is: reversible time
 stamped audit logging on any field edits. One keeps additional records
@@ -304,4 +366,11 @@ cost of the audit or roll-back logging. So one needs to turn these
 engineers into modeling peers and allies.
 
 Data users should *insist* on bitemporal data for forecasting
-applications.
+applications. When date or time enter the picture- it is rare that there
+is only one key. Most date/time questions unfortunately can not be
+simplified down to “what is the prediction for date x?” Instead one
+needs to respect structures such as “what is the best predition for date
+x, using a model trained up through what was known at date y, and taking
+inputs known up through date z?” To even back test such models one needs
+a bitemporal database (to control what data looked like at different
+times).
