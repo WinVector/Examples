@@ -59,7 +59,7 @@ popcorn sales (allowing us to staff, purchase, and predict revenue).
 In the above example data all dates in August of 2024 are “in the past”
 (available as training and test/validation data) and all dates in
 September of 2024 are “in the future” (dates we want to make predictions
-for). The movie attendance service we are subscribing supplies: past
+for). The movie attendance service we are subscribing to supplies: past
 schedules, past attendance, future schedules, and (estimated) future
 attendance.
 
@@ -70,13 +70,16 @@ attendance” and “(estimated) future attendance.” In machine learning
 modeling we want our explanatory variables (in this case attendance) to
 be produced the same way when *training* a model as when *applying* the
 model. Here in the past we are using recorded attendance, and in the
-future we are using some sort of estimated future attendance. These are
-*not* necessarily the same thing.
+future we are using some sort of estimated future attendance. Without
+proper care, these are *not* necessarily the same thing.
 
 ### Continuing the example
 
-Our next step is to build a model relating past popcorn (unit) purchases
-to past attendance.
+Our intermediate goal is to build a model relating past popcorn (unit)
+purchases to past attendance.
+
+To do this we join in our own past popcorn sales data (in units sold)
+and build predictive model.
 
 ``` r
 # join in popcorn sales records
@@ -207,8 +210,8 @@ ggplot(
 ![](Please_Version_Data_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 The months look nothing alike. The estimated future attendances (which
-we purchased from our data supplier) look nothing like what the data
-supplier said past attendances were.
+we purchased from our data supplier) look nothing like what the (same)
+data supplier said past attendances were.
 
 Let’s look at a few rows of future application data.
 
@@ -251,13 +254,15 @@ data supplier is using the venue size as the size estimate. For past
 events they *edit* the event record to reflect actual ticketed
 attendance. This correction seems like an improvement, until one
 attempts a project spanning both past (used for training) and future
-(used for application) data. This is a *severe* form of undesirable
-concept-drift or data non-exchangeability. We need the imposed practice
-or rehearsal conditions to simulate the required performance conditions.
+(used for application) data. The individual record may seem better, but
+its relation to other records is made worse. This is a *severe* form of
+undesirable concept-drift or data non-exchangeability. We need the
+imposed practice or rehearsal conditions to simulate the required
+performance conditions.
 
-No amount of back-testing on past data would show the effect. Only
-tracking what was the recorded attendance for a given date *as a
-function of when we ask* will reveal what is going on.
+No amount of single time index back-testing on past data would show the
+effect. Only tracking what was the recorded attendance for a given date
+*as a function of when we ask* will reveal what is going on.
 
 ## The fix
 
@@ -272,7 +277,8 @@ If our vendor supplies versioned data we can then use that. Even though
 it is “inferior” it is better suited to our application.
 
 Let’s see that in action. To do this we need older projections for
-attendance that have not been corrected.
+attendance that have not been corrected. If we have such we can proceed,
+if not we are stuck. Let’s suppose we have the older records.
 
 ``` r
 # read our data
@@ -295,10 +301,6 @@ d_est |>
 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |                  47 |
 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |                 233 |
 | 2024-08-02 | Lyd                                                  | 6:30 pm |                 233 |
-
-We now have the older estimates are just as bad as the future estimates-
-so learning to work with them will help us in the future. For our
-application this is in fact an improvement.
 
 Let’s repeat our modeling effort with the uncorrected (not retouched)
 data.
@@ -343,11 +345,12 @@ ggplot(
 
 Note: using the estimated attendance to train (instead of actual) gives
 a *vastly* inferior R-squared as measured on training data. However
-usign the estimated attendane (without corrections) gives us a model
+usign the estimated attendance (without corrections) gives us a model
 that performs *much* better in the future (which *is* the actual project
 goal)! The idea is: we expect our model to be applied to rough future
 inputs, so we need to train it on such (and not on cleaned up values if
-such are not going to be available during application).
+such are not going to be available during application). A production
+model must be trained in rough seas.
 
 ## Conclusion
 
