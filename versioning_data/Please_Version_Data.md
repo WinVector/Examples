@@ -19,10 +19,30 @@ with an example.
 ## An Example Problem
 
 Suppose you are purchasing past scheduled and future predicted movie
-attendance data for your region. The data is initially described as
-having aligned published movie schedules with a projection of attendance
-and looks like the following schedule from [The Roxie movie
+attendance data for your region. In particular you are concerned about
+planning for popcorn sales at the [The Roxie movie
 house](https://roxie.com/calendar/).
+
+<center>
+<a href="https://en.wikipedia.org/wiki/Roxie_Theater#/media/File:RoxieSF.jpg">
+<img src="1920px-RoxieSF.jpg" height=400>
+<p/>
+Photo by
+<a rel="nofollow" class="external text" href="https://www.flickr.com/photos/45199709@N00">Simon
+Durkin</a> - originally posted to
+<a href="//commons.wikimedia.org/wiki/Flickr" class="mw-redirect" title="Flickr">Flickr</a>
+as
+<a rel="nofollow" class="external text" href="https://www.flickr.com/photos/45199709@N00/3329573032">Roxie
+Theatre - Mission SF</a>,
+<a href="https://creativecommons.org/licenses/by-sa/2.0" title="Creative Commons Attribution-Share Alike 2.0">CC
+BY-SA 2.0</a>,
+<a href="https://commons.wikimedia.org/w/index.php?curid=7593242">Link</a>
+</a>
+</center>
+
+The attendance data is initially described as having aligned published
+movie schedules with a projection of attendance and looks like the
+following.
 
 ``` r
 # attach our packages
@@ -40,7 +60,7 @@ d$Date <- as.Date(d$Date)
 
 d |>
   head() |>
-  knitr::kable()
+  knitr::kable(row.names = NA)
 ```
 
 | Date       | Movie                                                | Time    | Attendance |
@@ -91,7 +111,7 @@ popcorn_sales$Date <- as.Date(popcorn_sales$Date)
 
 popcorn_sales |>
   head() |>
-  knitr::kable()
+  knitr::kable(row.names = NA)
 ```
 
 | Date       | PopcornSales |
@@ -112,7 +132,7 @@ d_train <- d |>
 
 d_train |>
   head() |>
-  knitr::kable()
+  knitr::kable(row.names = NA)
 ```
 
 | Date       | Attendance | PopcornSales |
@@ -127,7 +147,9 @@ d_train |>
 ``` r
 # model popcorn sales as a function of attendance
 model <- lm(PopcornSales ~ Attendance, data=d_train)
-d$PredictedPopcorn <- round(pmax(0, predict(model, newdata=d)), digits=1)
+d$PredictedPopcorn <- round(pmax(0, 
+                                 predict(model, newdata=d)), 
+                            digits=1)
 train_R2 <- summary(model)$adj.r.squared
 summary(model)
 ```
@@ -174,8 +196,15 @@ ggplot(
   data=d_daily,
   mapping=aes(x=Date)) +
   geom_point(mapping=aes(y=PopcornSales)) +
-  geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
-  geom_step(mapping=aes(y=MeanPredictedPopcorn), direction='mid', color='Blue', alpha=0.5, linetype=2) +
+  geom_line(
+    mapping=aes(y=PredictedPopcorn), 
+    color='Blue') +
+  geom_step(
+    mapping=aes(y=MeanPredictedPopcorn), 
+    direction='mid', 
+    color='Blue', 
+    alpha=0.5, 
+    linetype=2) +
   ggtitle(paste(
     'misusing corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ',
     sprintf('%.2f', train_R2)))
@@ -200,7 +229,11 @@ d_plot$Month = format(d_plot$Date, '%B')
 
 ggplot(
   data=d_plot,
-  mapping=aes(x=Attendance, color=Month, fill=Month, linetype=Month)) +
+  mapping=aes(
+    x=Attendance, 
+    color=Month, 
+    fill=Month, 
+    linetype=Month)) +
   geom_density(adjust = 0.2, alpha=0.5) +
   scale_color_brewer(type="qual", palette="Dark2") + 
   scale_fill_brewer(type="qual", palette="Dark2") +
@@ -218,7 +251,7 @@ Let’s look at a few rows of future application data.
 ``` r
 d |>
   tail() |>
-  knitr::kable()
+  knitr::kable(row.names = NA)
 ```
 
 |     | Date       | Movie                                                                      | Time    | Attendance | PredictedPopcorn |
@@ -234,8 +267,10 @@ This looks like only a few different attendance values are reported.
 Let’s dig deeper into that.
 
 ``` r
-table(Attendance = d[format(d$Date, '%B') == 'September', 'Attendance']) |>
-  knitr::kable()
+table(
+  Attendance = d[format(d$Date, '%B') == 'September',
+                 'Attendance']) |>
+  knitr::kable(row.names = NA)
 ```
 
 | Attendance | Freq |
@@ -290,7 +325,7 @@ d_est$Date <- as.Date(d$Date, format='%Y-%B-%d')
 
 d_est |>
   head() |>
-  knitr::kable()
+  knitr::kable(row.names = NA)
 ```
 
 | Date       | Movie                                                | Time    | EstimatedAttendance |
@@ -314,7 +349,9 @@ d_est_train <- d_est |>
   inner_join(popcorn_sales, by='Date')
 
 model_est <- lm(PopcornSales ~ EstimatedAttendance, data=d_est_train)
-d_est$PredictedPopcorn <- round(pmax(0, predict(model_est, newdata=d_est)), digits=1)
+d_est$PredictedPopcorn <- round(pmax(0, 
+                                     predict(model_est, newdata=d_est)), 
+                                digits=1)
 train_est_R2 <- summary(model_est)$adj.r.squared
 ```
 
@@ -334,8 +371,15 @@ ggplot(
   data=d_est_daily,
   mapping=aes(x=Date)) +
   geom_point(mapping=aes(y=PopcornSales)) +
-  geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
-  geom_step(mapping=aes(y=MeanPredictedPopcorn), directon='mid', color='Blue', alpha=0.5, linetype=2) +
+  geom_line(mapping=aes(
+    y=PredictedPopcorn), 
+    color='Blue') +
+  geom_step(mapping=aes(
+    y=MeanPredictedPopcorn), 
+    directon='mid', 
+    color='Blue', 
+    alpha=0.5, 
+    linetype=2) +
   ggtitle(paste(
     'properly using non-corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ', 
     sprintf('%.2f', train_est_R2)))
