@@ -344,8 +344,8 @@ ggplot(
 ![](Please_Version_Data_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Note: using the estimated attendance to train (instead of actual) gives
-a *vastly* inferior R-squared as measured on training data. However
-usign the estimated attendance (without corrections) gives us a model
+a *vastly* inferior R-squared as measured on training data. However,
+using the estimated attendance (without corrections) gives us a model
 that performs *much* better in the future (which *is* the actual project
 goal)! The idea is: we expect our model to be applied to rough future
 inputs, so we need to train it on such (and not on cleaned up values if
@@ -363,14 +363,9 @@ bitemporal modeling.
 A common way to achieve a full bitemporal data model is: reversible time
 stamped audit logging on any field edits. One keeps additional records
 of the form “at this time this value was changed from A to B in this
-record.” This puts most of the cost of “as of” or “what would this value
-have looked like if asked about at this date” queries on the modeling
-system (which wants them) and away from the data production system
-(which would just like to update records and be done with things).
-
-An engineer unfamiliar with how forecasts are applied may not accept the
-cost of the audit or roll-back logging. So one needs to turn these
-engineers into modeling peers and allies.
+record.” An engineer unfamiliar with how forecasts are applied may not
+accept the cost of the audit or roll-back logging. So one needs to turn
+these engineers into modeling peers and allies.
 
 Data users should *insist* on bitemporal data for forecasting
 applications. When date or time enter the picture- it is rare that there
