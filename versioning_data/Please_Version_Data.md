@@ -6,20 +6,22 @@ Please Version Data
 
 An important goal of our [Win Vector LLC teaching
 offerings](https://win-vector.com/training-overview/) is to instill in
-engineers an empathy of how data is likely to be used. Having such
-engineers in your organization *greatly* increases the quality of data
-later available to your analysts and data scientists. This greatly
-expands what is possible in prediction and forecasting, which can lead
-to significant revenue opportunities.
+engineers some familiarity with and empathy for how data is likely to be
+used for analytics and business. Having such engineers in your
+organization *greatly* increases the quality of data later available to
+your analysts and data scientists. This in turn expands what is possible
+in prediction and forecasting, which can lead to significant revenue
+opportunities.
 
-I’d like to illustrate this with an example.
+I’d like to illustrate a data issue that can squander such opportunities
+with an example.
 
 ## An Example Problem
 
-Suppose you are purchasing predicted and scheduled movie attendance data
-for your region. The data is initially described as having aligned
-published movie schedules with a projection of attendance and looks like
-the following schedule from [The Roxie movie
+Suppose you are purchasing past scheduled and future predicted movie
+attendance data for your region. The data is initially described as
+having aligned published movie schedules with a projection of attendance
+and looks like the following schedule from [The Roxie movie
 house](https://roxie.com/calendar/).
 
 ``` r
@@ -250,7 +252,7 @@ events they *edit* the event record to reflect actual ticketed
 attendance. This correction seems like an improvement, until one
 attempts a project spanning both past (used for training) and future
 (used for application) data. This is a *severe* form of undesirable
-concept-drift or non-exchangeability. Or: we need the imposed practice
+concept-drift or data non-exchangeability. We need the imposed practice
 or rehearsal conditions to simulate the required performance conditions.
 
 No amount of back-testing on past data would show the effect. Only
@@ -296,7 +298,7 @@ d_est |>
 
 We now have the older estimates are just as bad as the future estimates-
 so learning to work with them will help us in the future. For our
-application is in fact an improvement.
+application this is in fact an improvement.
 
 Let’s repeat our modeling effort with the uncorrected (not retouched)
 data.
@@ -333,7 +335,7 @@ ggplot(
   geom_line(mapping=aes(y=PredictedPopcorn), color='Blue') +
   geom_step(mapping=aes(y=MeanPredictedPopcorn), directon='mid', color='Blue', alpha=0.5, linetype=2) +
   ggtitle(paste(
-    'correctly using non-corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ', 
+    'properly using non-corrected data\npopcorn sales, actual as points, predited as lines, monthly mean as dashed\ntrain R-Squared: ', 
     sprintf('%.2f', train_est_R2)))
 ```
 
@@ -350,8 +352,8 @@ such are not going to be available during application).
 ## Conclusion
 
 The performance of a model on held-out data is only a proxy measure for
-future model performance. In our example we see that this common proxy
-idea breaks down when there is a data concept-change between the
+future model performance. In our example we see that the desired
+connection breaks down when there is a data concept-change between the
 training and application periods. The fix is: using “as of” data or
 bitemporal modeling.
 
@@ -371,11 +373,11 @@ Data users should *insist* on bitemporal data for forecasting
 applications. When date or time enter the picture- it is rare that there
 is only one key. Most date/time questions unfortunately can not be
 simplified down to “what is the prediction for date x?” Instead one
-needs to respect structures such as “what is the best predition for date
-x, using a model trained up through what was known at date y, and taking
-inputs known up through date z?” To even back test such models one needs
-a bitemporal database (to control what data looked like at different
-times).
+needs to respect structures such as “what is the best prediction for
+date x, using a model trained up through what was known at date y, and
+taking inputs known up through date z?” To even back test such models
+one needs a bitemporal database (to control what data looked like at
+different times).
 
 ## Appendix
 
