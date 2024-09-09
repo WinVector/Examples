@@ -2,7 +2,7 @@ Please Version Data
 ================
 2024-09-07
 
-## Introdution
+## Introduction
 
 An important goal of our [Win Vector LLC teaching
 offerings](https://win-vector.com/training-overview/) is to instill in

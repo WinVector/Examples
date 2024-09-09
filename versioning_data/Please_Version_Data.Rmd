@@ -4,7 +4,7 @@ output: github_document
 date: "2024-09-07"
 ---
 
-## Introdution
+## Introduction
 
 An important goal of our [Win Vector LLC teaching offerings](https://win-vector.com/training-overview/) is to instill in engineers some familiarity with, and empathy for, how data is likely to be used for analytics and business. Having such engineers in your organization *greatly* increases the quality of the data later available to your analysts and data scientists. This in turn expands what is possible in prediction and forecasting, which can lead to significant revenue opportunities.
 
