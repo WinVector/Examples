@@ -6,11 +6,7 @@ rstan
 library(rstan)
 ```
 
-    ## Warning: package 'rstan' was built under R version 4.3.2
-
     ## Loading required package: StanHeaders
-
-    ## Warning: package 'StanHeaders' was built under R version 4.3.3
 
     ## 
     ## rstan version 2.32.6 (Stan version 2.32.2)
@@ -25,1010 +21,193 @@ library(rstan)
 
 ``` r
 library(jsonlite)
+library(ggplot2)
+library(poorman)
 ```
 
+    ## 
+    ##   I'd seen my father. He was a poor man, and I watched him do astonishing things.
+    ##     - Sidney Poitier
+
+    ## 
+    ## Attaching package: 'poorman'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
 ``` r
-data <- fromJSON("rank_data_utility_model_tmp.json")
+data <- fromJSON("rank_data_censored_picks.json")
 ```
 
 ``` r
 fit1 <- stan(
-  file = "rank_src_utility_model_tmp.stan",  # Stan program
-  data = data,    # named list of data
-  chains = 4,             # number of Markov chains
-  warmup = 1000,          # number of warmup iterations per chain
-  iter = 2000,            # total number of iterations per chain
-  cores = 4,              # number of cores (could use one per chain)
-  refresh = 0             # no progress shown
+  file = "rank_src_censored_picks.stan",  # Stan program
+  data = data,                            # named list of data
+  chains = 4,                             # number of Markov chains
+  warmup = 1000,                          # number of warmup iterations per chain
+  iter = 2000,                            # total number of iterations per chain
+  cores = 4,                              # number of cores (could use one per chain)
+  refresh = 0,                            # no progress shown
+  pars=c("lp__", "beta_0", "beta")        # parameters to bring back
   )
 ```
 
 ``` r
-res <- as.data.frame(fit1)
-dim(res)
+draws <- as.data.frame(fit1)
 ```
-
-    ## [1] 4000  729
 
 ``` r
-colnames(res)
+draws |>
+  head() |>
+  knitr::kable()
 ```
 
-    ##   [1] "beta[1]"              "beta[2]"              "beta[3]"             
-    ##   [4] "beta[4]"              "beta[5]"              "beta[6]"             
-    ##   [7] "beta[7]"              "beta[8]"              "beta[9]"             
-    ##  [10] "beta[10]"             "beta[11]"             "beta[12]"            
-    ##  [13] "beta[13]"             "beta[14]"             "beta[15]"            
-    ##  [16] "beta[16]"             "beta[17]"             "beta[18]"            
-    ##  [19] "beta[19]"             "beta[20]"             "beta[21]"            
-    ##  [22] "beta[22]"             "beta[23]"             "beta[24]"            
-    ##  [25] "beta[25]"             "beta[26]"             "beta[27]"            
-    ##  [28] "beta[28]"             "error_picked[1]"      "error_picked[2]"     
-    ##  [31] "error_picked[3]"      "error_picked[4]"      "error_picked[5]"     
-    ##  [34] "error_picked[6]"      "error_picked[7]"      "error_picked[8]"     
-    ##  [37] "error_picked[9]"      "error_picked[10]"     "error_picked[11]"    
-    ##  [40] "error_picked[12]"     "error_picked[13]"     "error_picked[14]"    
-    ##  [43] "error_picked[15]"     "error_picked[16]"     "error_picked[17]"    
-    ##  [46] "error_picked[18]"     "error_picked[19]"     "error_picked[20]"    
-    ##  [49] "error_picked[21]"     "error_picked[22]"     "error_picked[23]"    
-    ##  [52] "error_picked[24]"     "error_picked[25]"     "error_picked[26]"    
-    ##  [55] "error_picked[27]"     "error_picked[28]"     "error_picked[29]"    
-    ##  [58] "error_picked[30]"     "error_picked[31]"     "error_picked[32]"    
-    ##  [61] "error_picked[33]"     "error_picked[34]"     "error_picked[35]"    
-    ##  [64] "error_picked[36]"     "error_picked[37]"     "error_picked[38]"    
-    ##  [67] "error_picked[39]"     "error_picked[40]"     "error_picked[41]"    
-    ##  [70] "error_picked[42]"     "error_picked[43]"     "error_picked[44]"    
-    ##  [73] "error_picked[45]"     "error_picked[46]"     "error_picked[47]"    
-    ##  [76] "error_picked[48]"     "error_picked[49]"     "error_picked[50]"    
-    ##  [79] "error_picked[51]"     "error_picked[52]"     "error_picked[53]"    
-    ##  [82] "error_picked[54]"     "error_picked[55]"     "error_picked[56]"    
-    ##  [85] "error_picked[57]"     "error_picked[58]"     "error_picked[59]"    
-    ##  [88] "error_picked[60]"     "error_picked[61]"     "error_picked[62]"    
-    ##  [91] "error_picked[63]"     "error_picked[64]"     "error_picked[65]"    
-    ##  [94] "error_picked[66]"     "error_picked[67]"     "error_picked[68]"    
-    ##  [97] "error_picked[69]"     "error_picked[70]"     "error_picked[71]"    
-    ## [100] "error_picked[72]"     "error_picked[73]"     "error_picked[74]"    
-    ## [103] "error_picked[75]"     "error_picked[76]"     "error_picked[77]"    
-    ## [106] "error_picked[78]"     "error_picked[79]"     "error_picked[80]"    
-    ## [109] "error_picked[81]"     "error_picked[82]"     "error_picked[83]"    
-    ## [112] "error_picked[84]"     "error_picked[85]"     "error_picked[86]"    
-    ## [115] "error_picked[87]"     "error_picked[88]"     "error_picked[89]"    
-    ## [118] "error_picked[90]"     "error_picked[91]"     "error_picked[92]"    
-    ## [121] "error_picked[93]"     "error_picked[94]"     "error_picked[95]"    
-    ## [124] "error_picked[96]"     "error_picked[97]"     "error_picked[98]"    
-    ## [127] "error_picked[99]"     "error_picked[100]"    "expect_picked[1]"    
-    ## [130] "expect_picked[2]"     "expect_picked[3]"     "expect_picked[4]"    
-    ## [133] "expect_picked[5]"     "expect_picked[6]"     "expect_picked[7]"    
-    ## [136] "expect_picked[8]"     "expect_picked[9]"     "expect_picked[10]"   
-    ## [139] "expect_picked[11]"    "expect_picked[12]"    "expect_picked[13]"   
-    ## [142] "expect_picked[14]"    "expect_picked[15]"    "expect_picked[16]"   
-    ## [145] "expect_picked[17]"    "expect_picked[18]"    "expect_picked[19]"   
-    ## [148] "expect_picked[20]"    "expect_picked[21]"    "expect_picked[22]"   
-    ## [151] "expect_picked[23]"    "expect_picked[24]"    "expect_picked[25]"   
-    ## [154] "expect_picked[26]"    "expect_picked[27]"    "expect_picked[28]"   
-    ## [157] "expect_picked[29]"    "expect_picked[30]"    "expect_picked[31]"   
-    ## [160] "expect_picked[32]"    "expect_picked[33]"    "expect_picked[34]"   
-    ## [163] "expect_picked[35]"    "expect_picked[36]"    "expect_picked[37]"   
-    ## [166] "expect_picked[38]"    "expect_picked[39]"    "expect_picked[40]"   
-    ## [169] "expect_picked[41]"    "expect_picked[42]"    "expect_picked[43]"   
-    ## [172] "expect_picked[44]"    "expect_picked[45]"    "expect_picked[46]"   
-    ## [175] "expect_picked[47]"    "expect_picked[48]"    "expect_picked[49]"   
-    ## [178] "expect_picked[50]"    "expect_picked[51]"    "expect_picked[52]"   
-    ## [181] "expect_picked[53]"    "expect_picked[54]"    "expect_picked[55]"   
-    ## [184] "expect_picked[56]"    "expect_picked[57]"    "expect_picked[58]"   
-    ## [187] "expect_picked[59]"    "expect_picked[60]"    "expect_picked[61]"   
-    ## [190] "expect_picked[62]"    "expect_picked[63]"    "expect_picked[64]"   
-    ## [193] "expect_picked[65]"    "expect_picked[66]"    "expect_picked[67]"   
-    ## [196] "expect_picked[68]"    "expect_picked[69]"    "expect_picked[70]"   
-    ## [199] "expect_picked[71]"    "expect_picked[72]"    "expect_picked[73]"   
-    ## [202] "expect_picked[74]"    "expect_picked[75]"    "expect_picked[76]"   
-    ## [205] "expect_picked[77]"    "expect_picked[78]"    "expect_picked[79]"   
-    ## [208] "expect_picked[80]"    "expect_picked[81]"    "expect_picked[82]"   
-    ## [211] "expect_picked[83]"    "expect_picked[84]"    "expect_picked[85]"   
-    ## [214] "expect_picked[86]"    "expect_picked[87]"    "expect_picked[88]"   
-    ## [217] "expect_picked[89]"    "expect_picked[90]"    "expect_picked[91]"   
-    ## [220] "expect_picked[92]"    "expect_picked[93]"    "expect_picked[94]"   
-    ## [223] "expect_picked[95]"    "expect_picked[96]"    "expect_picked[97]"   
-    ## [226] "expect_picked[98]"    "expect_picked[99]"    "expect_picked[100]"  
-    ## [229] "v_picked[1]"          "v_picked[2]"          "v_picked[3]"         
-    ## [232] "v_picked[4]"          "v_picked[5]"          "v_picked[6]"         
-    ## [235] "v_picked[7]"          "v_picked[8]"          "v_picked[9]"         
-    ## [238] "v_picked[10]"         "v_picked[11]"         "v_picked[12]"        
-    ## [241] "v_picked[13]"         "v_picked[14]"         "v_picked[15]"        
-    ## [244] "v_picked[16]"         "v_picked[17]"         "v_picked[18]"        
-    ## [247] "v_picked[19]"         "v_picked[20]"         "v_picked[21]"        
-    ## [250] "v_picked[22]"         "v_picked[23]"         "v_picked[24]"        
-    ## [253] "v_picked[25]"         "v_picked[26]"         "v_picked[27]"        
-    ## [256] "v_picked[28]"         "v_picked[29]"         "v_picked[30]"        
-    ## [259] "v_picked[31]"         "v_picked[32]"         "v_picked[33]"        
-    ## [262] "v_picked[34]"         "v_picked[35]"         "v_picked[36]"        
-    ## [265] "v_picked[37]"         "v_picked[38]"         "v_picked[39]"        
-    ## [268] "v_picked[40]"         "v_picked[41]"         "v_picked[42]"        
-    ## [271] "v_picked[43]"         "v_picked[44]"         "v_picked[45]"        
-    ## [274] "v_picked[46]"         "v_picked[47]"         "v_picked[48]"        
-    ## [277] "v_picked[49]"         "v_picked[50]"         "v_picked[51]"        
-    ## [280] "v_picked[52]"         "v_picked[53]"         "v_picked[54]"        
-    ## [283] "v_picked[55]"         "v_picked[56]"         "v_picked[57]"        
-    ## [286] "v_picked[58]"         "v_picked[59]"         "v_picked[60]"        
-    ## [289] "v_picked[61]"         "v_picked[62]"         "v_picked[63]"        
-    ## [292] "v_picked[64]"         "v_picked[65]"         "v_picked[66]"        
-    ## [295] "v_picked[67]"         "v_picked[68]"         "v_picked[69]"        
-    ## [298] "v_picked[70]"         "v_picked[71]"         "v_picked[72]"        
-    ## [301] "v_picked[73]"         "v_picked[74]"         "v_picked[75]"        
-    ## [304] "v_picked[76]"         "v_picked[77]"         "v_picked[78]"        
-    ## [307] "v_picked[79]"         "v_picked[80]"         "v_picked[81]"        
-    ## [310] "v_picked[82]"         "v_picked[83]"         "v_picked[84]"        
-    ## [313] "v_picked[85]"         "v_picked[86]"         "v_picked[87]"        
-    ## [316] "v_picked[88]"         "v_picked[89]"         "v_picked[90]"        
-    ## [319] "v_picked[91]"         "v_picked[92]"         "v_picked[93]"        
-    ## [322] "v_picked[94]"         "v_picked[95]"         "v_picked[96]"        
-    ## [325] "v_picked[97]"         "v_picked[98]"         "v_picked[99]"        
-    ## [328] "v_picked[100]"        "expect_passed_1[1]"   "expect_passed_1[2]"  
-    ## [331] "expect_passed_1[3]"   "expect_passed_1[4]"   "expect_passed_1[5]"  
-    ## [334] "expect_passed_1[6]"   "expect_passed_1[7]"   "expect_passed_1[8]"  
-    ## [337] "expect_passed_1[9]"   "expect_passed_1[10]"  "expect_passed_1[11]" 
-    ## [340] "expect_passed_1[12]"  "expect_passed_1[13]"  "expect_passed_1[14]" 
-    ## [343] "expect_passed_1[15]"  "expect_passed_1[16]"  "expect_passed_1[17]" 
-    ## [346] "expect_passed_1[18]"  "expect_passed_1[19]"  "expect_passed_1[20]" 
-    ## [349] "expect_passed_1[21]"  "expect_passed_1[22]"  "expect_passed_1[23]" 
-    ## [352] "expect_passed_1[24]"  "expect_passed_1[25]"  "expect_passed_1[26]" 
-    ## [355] "expect_passed_1[27]"  "expect_passed_1[28]"  "expect_passed_1[29]" 
-    ## [358] "expect_passed_1[30]"  "expect_passed_1[31]"  "expect_passed_1[32]" 
-    ## [361] "expect_passed_1[33]"  "expect_passed_1[34]"  "expect_passed_1[35]" 
-    ## [364] "expect_passed_1[36]"  "expect_passed_1[37]"  "expect_passed_1[38]" 
-    ## [367] "expect_passed_1[39]"  "expect_passed_1[40]"  "expect_passed_1[41]" 
-    ## [370] "expect_passed_1[42]"  "expect_passed_1[43]"  "expect_passed_1[44]" 
-    ## [373] "expect_passed_1[45]"  "expect_passed_1[46]"  "expect_passed_1[47]" 
-    ## [376] "expect_passed_1[48]"  "expect_passed_1[49]"  "expect_passed_1[50]" 
-    ## [379] "expect_passed_1[51]"  "expect_passed_1[52]"  "expect_passed_1[53]" 
-    ## [382] "expect_passed_1[54]"  "expect_passed_1[55]"  "expect_passed_1[56]" 
-    ## [385] "expect_passed_1[57]"  "expect_passed_1[58]"  "expect_passed_1[59]" 
-    ## [388] "expect_passed_1[60]"  "expect_passed_1[61]"  "expect_passed_1[62]" 
-    ## [391] "expect_passed_1[63]"  "expect_passed_1[64]"  "expect_passed_1[65]" 
-    ## [394] "expect_passed_1[66]"  "expect_passed_1[67]"  "expect_passed_1[68]" 
-    ## [397] "expect_passed_1[69]"  "expect_passed_1[70]"  "expect_passed_1[71]" 
-    ## [400] "expect_passed_1[72]"  "expect_passed_1[73]"  "expect_passed_1[74]" 
-    ## [403] "expect_passed_1[75]"  "expect_passed_1[76]"  "expect_passed_1[77]" 
-    ## [406] "expect_passed_1[78]"  "expect_passed_1[79]"  "expect_passed_1[80]" 
-    ## [409] "expect_passed_1[81]"  "expect_passed_1[82]"  "expect_passed_1[83]" 
-    ## [412] "expect_passed_1[84]"  "expect_passed_1[85]"  "expect_passed_1[86]" 
-    ## [415] "expect_passed_1[87]"  "expect_passed_1[88]"  "expect_passed_1[89]" 
-    ## [418] "expect_passed_1[90]"  "expect_passed_1[91]"  "expect_passed_1[92]" 
-    ## [421] "expect_passed_1[93]"  "expect_passed_1[94]"  "expect_passed_1[95]" 
-    ## [424] "expect_passed_1[96]"  "expect_passed_1[97]"  "expect_passed_1[98]" 
-    ## [427] "expect_passed_1[99]"  "expect_passed_1[100]" "expect_passed_2[1]"  
-    ## [430] "expect_passed_2[2]"   "expect_passed_2[3]"   "expect_passed_2[4]"  
-    ## [433] "expect_passed_2[5]"   "expect_passed_2[6]"   "expect_passed_2[7]"  
-    ## [436] "expect_passed_2[8]"   "expect_passed_2[9]"   "expect_passed_2[10]" 
-    ## [439] "expect_passed_2[11]"  "expect_passed_2[12]"  "expect_passed_2[13]" 
-    ## [442] "expect_passed_2[14]"  "expect_passed_2[15]"  "expect_passed_2[16]" 
-    ## [445] "expect_passed_2[17]"  "expect_passed_2[18]"  "expect_passed_2[19]" 
-    ## [448] "expect_passed_2[20]"  "expect_passed_2[21]"  "expect_passed_2[22]" 
-    ## [451] "expect_passed_2[23]"  "expect_passed_2[24]"  "expect_passed_2[25]" 
-    ## [454] "expect_passed_2[26]"  "expect_passed_2[27]"  "expect_passed_2[28]" 
-    ## [457] "expect_passed_2[29]"  "expect_passed_2[30]"  "expect_passed_2[31]" 
-    ## [460] "expect_passed_2[32]"  "expect_passed_2[33]"  "expect_passed_2[34]" 
-    ## [463] "expect_passed_2[35]"  "expect_passed_2[36]"  "expect_passed_2[37]" 
-    ## [466] "expect_passed_2[38]"  "expect_passed_2[39]"  "expect_passed_2[40]" 
-    ## [469] "expect_passed_2[41]"  "expect_passed_2[42]"  "expect_passed_2[43]" 
-    ## [472] "expect_passed_2[44]"  "expect_passed_2[45]"  "expect_passed_2[46]" 
-    ## [475] "expect_passed_2[47]"  "expect_passed_2[48]"  "expect_passed_2[49]" 
-    ## [478] "expect_passed_2[50]"  "expect_passed_2[51]"  "expect_passed_2[52]" 
-    ## [481] "expect_passed_2[53]"  "expect_passed_2[54]"  "expect_passed_2[55]" 
-    ## [484] "expect_passed_2[56]"  "expect_passed_2[57]"  "expect_passed_2[58]" 
-    ## [487] "expect_passed_2[59]"  "expect_passed_2[60]"  "expect_passed_2[61]" 
-    ## [490] "expect_passed_2[62]"  "expect_passed_2[63]"  "expect_passed_2[64]" 
-    ## [493] "expect_passed_2[65]"  "expect_passed_2[66]"  "expect_passed_2[67]" 
-    ## [496] "expect_passed_2[68]"  "expect_passed_2[69]"  "expect_passed_2[70]" 
-    ## [499] "expect_passed_2[71]"  "expect_passed_2[72]"  "expect_passed_2[73]" 
-    ## [502] "expect_passed_2[74]"  "expect_passed_2[75]"  "expect_passed_2[76]" 
-    ## [505] "expect_passed_2[77]"  "expect_passed_2[78]"  "expect_passed_2[79]" 
-    ## [508] "expect_passed_2[80]"  "expect_passed_2[81]"  "expect_passed_2[82]" 
-    ## [511] "expect_passed_2[83]"  "expect_passed_2[84]"  "expect_passed_2[85]" 
-    ## [514] "expect_passed_2[86]"  "expect_passed_2[87]"  "expect_passed_2[88]" 
-    ## [517] "expect_passed_2[89]"  "expect_passed_2[90]"  "expect_passed_2[91]" 
-    ## [520] "expect_passed_2[92]"  "expect_passed_2[93]"  "expect_passed_2[94]" 
-    ## [523] "expect_passed_2[95]"  "expect_passed_2[96]"  "expect_passed_2[97]" 
-    ## [526] "expect_passed_2[98]"  "expect_passed_2[99]"  "expect_passed_2[100]"
-    ## [529] "expect_passed_3[1]"   "expect_passed_3[2]"   "expect_passed_3[3]"  
-    ## [532] "expect_passed_3[4]"   "expect_passed_3[5]"   "expect_passed_3[6]"  
-    ## [535] "expect_passed_3[7]"   "expect_passed_3[8]"   "expect_passed_3[9]"  
-    ## [538] "expect_passed_3[10]"  "expect_passed_3[11]"  "expect_passed_3[12]" 
-    ## [541] "expect_passed_3[13]"  "expect_passed_3[14]"  "expect_passed_3[15]" 
-    ## [544] "expect_passed_3[16]"  "expect_passed_3[17]"  "expect_passed_3[18]" 
-    ## [547] "expect_passed_3[19]"  "expect_passed_3[20]"  "expect_passed_3[21]" 
-    ## [550] "expect_passed_3[22]"  "expect_passed_3[23]"  "expect_passed_3[24]" 
-    ## [553] "expect_passed_3[25]"  "expect_passed_3[26]"  "expect_passed_3[27]" 
-    ## [556] "expect_passed_3[28]"  "expect_passed_3[29]"  "expect_passed_3[30]" 
-    ## [559] "expect_passed_3[31]"  "expect_passed_3[32]"  "expect_passed_3[33]" 
-    ## [562] "expect_passed_3[34]"  "expect_passed_3[35]"  "expect_passed_3[36]" 
-    ## [565] "expect_passed_3[37]"  "expect_passed_3[38]"  "expect_passed_3[39]" 
-    ## [568] "expect_passed_3[40]"  "expect_passed_3[41]"  "expect_passed_3[42]" 
-    ## [571] "expect_passed_3[43]"  "expect_passed_3[44]"  "expect_passed_3[45]" 
-    ## [574] "expect_passed_3[46]"  "expect_passed_3[47]"  "expect_passed_3[48]" 
-    ## [577] "expect_passed_3[49]"  "expect_passed_3[50]"  "expect_passed_3[51]" 
-    ## [580] "expect_passed_3[52]"  "expect_passed_3[53]"  "expect_passed_3[54]" 
-    ## [583] "expect_passed_3[55]"  "expect_passed_3[56]"  "expect_passed_3[57]" 
-    ## [586] "expect_passed_3[58]"  "expect_passed_3[59]"  "expect_passed_3[60]" 
-    ## [589] "expect_passed_3[61]"  "expect_passed_3[62]"  "expect_passed_3[63]" 
-    ## [592] "expect_passed_3[64]"  "expect_passed_3[65]"  "expect_passed_3[66]" 
-    ## [595] "expect_passed_3[67]"  "expect_passed_3[68]"  "expect_passed_3[69]" 
-    ## [598] "expect_passed_3[70]"  "expect_passed_3[71]"  "expect_passed_3[72]" 
-    ## [601] "expect_passed_3[73]"  "expect_passed_3[74]"  "expect_passed_3[75]" 
-    ## [604] "expect_passed_3[76]"  "expect_passed_3[77]"  "expect_passed_3[78]" 
-    ## [607] "expect_passed_3[79]"  "expect_passed_3[80]"  "expect_passed_3[81]" 
-    ## [610] "expect_passed_3[82]"  "expect_passed_3[83]"  "expect_passed_3[84]" 
-    ## [613] "expect_passed_3[85]"  "expect_passed_3[86]"  "expect_passed_3[87]" 
-    ## [616] "expect_passed_3[88]"  "expect_passed_3[89]"  "expect_passed_3[90]" 
-    ## [619] "expect_passed_3[91]"  "expect_passed_3[92]"  "expect_passed_3[93]" 
-    ## [622] "expect_passed_3[94]"  "expect_passed_3[95]"  "expect_passed_3[96]" 
-    ## [625] "expect_passed_3[97]"  "expect_passed_3[98]"  "expect_passed_3[99]" 
-    ## [628] "expect_passed_3[100]" "expect_passed_4[1]"   "expect_passed_4[2]"  
-    ## [631] "expect_passed_4[3]"   "expect_passed_4[4]"   "expect_passed_4[5]"  
-    ## [634] "expect_passed_4[6]"   "expect_passed_4[7]"   "expect_passed_4[8]"  
-    ## [637] "expect_passed_4[9]"   "expect_passed_4[10]"  "expect_passed_4[11]" 
-    ## [640] "expect_passed_4[12]"  "expect_passed_4[13]"  "expect_passed_4[14]" 
-    ## [643] "expect_passed_4[15]"  "expect_passed_4[16]"  "expect_passed_4[17]" 
-    ## [646] "expect_passed_4[18]"  "expect_passed_4[19]"  "expect_passed_4[20]" 
-    ## [649] "expect_passed_4[21]"  "expect_passed_4[22]"  "expect_passed_4[23]" 
-    ## [652] "expect_passed_4[24]"  "expect_passed_4[25]"  "expect_passed_4[26]" 
-    ## [655] "expect_passed_4[27]"  "expect_passed_4[28]"  "expect_passed_4[29]" 
-    ## [658] "expect_passed_4[30]"  "expect_passed_4[31]"  "expect_passed_4[32]" 
-    ## [661] "expect_passed_4[33]"  "expect_passed_4[34]"  "expect_passed_4[35]" 
-    ## [664] "expect_passed_4[36]"  "expect_passed_4[37]"  "expect_passed_4[38]" 
-    ## [667] "expect_passed_4[39]"  "expect_passed_4[40]"  "expect_passed_4[41]" 
-    ## [670] "expect_passed_4[42]"  "expect_passed_4[43]"  "expect_passed_4[44]" 
-    ## [673] "expect_passed_4[45]"  "expect_passed_4[46]"  "expect_passed_4[47]" 
-    ## [676] "expect_passed_4[48]"  "expect_passed_4[49]"  "expect_passed_4[50]" 
-    ## [679] "expect_passed_4[51]"  "expect_passed_4[52]"  "expect_passed_4[53]" 
-    ## [682] "expect_passed_4[54]"  "expect_passed_4[55]"  "expect_passed_4[56]" 
-    ## [685] "expect_passed_4[57]"  "expect_passed_4[58]"  "expect_passed_4[59]" 
-    ## [688] "expect_passed_4[60]"  "expect_passed_4[61]"  "expect_passed_4[62]" 
-    ## [691] "expect_passed_4[63]"  "expect_passed_4[64]"  "expect_passed_4[65]" 
-    ## [694] "expect_passed_4[66]"  "expect_passed_4[67]"  "expect_passed_4[68]" 
-    ## [697] "expect_passed_4[69]"  "expect_passed_4[70]"  "expect_passed_4[71]" 
-    ## [700] "expect_passed_4[72]"  "expect_passed_4[73]"  "expect_passed_4[74]" 
-    ## [703] "expect_passed_4[75]"  "expect_passed_4[76]"  "expect_passed_4[77]" 
-    ## [706] "expect_passed_4[78]"  "expect_passed_4[79]"  "expect_passed_4[80]" 
-    ## [709] "expect_passed_4[81]"  "expect_passed_4[82]"  "expect_passed_4[83]" 
-    ## [712] "expect_passed_4[84]"  "expect_passed_4[85]"  "expect_passed_4[86]" 
-    ## [715] "expect_passed_4[87]"  "expect_passed_4[88]"  "expect_passed_4[89]" 
-    ## [718] "expect_passed_4[90]"  "expect_passed_4[91]"  "expect_passed_4[92]" 
-    ## [721] "expect_passed_4[93]"  "expect_passed_4[94]"  "expect_passed_4[95]" 
-    ## [724] "expect_passed_4[96]"  "expect_passed_4[97]"  "expect_passed_4[98]" 
-    ## [727] "expect_passed_4[99]"  "expect_passed_4[100]" "lp__"
+|    lp\_\_ |    beta_0 | beta\[1\] | beta\[2\] | beta\[3\] |
+|----------:|----------:|----------:|----------:|----------:|
+| -1251.130 | -1.520818 | 0.2282623 | 0.2879370 | 0.3201965 |
+| -1250.358 | -1.506511 | 0.2233696 | 0.2475490 | 0.1977965 |
+| -1251.936 | -1.552996 | 0.1998336 | 0.2522806 | 0.3323120 |
+| -1249.657 | -1.533951 | 0.2080136 | 0.2574112 | 0.3573067 |
+| -1248.750 | -1.493253 | 0.2228508 | 0.2416577 | 0.3151417 |
+| -1248.531 | -1.221375 | 0.2030706 | 0.2373745 | 0.0258106 |
 
 ``` r
-t(res[1:3, ])
+nrow(draws)
 ```
 
-    ##                                  1             2             3
-    ## beta[1]              -3.734025e-01    0.42328245    0.91843864
-    ## beta[2]              -2.591009e+00  -11.55147372  -10.06044760
-    ## beta[3]               1.112807e+01    2.84946016    8.21249301
-    ## beta[4]               4.302346e-01   -0.90384391   -2.59341015
-    ## beta[5]               7.102316e+00   -3.89699812   -1.71600604
-    ## beta[6]               4.723819e-01    0.39409350    0.24826991
-    ## beta[7]              -3.088630e-01   -0.23421681   -0.18444130
-    ## beta[8]               3.403610e+00   17.01161290  -10.97855227
-    ## beta[9]               3.268402e+00    6.25582476    7.36444694
-    ## beta[10]              9.626793e+00    6.54157566  -15.41835684
-    ## beta[11]             -8.407278e-01    0.93035885    1.55730001
-    ## beta[12]             -7.873126e-01   -1.33142545   -1.48757847
-    ## beta[13]             -1.034072e+01   -5.36174050  -11.11390797
-    ## beta[14]              1.350625e+00   -1.80114959   -6.49685877
-    ## beta[15]              8.939164e-01    0.70809384    0.19467756
-    ## beta[16]             -9.795823e+00   -3.30939177    5.98826208
-    ## beta[17]             -6.172045e-02   -0.07915876   -0.07628769
-    ## beta[18]             -4.696687e-02   -0.03032559    0.05573300
-    ## beta[19]             -2.075563e+01   -4.54296719    0.92380006
-    ## beta[20]              8.418034e-03    7.01537667   -1.35783876
-    ## beta[21]              1.519015e+01   15.86310419    0.41553311
-    ## beta[22]              1.568983e+00    1.72460607    3.57802797
-    ## beta[23]             -1.600391e+01  -12.72240974   13.20510753
-    ## beta[24]              1.941530e+01   18.24916519   11.87923395
-    ## beta[25]              1.401901e+01   12.72330078    5.45100742
-    ## beta[26]              1.073189e+01   11.02425282    4.47083174
-    ## beta[27]              6.114609e+00    9.60151849   -2.05616019
-    ## beta[28]              4.851934e+00    6.95292060    0.70825060
-    ## error_picked[1]      -2.601584e+00    4.46232554   11.02069474
-    ## error_picked[2]       1.687575e+01    4.27078717   23.43072352
-    ## error_picked[3]      -4.691686e+00    4.12545624   10.14628939
-    ## error_picked[4]       1.564107e+01   21.92143927   -6.54195716
-    ## error_picked[5]       2.545462e+01   19.55706285    9.67516052
-    ## error_picked[6]       1.287236e+01    9.00740265    2.10562989
-    ## error_picked[7]      -1.433888e+00    2.17226645   20.88822096
-    ## error_picked[8]       4.736073e+00   14.68715670   -0.06995660
-    ## error_picked[9]       1.488622e+01   16.22003823    5.77077719
-    ## error_picked[10]      1.918852e+01   18.62180055   -5.27575333
-    ## error_picked[11]      1.017000e+01   10.91738629    1.31391672
-    ## error_picked[12]      1.810418e+01   25.54527554   -9.50086551
-    ## error_picked[13]      1.903483e+01   19.61571506   -2.85561203
-    ## error_picked[14]      1.343449e+01   14.60434272    7.50324789
-    ## error_picked[15]      1.034658e+01   11.68107004   20.48735218
-    ## error_picked[16]      2.554431e+01   18.18774937    7.61132579
-    ## error_picked[17]      7.751557e+00   12.01730032    1.30046654
-    ## error_picked[18]      3.093715e+00    4.94908402    6.66319927
-    ## error_picked[19]      2.662248e+00    5.50641866   16.60885910
-    ## error_picked[20]      6.312142e+00    8.25899178    5.86499069
-    ## error_picked[21]      1.956300e+01   13.86930108    5.28015478
-    ## error_picked[22]      3.328747e+00   14.97460400   -3.40783348
-    ## error_picked[23]      5.201494e+00    2.24998218   16.02148065
-    ## error_picked[24]      3.738578e+00    5.46004436   16.37116177
-    ## error_picked[25]      5.052284e+00   -2.68899738   15.22668598
-    ## error_picked[26]      1.971023e+01   12.84683040   10.65826856
-    ## error_picked[27]     -4.110674e+00   -1.38843485   23.90266656
-    ## error_picked[28]      3.329273e+00   -0.65479031   25.90979339
-    ## error_picked[29]     -2.929963e+00   -6.79670470   26.51218833
-    ## error_picked[30]      1.614933e+01   13.69863961   -2.50302317
-    ## error_picked[31]      8.507653e+00    5.95441728    3.18708050
-    ## error_picked[32]      7.532190e+00    7.54939930   19.81084005
-    ## error_picked[33]      1.320175e+01   10.69333897   20.95289699
-    ## error_picked[34]      1.427642e+01   16.38592753   -1.61193172
-    ## error_picked[35]     -4.353115e+00   -5.13672954   16.09701171
-    ## error_picked[36]      8.746571e+00   11.13308375    3.12742147
-    ## error_picked[37]      4.938378e+00   -1.51306768   18.09120817
-    ## error_picked[38]      1.261334e+01   13.92711765    8.18101070
-    ## error_picked[39]      7.164797e+00   14.22680647    4.28295102
-    ## error_picked[40]      1.503978e+01   22.94305319    0.70081703
-    ## error_picked[41]     -2.207754e+00   -0.09055882   11.58421210
-    ## error_picked[42]      7.539243e+00    7.42522044   22.02613078
-    ## error_picked[43]      5.440590e+00    9.18414959    4.66783302
-    ## error_picked[44]      1.116788e+01   11.38776158    9.01518246
-    ## error_picked[45]      1.883655e+01    6.92995790   11.50466615
-    ## error_picked[46]      9.034724e+00    1.75682692   10.86047604
-    ## error_picked[47]      1.720457e+01   14.48086374   12.79399672
-    ## error_picked[48]      8.692802e+00   12.81404851    4.86217119
-    ## error_picked[49]      7.287660e+00    7.96702411    8.97716770
-    ## error_picked[50]      1.761751e+01   18.05949047    7.80547800
-    ## error_picked[51]     -1.266990e+01   -5.12176362   22.83268845
-    ## error_picked[52]     -7.779126e-02    7.09730996    9.13048881
-    ## error_picked[53]      3.629398e+00    3.81089810   14.79543612
-    ## error_picked[54]     -1.067045e+00   -8.09309797   22.67062464
-    ## error_picked[55]      1.108805e+01    9.53148181   12.63576660
-    ## error_picked[56]      1.222359e+01   17.41608928   16.13553158
-    ## error_picked[57]      9.892433e+00    0.61696553    9.74950518
-    ## error_picked[58]      1.173403e+01   14.60895512    0.87486564
-    ## error_picked[59]      1.792780e+01   15.93553192    3.23603109
-    ## error_picked[60]      1.385317e+01   13.91396136   -1.24510515
-    ## error_picked[61]     -4.317107e+00    0.04901290   14.58986257
-    ## error_picked[62]      6.452422e+00   10.20308093   15.05283932
-    ## error_picked[63]     -5.212397e-01   -2.62953370   23.57508230
-    ## error_picked[64]      1.001078e+01   11.19244773   11.11743510
-    ## error_picked[65]      1.688718e+01   18.86200803   -0.57580759
-    ## error_picked[66]      3.021564e+00    4.70582443   16.38288474
-    ## error_picked[67]      1.149322e+01    8.19802186    7.70837314
-    ## error_picked[68]      2.398043e+01   24.87118695    3.55579323
-    ## error_picked[69]      1.277492e+01   19.57886159   14.88421281
-    ## error_picked[70]      4.105595e+00   -4.07072839   12.01232497
-    ## error_picked[71]      1.896988e+00    2.45874289    1.99243279
-    ## error_picked[72]      2.459622e+01   19.65394570    0.14771541
-    ## error_picked[73]      9.256534e+00   13.03715646    4.19218219
-    ## error_picked[74]      2.413206e+01   22.87778858    0.23404699
-    ## error_picked[75]      1.222981e+01    6.69298220   14.49926955
-    ## error_picked[76]      4.207829e+00    9.91142393    6.89973398
-    ## error_picked[77]      1.427430e+01    9.15543401    3.16609261
-    ## error_picked[78]      2.575553e+01   29.66224874    7.14599581
-    ## error_picked[79]      2.416178e+01   33.57262304  -12.72890338
-    ## error_picked[80]      9.718045e+00    4.10260197   13.13727831
-    ## error_picked[81]      4.434665e+00   11.40519451   10.45813567
-    ## error_picked[82]      1.298173e+01    7.12025091   31.73815606
-    ## error_picked[83]     -5.221937e+00    0.18945381   11.75047552
-    ## error_picked[84]      8.588940e+00   12.28021499    1.43181035
-    ## error_picked[85]      1.629495e+01   17.90748333    7.04027708
-    ## error_picked[86]      1.214668e+01   12.60893220   10.77503033
-    ## error_picked[87]      1.398693e+01   20.58961187    4.37234640
-    ## error_picked[88]      1.497099e+01    9.70206412   16.48706323
-    ## error_picked[89]      7.625494e+00    6.52475453    8.35125309
-    ## error_picked[90]      1.295336e+01   11.66574799   14.40725175
-    ## error_picked[91]     -4.817711e+00   -2.33404854   11.85520987
-    ## error_picked[92]      5.962333e+00   10.58244956    0.22281946
-    ## error_picked[93]      2.041006e+01   20.42215811   19.43982109
-    ## error_picked[94]      7.345654e+00    7.82072480    5.53558070
-    ## error_picked[95]      2.070794e+01   12.29521448    6.50954190
-    ## error_picked[96]      8.854239e+00   12.65397214    6.31802055
-    ## error_picked[97]      1.130822e+01    6.56345083    9.07562624
-    ## error_picked[98]      1.394365e+01    8.10820433   21.54953932
-    ## error_picked[99]      6.753650e+00    4.43812070   23.52672074
-    ## error_picked[100]     9.553467e+00    4.53776532   20.32576659
-    ## expect_picked[1]      9.708366e+00   51.77823283   43.06357061
-    ## expect_picked[2]      1.283407e+00   37.27702181   29.51757489
-    ## expect_picked[3]      1.425006e+01   51.16372140   41.88100325
-    ## expect_picked[4]      9.659945e+00   48.25457663   41.68817708
-    ## expect_picked[5]     -3.348419e+00   38.16771715   35.56362139
-    ## expect_picked[6]      1.967503e+01   55.69179183   34.30319540
-    ## expect_picked[7]      7.917145e+00   54.16440704   30.06169758
-    ## expect_picked[8]      9.375989e+00   45.59711623   41.82838871
-    ## expect_picked[9]      8.753881e+00   44.47993796   38.50642331
-    ## expect_picked[10]     1.225919e+01   49.26254712   41.74159176
-    ## expect_picked[11]     1.248955e+01   48.98991342   37.67829388
-    ## expect_picked[12]     1.339822e+01   53.64928755   40.32467480
-    ## expect_picked[13]     3.646816e+00   44.43584831   38.30107483
-    ## expect_picked[14]     6.572760e+00   41.75186563   26.26107786
-    ## expect_picked[15]    -3.515578e-01   40.21342597   25.12100155
-    ## expect_picked[16]     9.273098e+00   50.14908443   40.67913990
-    ## expect_picked[17]     1.322184e+01   46.18739174   33.99412078
-    ## expect_picked[18]     1.109354e+01   49.39640497   36.06250382
-    ## expect_picked[19]     1.384331e+00   40.52403922   31.80339172
-    ## expect_picked[20]     1.360831e+01   52.58700212   37.45271950
-    ## expect_picked[21]     5.679163e+00   44.31690986   36.43579317
-    ## expect_picked[22]     1.554638e+01   51.05573775   34.67145920
-    ## expect_picked[23]     8.698146e+00   46.08476901   30.92876072
-    ## expect_picked[24]     5.975646e+00   44.23221240   33.08182858
-    ## expect_picked[25]     1.753191e+01   51.52613444   40.15178253
-    ## expect_picked[26]    -3.773391e+00   38.62618131   35.14323637
-    ## expect_picked[27]     6.769897e+00   45.17173603   34.23512762
-    ## expect_picked[28]     2.264711e+00   41.49324873   24.08960641
-    ## expect_picked[29]     6.565014e+00   43.44424196   39.52606266
-    ## expect_picked[30]     1.004779e+01   46.32790837   34.05918752
-    ## expect_picked[31]     5.290917e+00   51.01178241   43.90850932
-    ## expect_picked[32]     3.956853e+00   43.13354216   19.70878287
-    ## expect_picked[33]    -3.006715e+00   33.53648461   23.47508553
-    ## expect_picked[34]     1.400662e+01   51.69369935   39.97916906
-    ## expect_picked[35]     1.601438e+01   53.60672899   38.82641106
-    ## expect_picked[36]     1.441477e+01   49.45442064   37.63572990
-    ## expect_picked[37]     1.331967e+01   48.40772333   37.19810030
-    ## expect_picked[38]     5.521539e+00   42.98167677   36.28416599
-    ## expect_picked[39]     1.338654e+01   50.49421137   37.50592181
-    ## expect_picked[40]     5.890398e+00   50.17708122   37.23107710
-    ## expect_picked[41]     1.376196e+01   50.78698680   36.82070288
-    ## expect_picked[42]    -3.022619e-01   44.29614922   29.60298018
-    ## expect_picked[43]     1.294743e+01   50.92286256   42.31633823
-    ## expect_picked[44]     5.531202e+00   43.69411682   28.59648588
-    ## expect_picked[45]     1.042005e+01   46.38549964   35.21568930
-    ## expect_picked[46]     1.110669e+01   48.89359251   38.47660370
-    ## expect_picked[47]     7.168661e+00   46.67294140   30.43549558
-    ## expect_picked[48]     4.838843e+00   43.34607114   31.46997611
-    ## expect_picked[49]     6.618436e+00   41.52826754   29.32949213
-    ## expect_picked[50]    -3.846811e+00   35.40953065   29.50595726
-    ## expect_picked[51]     1.039820e+01   46.19691217   30.88417717
-    ## expect_picked[52]     2.058985e+01   52.47211383   34.55187377
-    ## expect_picked[53]     8.871646e+00   47.75312069   33.06947647
-    ## expect_picked[54]     1.170698e+01   48.36470910   41.68166401
-    ## expect_picked[55]     3.962551e+00   43.67562209   31.92395521
-    ## expect_picked[56]     3.907653e+00   42.59240625   21.25955444
-    ## expect_picked[57]     1.074580e+01   51.81964312   41.48451022
-    ## expect_picked[58]     7.892017e+00   46.67995608   33.69083830
-    ## expect_picked[59]     9.919644e+00   49.19376671   40.84535276
-    ## expect_picked[60]     1.645379e+01   56.09478418   48.51582361
-    ## expect_picked[61]     1.431554e+01   51.65592461   38.96382144
-    ## expect_picked[62]     1.867053e+00   42.47612672   33.78034723
-    ## expect_picked[63]     4.836052e+00   45.10060749   32.31145013
-    ## expect_picked[64]     3.392288e+00   42.57043902   31.66635348
-    ## expect_picked[65]     4.051857e+00   41.54956759   36.44066748
-    ## expect_picked[66]     8.183971e+00   47.18596244   35.39465648
-    ## expect_picked[67]     6.246752e+00   44.99057767   37.02790083
-    ## expect_picked[68]     5.719515e+00   42.13937838   29.41274395
-    ## expect_picked[69]    -4.266429e-01   35.42746523   26.92637915
-    ## expect_picked[70]     1.848265e+01   57.64577553   45.00597811
-    ## expect_picked[71]     2.283641e+01   61.05121544   40.46002140
-    ## expect_picked[72]     5.627954e+00   43.76402008   35.61103552
-    ## expect_picked[73]     7.753214e+00   46.65272191   29.08828034
-    ## expect_picked[74]     1.263830e+00   39.97336449   28.40063677
-    ## expect_picked[75]     8.475915e+00   44.34369194   31.89352764
-    ## expect_picked[76]     1.332156e+01   47.33252285   30.23424533
-    ## expect_picked[77]     7.946764e+00   46.04746770   31.98796975
-    ## expect_picked[78]     1.942010e+00   39.45098103   22.25289759
-    ## expect_picked[79]     4.456886e+00   49.59484753   42.34212456
-    ## expect_picked[80]     1.521195e+01   53.76058315   47.17557276
-    ## expect_picked[81]    -1.487061e+00   35.79609472   29.07116619
-    ## expect_picked[82]    -3.130405e+00   37.74212901   27.35234281
-    ## expect_picked[83]     1.146884e+01   47.82435390   39.17476870
-    ## expect_picked[84]     1.231403e+01   49.98162468   42.75930685
-    ## expect_picked[85]    -5.300698e+00   35.94210838   29.74750293
-    ## expect_picked[86]     3.517092e+00   39.31621283   31.47381792
-    ## expect_picked[87]     1.385246e+01   48.92723324   29.34408928
-    ## expect_picked[88]     3.641565e+00   42.91855052   35.05878082
-    ## expect_picked[89]     1.216129e+01   51.18207472   37.88390193
-    ## expect_picked[90]     4.405714e+00   42.16910408   25.93164018
-    ## expect_picked[91]     9.452134e+00   48.55739654   33.99656234
-    ## expect_picked[92]     1.358026e+01   52.71182684   41.82288301
-    ## expect_picked[93]    -4.254158e+00   34.57315047   27.70937365
-    ## expect_picked[94]     1.196216e+01   51.49191410   46.82141000
-    ## expect_picked[95]     7.226420e+00   51.48175261   41.63995129
-    ## expect_picked[96]     1.327094e+01   49.89763286   30.33278980
-    ## expect_picked[97]     1.067573e+01   48.58594335   39.59458923
-    ## expect_picked[98]     3.964936e+00   40.77594474   20.62917237
-    ## expect_picked[99]     1.816776e+00   40.28353052   17.05694132
-    ## expect_picked[100]    3.687510e+00   43.94031984   33.96866446
-    ## v_picked[1]           7.106782e+00   56.24055837   54.08426535
-    ## v_picked[2]           1.815916e+01   41.54780898   52.94829841
-    ## v_picked[3]           9.558376e+00   55.28917764   52.02729264
-    ## v_picked[4]           2.530102e+01   70.17601591   35.14621992
-    ## v_picked[5]           2.210620e+01   57.72478000   45.23878191
-    ## v_picked[6]           3.254739e+01   64.69919449   36.40882529
-    ## v_picked[7]           6.483258e+00   56.33667348   50.94991854
-    ## v_picked[8]           1.411206e+01   60.28427293   41.75843211
-    ## v_picked[9]           2.364011e+01   60.69997619   44.27720050
-    ## v_picked[10]          3.144771e+01   67.88434767   36.46583843
-    ## v_picked[11]          2.265955e+01   59.90729971   38.99221060
-    ## v_picked[12]          3.150241e+01   79.19456309   30.82380929
-    ## v_picked[13]          2.268164e+01   64.05156337   35.44546280
-    ## v_picked[14]          2.000725e+01   56.35620835   33.76432575
-    ## v_picked[15]          9.995021e+00   51.89449601   45.60835373
-    ## v_picked[16]          3.481740e+01   68.33683379   48.29046569
-    ## v_picked[17]          2.097339e+01   58.20469207   35.29458733
-    ## v_picked[18]          1.418726e+01   54.34548899   42.72570309
-    ## v_picked[19]          4.046580e+00   46.03045788   48.41225083
-    ## v_picked[20]          1.992045e+01   60.84599390   43.31771019
-    ## v_picked[21]          2.524217e+01   58.18621094   41.71594795
-    ## v_picked[22]          1.887513e+01   66.03034175   31.26362572
-    ## v_picked[23]          1.389964e+01   48.33475120   46.95024136
-    ## v_picked[24]          9.714224e+00   49.69225677   49.45299035
-    ## v_picked[25]          2.258420e+01   48.83713705   55.37846851
-    ## v_picked[26]          1.593684e+01   51.47301171   45.80150494
-    ## v_picked[27]          2.659223e+00   43.78330118   58.13779418
-    ## v_picked[28]          5.593984e+00   40.83845842   49.99939980
-    ## v_picked[29]          3.635051e+00   36.64753727   66.03825099
-    ## v_picked[30]          2.619712e+01   60.02654799   31.55616435
-    ## v_picked[31]          1.379857e+01   56.96619969   47.09558982
-    ## v_picked[32]          1.148904e+01   50.68294147   39.51962291
-    ## v_picked[33]          1.019504e+01   44.22982358   44.42798252
-    ## v_picked[34]          2.828304e+01   68.07962688   38.36723735
-    ## v_picked[35]          1.166126e+01   48.46999946   54.92342276
-    ## v_picked[36]          2.316134e+01   60.58750439   40.76315137
-    ## v_picked[37]          1.825805e+01   46.89465565   55.28930847
-    ## v_picked[38]          1.813488e+01   56.90879442   44.46517669
-    ## v_picked[39]          2.055134e+01   64.72101784   41.78887283
-    ## v_picked[40]          2.093017e+01   73.12013441   37.93189413
-    ## v_picked[41]          1.155420e+01   50.69642798   48.40491498
-    ## v_picked[42]          7.236981e+00   51.72136966   51.62911096
-    ## v_picked[43]          1.838802e+01   60.10701215   46.98417125
-    ## v_picked[44]          1.669908e+01   55.08187840   37.61166834
-    ## v_picked[45]          2.925661e+01   53.31545754   46.72035545
-    ## v_picked[46]          2.014142e+01   50.65041943   49.33707974
-    ## v_picked[47]          2.437323e+01   61.15380514   43.22949230
-    ## v_picked[48]          1.353164e+01   56.16011964   36.33214729
-    ## v_picked[49]          1.390610e+01   49.49529165   38.30665983
-    ## v_picked[50]          1.377069e+01   53.46902112   37.31143525
-    ## v_picked[51]         -2.271702e+00   41.07514856   53.71686562
-    ## v_picked[52]          2.051206e+01   59.56942379   43.68236258
-    ## v_picked[53]          1.250104e+01   51.56401879   47.86491259
-    ## v_picked[54]          1.063994e+01   40.27161113   64.35228865
-    ## v_picked[55]          1.505060e+01   53.20710390   44.55972181
-    ## v_picked[56]          1.613125e+01   60.00849553   37.39508602
-    ## v_picked[57]          2.063823e+01   52.43660865   51.23401540
-    ## v_picked[58]          1.962605e+01   61.28891120   34.56570395
-    ## v_picked[59]          2.784745e+01   65.12929863   44.08138385
-    ## v_picked[60]          3.030696e+01   70.00874554   47.27071847
-    ## v_picked[61]          9.998434e+00   51.70493751   53.55368401
-    ## v_picked[62]          8.319475e+00   52.67920765   48.83318655
-    ## v_picked[63]          4.314812e+00   42.47107378   55.88653243
-    ## v_picked[64]          1.340307e+01   53.76288675   42.78378858
-    ## v_picked[65]          2.093903e+01   60.41157562   35.86485989
-    ## v_picked[66]          1.120553e+01   51.89178687   51.77754123
-    ## v_picked[67]          1.773997e+01   53.18859953   44.73627397
-    ## v_picked[68]          2.969995e+01   67.01056533   32.96853718
-    ## v_picked[69]          1.234828e+01   55.00632682   41.81059196
-    ## v_picked[70]          2.258824e+01   53.57504714   57.01830308
-    ## v_picked[71]          2.473339e+01   63.50995833   42.45245418
-    ## v_picked[72]          3.022418e+01   63.41796578   35.75875093
-    ## v_picked[73]          1.700975e+01   59.68987836   33.28046253
-    ## v_picked[74]          2.539589e+01   62.85115307   28.63468376
-    ## v_picked[75]          2.070573e+01   51.03667414   46.39279720
-    ## v_picked[76]          1.752939e+01   57.24394678   37.13397931
-    ## v_picked[77]          2.222107e+01   55.20290172   35.15406236
-    ## v_picked[78]          2.769754e+01   69.11322976   29.39889340
-    ## v_picked[79]          2.861867e+01   83.16747058   29.61322118
-    ## v_picked[80]          2.493000e+01   57.86318512   60.31285107
-    ## v_picked[81]          2.947605e+00   47.20128924   39.52930186
-    ## v_picked[82]          9.851326e+00   44.86237993   59.09049887
-    ## v_picked[83]          6.246900e+00   48.01380771   50.92524422
-    ## v_picked[84]          2.090297e+01   62.26183966   44.19111721
-    ## v_picked[85]          1.099425e+01   53.84959170   36.78778000
-    ## v_picked[86]          1.566377e+01   51.92514504   42.24884825
-    ## v_picked[87]          2.783940e+01   69.51684511   33.71643568
-    ## v_picked[88]          1.861255e+01   52.62061464   51.54584405
-    ## v_picked[89]          1.978678e+01   57.70682925   46.23515501
-    ## v_picked[90]          1.735907e+01   53.83485207   40.33889193
-    ## v_picked[91]          4.634423e+00   46.22334800   45.85177221
-    ## v_picked[92]          1.954259e+01   63.29427641   42.04570247
-    ## v_picked[93]          1.615591e+01   54.99530859   47.14919475
-    ## v_picked[94]          1.930782e+01   59.31263889   52.35699070
-    ## v_picked[95]          2.793436e+01   63.77696709   48.14949319
-    ## v_picked[96]          2.212518e+01   62.55160500   36.65081035
-    ## v_picked[97]          2.198394e+01   55.14939418   48.67021546
-    ## v_picked[98]          1.790859e+01   48.88414906   42.17871169
-    ## v_picked[99]          8.570426e+00   44.72165121   40.58366205
-    ## v_picked[100]         1.324098e+01   48.47808516   54.29443105
-    ## expect_passed_1[1]    5.540775e+00   38.47076886   28.55762337
-    ## expect_passed_1[2]   -1.715811e+00   35.14514876   29.82401412
-    ## expect_passed_1[3]    2.447723e+00   42.07767996   28.95614807
-    ## expect_passed_1[4]   -2.228323e-01   38.03073618   28.94697069
-    ## expect_passed_1[5]    7.175577e-02   40.08578891   35.74318175
-    ## expect_passed_1[6]    8.759624e+00   47.23229370   32.89179762
-    ## expect_passed_1[7]    5.285208e+00   40.99753785   32.68315397
-    ## expect_passed_1[8]    1.167255e+01   46.41930783   27.76298868
-    ## expect_passed_1[9]    7.119032e+00   41.71092369   35.87078666
-    ## expect_passed_1[10]   9.776300e+00   48.84917073   35.74892163
-    ## expect_passed_1[11]   2.219095e+00   38.52751918   27.62731169
-    ## expect_passed_1[12]   2.345866e+00   38.60490197   29.10147716
-    ## expect_passed_1[13]  -6.873136e-02   36.49610147   29.26081097
-    ## expect_passed_1[14]   1.249084e+01   47.46607196   31.20005460
-    ## expect_passed_1[15]   9.808937e+00   44.40934299   27.42501176
-    ## expect_passed_1[16]   1.728982e+01   50.28403773   32.74098448
-    ## expect_passed_1[17]   3.108995e+00   41.28606879   36.02909887
-    ## expect_passed_1[18]   9.775143e+00   44.21722384   31.47509902
-    ## expect_passed_1[19]   3.700350e+00   36.57904756   25.23976938
-    ## expect_passed_1[20]   1.185540e+01   53.49214938   44.60018894
-    ## expect_passed_1[21]   1.145146e+01   47.75154534   32.01711431
-    ## expect_passed_1[22]   9.847378e+00   43.46792234   30.23902614
-    ## expect_passed_1[23]   7.935580e+00   46.51771134   36.63257865
-    ## expect_passed_1[24]   6.632281e+00   44.05647946   29.91994861
-    ## expect_passed_1[25]   9.290973e+00   43.75278616   30.24060180
-    ## expect_passed_1[26]   1.041984e+01   46.55551096   34.92272078
-    ## expect_passed_1[27]   8.506834e+00   44.64228690   33.22524306
-    ## expect_passed_1[28]   1.159348e+01   48.65284747   37.12511118
-    ## expect_passed_1[29]   3.832596e+00   37.21734631   29.44055502
-    ## expect_passed_1[30]  -4.646399e+00   36.56897029   28.88271753
-    ## expect_passed_1[31]   3.075037e+00   39.49175931   27.75153607
-    ## expect_passed_1[32]   8.688325e+00   49.30270421   39.69402972
-    ## expect_passed_1[33]   1.400054e+01   55.92759798   43.17430925
-    ## expect_passed_1[34]   1.067558e+01   44.23148310   26.98453299
-    ## expect_passed_1[35]   3.219024e+00   44.02651947   32.18263776
-    ## expect_passed_1[36]   2.227964e+00   37.58976412   29.93185760
-    ## expect_passed_1[37]   1.367881e+01   48.37313592   26.64841916
-    ## expect_passed_1[38]   1.385087e+01   48.98465980   36.63557495
-    ## expect_passed_1[39]   1.148045e+01   49.80807462   34.31418593
-    ## expect_passed_1[40]   1.798163e+00   40.22886319   25.84921280
-    ## expect_passed_1[41]   5.125574e+00   41.65779241   32.12101206
-    ## expect_passed_1[42]   4.965954e+00   39.11507460   28.88668124
-    ## expect_passed_1[43]  -7.885302e+00   39.33682421   32.92162219
-    ## expect_passed_1[44]   3.987092e+00   42.26718843   29.64199158
-    ## expect_passed_1[45]   3.579004e+00   40.57736596   29.66824961
-    ## expect_passed_1[46]   8.643203e+00   41.22025174   25.47944724
-    ## expect_passed_1[47]   1.737910e+01   53.67881269   37.68801083
-    ## expect_passed_1[48]  -1.822655e+00   36.50907164   24.15465601
-    ## expect_passed_1[49]   8.268188e+00   44.90591576   36.09877273
-    ## expect_passed_1[50]   1.100337e+01   47.20331925   35.95105754
-    ## expect_passed_1[51]   2.130054e+00   42.34431575   34.54967822
-    ## expect_passed_1[52]   1.255042e+01   50.62550265   35.69884675
-    ## expect_passed_1[53]   5.625255e+00   41.92453786   36.33152718
-    ## expect_passed_1[54]   1.534339e+00   37.74957260   26.57907059
-    ## expect_passed_1[55]   1.057007e+01   48.70372573   39.75382403
-    ## expect_passed_1[56]   1.257821e+01   49.59653521   29.43940821
-    ## expect_passed_1[57]  -7.938446e-01   35.06350490   30.60744753
-    ## expect_passed_1[58]  -3.147202e+00   35.42623847   24.53642080
-    ## expect_passed_1[59]   9.715122e+00   46.90827160   32.68457019
-    ## expect_passed_1[60]   1.056188e+01   49.66859262   34.22342115
-    ## expect_passed_1[61]   1.038427e+01   46.85121498   39.83882305
-    ## expect_passed_1[62]   9.480085e+00   41.84227718   33.34540267
-    ## expect_passed_1[63]   3.735929e+00   43.49117254   30.03565982
-    ## expect_passed_1[64]   1.354357e+01   49.59117159   40.34806370
-    ## expect_passed_1[65]   1.509328e+01   50.09296870   33.40090907
-    ## expect_passed_1[66]   8.542999e+00   44.92473498   35.14510049
-    ## expect_passed_1[67]   8.491009e+00   45.20833923   37.05447930
-    ## expect_passed_1[68]   7.051491e+00   51.94983155   39.37684383
-    ## expect_passed_1[69]   1.442013e+01   49.99344899   42.17459464
-    ## expect_passed_1[70]   2.390333e+00   40.83814210   29.73221551
-    ## expect_passed_1[71]   6.341870e+00   45.84252229   33.74306764
-    ## expect_passed_1[72]   1.821513e+01   50.56651032   35.09519057
-    ## expect_passed_1[73]  -2.676249e-01   42.17603605   30.66431703
-    ## expect_passed_1[74]   6.225219e+00   43.79617276   36.34296989
-    ## expect_passed_1[75]   4.263656e+00   42.72871223   35.25995055
-    ## expect_passed_1[76]   4.498546e+00   46.78413454   35.05329558
-    ## expect_passed_1[77]   1.311837e+01   50.92213495   40.01557000
-    ## expect_passed_1[78]   6.881976e+00   45.36610472   26.87873847
-    ## expect_passed_1[79]   1.381375e+01   45.72150126   25.35934743
-    ## expect_passed_1[80]   5.466539e+00   46.28283436   42.13470290
-    ## expect_passed_1[81]   1.336920e-02   35.72869159   25.62751055
-    ## expect_passed_1[82]   7.746717e+00   44.91459115   34.71089552
-    ## expect_passed_1[83]   6.912906e+00   44.19500833   27.87159107
-    ## expect_passed_1[84]   7.056712e+00   43.59362379   33.60414178
-    ## expect_passed_1[85]   5.264837e+00   43.55940261   38.01960932
-    ## expect_passed_1[86]   1.590632e+01   52.03242046   40.33665863
-    ## expect_passed_1[87]   1.784016e+01   52.96161078   37.68401413
-    ## expect_passed_1[88]   1.225142e+01   53.93072374   39.87905352
-    ## expect_passed_1[89]   7.945840e+00   49.37266954   34.20102308
-    ## expect_passed_1[90]   1.244387e+01   47.43574638   31.25578760
-    ## expect_passed_1[91]  -8.928417e+00   28.66618443   25.75134774
-    ## expect_passed_1[92]  -4.704663e+00   33.18065165   27.24423424
-    ## expect_passed_1[93]   1.014082e+01   44.75153621   32.24542089
-    ## expect_passed_1[94]   6.619319e+00   44.20342930   24.19418565
-    ## expect_passed_1[95]   8.211967e+00   49.31839241   30.88848190
-    ## expect_passed_1[96]   1.825964e+01   53.43874636   43.71959079
-    ## expect_passed_1[97]   3.706353e+00   38.24597088   32.55400338
-    ## expect_passed_1[98]   9.696479e-01   50.24999772   37.27307513
-    ## expect_passed_1[99]  -1.775564e+01   15.61389759   -6.77932536
-    ## expect_passed_1[100] -6.537594e+00   33.34262691   19.32810357
-    ## expect_passed_2[1]    4.634515e+00   45.88852202   31.31671982
-    ## expect_passed_2[2]    7.603410e+00   43.85555788   33.35756760
-    ## expect_passed_2[3]    9.472688e-01   38.55056151   29.30013038
-    ## expect_passed_2[4]   -9.682855e-01   36.72632649   27.79454434
-    ## expect_passed_2[5]   -1.326024e+00   39.45594498   29.54181047
-    ## expect_passed_2[6]    1.282514e+00   42.55275292   37.83214228
-    ## expect_passed_2[7]   -1.347658e+01   30.03146636   21.65320448
-    ## expect_passed_2[8]    4.939768e+00   47.71428593   35.03739414
-    ## expect_passed_2[9]    5.270406e+00   42.01965923   32.09237758
-    ## expect_passed_2[10]  -5.271497e+00   32.62948116   26.88411946
-    ## expect_passed_2[11]  -6.476631e+00   33.27739545   25.39451705
-    ## expect_passed_2[12]  -2.630500e+00   36.83684584   29.10442739
-    ## expect_passed_2[13]   7.513672e+00   50.85112916   36.98818412
-    ## expect_passed_2[14]   7.601061e+00   47.71912690   38.65652181
-    ## expect_passed_2[15]  -2.039394e-01   38.77346958   30.42803641
-    ## expect_passed_2[16]   3.515338e+00   39.55563880   25.64511726
-    ## expect_passed_2[17]   6.324903e+00   43.72788653   30.93631358
-    ## expect_passed_2[18]   4.860930e+00   45.14082056   34.51603813
-    ## expect_passed_2[19]   6.137289e+00   49.44013445   34.98114518
-    ## expect_passed_2[20]   6.220120e+00   48.28218835   35.32493573
-    ## expect_passed_2[21]   7.787316e+00   47.34114847   36.00854645
-    ## expect_passed_2[22]  -2.414622e+00   36.18812473   28.60402625
-    ## expect_passed_2[23]   2.963937e+00   43.12776758   31.29980212
-    ## expect_passed_2[24]   4.336560e+00   42.49231576   34.46433841
-    ## expect_passed_2[25]   3.025244e+00   38.86256172   27.59407382
-    ## expect_passed_2[26]  -4.017301e-01   35.80920478   26.31722494
-    ## expect_passed_2[27]   3.073402e+00   38.83470974   32.61270872
-    ## expect_passed_2[28]   2.708876e+00   41.66540753   32.90428915
-    ## expect_passed_2[29]   1.849174e+00   41.67552051   34.52378718
-    ## expect_passed_2[30]  -4.479453e+00   34.88169756   27.75310509
-    ## expect_passed_2[31]  -4.768413e+00   36.85792414   25.53685878
-    ## expect_passed_2[32]  -5.109782e+00   34.81002368   23.17448032
-    ## expect_passed_2[33]   2.669739e+00   40.78253604   31.11092346
-    ## expect_passed_2[34]   1.947743e+00   39.52719297   29.72400493
-    ## expect_passed_2[35]   1.038152e+00   40.32191839   30.25092203
-    ## expect_passed_2[36]   6.314112e+00   45.43383651   32.74015534
-    ## expect_passed_2[37]   3.189786e+00   42.56990355   29.80392944
-    ## expect_passed_2[38]   3.038183e+00   40.56764989   30.48343483
-    ## expect_passed_2[39]   4.545516e+00   44.51133940   30.36810341
-    ## expect_passed_2[40]   1.245935e+01   47.52889403   34.49918495
-    ## expect_passed_2[41]   3.464925e-01   40.15395421   31.83769685
-    ## expect_passed_2[42]  -2.180191e+00   34.59869141   13.73442313
-    ## expect_passed_2[43]  -1.800318e+01   23.93893004   19.36254607
-    ## expect_passed_2[44]   1.091128e+01   45.75153215   34.57885450
-    ## expect_passed_2[45]   9.632768e+00   46.67845905   34.24833581
-    ## expect_passed_2[46]   7.039581e+00   50.11208849   34.24988031
-    ## expect_passed_2[47]   1.071565e+01   46.33544580   29.69917891
-    ## expect_passed_2[48]   1.400544e+01   49.38094368   37.84314306
-    ## expect_passed_2[49]   3.836550e-01   37.13633639   25.70423162
-    ## expect_passed_2[50]   9.199258e+00   44.03085103   29.17965369
-    ## expect_passed_2[51]  -2.654154e+00   36.10910232   28.84962725
-    ## expect_passed_2[52]   2.323451e+00   40.44177444   33.53788277
-    ## expect_passed_2[53]   1.494386e+01   50.01014228   39.59267038
-    ## expect_passed_2[54]   3.129187e+00   41.42624688   30.25715729
-    ## expect_passed_2[55]   3.331310e+00   39.82921958   28.34931645
-    ## expect_passed_2[56]   7.976104e+00   48.85122899   35.48852205
-    ## expect_passed_2[57]   1.057896e+00   38.82737088   26.75853007
-    ## expect_passed_2[58]   9.469202e+00   45.55681208   34.15119125
-    ## expect_passed_2[59]   3.866109e+00   41.22877723   28.94689513
-    ## expect_passed_2[60]   9.360641e+00   50.18003384   36.69900943
-    ## expect_passed_2[61]   1.876342e+00   38.08409592   32.27967786
-    ## expect_passed_2[62]   1.315485e+01   47.06239193   31.70925058
-    ## expect_passed_2[63]   1.407567e+01   49.08093263   35.81756126
-    ## expect_passed_2[64]   6.184841e+00   47.20985921   35.65740765
-    ## expect_passed_2[65]   9.160449e+00   48.33365545   37.76320411
-    ## expect_passed_2[66]   1.111532e+01   47.00638505   30.41713128
-    ## expect_passed_2[67]   5.731354e+00   42.22950828   30.22732769
-    ## expect_passed_2[68]   1.932163e+01   51.65513633   34.76984333
-    ## expect_passed_2[69]   7.275882e+00   41.73526314   26.52099815
-    ## expect_passed_2[70]   2.195260e+00   40.20605917   31.92072450
-    ## expect_passed_2[71]  -6.974307e-01   36.04223893   25.96064600
-    ## expect_passed_2[72]   4.178926e+00   43.48711432   41.35757580
-    ## expect_passed_2[73]  -1.526083e+00   38.14665394   33.08407806
-    ## expect_passed_2[74]  -2.691226e+00   37.49554388   26.59888720
-    ## expect_passed_2[75]   9.826087e+00   44.54195893   32.19744997
-    ## expect_passed_2[76]   8.843326e+00   44.16004890   29.20899143
-    ## expect_passed_2[77]  -2.295352e+00   38.98629749   29.78465720
-    ## expect_passed_2[78]   8.117386e+00   47.37064238   33.31177376
-    ## expect_passed_2[79]   9.339925e-01   40.30484288   30.88721571
-    ## expect_passed_2[80]   6.671826e+00   41.82267853   30.38566947
-    ## expect_passed_2[81]   1.642407e+00   41.02140169   32.38884534
-    ## expect_passed_2[82]   2.939593e+00   40.62008243   30.84057271
-    ## expect_passed_2[83]  -1.398411e+01   28.71719602   22.33910071
-    ## expect_passed_2[84]   4.329314e-01   39.03935262   27.11889544
-    ## expect_passed_2[85]  -8.772766e+00   31.44434367   24.00963110
-    ## expect_passed_2[86]   5.213217e+00   40.29597086   33.23168671
-    ## expect_passed_2[87]  -3.494363e+00   34.13168889   24.51005764
-    ## expect_passed_2[88]   1.629863e+01   50.79981177   38.30819938
-    ## expect_passed_2[89]   2.154254e+00   39.87343277   30.82002014
-    ## expect_passed_2[90]   6.924976e+00   43.65889972   33.36242453
-    ## expect_passed_2[91]  -3.277404e-02   37.60936749   23.68010889
-    ## expect_passed_2[92]  -6.546280e+00   32.08274961   26.89899626
-    ## expect_passed_2[93]   8.541172e+00   46.73124795   34.20573670
-    ## expect_passed_2[94]   8.836815e+00   45.18029213   32.98414848
-    ## expect_passed_2[95]   5.679163e+00   44.31690986   36.43579317
-    ## expect_passed_2[96]  -7.272630e+00   34.85516808   24.71386361
-    ## expect_passed_2[97]   1.167131e-01   37.40844906   27.85620880
-    ## expect_passed_2[98]  -1.825165e+00   37.07834932   29.71771468
-    ## expect_passed_2[99]  -2.290539e+01   21.89720178   15.05517333
-    ## expect_passed_2[100]  6.486221e+00   47.03049387   32.31386339
-    ## expect_passed_3[1]   -2.111420e+00   38.01960621   19.55299264
-    ## expect_passed_3[2]    1.450435e+00   43.47585859   29.69853303
-    ## expect_passed_3[3]   -6.742505e+00   37.21974868   24.36344568
-    ## expect_passed_3[4]   -5.003172e+00   34.76854979   25.03231055
-    ## expect_passed_3[5]   -4.428121e+00   38.69795523   19.65623912
-    ## expect_passed_3[6]   -3.318823e-01   43.01266257   28.56301359
-    ## expect_passed_3[7]    1.208633e+01   51.42293595   39.22590899
-    ## expect_passed_3[8]   -2.803095e+00   36.77504738   26.01674032
-    ## expect_passed_3[9]   -4.585922e+00   38.60669911   20.29515457
-    ## expect_passed_3[10]  -2.858034e-01   41.72720947   28.66952091
-    ## expect_passed_3[11]   4.885097e+00   31.39263809   -5.67742596
-    ## expect_passed_3[12]  -3.051876e+00   37.53025864   26.16552158
-    ## expect_passed_3[13]  -2.510058e+00   35.92660002   14.36636271
-    ## expect_passed_3[14]   2.994151e+00   48.55076771   27.64668259
-    ## expect_passed_3[15]   1.916322e+01   51.42236333   38.44377556
-    ## expect_passed_3[16]   8.309166e-01   40.86682132   28.30051468
-    ## expect_passed_3[17]  -9.290655e-02   45.75552209   23.76112014
-    ## expect_passed_3[18]  -4.162826e+00   37.67401200   17.53881352
-    ## expect_passed_3[19]  -3.962374e+00   40.71432868   23.66964440
-    ## expect_passed_3[20]   6.797795e-01   43.01730922   25.98414113
-    ## expect_passed_3[21]  -7.743019e-01   44.15230581   20.31085693
-    ## expect_passed_3[22]  -2.799182e+00   36.98504414   23.23366259
-    ## expect_passed_3[23]  -9.717669e-01   48.59313674   35.36667144
-    ## expect_passed_3[24]  -4.826816e+00   39.67557559   22.03736556
-    ## expect_passed_3[25]   3.210508e+00   41.05689674   16.72107785
-    ## expect_passed_3[26]  -4.520305e+00   37.18110174   26.05089023
-    ## expect_passed_3[27]  -2.497148e+00   37.16546354   20.99951720
-    ## expect_passed_3[28]   9.997970e+00   48.95669867   33.44234444
-    ## expect_passed_3[29]  -9.705811e+00   31.94070876   20.36694363
-    ## expect_passed_3[30]   2.114888e+00   41.63315841   23.27191257
-    ## expect_passed_3[31]   1.299090e+00   42.54810625   26.25407429
-    ## expect_passed_3[32]   8.714771e+00   47.25434580   34.23054871
-    ## expect_passed_3[33]  -2.087090e+00   39.18913272   27.81273869
-    ## expect_passed_3[34]   5.037447e+00   49.60678339   23.41425183
-    ## expect_passed_3[35]   4.510994e+00   44.86198798   18.93717036
-    ## expect_passed_3[36]  -1.481452e-01   40.83681153   25.14522235
-    ## expect_passed_3[37]   6.131747e+00   45.33410107   27.79558793
-    ## expect_passed_3[38]   5.490611e+00   42.79013290   21.05697128
-    ## expect_passed_3[39]  -2.687261e+00   37.14540438   18.27463955
-    ## expect_passed_3[40]  -3.590477e+00   39.53503659   29.98655852
-    ## expect_passed_3[41]  -4.623556e+00   36.81766538   23.55723503
-    ## expect_passed_3[42]   8.146766e+00   50.11953248   41.80538718
-    ## expect_passed_3[43]   3.293713e+00   50.28133743   29.56479997
-    ## expect_passed_3[44]  -1.947539e+00   39.35980171   24.58393153
-    ## expect_passed_3[45]  -2.573077e-01   40.70212802   26.56342297
-    ## expect_passed_3[46]  -6.041780e+00   34.57403445   27.08189709
-    ## expect_passed_3[47]  -3.231785e+00   38.99414302   24.61359131
-    ## expect_passed_3[48]  -7.351960e+00   33.71641425   18.57196863
-    ## expect_passed_3[49]  -6.307674e+00   35.12793452   26.76832089
-    ## expect_passed_3[50]  -3.824647e+00   37.86906425   21.52031660
-    ## expect_passed_3[51]   2.322667e+00   42.65079441   24.61570984
-    ## expect_passed_3[52]  -3.231785e+00   38.99414302   24.61359131
-    ## expect_passed_3[53]   1.454720e+00   41.49951360   18.85922947
-    ## expect_passed_3[54]  -6.523654e+00   36.61434037   22.64358502
-    ## expect_passed_3[55]  -7.209366e+00   34.06543337   22.61506311
-    ## expect_passed_3[56]   1.288666e+01   48.08577061   35.99689532
-    ## expect_passed_3[57]   3.864729e+00   43.04708298   29.65126997
-    ## expect_passed_3[58]  -2.834646e-01   40.51644066   27.63482757
-    ## expect_passed_3[59]  -7.002403e+00   35.23136988   21.50265756
-    ## expect_passed_3[60]   9.014162e-01   46.74035231   34.13600650
-    ## expect_passed_3[61]  -1.315882e+00   43.71755586   26.43275519
-    ## expect_passed_3[62]  -3.474607e+00   35.89431224   18.26205583
-    ## expect_passed_3[63]  -3.664057e+00   39.29665809   26.62699860
-    ## expect_passed_3[64]   1.763010e+00   46.15084433   29.53456868
-    ## expect_passed_3[65]  -7.570918e+00   33.91890878   19.08698389
-    ## expect_passed_3[66]   4.618020e+00   44.15167446   19.58972412
-    ## expect_passed_3[67]  -4.488485e+00   33.42253030   18.94451377
-    ## expect_passed_3[68]  -1.555482e+00   42.72183486   26.38198483
-    ## expect_passed_3[69]   1.044977e+01   48.49617556   29.25600881
-    ## expect_passed_3[70]  -2.919367e+00   39.60317921   27.54715756
-    ## expect_passed_3[71]  -1.595325e+01   26.33627530   -1.92613559
-    ## expect_passed_3[72]  -3.642476e+00   38.23134215   19.45894203
-    ## expect_passed_3[73]   1.166829e+01   47.09922211   32.72846299
-    ## expect_passed_3[74]  -2.063926e+01   25.96915994   15.00928383
-    ## expect_passed_3[75]   1.631186e+00   41.83587297   25.51127995
-    ## expect_passed_3[76]  -7.236770e+00   31.65006116   19.06785106
-    ## expect_passed_3[77]  -2.951755e+00   38.27487907   20.92716475
-    ## expect_passed_3[78]  -2.485193e+00   41.05549526   23.48532066
-    ## expect_passed_3[79]   5.097862e-01   40.95812342   24.80349353
-    ## expect_passed_3[80]  -2.225896e+00   39.85564125   21.20841544
-    ## expect_passed_3[81]  -1.944132e+00   39.61258667   22.44440157
-    ## expect_passed_3[82]  -4.307810e+00   38.47618763   26.04892304
-    ## expect_passed_3[83]  -4.950067e+00   39.85331550   26.97533077
-    ## expect_passed_3[84]  -4.117233e-02   40.76932124   21.41350432
-    ## expect_passed_3[85]   2.415920e-01   46.59128115   32.12631025
-    ## expect_passed_3[86]  -2.547324e-01   43.89758148   22.44174360
-    ## expect_passed_3[87]  -4.076098e+00   35.90322872   21.15988711
-    ## expect_passed_3[88]  -3.962374e+00   40.71432868   23.66964440
-    ## expect_passed_3[89]   9.477744e+00   49.20404667   23.83234971
-    ## expect_passed_3[90]  -3.852548e+00   38.42778530   28.93349987
-    ## expect_passed_3[91]   4.666143e+00   46.26790683   21.96604712
-    ## expect_passed_3[92]   1.659657e+00   39.11271109   18.54282073
-    ## expect_passed_3[93]   3.148971e+00   46.12424810   34.85918052
-    ## expect_passed_3[94]   6.974262e+00   45.94678827   23.01107499
-    ## expect_passed_3[95]  -3.584510e+00   41.52924947   29.38529183
-    ## expect_passed_3[96]  -1.022551e+01   30.16022005   16.77956861
-    ## expect_passed_3[97]  -1.604771e+00   38.16680096   23.34334300
-    ## expect_passed_3[98]   1.571346e+01   56.26755242   49.13191915
-    ## expect_passed_3[99]   1.225669e+01   50.92071446   40.40797552
-    ## expect_passed_3[100]  1.923646e-01   39.94987564   24.32305905
-    ## expect_passed_4[1]   -2.810953e+00   35.68486719   21.13223941
-    ## expect_passed_4[2]   -3.865917e+00   38.19376359   26.44362588
-    ## expect_passed_4[3]   -4.140781e+00   41.52236268   29.09738953
-    ## expect_passed_4[4]   -1.169261e+01   26.51215360   25.56221304
-    ## expect_passed_4[5]    8.056198e+00   43.03832003   28.08200291
-    ## expect_passed_4[6]   -3.752381e+00   41.54454879   29.99808085
-    ## expect_passed_4[7]   -8.093021e+00   29.77972870   22.05139741
-    ## expect_passed_4[8]   -2.233138e+00   40.36451608   34.53849368
-    ## expect_passed_4[9]   -2.140542e-01   38.72013177   30.66655947
-    ## expect_passed_4[10]   2.093635e+00   40.59700725   23.01602918
-    ## expect_passed_4[11]  -6.089491e+00   37.02697769   24.80177635
-    ## expect_passed_4[12]  -3.283948e+00   37.35425441   26.70868280
-    ## expect_passed_4[13]   1.321452e+00   39.97744051   24.95703753
-    ## expect_passed_4[14]  -2.450934e+00   42.14660421   31.08405470
-    ## expect_passed_4[15]  -2.850698e+00   38.94646310   35.20099466
-    ## expect_passed_4[16]  -9.235811e+00   30.72572128   24.51805414
-    ## expect_passed_4[17]  -9.154861e+00   30.77707747   18.57667391
-    ## expect_passed_4[18]  -6.729519e+00   37.12478176   28.00975835
-    ## expect_passed_4[19]  -4.697135e+00   31.19139539   25.29112537
-    ## expect_passed_4[20]  -1.371068e+01   29.11340152   21.73063366
-    ## expect_passed_4[21]  -2.218449e+01   20.43756418   14.64193186
-    ## expect_passed_4[22]   3.276791e+00   41.66536619   26.51303077
-    ## expect_passed_4[23]  -3.539126e+00   37.99363989   30.86827869
-    ## expect_passed_4[24]  -7.704065e+00   34.13666768   25.36011082
-    ## expect_passed_4[25]  -9.802109e+00   30.86950612   21.61585521
-    ## expect_passed_4[26]  -1.735932e+01   24.27016629   21.62514199
-    ## expect_passed_4[27]  -2.979111e+00   37.19109679   26.74039592
-    ## expect_passed_4[28]  -1.981640e+01   24.40368358   18.17871541
-    ## expect_passed_4[29]  -3.123998e+00   39.42820893   28.49933923
-    ## expect_passed_4[30]  -7.788589e+00   35.66103146   29.61355129
-    ## expect_passed_4[31]  -6.795122e+00   33.30642182   27.37895151
-    ## expect_passed_4[32]   2.091567e+00   42.82238798   30.31807757
-    ## expect_passed_4[33]  -5.204530e+00   37.90524190   27.18119839
-    ## expect_passed_4[34]  -3.865516e+00   34.68446209   24.06169059
-    ## expect_passed_4[35]  -6.457948e+00   35.81077631   22.85687821
-    ## expect_passed_4[36]  -1.497353e+00   38.74458019   27.10061801
-    ## expect_passed_4[37]  -4.874761e+00   37.79802621   23.95810868
-    ## expect_passed_4[38]   1.681731e+00   39.72632656   28.77655880
-    ## expect_passed_4[39]  -5.828228e+00   34.03011692   23.34943536
-    ## expect_passed_4[40]   1.153526e+00   38.71494095   27.17635415
-    ## expect_passed_4[41]  -9.177419e-01   42.09317894   32.70700762
-    ## expect_passed_4[42]  -3.036244e+00   40.74279990   29.59719157
-    ## expect_passed_4[43]  -8.924301e+00   32.13672985   25.13639970
-    ## expect_passed_4[44]  -3.364083e+00   35.59849320   21.77417215
-    ## expect_passed_4[45]   3.115421e+00   43.50521254   30.94368744
-    ## expect_passed_4[46]  -5.817509e+00   33.36811955   25.63125169
-    ## expect_passed_4[47]  -9.349842e-01   39.13177025   25.20630276
-    ## expect_passed_4[48]  -2.369412e+00   39.71097056   27.36905149
-    ## expect_passed_4[49]  -2.048906e+00   39.00686826   30.65474614
-    ## expect_passed_4[50]  -7.846141e+00   36.84675035   24.14728262
-    ## expect_passed_4[51]  -5.704963e+00   36.46146374   29.67381617
-    ## expect_passed_4[52]  -5.563385e+00   31.79425742   23.61239810
-    ## expect_passed_4[53]  -5.119926e+00   36.74590020   22.93764087
-    ## expect_passed_4[54]  -3.557931e+00   35.98904678   25.00258691
-    ## expect_passed_4[55]  -1.315258e+01   30.78383585   20.95128247
-    ## expect_passed_4[56]  -8.037865e+00   34.25726488   19.78104300
-    ## expect_passed_4[57]  -1.280794e+01   30.67207807   22.70743754
-    ## expect_passed_4[58]  -8.137004e-01   35.30418518   24.11709167
-    ## expect_passed_4[59]  -9.826847e+00   33.67782571   23.22323173
-    ## expect_passed_4[60]  -3.901614e+00   36.31669728   29.21942964
-    ## expect_passed_4[61]  -1.235659e+01   29.20606322   21.63193590
-    ## expect_passed_4[62]  -1.511983e+00   36.77363838   23.29572978
-    ## expect_passed_4[63]   3.161565e+00   41.24648636   29.68334505
-    ## expect_passed_4[64]  -1.452490e+00   37.87483946   25.69651733
-    ## expect_passed_4[65]  -4.721598e+00   33.16553712   16.29842875
-    ## expect_passed_4[66]  -2.113567e+00   36.57502768   25.04665612
-    ## expect_passed_4[67]  -9.980845e-01   38.68348649   25.48991008
-    ## expect_passed_4[68]  -7.037026e+00   36.57393557   29.80692139
-    ## expect_passed_4[69]   1.573838e+00   39.06445136   25.26431091
-    ## expect_passed_4[70]  -7.785013e+00   32.33462028   22.48288334
-    ## expect_passed_4[71]   4.014178e-01   41.19822245   25.66559934
-    ## expect_passed_4[72]  -4.931536e+00   37.10777208   26.76467685
-    ## expect_passed_4[73]  -2.355268e+00   41.40544181   29.86922998
-    ## expect_passed_4[74]   3.360014e+00   42.31344701   24.86136967
-    ## expect_passed_4[75]  -1.831795e+01   24.97018375   17.68245347
-    ## expect_passed_4[76]   1.395928e+00   37.66393091   22.75841701
-    ## expect_passed_4[77]   8.082737e-01   41.99794960   32.64502007
-    ## expect_passed_4[78]   1.924875e+01   54.45309764   35.77231580
-    ## expect_passed_4[79]  -6.068016e+00   32.12111286   21.13109111
-    ## expect_passed_4[80]  -1.179750e+01   30.17916994   17.16666580
-    ## expect_passed_4[81]   2.469202e-01   39.97747682   27.01829693
-    ## expect_passed_4[82]   1.742310e+01   54.17286318   37.04533511
-    ## expect_passed_4[83]  -2.713174e-01   42.10381226   36.32047239
-    ## expect_passed_4[84]  -2.895987e+00   39.99773420   28.87844983
-    ## expect_passed_4[85]  -4.258224e+00   37.25320060   23.59621394
-    ## expect_passed_4[86]  -4.029258e+00   35.69913817   27.00725726
-    ## expect_passed_4[87]  -1.202148e+00   39.23112138   26.15057316
-    ## expect_passed_4[88]  -3.195933e+00   37.61316087   33.65283807
-    ## expect_passed_4[89]  -1.773222e+00   38.87305938   27.92291710
-    ## expect_passed_4[90]  -3.613734e-01   41.55426573   28.78951876
-    ## expect_passed_4[91]  -5.431687e+00   35.88965803   26.88816823
-    ## expect_passed_4[92]  -1.040371e+01   34.23499438   27.15807786
-    ## expect_passed_4[93]   1.286217e+01   53.67305254   45.98817383
-    ## expect_passed_4[94]   2.469202e-01   39.97747682   27.01829693
-    ## expect_passed_4[95]  -1.534302e+01   24.59488312   10.53166115
-    ## expect_passed_4[96]   8.887459e-01   44.33765363   33.57853933
-    ## expect_passed_4[97]  -1.842486e+00   39.44810600   31.40120221
-    ## expect_passed_4[98]  -4.008863e+00   32.80284172   26.11075975
-    ## expect_passed_4[99]  -6.823921e+00   30.71630965   23.01664268
-    ## expect_passed_4[100] -9.773083e-01   40.56789099   28.65144220
-    ## lp__                 -1.597825e+02 -162.88658434 -159.22260926
+    ## [1] 4000
+
+``` r
+(
+    ggplot(
+        data=draws,
+        mapping=aes(x=lp__)
+    )
+    + geom_density(fill='darkgrey', alpha=0.8)
+    + geom_vline(
+      xintercept=quantile(draws$lp__, 0.95), 
+      color='blue', 
+      linewidth=2, 
+      alpha=0.8)
+    + ggtitle("log sample intensity (reified noise: False)",
+        subtitle = paste0(
+          "(log intensity standard deviation: ",
+          format(sd(draws$lp__), digits=3),
+          "\n log draw size: ", 
+          format(log(nrow(draws)), digits=3), 
+          ")"))
+)
+```
+
+![](rstan_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+draws_long <- pivot_longer(
+  draws[, c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]')], 
+  cols=c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]'),
+  names_to='variable',
+  values_to='value')
+(
+    ggplot(
+        data=draws_long,
+        mapping=aes(x=value, color=variable, fill=variable)
+    )
+    + geom_density(alpha=0.2)
+    + ggtitle("distribution of recovered high likelihood parameter values",
+        subtitle = paste0(
+          "(reified noise: False, samples = ",
+          1,
+          ", reified noise = ",
+          2,
+          ")"))
+)
+```
+
+![](rstan_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+fit1 <- stan(
+  file = "rank_src_censored_picks_reified_noise.stan",  # Stan program
+  data = data,                            # named list of data
+  chains = 4,                             # number of Markov chains
+  warmup = 1000,                          # number of warmup iterations per chain
+  iter = 2000,                            # total number of iterations per chain
+  cores = 4,                              # number of cores (could use one per chain)
+  refresh = 0,                            # no progress shown
+  pars=c("lp__", "beta_0", "beta")        # parameters to bring back
+  )
+```
+
+``` r
+draws <- as.data.frame(fit1)
+```
+
+``` r
+draws |>
+  head() |>
+  knitr::kable()
+```
+
+|    lp\_\_ |     beta_0 | beta\[1\] | beta\[2\] |  beta\[3\] |
+|----------:|-----------:|----------:|----------:|-----------:|
+| -1720.524 | -1.0012525 | 0.1824492 | 0.1432262 | -0.0284954 |
+| -1727.087 | -1.0242526 | 0.1828179 | 0.1498542 | -0.0321725 |
+| -1725.950 | -1.0405628 | 0.2074125 | 0.1654192 |  0.1822274 |
+| -1725.436 | -0.9885111 | 0.1666840 | 0.1833373 |  0.0403337 |
+| -1723.363 | -0.9157697 | 0.2107349 | 0.1373391 | -0.0170442 |
+| -1729.142 | -1.2450365 | 0.1651720 | 0.2463396 |  0.0614226 |
+
+``` r
+nrow(draws)
+```
+
+    ## [1] 4000
+
+``` r
+(
+    ggplot(
+        data=draws,
+        mapping=aes(x=lp__)
+    )
+    + geom_density(fill='darkgrey', alpha=0.8)
+    + geom_vline(
+      xintercept=quantile(draws$lp__, 0.95), 
+      color='blue', 
+      linewidth=2, 
+      alpha=0.8)
+    + ggtitle("log sample intensity (reified noise: True)",
+        subtitle = paste0(
+          "(log intensity standard deviation: ",
+          format(sd(draws$lp__), digits=3),
+          "\n log draw size: ", 
+          format(log(nrow(draws)), digits=3), 
+          ")"))
+)
+```
+
+![](rstan_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+draws_long <- pivot_longer(
+  draws[, c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]')], 
+  cols=c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]'),
+  names_to='variable',
+  values_to='value')
+(
+    ggplot(
+        data=draws_long,
+        mapping=aes(x=value, color=variable, fill=variable)
+    )
+    + geom_density(alpha=0.2)
+    + ggtitle("distribution of recovered high likelihood parameter values",
+        subtitle = paste0(
+          "(reified noise: True, samples = ",
+          1,
+          ", reified noise = ",
+          2,
+          ")"))
+)
+```
+
+![](rstan_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->

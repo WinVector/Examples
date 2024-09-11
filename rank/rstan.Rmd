@@ -4,39 +4,167 @@ output: github_document
 date: "2024-08-28"
 ---
 
-```{r}
+```{r, warning=FALSE, error=FALSE, results=FALSE}
 library(rstan)
 library(jsonlite)
+library(ggplot2)
+library(poorman)
 ```
 
 ```{r}
-data <- fromJSON("rank_data_utility_model_tmp.json")
+data <- fromJSON("rank_data_censored_picks.json")
 ```
+
+
+
+
 
 ```{r}
 fit1 <- stan(
-  file = "rank_src_utility_model_tmp.stan",  # Stan program
-  data = data,    # named list of data
-  chains = 4,             # number of Markov chains
-  warmup = 1000,          # number of warmup iterations per chain
-  iter = 2000,            # total number of iterations per chain
-  cores = 4,              # number of cores (could use one per chain)
-  refresh = 0             # no progress shown
+  file = "rank_src_censored_picks.stan",  # Stan program
+  data = data,                            # named list of data
+  chains = 4,                             # number of Markov chains
+  warmup = 1000,                          # number of warmup iterations per chain
+  iter = 2000,                            # total number of iterations per chain
+  cores = 4,                              # number of cores (could use one per chain)
+  refresh = 0,                            # no progress shown
+  pars=c("lp__", "beta_0", "beta")        # parameters to bring back
   )
 ```
 
 ```{r}
-res <- as.data.frame(fit1)
-dim(res)
+draws <- as.data.frame(fit1)
 ```
 
 ```{r}
-colnames(res)
+draws |>
+  head() |>
+  knitr::kable()
 ```
 
 ```{r}
-t(res[1:3, ])
+nrow(draws)
+```
+
+```{r}
+(
+    ggplot(
+        data=draws,
+        mapping=aes(x=lp__)
+    )
+    + geom_density(fill='darkgrey', alpha=0.8)
+    + geom_vline(
+      xintercept=quantile(draws$lp__, 0.95), 
+      color='blue', 
+      linewidth=2, 
+      alpha=0.8)
+    + ggtitle("log sample intensity (reified noise: False)",
+        subtitle = paste0(
+          "(log intensity standard deviation: ",
+          format(sd(draws$lp__), digits=3),
+          "\n log draw size: ", 
+          format(log(nrow(draws)), digits=3), 
+          ")"))
+)
+```
+
+```{r}
+draws_long <- pivot_longer(
+  draws[, c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]')], 
+  cols=c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]'),
+  names_to='variable',
+  values_to='value')
+(
+    ggplot(
+        data=draws_long,
+        mapping=aes(x=value, color=variable, fill=variable)
+    )
+    + geom_density(alpha=0.2)
+    + ggtitle("distribution of recovered high likelihood parameter values",
+        subtitle = paste0(
+          "(reified noise: False, samples = ",
+          1,
+          ", reified noise = ",
+          2,
+          ")"))
+)
 ```
 
 
+
+
+
+
+
+
+```{r}
+fit1 <- stan(
+  file = "rank_src_censored_picks_reified_noise.stan",  # Stan program
+  data = data,                            # named list of data
+  chains = 4,                             # number of Markov chains
+  warmup = 1000,                          # number of warmup iterations per chain
+  iter = 2000,                            # total number of iterations per chain
+  cores = 4,                              # number of cores (could use one per chain)
+  refresh = 0,                            # no progress shown
+  pars=c("lp__", "beta_0", "beta")        # parameters to bring back
+  )
+```
+
+```{r}
+draws <- as.data.frame(fit1)
+```
+
+```{r}
+draws |>
+  head() |>
+  knitr::kable()
+```
+
+```{r}
+nrow(draws)
+```
+
+```{r}
+(
+    ggplot(
+        data=draws,
+        mapping=aes(x=lp__)
+    )
+    + geom_density(fill='darkgrey', alpha=0.8)
+    + geom_vline(
+      xintercept=quantile(draws$lp__, 0.95), 
+      color='blue', 
+      linewidth=2, 
+      alpha=0.8)
+    + ggtitle("log sample intensity (reified noise: True)",
+        subtitle = paste0(
+          "(log intensity standard deviation: ",
+          format(sd(draws$lp__), digits=3),
+          "\n log draw size: ", 
+          format(log(nrow(draws)), digits=3), 
+          ")"))
+)
+```
+
+```{r}
+draws_long <- pivot_longer(
+  draws[, c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]')], 
+  cols=c('beta_0', 'beta[1]', 'beta[2]', 'beta[3]'),
+  names_to='variable',
+  values_to='value')
+(
+    ggplot(
+        data=draws_long,
+        mapping=aes(x=value, color=variable, fill=variable)
+    )
+    + geom_density(alpha=0.2)
+    + ggtitle("distribution of recovered high likelihood parameter values",
+        subtitle = paste0(
+          "(reified noise: True, samples = ",
+          1,
+          ", reified noise = ",
+          2,
+          ")"))
+)
+```
 
