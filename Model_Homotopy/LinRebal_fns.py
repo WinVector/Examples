@@ -66,7 +66,7 @@ def solve_equality_near_target(
     assert (m, ) == p.shape
     lambda_ = 2 * np.linalg.solve(X @ X.T, (X @ y0) - p)
     y = y0 - (0.5 * X.T @ lambda_)
-    assert np.max(np.abs((X @ y) - p)) < 1e-8
+    assert np.max(np.abs((X @ y) - p)) < (1e-8 * np.max([1, np.mean(np.abs(p))]))
     return y
 
 
@@ -90,7 +90,7 @@ def engineer_new_ys(
                 ]
         signed_minors[i] = (-1)**(i + target_j) * sp.det(minor)
     # confirm signed minor expansion
-    assert np.abs(np.sum([XtX[x_i, target_j] * signed_minors[x_i] for x_i in range(XtX.shape[0])]).expand() - XtX.det()) < 1e-3
+    assert np.abs(np.sum([XtX[x_i, target_j] * signed_minors[x_i] for x_i in range(XtX.shape[0])]).expand() - XtX.det()) < 1e-8
     # get the polynomial coefs
     def get_coef_vector(p):
         vec = [0] * XtX.shape[0]
@@ -105,8 +105,8 @@ def engineer_new_ys(
     mixing_soln = np.linalg.lstsq(vecs.T, target_vec, rcond=None)[0]
     # confirm mixing soln yields target vector
     assert np.max(np.abs(
-        np.array(get_coef_vector(np.sum([mixing_soln[j] * signed_minors[j] for j in range(len(signed_minors))]).expand())) 
-        - np.array(target_vec))) < 1e-3
+        np.array(get_coef_vector(np.sum([mixing_soln[j] * signed_minors[j] for j in range(len(signed_minors))]).expand()))
+        - np.array(target_vec))) < 1e-8 * np.max([1, np.mean(np.abs(target_vec))])
     # want ((1-z) * sp.Matrix(X1.T @ ys1)) + (z * sp.Matrix(X2.T @ ys2)) == mixing solution
     # so solve X1.T @ ys1 = mixing_soln and X2.T @ ys2 = mixing_soln
     # ys1 = np.linalg.lstsq(X1.T, mixing_soln, rcond=None)[0]
