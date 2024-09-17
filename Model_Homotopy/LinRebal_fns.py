@@ -1,5 +1,4 @@
 
-
 import functools
 import sympy as sp
 import numpy as np
@@ -7,19 +6,54 @@ import pandas as pd
 from plotnine import *
 
 
+def det_by_Laplace_expansion(X):
+    """slow, but involves no divisions (otherwise just use sp.det())"""
+    n = X.shape[0]
+    if n <= 1:
+        if len(X.shape) == 1:  # work around numpy bug
+            return X[0]
+        return X[0, 0]
+    assert len(X.shape) == 2
+    assert n == X.shape[1]
+    # get the sign adjusted minors
+    res = 0
+    for i in range(n):
+        minor = X[
+                [x_i for x_i in range(n) if x_i != i],
+                [x_j for x_j in range(n) if x_j != 0]
+                ]
+        term = X[i, 0] * det_by_Laplace_expansion(minor)
+        if (i % 2) == 0:
+            res = res + term
+        else:
+            res = res - term
+    return res.expand()
+
+
+def _det(X):
+    # return sp.det(X)
+    return det_by_Laplace_expansion(X)
+    
+
 def solve_by_Cramers_rule(
         XtX,
-        Xty
+        Xty,
+        *,
+        normalize: bool = False,
 ):
     """solve b ~ (XtX)^(-1) Xty"""
-    common_denom = sp.det(XtX)
+    common_denom = _det(XtX)
     lc = sp.polys.polytools.LC(common_denom)
-    common_denom = common_denom / float(lc)
+    if normalize:
+        common_denom = common_denom / float(lc)
     soln_nums = sp.Matrix([0] * (XtX.shape[0]))
     for j in range(XtX.shape[0]):
         XtXc = XtX.copy()
         XtXc[:, j] = Xty
-        soln_nums[j] = sp.det(XtXc) / float(lc)
+        if normalize:
+            soln_nums[j] = _det(XtXc) / float(lc)
+        else:
+            soln_nums[j] = _det(XtXc)
     return sp.Matrix(soln_nums), common_denom
 
 
@@ -88,9 +122,10 @@ def engineer_new_ys(
                 [x_i for x_i in range(XtX.shape[0]) if x_i != i], 
                 [x_j for x_j in range(XtX.shape[1]) if x_j != target_j]
                 ]
-        signed_minors[i] = (-1)**(i + target_j) * sp.det(minor)
+        signed_minors[i] = (-1)**(i + target_j) * _det(minor)
     # confirm signed minor expansion
-    assert np.abs(np.sum([XtX[x_i, target_j] * signed_minors[x_i] for x_i in range(XtX.shape[0])]).expand() - XtX.det()) < 1e-8
+    assert np.abs(np.sum([XtX[x_i, target_j] * signed_minors[x_i] 
+                          for x_i in range(XtX.shape[0])]).expand() - XtX.det()) < 1e-8
     # get the polynomial coefs
     def get_coef_vector(p):
         vec = [0] * XtX.shape[0]
@@ -105,7 +140,8 @@ def engineer_new_ys(
     mixing_soln = np.linalg.lstsq(vecs.T, target_vec, rcond=None)[0]
     # confirm mixing soln yields target vector
     assert np.max(np.abs(
-        np.array(get_coef_vector(np.sum([mixing_soln[j] * signed_minors[j] for j in range(len(signed_minors))]).expand()))
+        np.array(get_coef_vector(np.sum([mixing_soln[j] * signed_minors[j] 
+                                         for j in range(len(signed_minors))]).expand()))
         - np.array(target_vec))) < 1e-8 * np.max([1, np.mean(np.abs(target_vec))])
     # want ((1-z) * sp.Matrix(X1.T @ ys1)) + (z * sp.Matrix(X2.T @ ys2)) == mixing solution
     # so solve X1.T @ ys1 = mixing_soln and X2.T @ ys2 = mixing_soln
