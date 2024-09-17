@@ -124,8 +124,10 @@ def engineer_new_ys(
                 ]
         signed_minors[i] = (-1)**(i + target_j) * _det(minor)
     # confirm signed minor expansion
-    assert np.abs(np.sum([XtX[x_i, target_j] * signed_minors[x_i] 
-                          for x_i in range(XtX.shape[0])]).expand() - XtX.det()) < 1e-8
+    minor_check = (
+        np.sum([XtX[x_i, target_j] * signed_minors[x_i] for x_i in range(XtX.shape[0])]).expand()
+        - _det(XtX))
+    assert np.max(np.abs(sp.Poly(minor_check).coeffs())) < 1e-8
     # get the polynomial coefs
     def get_coef_vector(p):
         vec = [0] * XtX.shape[0]
@@ -183,7 +185,7 @@ def plot_linear_diagram(
 def plot_coefficient_curves(
     evals,
     *,
-    evals_ends_plot,
+    evals_ends_plot=None,
     title: str,
 ):
     evals_plot = evals.melt(
