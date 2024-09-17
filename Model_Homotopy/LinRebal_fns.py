@@ -190,7 +190,7 @@ def plot_coefficient_curves(
         id_vars=['z'], 
         var_name='coefficient', 
         value_name='value')
-    return (
+    res = (
         ggplot(
             data=evals_plot,
             mapping=aes(
@@ -199,14 +199,20 @@ def plot_coefficient_curves(
                 color='coefficient')
         )
         + geom_line(size=1, alpha=0.8)
-        + geom_point(data=evals_ends_plot,
-                    size=3, alpha=0.8)
+
         + scale_color_manual(colors)
         + geom_vline(xintercept=0.0, alpha=0.8, linetype="dashdot")
         + geom_vline(xintercept=0.50, alpha=0.8, linetype="dashdot")
         + geom_vline(xintercept=1, alpha=0.2, linetype="dashdot")
         + ggtitle(title)
     )
+    if evals_ends_plot is not None:
+        res = (
+            res
+                + geom_point(data=evals_ends_plot,
+                    size=3, alpha=0.8)
+        )
+    return res
 
 
 def plot_single_curve(
