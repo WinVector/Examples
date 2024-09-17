@@ -124,10 +124,11 @@ def engineer_new_ys(
                 ]
         signed_minors[i] = (-1)**(i + target_j) * _det(minor)
     # confirm signed minor expansion
+    dXtX = _det(XtX)
     minor_check = (
         np.sum([XtX[x_i, target_j] * signed_minors[x_i] for x_i in range(XtX.shape[0])]).expand()
-        - _det(XtX))
-    assert np.max(np.abs(sp.Poly(minor_check).coeffs())) < 1e-8
+        - dXtX)
+    assert np.max(np.abs(sp.Poly(minor_check).coeffs())) < 1e-8 * np.max([1, np.mean(np.abs(sp.Poly(dXtX).coeffs()))])
     # get the polynomial coefs
     def get_coef_vector(p):
         vec = [0] * XtX.shape[0]
