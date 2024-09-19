@@ -106,6 +106,7 @@ update_log <- data.frame(
   `_usi` = c(1212, 1337, 1338),
   `_update_time` = c('2024-06-12 18:45:15Z', '2024-08-02 23:45:15Z', '2024-09-03 22:12:00Z'),
   note = c('mal-formatted records removed', 'after July 2024 data refresh', 'after August 2024 data refresh'),
+  as_of_date = c('2024-05-31', '2024-07-31', '2024-08-31'),
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, overwrite=TRUE)

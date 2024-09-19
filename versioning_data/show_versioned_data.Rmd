@@ -12,40 +12,77 @@ source("pull_data_by_use.R")
 ```
 
 ```{r}
-con <- dbConnect(RSQLite::SQLite(), "movie_data.sqlite", flags=SQLITE_RO)
+con <- dbConnect(
+  RSQLite::SQLite(), 
+  "movie_data.sqlite", 
+  flags=SQLITE_RO)
+```
+
+
+```{r}
+dbGetQuery(
+  con, 
+  "SELECT * from update_log ORDER BY _usi")
 ```
 
 ```{r}
-dbGetQuery(con, "SELECT * from update_log ORDER BY _usi")
+head(dbGetQuery(
+  con, 
+  "SELECT * from d_data_log ORDER BY _fi, _usi"), n = 6)
 ```
+
+
+```{r}
+usi_before_August = dbGetQuery(
+  con, 
+  "SELECT MAX(_usi) FROM update_log WHERE as_of_date == '2024-07-31'")[1, 1]
+
+usi_before_August
+```
+
+
+[query](https://github.com/WinVector/Examples/blob/main/versioning_data/pull_data_by_use.R).
 
 ```{r comment=NA}
-writeLines(pull_data_by_usi(1337))
+writeLines(pull_data_by_usi(usi_before_August))
 ```
 
 ```{r}
-d1_view <- dbGetQuery(con, pull_data_by_usi(1337))
-```
-
-
-```{r}
-head(d1_view)
-```
-
-
-
-```{r}
-d2_view <- dbGetQuery(con, pull_data_by_usi(1338))
+d_before_August <- dbGetQuery(
+  con, 
+  pull_data_by_usi(usi_before_August))
 ```
 
 
 ```{r}
-head(d2_view)
+head(d_before_August, n=3)
 ```
 
 
 ```{r}
-dbGetQuery(con, "SELECT * FROM d_row_deletions ORDER BY _usi, _fi")
+usi_after_August = dbGetQuery(
+  con, 
+  "SELECT MAX(_usi) FROM update_log WHERE as_of_date == '2024-08-31'")[1, 1]
+
+usi_after_August
+```
+
+```{r}
+d_after_August <- dbGetQuery(
+  con, 
+  pull_data_by_usi(usi_after_August))
+```
+
+
+```{r}
+head(d_after_August, n=3)
+```
+
+
+```{r}
+dbGetQuery(
+  con, 
+  "SELECT * FROM d_row_deletions ORDER BY _usi, _fi")
 ```
 
 
