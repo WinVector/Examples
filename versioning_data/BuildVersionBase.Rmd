@@ -7,7 +7,11 @@ date: "2024-09-19"
 
 ```{r}
 library(DBI)
-con <- dbConnect(RSQLite::SQLite(), ":memory:")
+source("pull_data_by_use.R")
+```
+
+```{r}
+con <- dbConnect(RSQLite::SQLite(), "movie_data.sqlite")
 ```
 
 ```{r}
@@ -29,6 +33,7 @@ d2 <- d2_orig
 # d2$Date <- as.Date(d2$Date)
 d2$`_usi` <- 1338
 d <- rbind(d1, d2)
+orig_cols <- colnames(d1_orig)
 ```
 
 ```{r}
@@ -88,6 +93,7 @@ SELECT
      usi_scan._usi,
      usi_scan.Attendance
 ")
+dbRemoveTable(con, 'd_raw')
 ```
 
 ```{r}
@@ -97,10 +103,9 @@ head(dbGetQuery(con, "SELECT * from d_data_log"))
 
 ```{r}
 update_log <- data.frame(
-  `_usi` = c(1336, 1337, 1338),
-  `_update_time` = c('2024-06-12 18:45:15Z', '2024-08-02 23:45:15Z', '2024-09-01 22:12:00Z'),
-  `_is_redaction` = c(TRUE, FALSE, FALSE),
-  note = c('PII audit', 'after July 2024 data refresh', 'after August 2024 data refresh'),
+  `_usi` = c(1212, 1337, 1338),
+  `_update_time` = c('2024-06-12 18:45:15Z', '2024-08-02 23:45:15Z', '2024-09-03 22:12:00Z'),
+  note = c('mal-formatted records removed', 'after July 2024 data refresh', 'after August 2024 data refresh'),
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, overwrite=TRUE)
@@ -109,9 +114,8 @@ head(dbGetQuery(con, "SELECT * from update_log"))
 
 ```{r}
 d_row_deletions <- data.frame(
-  `_fi` = c(3312),
-  `_usi` = c(1212),
-  `support staff` = c('Data PII audit'),
+  `_usi` = c(1212, 1212),
+  `_fi` = c(3312, 3313),
   check.names = FALSE
 )
 dbWriteTable(con, 'd_row_deletions', d_row_deletions, overwrite=TRUE)
@@ -120,72 +124,30 @@ head(dbGetQuery(con, "SELECT * from d_row_deletions"))
 
 
 ```{r}
-
-pull_data_by_usi <- function(target_usi) {
-  return (dbGetQuery(con, gsub("{target_usi}", target_usi, "
-WITH 
-usi_scan AS (
-   SELECT
-     _fi,
-     MAX(_usi) AS _usi
-   FROM 
-     d_data_log
-   WHERE
-     _usi <= {target_usi}
-   GROUP BY
-     _fi
-),
-del_scan AS (
-   SELECT
-     _fi
-   FROM 
-     d_row_deletions
-   WHERE
-     _usi <= {target_usi}
-   GROUP BY
-     _fi
-),
-chosen_ids AS (
-  SELECT
-    usi_scan.*,
-    del_scan._fi AS _deleted_fi
-  FROM
-    usi_scan
-  LEFT JOIN
-    del_scan
-  ON
-    usi_scan._fi = del_scan._fi
-)
-SELECT
-   d_data_log.*
-FROM
-   d_data_log
-INNER JOIN
-   chosen_ids
-ON
-  d_data_log._fi = chosen_ids._fi
-  AND d_data_log._usi = chosen_ids._usi
-WHERE
-   chosen_ids._deleted_fi is NULL
-ORDER BY
-   d_data_log._fi,
-   d_data_log._usi
-", fixed = TRUE)))
-}
+d1_view <- dbGetQuery(con, pull_data_by_usi(1337))
 ```
 
 
 ```{r}
-d1_view <- pull_data_by_usi(1337)
-
 head(d1_view)
 ```
 
+```{r}
+tail(d1_view)
+```
 
 ```{r}
-d2_view <- pull_data_by_usi(1338)
+d2_view <- dbGetQuery(con, pull_data_by_usi(1338))
+```
 
+
+```{r}
 head(d2_view)
+```
+
+
+```{r}
+tail(d2_view)
 ```
 
 
@@ -208,7 +170,7 @@ equivalent_data_frames <- function(a, b) {
 ```
 
 ```{r}
-orig_cols = c('Date', 'Time', 'Movie', 'Attendance')
+
 stopifnot(equivalent_data_frames(d1_orig, d1_view[ , orig_cols]))
 stopifnot(equivalent_data_frames(d2_orig, d2_view[ , orig_cols]))
 ```

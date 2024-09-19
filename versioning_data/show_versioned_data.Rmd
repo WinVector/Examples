@@ -1,0 +1,55 @@
+---
+title: "show versioned data"
+output: html_document
+date: "2024-09-19"
+---
+
+
+```{r}
+library(DBI)
+library(RSQLite)
+source("pull_data_by_use.R")
+```
+
+```{r}
+con <- dbConnect(RSQLite::SQLite(), "movie_data.sqlite", flags=SQLITE_RO)
+```
+
+```{r}
+dbGetQuery(con, "SELECT * from update_log ORDER BY _usi")
+```
+
+```{r comment=NA}
+writeLines(pull_data_by_usi(1337))
+```
+
+```{r}
+d1_view <- dbGetQuery(con, pull_data_by_usi(1337))
+```
+
+
+```{r}
+head(d1_view)
+```
+
+
+
+```{r}
+d2_view <- dbGetQuery(con, pull_data_by_usi(1338))
+```
+
+
+```{r}
+head(d2_view)
+```
+
+
+```{r}
+dbGetQuery(con, "SELECT * FROM d_row_deletions ORDER BY _usi, _fi")
+```
+
+
+
+```{r}
+dbDisconnect(con)
+```
