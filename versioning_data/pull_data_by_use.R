@@ -1,5 +1,5 @@
 
-pull_data_by_usi <- function(target_usi) {
+pull_data_by_usi_query <- function(target_usi) {
   return (gsub("{target_usi}", target_usi, "
 -- Pull what was known at sequence
 -- target_usi = {target_usi}
@@ -60,4 +60,14 @@ ORDER BY
    d_data_log._fi,
    d_data_log._usi
 ", fixed = TRUE))
+}
+
+pull_data_by_usi <- function(con, target_usi, return_intenal_keys = FALSE) {
+  q <- pull_data_by_usi_query(target_usi)
+  res <- dbGetQuery(con, q)
+  if (!return_intenal_keys) {
+    res["_fi"] <- NULL
+    res["_usi"] <- NULL
+  }
+  return(res)
 }
