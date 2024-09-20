@@ -6,7 +6,7 @@ date: "2024-09-19"
 
 ## Introduction
 
-In our note ["Please Version Data"](https://win-vector.com/2024/09/09/please-version-data/) we wished that a data source (in this case move attendance) was [bi-temporal](https://en.wikipedia.org/wiki/Bitemporal_modeling) or versioned. In this note we outline how to work with bi-temporal database in `R`.
+In our note [Please Version Data](https://win-vector.com/2024/09/09/please-version-data/)  (and [Please Version Data (source)](https://github.com/WinVector/Examples/blob/main/versioning_data/Please_Version_Data.md)) we wished that a data source (in this case move attendance) was [bi-temporal](https://en.wikipedia.org/wiki/Bitemporal_modeling) or versioned. In this note we outline how to work with bi-temporal database in `R`.
 
 Let's start up `R`.
 
@@ -187,6 +187,8 @@ To add or update data one:
 For a row to "be altered" we must have unique keying to say something is a "new value in an old row" versus "a new row that looks a lot like an old row." So to update data we must have some (domain specific) concept of row identity- or assigning the `_fi` key. We could use the `_fi` key itself, but it usually makes more sense to also have domain specific set of fields considered to be "primary domain keys" (though there are issues if values of these keys change, which is another reason why we have `_fi`). Just keep in mind: the system does not support altering the the `_fi` or `_usi` keys in a time-rewindable manner. These keys are what implement the time rewinding.
 
 The "append only" nature of the data store is just a convention to support playing an *intended view* of time forward and backward. For changes we do not intend to undo or replay we would directly alter the data store. For instance deleting PII (personally identifiable information) would be done by censoring all fields of all row versions, or even deleting rows from the data store (instead of just marking as deleted in the `d_row_deletions` table).
+
+We have a sketched out example of new data ingestion [here](https://github.com/WinVector/Examples/blob/main/versioning_data/BuildVersionBase.md). However, maintaining the bi-temporal database is exactly the step the anlyst hopes to delegate or ignore. The analyst needs to assume a bitemporal source and use it well.
 
 
 ```{r}

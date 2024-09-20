@@ -4,9 +4,11 @@ show versioned data
 
 ## Introduction
 
-In our note [“Please Version
-Data”](https://win-vector.com/2024/09/09/please-version-data/) we wished
-that a data source (in this case move attendance) was
+In our note [Please Version
+Data](https://win-vector.com/2024/09/09/please-version-data/) (and
+[Please Version Data
+(source)](https://github.com/WinVector/Examples/blob/main/versioning_data/Please_Version_Data.md))
+we wished that a data source (in this case move attendance) was
 [bi-temporal](https://en.wikipedia.org/wiki/Bitemporal_modeling) or
 versioned. In this note we outline how to work with bi-temporal database
 in `R`.
@@ -68,14 +70,14 @@ dbGetQuery(
   knitr::kable()
 ```
 
-|  \_fi | \_usi | Date       | Time    | Movie                           | Attendance |
-|------:|------:|:-----------|:--------|:--------------------------------|-----------:|
-| 87777 |  1337 | 2024-08-01 | 6:40 pm | Chronicles of a Wandering Saint |         47 |
-| 87777 |  1338 | 2024-08-01 | 6:40 pm | Chronicles of a Wandering Saint |          6 |
-| 87778 |  1337 | 2024-08-01 | 6:40 pm | Eno                             |        233 |
-| 87778 |  1338 | 2024-08-01 | 6:40 pm | Eno                             |         10 |
-| 87779 |  1337 | 2024-08-01 | 8:35 pm | Longlegs                        |        233 |
-| 87779 |  1338 | 2024-08-01 | 8:35 pm | Longlegs                        |        114 |
+|  \_fi | \_usi | Date       | Movie                           | Time    | Attendance |
+|------:|------:|:-----------|:--------------------------------|:--------|-----------:|
+| 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |         47 |
+| 87777 |  1338 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |          6 |
+| 87778 |  1337 | 2024-08-01 | Eno                             | 6:40 pm |        233 |
+| 87778 |  1338 | 2024-08-01 | Eno                             | 6:40 pm |         10 |
+| 87779 |  1337 | 2024-08-01 | Longlegs                        | 8:35 pm |        233 |
+| 87779 |  1338 | 2024-08-01 | Longlegs                        | 8:35 pm |        114 |
 
 This table is a running log of new row values.
 
@@ -164,11 +166,11 @@ d_before_August |>
   knitr::kable()
 ```
 
-|  \_fi | \_usi | Date       | Time    | Movie                           | Attendance |
-|------:|------:|:-----------|:--------|:--------------------------------|-----------:|
-| 87777 |  1337 | 2024-08-01 | 6:40 pm | Chronicles of a Wandering Saint |         47 |
-| 87778 |  1337 | 2024-08-01 | 6:40 pm | Eno                             |        233 |
-| 87779 |  1337 | 2024-08-01 | 8:35 pm | Longlegs                        |        233 |
+|  \_fi | \_usi | Date       | Movie                           | Time    | Attendance |
+|------:|------:|:-----------|:--------------------------------|:--------|-----------:|
+| 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |         47 |
+| 87778 |  1337 | 2024-08-01 | Eno                             | 6:40 pm |        233 |
+| 87779 |  1337 | 2024-08-01 | Longlegs                        | 8:35 pm |        233 |
 
 Notice we have only the older “Attendance ~ Theater Capacity” data rows
 that were available in July.
@@ -198,11 +200,11 @@ d_after_August |>
   knitr::kable()
 ```
 
-|  \_fi | \_usi | Date       | Time    | Movie                           | Attendance |
-|------:|------:|:-----------|:--------|:--------------------------------|-----------:|
-| 87777 |  1338 | 2024-08-01 | 6:40 pm | Chronicles of a Wandering Saint |          6 |
-| 87778 |  1338 | 2024-08-01 | 6:40 pm | Eno                             |         10 |
-| 87779 |  1338 | 2024-08-01 | 8:35 pm | Longlegs                        |        114 |
+|  \_fi | \_usi | Date       | Movie                           | Time    | Attendance |
+|------:|------:|:-----------|:--------------------------------|:--------|-----------:|
+| 87777 |  1338 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |          6 |
+| 87778 |  1338 | 2024-08-01 | Eno                             | 6:40 pm |         10 |
+| 87779 |  1338 | 2024-08-01 | Longlegs                        | 8:35 pm |        114 |
 
 Now we have the “after the event, Attendance is updated to show how may
 tickets actually sold.”
@@ -223,11 +225,11 @@ pull_data_by_usi(
   knitr::kable()
 ```
 
-| Date       | Time    | Movie                           | Attendance |
-|:-----------|:--------|:--------------------------------|-----------:|
-| 2024-08-01 | 6:40 pm | Chronicles of a Wandering Saint |         47 |
-| 2024-08-01 | 6:40 pm | Eno                             |        233 |
-| 2024-08-01 | 8:35 pm | Longlegs                        |        233 |
+| Date       | Movie                           | Time    | Attendance |
+|:-----------|:--------------------------------|:--------|-----------:|
+| 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |         47 |
+| 2024-08-01 | Eno                             | 6:40 pm |        233 |
+| 2024-08-01 | Longlegs                        | 8:35 pm |        233 |
 
 ## Procedures
 
@@ -301,6 +303,12 @@ data store. For instance deleting PII (personally identifiable
 information) would be done by censoring all fields of all row versions,
 or even deleting rows from the data store (instead of just marking as
 deleted in the `d_row_deletions` table).
+
+We have a sketched out example of new data ingestion
+[here](https://github.com/WinVector/Examples/blob/main/versioning_data/BuildVersionBase.md).
+However, maintaining the bi-temporal database is exactly the step the
+anlyst hopes to delegate or ignore. The analyst needs to assume a
+bitemporal source and use it well.
 
 ``` r
 dbDisconnect(con)

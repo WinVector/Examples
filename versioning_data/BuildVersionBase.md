@@ -2,6 +2,13 @@ build versioned db
 ================
 2024-09-19
 
+An example of building the versioned database for [Please Version
+Data](https://win-vector.com/2024/09/09/please-version-data/), [Please
+Version Data
+(source)](https://github.com/WinVector/Examples/blob/main/versioning_data/Please_Version_Data.md),
+and [show versioned
+data](https://github.com/WinVector/Examples/blob/main/versioning_data/show_versioned_data.md).
+
 ``` r
 library(DBI)
 source("pull_data_by_use.R")
