@@ -55,6 +55,7 @@ update_log <- data.frame(
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, overwrite=TRUE)
+
 dbGetQuery(con, "SELECT * from update_log") |>
   knitr::kable()
 ```
@@ -66,6 +67,7 @@ dbGetQuery(con, "SELECT * from update_log") |>
 
 ``` r
 dbWriteTable(con, 'd_data_log', d_before_August, overwrite=TRUE)
+
 dbGetQuery(con, "SELECT * from d_data_log") |>
   head() |>
   knitr::kable()
@@ -74,11 +76,11 @@ dbGetQuery(con, "SELECT * from d_data_log") |>
 |  \_fi | \_usi | Date       | Movie                                                | Time    | Attendance |
 |------:|------:|:-----------|:-----------------------------------------------------|:--------|-----------:|
 | 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |         47 |
-| 87778 |  1337 | 2024-08-01 | Eno                                                  | 6:40 pm |        233 |
-| 87779 |  1337 | 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
-| 87780 |  1337 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
-| 87781 |  1337 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
-| 87782 |  1337 | 2024-08-02 | Lyd                                                  | 6:30 pm |        233 |
+| 87778 |  1337 | 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
+| 87779 |  1337 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
+| 87780 |  1337 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
+| 87781 |  1337 | 2024-08-02 | Lyd                                                  | 6:30 pm |        233 |
+| 87782 |  1337 | 2024-08-02 | The Red Shoes                                        | 8:45 pm |        233 |
 
 ``` r
 d_row_deletions <- data.frame(
@@ -87,6 +89,7 @@ d_row_deletions <- data.frame(
   check.names = FALSE
 )
 dbWriteTable(con, 'd_row_deletions', d_row_deletions, overwrite=TRUE)
+
 dbGetQuery(con, "SELECT * from d_row_deletions")|>
   knitr::kable()
 ```
@@ -117,17 +120,21 @@ dbBegin(con)
 
 ``` r
 # confirm we have right _usi
-max_usi <- dbGetQuery(con, "SELECT MAX(_usi) AS _usi from update_log")[1, 1]
+max_usi <- max(
+  dbGetQuery(con, "SELECT MAX(_usi) AS _usi FROM update_log")[1, 1],
+  dbGetQuery(con, "SELECT MAX(_usi) AS _usi FROM d_row_deletions")[1, 1],
+  dbGetQuery(con, "SELECT MAX(_usi) AS _usi FROM d_data_log")[1, 1])
 if (max_usi != 1337) {
   # abort
   dbRollback(con)
   stopifnot(FALSE)
 }
+next_usi = max_usi + 1
 ```
 
 ``` r
 # get current view to compute deltas relative to
-d_before_August <- pull_data_by_usi(con, 1337, return_intenal_keys = TRUE)
+d_before_August <- pull_data_by_usi(con, max_usi, return_intenal_keys = TRUE)
 ```
 
 ``` r
@@ -138,54 +145,116 @@ d_after_August_orig <- read.csv(
   stringsAsFactors = FALSE)
 d_after_August <- d_after_August_orig
 # d_after_August$Date <- as.Date(d_after_August$Date)
-d_after_August$`_usi` <- 1338
+d_after_August$`_usi` <- next_usi
 d_after_merged <- merge(
   d_after_August, 
   d_before_August[ , c('_fi', domain_primary_keys)], 
   by = domain_primary_keys,
   all.x = TRUE,
-  all.y = FALSE)
-stopifnot(nrow(d_after_merged) == nrow(d_after_August))
+  all.y = TRUE)
 # TODO: new ID, and deleted ID cases, and no change in data cases
 d_after_August <- d_after_merged[, c('_fi', '_usi', orig_cols), drop = FALSE]
 stopifnot(sum(duplicated(d_after_August[, domain_primary_keys])) == 0)
 ```
 
-We now have the new rows we want to insert. A production level
-implementation would have to handle
-
-- New IDs for new rows.
-- Not inserting rows that have not changed.
-- Marking deleted rows.
-
-None of these are present in our current data, so we just update our
-tables.
+``` r
+# work new rows
+new_rows <- which(is.na(d_after_August$`_fi`))
+if(length(new_rows) > 0) {
+  # get next available _fi
+  next_fi <- 1 + max(
+    dbGetQuery(con, "SELECT MAX(_fi) AS _fi FROM d_row_deletions")[1, 1],
+    dbGetQuery(con, "SELECT MAX(_fi) AS _fi FROM d_data_log")[1, 1])
+  for (i in new_rows) {
+    d_after_August$`_fi`[i] = next_fi
+    next_fi = next_fi + 1
+  }
+}
+```
 
 ``` r
-dbWriteTable(con, 'd_data_log', d_after_August, append=TRUE)
+# work deleted rows
+deleted_fi <- d_after_August[is.na(d_after_August$`_usi`), '_fi', drop = TRUE]
+d_after_August <- d_after_August[is.na(d_after_August$`_usi`) == FALSE, , drop = FALSE]
+```
+
+``` r
+# suppress unchanged rows
+
+d_dup_check <- merge(
+  d_after_August[ , c('_fi', orig_cols)], 
+  d_before_August[ , c('_fi', orig_cols)], 
+  by = '_fi',
+  all.x = FALSE,
+  all.y = FALSE)
+stopifnot(length(unique(d_dup_check$`_fi`)) == nrow(d_dup_check))
+is_dup = rep(TRUE, nrow(d_dup_check))
+for(col in orig_cols) {
+  is_dup = is_dup & (d_dup_check[ , paste0(col, '.x')] == d_dup_check[ , paste0(col, '.y')])
+}
+dup_ids <- d_dup_check$`_fi`[is_dup]
+d_after_August <- d_after_August[!(d_after_August$`_fi` %in% dup_ids), , drop = FALSE]
+```
+
+We now have the new rows we want to insert, and deletions, and are not
+updating rows that did not change.
+
+``` r
+if (nrow(d_after_August) > 0) {
+  dbWriteTable(con, 'd_data_log', d_after_August, append=TRUE)
+}
+```
+
+``` r
+if(length(deleted_fi) > 0) {
+  d_row_deletions <- data.frame(
+    `_usi` = next_usi,
+    `_fi` = deleted_fi,
+    check.names = FALSE
+  )
+  dbWriteTable(con, 'd_row_deletions', d_row_deletions, append=TRUE)
+}
 ```
 
 ``` r
 update_log <- data.frame(
-  `_usi` = c(1338),
+  `_usi` = c(next_usi),
   `_update_time` = c('2024-09-03 22:12:00Z'),
   note = c('after August 2024 data refresh'),
   as_of_date = c('2024-08-31'),
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, append=TRUE)
-head(dbGetQuery(con, "SELECT * from update_log"))
 ```
-
-    ##   _usi         _update_time                           note as_of_date
-    ## 1 1212 2024-06-12 18:45:15Z  mal-formatted records removed 2024-05-31
-    ## 2 1337 2024-08-02 23:45:15Z   after July 2024 data refresh 2024-07-31
-    ## 3 1338 2024-09-03 22:12:00Z after August 2024 data refresh 2024-08-31
 
 ``` r
 # commit transaction
 dbCommit(con)
 ```
+
+Display our record tables.
+
+``` r
+dbGetQuery(con, "SELECT * from update_log") |>
+  knitr::kable()
+```
+
+| \_usi | \_update_time        | note                           | as_of_date |
+|------:|:---------------------|:-------------------------------|:-----------|
+|  1212 | 2024-06-12 18:45:15Z | mal-formatted records removed  | 2024-05-31 |
+|  1337 | 2024-08-02 23:45:15Z | after July 2024 data refresh   | 2024-07-31 |
+|  1338 | 2024-09-03 22:12:00Z | after August 2024 data refresh | 2024-08-31 |
+
+``` r
+dbGetQuery(con, "SELECT * from d_row_deletions")  |>
+  knitr::kable()
+```
+
+| \_usi |  \_fi |
+|------:|------:|
+|  1212 |  3312 |
+|  1212 |  3313 |
+|  1338 | 87777 |
 
 Display our views.
 
@@ -194,46 +263,42 @@ d_before_August_view <- pull_data_by_usi(con, 1337)
 ```
 
 ``` r
-head(d_before_August_view)
+d_before_August_view |>
+  head() |>
+  knitr::kable()
 ```
 
-    ##         Date                                                Movie    Time
-    ## 1 2024-08-01                      Chronicles of a Wandering Saint 6:40 pm
-    ## 2 2024-08-01                                                  Eno 6:40 pm
-    ## 3 2024-08-01                                             Longlegs 8:35 pm
-    ## 4 2024-08-01                 Staff Pick: Melvin and Howard (35mm) 8:45 pm
-    ## 5 2024-08-02 Made in England: The Films of Powell and Pressburger 6:00 pm
-    ## 6 2024-08-02                                                  Lyd 6:30 pm
-    ##   Attendance
-    ## 1         47
-    ## 2        233
-    ## 3        233
-    ## 4         47
-    ## 5        233
-    ## 6        233
+| Date       | Movie                                                | Time    | Attendance |
+|:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |         47 |
+| 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
+| 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
+| 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
+| 2024-08-02 | Lyd                                                  | 6:30 pm |        233 |
+| 2024-08-02 | The Red Shoes                                        | 8:45 pm |        233 |
 
 ``` r
 d_after_August_view <- pull_data_by_usi(con, 1338)
 ```
 
 ``` r
-head(d_after_August_view)
+d_after_August_view |>
+  head() |>
+  knitr::kable()
 ```
 
-    ##         Date                                                Movie    Time
-    ## 1 2024-08-01                      Chronicles of a Wandering Saint 6:40 pm
-    ## 2 2024-08-01                                                  Eno 6:40 pm
-    ## 3 2024-08-01                                             Longlegs 8:35 pm
-    ## 4 2024-08-01                 Staff Pick: Melvin and Howard (35mm) 8:45 pm
-    ## 5 2024-08-02 Made in England: The Films of Powell and Pressburger 6:00 pm
-    ## 6 2024-08-02                                                  Lyd 6:30 pm
-    ##   Attendance
-    ## 1          6
-    ## 2         10
-    ## 3        114
-    ## 4         23
-    ## 5        204
-    ## 6        213
+| Date       | Movie                                                | Time    | Attendance |
+|:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |
+| 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |
+| 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        204 |
+| 2024-08-02 | Lyd                                                  | 6:30 pm |        213 |
+| 2024-08-02 | The Red Shoes                                        | 8:45 pm |        230 |
+| 2024-08-02 | Longlegs                                             | 8:50 pm |          1 |
+
+``` r
+dbDisconnect(con)
+```
 
 Confirm the views reproduce the original data.
 
@@ -247,19 +312,17 @@ equivalent_data_frames <- function(a, b) {
   if(!all(cols == sort(colnames(b)))) {
     return(FALSE)
   }
-  a <- a[, cols, drop=FALSE]
-  b <- b[, cols, drop=FALSE]
+  rownames(a) <- NULL
+  rownames(b) <- NULL
   a <- a[do.call(order, a), , drop = FALSE]
   b <- b[do.call(order, b), , drop = FALSE]
+  rownames(a) <- NULL
+  rownames(b) <- NULL
   return(all(a==b))
 }
 ```
 
 ``` r
-stopifnot(equivalent_data_frames(d_before_August_orig, d_before_August_view[ , orig_cols]))
-stopifnot(equivalent_data_frames(d_after_August_orig, d_after_August_view[ , orig_cols]))
-```
-
-``` r
-dbDisconnect(con)
+stopifnot(equivalent_data_frames(d_before_August_orig, d_before_August_view))
+stopifnot(equivalent_data_frames(d_after_August_orig, d_after_August_view))
 ```

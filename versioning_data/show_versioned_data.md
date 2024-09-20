@@ -70,14 +70,14 @@ dbGetQuery(
   knitr::kable()
 ```
 
-|  \_fi | \_usi | Date       | Movie                           | Time    | Attendance |
-|------:|------:|:-----------|:--------------------------------|:--------|-----------:|
-| 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |         47 |
-| 87777 |  1338 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |          6 |
-| 87778 |  1337 | 2024-08-01 | Eno                             | 6:40 pm |        233 |
-| 87778 |  1338 | 2024-08-01 | Eno                             | 6:40 pm |         10 |
-| 87779 |  1337 | 2024-08-01 | Longlegs                        | 8:35 pm |        233 |
-| 87779 |  1338 | 2024-08-01 | Longlegs                        | 8:35 pm |        114 |
+|  \_fi | \_usi | Date       | Movie                                                | Time    | Attendance |
+|------:|------:|:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |         47 |
+| 87778 |  1337 | 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
+| 87778 |  1338 | 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |
+| 87779 |  1337 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
+| 87779 |  1338 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |
+| 87780 |  1337 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
 
 This table is a running log of new row values.
 
@@ -166,11 +166,11 @@ d_before_August |>
   knitr::kable()
 ```
 
-|  \_fi | \_usi | Date       | Movie                           | Time    | Attendance |
-|------:|------:|:-----------|:--------------------------------|:--------|-----------:|
-| 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |         47 |
-| 87778 |  1337 | 2024-08-01 | Eno                             | 6:40 pm |        233 |
-| 87779 |  1337 | 2024-08-01 | Longlegs                        | 8:35 pm |        233 |
+|  \_fi | \_usi | Date       | Movie                                | Time    | Attendance |
+|------:|------:|:-----------|:-------------------------------------|:--------|-----------:|
+| 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint      | 6:40 pm |         47 |
+| 87778 |  1337 | 2024-08-01 | Longlegs                             | 8:35 pm |        233 |
+| 87779 |  1337 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm) | 8:45 pm |         47 |
 
 Notice we have only the older “Attendance ~ Theater Capacity” data rows
 that were available in July.
@@ -200,11 +200,11 @@ d_after_August |>
   knitr::kable()
 ```
 
-|  \_fi | \_usi | Date       | Movie                           | Time    | Attendance |
-|------:|------:|:-----------|:--------------------------------|:--------|-----------:|
-| 87777 |  1338 | 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |          6 |
-| 87778 |  1338 | 2024-08-01 | Eno                             | 6:40 pm |         10 |
-| 87779 |  1338 | 2024-08-01 | Longlegs                        | 8:35 pm |        114 |
+|  \_fi | \_usi | Date       | Movie                                                | Time    | Attendance |
+|------:|------:|:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 87778 |  1338 | 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |
+| 87779 |  1338 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |
+| 87780 |  1338 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        204 |
 
 Now we have the “after the event, Attendance is updated to show how may
 tickets actually sold.”
@@ -225,11 +225,11 @@ pull_data_by_usi(
   knitr::kable()
 ```
 
-| Date       | Movie                           | Time    | Attendance |
-|:-----------|:--------------------------------|:--------|-----------:|
-| 2024-08-01 | Chronicles of a Wandering Saint | 6:40 pm |         47 |
-| 2024-08-01 | Eno                             | 6:40 pm |        233 |
-| 2024-08-01 | Longlegs                        | 8:35 pm |        233 |
+| Date       | Movie                                | Time    | Attendance |
+|:-----------|:-------------------------------------|:--------|-----------:|
+| 2024-08-01 | Chronicles of a Wandering Saint      | 6:40 pm |         47 |
+| 2024-08-01 | Longlegs                             | 8:35 pm |        233 |
+| 2024-08-01 | Staff Pick: Melvin and Howard (35mm) | 8:45 pm |         47 |
 
 ## Procedures
 
@@ -251,10 +251,11 @@ dbGetQuery(
   knitr::kable()
 ```
 
-| \_usi | \_fi |
-|------:|-----:|
-|  1212 | 3312 |
-|  1212 | 3313 |
+| \_usi |  \_fi |
+|------:|------:|
+|  1212 |  3312 |
+|  1212 |  3313 |
+|  1338 | 87777 |
 
 ## Conclusion
 

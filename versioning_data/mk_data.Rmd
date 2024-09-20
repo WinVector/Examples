@@ -4,15 +4,28 @@ output: github_document
 date: "2024-09-06"
 ---
 
-```{r}
+```{r, results='hide',warning=FALSE,message=FALSE,error=FALSE}
 library(dplyr)
+```
 
+
+```{r}
 set.seed(2024)
 
 d <- read.csv('Roxie_schedule_original.csv', strip.white = TRUE, stringsAsFactors = FALSE)
 d$Date <- as.Date(d$Date, format='%Y-%B-%d')
 d$EstimatedAttendance <- sample(c(233, 47), size=nrow(d), replace = TRUE)
 d$Attendance <- round(d$EstimatedAttendance * runif(n = nrow(d)))
+# some estimates are right
+attendance_matches_indexes <- sort(sample.int(nrow(d), 0.05 * nrow(d), replace = FALSE))
+d$Attendance[attendance_matches_indexes] <- d$EstimatedAttendance[attendance_matches_indexes]
+match_table <- table(format(d$Date, format='%B'), d$EstimatedAttendance == d$Attendance)
+stopifnot(sum(match_table > 0) == 4)
+
+knitr::kable(match_table)
+```
+
+```{r}
 d$PopcornSales <- round(runif(n = nrow(d), min = 0.1, max = 0.2) * d$Attendance)
 
 popcorn_sales <- d |>
@@ -33,13 +46,16 @@ d$Attendance[format(d$Date, '%B') != 'August'] = d$EstimatedAttendance[format(d$
 
 d_mixed <- d
 d_mixed$EstimatedAttendance <- NULL
+d_mixed <- d_mixed[-1, , drop = FALSE]
 write.csv(d_mixed, 'Roxie_schedule_as_known_after_August.csv', row.names = FALSE)
 knitr::kable(head(d_mixed))
 ```
 
+
 ```{r}
 d_est <- d
 d_est$Attendance <- NULL
+d_est <- d_est[-2, , drop = FALSE]
 write.csv(d_est, 'Roxie_schedule_as_known_before_August.csv', row.names = FALSE)
 knitr::kable(head(d_est))
 ```

@@ -52,12 +52,14 @@ update_log <- data.frame(
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, overwrite=TRUE)
+
 dbGetQuery(con, "SELECT * from update_log") |>
   knitr::kable()
 ```
 
 ```{r}
 dbWriteTable(con, 'd_data_log', d_before_August, overwrite=TRUE)
+
 dbGetQuery(con, "SELECT * from d_data_log") |>
   head() |>
   knitr::kable()
@@ -71,6 +73,7 @@ d_row_deletions <- data.frame(
   check.names = FALSE
 )
 dbWriteTable(con, 'd_row_deletions', d_row_deletions, overwrite=TRUE)
+
 dbGetQuery(con, "SELECT * from d_row_deletions")|>
   knitr::kable()
 ```
@@ -91,17 +94,23 @@ dbBegin(con)
 
 ```{r}
 # confirm we have right _usi
-max_usi <- dbGetQuery(con, "SELECT MAX(_usi) AS _usi from update_log")[1, 1]
+max_usi <- max(
+  dbGetQuery(con, "SELECT MAX(_usi) AS _usi FROM update_log")[1, 1],
+  dbGetQuery(con, "SELECT MAX(_usi) AS _usi FROM d_row_deletions")[1, 1],
+  dbGetQuery(con, "SELECT MAX(_usi) AS _usi FROM d_data_log")[1, 1])
 if (max_usi != 1337) {
   # abort
   dbRollback(con)
   stopifnot(FALSE)
 }
+next_usi = max_usi + 1
 ```
+
+
 
 ```{r}
 # get current view to compute deltas relative to
-d_before_August <- pull_data_by_usi(con, 1337, return_intenal_keys = TRUE)
+d_before_August <- pull_data_by_usi(con, max_usi, return_intenal_keys = TRUE)
 ```
 
 
@@ -113,42 +122,88 @@ d_after_August_orig <- read.csv(
   stringsAsFactors = FALSE)
 d_after_August <- d_after_August_orig
 # d_after_August$Date <- as.Date(d_after_August$Date)
-d_after_August$`_usi` <- 1338
+d_after_August$`_usi` <- next_usi
 d_after_merged <- merge(
   d_after_August, 
   d_before_August[ , c('_fi', domain_primary_keys)], 
   by = domain_primary_keys,
   all.x = TRUE,
-  all.y = FALSE)
-stopifnot(nrow(d_after_merged) == nrow(d_after_August))
+  all.y = TRUE)
 # TODO: new ID, and deleted ID cases, and no change in data cases
 d_after_August <- d_after_merged[, c('_fi', '_usi', orig_cols), drop = FALSE]
 stopifnot(sum(duplicated(d_after_August[, domain_primary_keys])) == 0)
 ```
 
-We now have the new rows we want to insert. A production level implementation would have to handle
+```{r}
+# work new rows
+new_rows <- which(is.na(d_after_August$`_fi`))
+if(length(new_rows) > 0) {
+  # get next available _fi
+  next_fi <- 1 + max(
+    dbGetQuery(con, "SELECT MAX(_fi) AS _fi FROM d_row_deletions")[1, 1],
+    dbGetQuery(con, "SELECT MAX(_fi) AS _fi FROM d_data_log")[1, 1])
+  for (i in new_rows) {
+    d_after_August$`_fi`[i] = next_fi
+    next_fi = next_fi + 1
+  }
+}
+```
 
-  * New IDs for new rows.
-  * Not inserting rows that have not changed.
-  * Marking deleted rows.
-  
-None of these are present in our current data, so we just update our tables.
+```{r}
+# work deleted rows
+deleted_fi <- d_after_August[is.na(d_after_August$`_usi`), '_fi', drop = TRUE]
+d_after_August <- d_after_August[is.na(d_after_August$`_usi`) == FALSE, , drop = FALSE]
+```
+
+```{r}
+# suppress unchanged rows
+
+d_dup_check <- merge(
+  d_after_August[ , c('_fi', orig_cols)], 
+  d_before_August[ , c('_fi', orig_cols)], 
+  by = '_fi',
+  all.x = FALSE,
+  all.y = FALSE)
+stopifnot(length(unique(d_dup_check$`_fi`)) == nrow(d_dup_check))
+is_dup = rep(TRUE, nrow(d_dup_check))
+for(col in orig_cols) {
+  is_dup = is_dup & (d_dup_check[ , paste0(col, '.x')] == d_dup_check[ , paste0(col, '.y')])
+}
+dup_ids <- d_dup_check$`_fi`[is_dup]
+d_after_August <- d_after_August[!(d_after_August$`_fi` %in% dup_ids), , drop = FALSE]
+```
+
+
+We now have the new rows we want to insert, and deletions, and are not updating rows that did not change.
 
 
 ```{r}
-dbWriteTable(con, 'd_data_log', d_after_August, append=TRUE)
+if (nrow(d_after_August) > 0) {
+  dbWriteTable(con, 'd_data_log', d_after_August, append=TRUE)
+}
+```
+
+
+```{r}
+if(length(deleted_fi) > 0) {
+  d_row_deletions <- data.frame(
+    `_usi` = next_usi,
+    `_fi` = deleted_fi,
+    check.names = FALSE
+  )
+  dbWriteTable(con, 'd_row_deletions', d_row_deletions, append=TRUE)
+}
 ```
 
 ```{r}
 update_log <- data.frame(
-  `_usi` = c(1338),
+  `_usi` = c(next_usi),
   `_update_time` = c('2024-09-03 22:12:00Z'),
   note = c('after August 2024 data refresh'),
   as_of_date = c('2024-08-31'),
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, append=TRUE)
-head(dbGetQuery(con, "SELECT * from update_log"))
 ```
 
 
@@ -157,9 +212,19 @@ head(dbGetQuery(con, "SELECT * from update_log"))
 dbCommit(con)
 ```
 
+Display our record tables.
+
+```{r}
+dbGetQuery(con, "SELECT * from update_log") |>
+  knitr::kable()
+```
+
+```{r}
+dbGetQuery(con, "SELECT * from d_row_deletions")  |>
+  knitr::kable()
+```
 
 Display our views.
-
 
 
 ```{r}
@@ -168,7 +233,9 @@ d_before_August_view <- pull_data_by_usi(con, 1337)
 
 
 ```{r}
-head(d_before_August_view)
+d_before_August_view |>
+  head() |>
+  knitr::kable()
 ```
 
 ```{r}
@@ -177,7 +244,13 @@ d_after_August_view <- pull_data_by_usi(con, 1338)
 
 
 ```{r}
-head(d_after_August_view)
+d_after_August_view |>
+  head() |>
+  knitr::kable()
+```
+
+```{r}
+dbDisconnect(con)
 ```
 
 
@@ -194,22 +267,22 @@ equivalent_data_frames <- function(a, b) {
   if(!all(cols == sort(colnames(b)))) {
     return(FALSE)
   }
-  a <- a[, cols, drop=FALSE]
-  b <- b[, cols, drop=FALSE]
+  rownames(a) <- NULL
+  rownames(b) <- NULL
   a <- a[do.call(order, a), , drop = FALSE]
   b <- b[do.call(order, b), , drop = FALSE]
+  rownames(a) <- NULL
+  rownames(b) <- NULL
   return(all(a==b))
 }
 ```
 
 ```{r}
-stopifnot(equivalent_data_frames(d_before_August_orig, d_before_August_view[ , orig_cols]))
-stopifnot(equivalent_data_frames(d_after_August_orig, d_after_August_view[ , orig_cols]))
+stopifnot(equivalent_data_frames(d_before_August_orig, d_before_August_view))
+stopifnot(equivalent_data_frames(d_after_August_orig, d_after_August_view))
 ```
 
 
 
-```{r}
-dbDisconnect(con)
-```
+
 
