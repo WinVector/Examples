@@ -16,24 +16,24 @@ con <- dbConnect(RSQLite::SQLite(), "movie_data.sqlite")
 
 ```{r}
 # read our data
-d1_orig <- read.csv(
+d_before_August_orig <- read.csv(
   'Roxie_schedule_as_known_before_August.csv', 
   strip.white = TRUE, 
   stringsAsFactors = FALSE)
-d1_orig$Attendance <- d1_orig$EstimatedAttendance
-d1_orig$EstimatedAttendance <- NULL
-d1 <- d1_orig
-# d1$Date <- as.Date(d1$Date)
-d1$`_usi` <- 1337
-d2_orig <- read.csv(
+d_before_August_orig$Attendance <- d_before_August_orig$EstimatedAttendance
+d_before_August_orig$EstimatedAttendance <- NULL
+d_before_August <- d_before_August_orig
+# d_before_August$Date <- as.Date(d_before_August$Date)
+d_before_August$`_usi` <- 1337
+d_after_August_orig <- read.csv(
   'Roxie_schedule_as_known_after_August.csv', 
   strip.white = TRUE, 
   stringsAsFactors = FALSE)
-d2 <- d2_orig
-# d2$Date <- as.Date(d2$Date)
-d2$`_usi` <- 1338
-d <- rbind(d1, d2)
-orig_cols <- colnames(d1_orig)
+d_after_August <- d_after_August_orig
+# d_after_August$Date <- as.Date(d_after_August$Date)
+d_after_August$`_usi` <- 1338
+d <- rbind(d_before_August, d_after_August)
+orig_cols <- colnames(d_before_August_orig)
 ```
 
 ```{r}
@@ -125,30 +125,30 @@ head(dbGetQuery(con, "SELECT * from d_row_deletions"))
 
 
 ```{r}
-d1_view <- dbGetQuery(con, pull_data_by_usi(1337))
+d_before_August_view <- pull_data_by_usi(con, 1337)
 ```
 
 
 ```{r}
-head(d1_view)
+head(d_before_August_view)
 ```
 
 ```{r}
-tail(d1_view)
+tail(d_before_August_view)
 ```
 
 ```{r}
-d2_view <- dbGetQuery(con, pull_data_by_usi(1338))
-```
-
-
-```{r}
-head(d2_view)
+d_after_August_view <- pull_data_by_usi(con, 1338)
 ```
 
 
 ```{r}
-tail(d2_view)
+head(d_after_August_view)
+```
+
+
+```{r}
+tail(d_after_August_view)
 ```
 
 
@@ -172,8 +172,8 @@ equivalent_data_frames <- function(a, b) {
 
 ```{r}
 
-stopifnot(equivalent_data_frames(d1_orig, d1_view[ , orig_cols]))
-stopifnot(equivalent_data_frames(d2_orig, d2_view[ , orig_cols]))
+stopifnot(equivalent_data_frames(d_before_August_orig, d_before_August_view[ , orig_cols]))
+stopifnot(equivalent_data_frames(d_after_August_orig, d_after_August_view[ , orig_cols]))
 ```
 
 
