@@ -257,6 +257,22 @@ dbGetQuery(
 |  1212 |  3313 |
 |  1338 | 87777 |
 
+## The `_fi`
+
+The `_fi` (fact IDs) are critically important. Setting them correctly is
+a major data maintenance task. They are what prevent (or at least bound)
+a [“Ship of Theseus”](https://en.wikipedia.org/wiki/Ship_of_Theseus)
+meltdown in our data rows (or the “row of Theseus”). Different versions
+of a row (indexed by the `_usi`) are “the same row” if and only if they
+share the same `_fi`, no matter how many titles, keys, names, or fields
+change or migrate to other rows.
+
+<center>
+<a href="https://commons.wikimedia.org/wiki/File:HMSTheseus1897.jpg"><img src="./HMSTheseus1897.jpg" height=300></a>
+<p/>
+(Don’t trust even names, the wrong Ship of Theseus)
+</center>
+
 ## Conclusion
 
 This bi-temporal data model allows for time-rewinding on:

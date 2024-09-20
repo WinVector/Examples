@@ -161,6 +161,16 @@ dbGetQuery(
   knitr::kable()
 ```
 
+## The `_fi`
+
+The `_fi` (fact IDs) are critically important. Setting them correctly is a major data maintenance task. They are what prevent (or at least bound) a ["Ship of Theseus"](https://en.wikipedia.org/wiki/Ship_of_Theseus) meltdown in our data rows (or the "row of Theseus"). Different versions of a row (indexed by the `_usi`) are "the same row" if and only if they share the same `_fi`, no matter how many titles, keys, names, or fields change or migrate to other rows.
+
+<center>
+<a href="https://commons.wikimedia.org/wiki/File:HMSTheseus1897.jpg"><img src="./HMSTheseus1897.jpg" height=300></a>
+<p/>
+(Don't trust even names, the wrong Ship of Theseus)
+</center>
+
 ## Conclusion
 
 This bi-temporal data model allows for time-rewinding on:
@@ -189,6 +199,8 @@ For a row to "be altered" we must have unique keying to say something is a "new 
 The "append only" nature of the data store is just a convention to support playing an *intended view* of time forward and backward. For changes we do not intend to undo or replay we would directly alter the data store. For instance deleting PII (personally identifiable information) would be done by censoring all fields of all row versions, or even deleting rows from the data store (instead of just marking as deleted in the `d_row_deletions` table).
 
 We have a sketched out example of new data ingestion [here](https://github.com/WinVector/Examples/blob/main/versioning_data/BuildVersionBase.md). However, maintaining the bi-temporal database is exactly the step the anlyst hopes to delegate or ignore. The analyst needs to assume a bitemporal source and use it well.
+
+
 
 
 ```{r}
