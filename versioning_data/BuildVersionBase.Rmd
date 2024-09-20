@@ -1,11 +1,11 @@
 ---
 title: "build versioned db"
-output: html_document
+output: github_document
 date: "2024-09-19"
 ---
 
 
-```{r}
+```{r, results='hide',warning=FALSE,message=FALSE,error=FALSE}
 library(DBI)
 source("pull_data_by_use.R")
 ```
@@ -14,8 +14,10 @@ source("pull_data_by_use.R")
 con <- dbConnect(RSQLite::SQLite(), "movie_data.sqlite")
 ```
 
+Read initial data, normalize column names, and assign `_fi` and `_usi`.
+
 ```{r}
-# read our data
+# read our first data
 d_before_August_orig <- read.csv(
   'Roxie_schedule_as_known_before_August.csv', 
   strip.white = TRUE, 
@@ -24,94 +26,36 @@ d_before_August_orig$Attendance <- d_before_August_orig$EstimatedAttendance
 d_before_August_orig$EstimatedAttendance <- NULL
 d_before_August <- d_before_August_orig
 # d_before_August$Date <- as.Date(d_before_August$Date)
-d_before_August$`_usi` <- 1337
-d_after_August_orig <- read.csv(
-  'Roxie_schedule_as_known_after_August.csv', 
-  strip.white = TRUE, 
-  stringsAsFactors = FALSE)
-d_after_August <- d_after_August_orig
-# d_after_August$Date <- as.Date(d_after_August$Date)
-d_after_August$`_usi` <- 1338
-d <- rbind(d_before_August, d_after_August)
 orig_cols <- colnames(d_before_August_orig)
+d_before_August$`_fi` <- 87776 + 1:nrow(d_before_August)
+d_before_August$`_usi` <- 1337
+domain_primary_keys = c('Date', 'Movie', 'Time')
+d_before_August <- d_before_August[, c('_fi', '_usi', orig_cols), drop = FALSE]
+stopifnot(sum(duplicated(d_before_August[, domain_primary_keys])) == 0)
 ```
 
-```{r}
-dbWriteTable(con, 'd_raw', d, overwrite=TRUE)
-```
-
-```{r}
-# scan data getting newest version of each unique record
-# using the fact we know that only attendance changed
-# updates from external snapshots with few constraints would be harder
-res <- dbGetQuery(con, "
-WITH 
-fact_id_scan AS (
-   SELECT
-     Date,
-     Time,
-     Movie,
-     87776 + SUM(1) OVER(ORDER BY Date, Time, Movie) AS _fi
-   FROM 
-     d_raw
-   GROUP BY
-     Date,
-     Time,
-     Movie
-),
-usi_scan AS (
-   SELECT
-     MIN(_usi) AS _usi,
-     Date,
-     Time,
-     Movie,
-     Attendance
-   FROM 
-     d_raw
-   GROUP BY
-     Date,
-     Time,
-     Movie,
-     Attendance
-)
-SELECT
-    fact_id_scan._fi AS _fi,
-    usi_scan.*
-  FROM 
-    usi_scan
-  LEFT JOIN
-    fact_id_scan
-  ON
-    usi_scan.Date = fact_id_scan.Date
-    AND usi_scan.Time = fact_id_scan.Time
-    AND usi_scan.Movie = fact_id_scan.Movie
-  ORDER BY
-     usi_scan.Date,
-     usi_scan.Time,
-     usi_scan.Movie,
-     fact_id_scan._fi,
-     usi_scan._usi,
-     usi_scan.Attendance
-")
-dbRemoveTable(con, 'd_raw')
-```
-
-```{r}
-dbWriteTable(con, 'd_data_log', res, overwrite=TRUE)
-head(dbGetQuery(con, "SELECT * from d_data_log"))
-```
+Create first versions of all tables.
 
 ```{r}
 update_log <- data.frame(
-  `_usi` = c(1212, 1337, 1338),
-  `_update_time` = c('2024-06-12 18:45:15Z', '2024-08-02 23:45:15Z', '2024-09-03 22:12:00Z'),
-  note = c('mal-formatted records removed', 'after July 2024 data refresh', 'after August 2024 data refresh'),
-  as_of_date = c('2024-05-31', '2024-07-31', '2024-08-31'),
+  `_usi` = c(1212, 1337),
+  `_update_time` = c('2024-06-12 18:45:15Z', '2024-08-02 23:45:15Z'),
+  note = c('mal-formatted records removed', 'after July 2024 data refresh'),
+  as_of_date = c('2024-05-31', '2024-07-31'),
   check.names = FALSE
 )
 dbWriteTable(con, 'update_log', update_log, overwrite=TRUE)
-head(dbGetQuery(con, "SELECT * from update_log"))
+dbGetQuery(con, "SELECT * from update_log") |>
+  knitr::kable()
 ```
+
+```{r}
+dbWriteTable(con, 'd_data_log', d_before_August, overwrite=TRUE)
+dbGetQuery(con, "SELECT * from d_data_log") |>
+  head() |>
+  knitr::kable()
+```
+
 
 ```{r}
 d_row_deletions <- data.frame(
@@ -120,8 +64,69 @@ d_row_deletions <- data.frame(
   check.names = FALSE
 )
 dbWriteTable(con, 'd_row_deletions', d_row_deletions, overwrite=TRUE)
-head(dbGetQuery(con, "SELECT * from d_row_deletions"))
+dbGetQuery(con, "SELECT * from d_row_deletions")|>
+  knitr::kable()
 ```
+
+Now the bi-temporal database is up. We can then try to update it based on a new data pull from our simulated movie data vendor. Much better would be for the vendor to share access to an already organized bi-temporal database.
+
+To update the data we need to determine what rows to insert, update, and delete (all domain-specific changes) and assign a `_usi` for the whole transaction and new `_fi` for any new rows.
+
+```{r}
+# get current view to compute deltas relative to
+d_before_August <- pull_data_by_usi(con, 1337, return_intenal_keys = TRUE)
+```
+
+
+```{r}
+# read next glob of data
+d_after_August_orig <- read.csv(
+  'Roxie_schedule_as_known_after_August.csv', 
+  strip.white = TRUE, 
+  stringsAsFactors = FALSE)
+d_after_August <- d_after_August_orig
+# d_after_August$Date <- as.Date(d_after_August$Date)
+d_after_August$`_usi` <- 1338
+d_after_merged <- merge(
+  d_after_August, 
+  d_before_August[ , c('_fi', domain_primary_keys)], 
+  by = domain_primary_keys,
+  all.x = TRUE,
+  all.y = FALSE)
+stopifnot(nrow(d_after_merged) == nrow(d_after_August))
+# TODO: new ID, and deleted ID cases, and no change in data cases
+d_after_August <- d_after_merged[, c('_fi', '_usi', orig_cols), drop = FALSE]
+stopifnot(sum(duplicated(d_after_August[, domain_primary_keys])) == 0)
+```
+
+We now have the new rows we want to insert. A production level implementation would have to handle
+
+  * New IDs for new rows.
+  * Not inserting rows that have not changed.
+  * Marking deleted rows.
+  
+None of these are present in our current data, so we just update our tables.
+
+
+```{r}
+dbWriteTable(con, 'd_data_log', d_after_August, append=TRUE)
+```
+
+```{r}
+update_log <- data.frame(
+  `_usi` = c(1338),
+  `_update_time` = c('2024-09-03 22:12:00Z'),
+  note = c('after August 2024 data refresh'),
+  as_of_date = c('2024-08-31'),
+  check.names = FALSE
+)
+dbWriteTable(con, 'update_log', update_log, append=TRUE)
+head(dbGetQuery(con, "SELECT * from update_log"))
+```
+
+
+Display our views.
+
 
 
 ```{r}
@@ -134,10 +139,6 @@ head(d_before_August_view)
 ```
 
 ```{r}
-tail(d_before_August_view)
-```
-
-```{r}
 d_after_August_view <- pull_data_by_usi(con, 1338)
 ```
 
@@ -147,9 +148,7 @@ head(d_after_August_view)
 ```
 
 
-```{r}
-tail(d_after_August_view)
-```
+Confirm the views reproduce the original data.
 
 
 ```{r}
@@ -171,10 +170,10 @@ equivalent_data_frames <- function(a, b) {
 ```
 
 ```{r}
-
 stopifnot(equivalent_data_frames(d_before_August_orig, d_before_August_view[ , orig_cols]))
 stopifnot(equivalent_data_frames(d_after_August_orig, d_after_August_view[ , orig_cols]))
 ```
+
 
 
 ```{r}
