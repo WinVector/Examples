@@ -8,6 +8,7 @@ An example of building the versioned database for [Please Version Data](https://
 
 ```{r, results='hide',warning=FALSE,message=FALSE,error=FALSE}
 library(DBI)
+# library(RSQLite)
 source("pull_data_by_use.R")
 ```
 
@@ -36,6 +37,11 @@ stopifnot(sum(duplicated(d_before_August[, domain_primary_keys])) == 0)
 ```
 
 Create first versions of all tables.
+
+```{r}
+# start transaction
+dbBegin(con)
+```
 
 ```{r}
 update_log <- data.frame(
@@ -69,9 +75,29 @@ dbGetQuery(con, "SELECT * from d_row_deletions")|>
   knitr::kable()
 ```
 
+```{r}
+# commit transaction
+dbCommit(con)
+```
+
 Now the bi-temporal database is up. We can then try to update it based on a new data pull from our simulated movie data vendor. Much better would be for the vendor to share access to an already organized bi-temporal database.
 
 To update the data we need to determine what rows to insert, update, and delete (all domain-specific changes) and assign a `_usi` for the whole transaction and new `_fi` for any new rows.
+
+```{r}
+# start transaction
+dbBegin(con)
+```
+
+```{r}
+# confirm we have right _usi
+max_usi <- dbGetQuery(con, "SELECT MAX(_usi) AS _usi from update_log")[1, 1]
+if (max_usi != 1337) {
+  # abort
+  dbRollback(con)
+  stopifnot(FALSE)
+}
+```
 
 ```{r}
 # get current view to compute deltas relative to
@@ -123,6 +149,12 @@ update_log <- data.frame(
 )
 dbWriteTable(con, 'update_log', update_log, append=TRUE)
 head(dbGetQuery(con, "SELECT * from update_log"))
+```
+
+
+```{r}
+# commit transaction
+dbCommit(con)
 ```
 
 

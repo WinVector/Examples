@@ -11,6 +11,7 @@ data](https://github.com/WinVector/Examples/blob/main/versioning_data/show_versi
 
 ``` r
 library(DBI)
+# library(RSQLite)
 source("pull_data_by_use.R")
 ```
 
@@ -39,6 +40,11 @@ stopifnot(sum(duplicated(d_before_August[, domain_primary_keys])) == 0)
 ```
 
 Create first versions of all tables.
+
+``` r
+# start transaction
+dbBegin(con)
+```
 
 ``` r
 update_log <- data.frame(
@@ -90,6 +96,11 @@ dbGetQuery(con, "SELECT * from d_row_deletions")|>
 |  1212 | 3312 |
 |  1212 | 3313 |
 
+``` r
+# commit transaction
+dbCommit(con)
+```
+
 Now the bi-temporal database is up. We can then try to update it based
 on a new data pull from our simulated movie data vendor. Much better
 would be for the vendor to share access to an already organized
@@ -98,6 +109,21 @@ bi-temporal database.
 To update the data we need to determine what rows to insert, update, and
 delete (all domain-specific changes) and assign a `_usi` for the whole
 transaction and new `_fi` for any new rows.
+
+``` r
+# start transaction
+dbBegin(con)
+```
+
+``` r
+# confirm we have right _usi
+max_usi <- dbGetQuery(con, "SELECT MAX(_usi) AS _usi from update_log")[1, 1]
+if (max_usi != 1337) {
+  # abort
+  dbRollback(con)
+  stopifnot(FALSE)
+}
+```
 
 ``` r
 # get current view to compute deltas relative to
@@ -155,6 +181,11 @@ head(dbGetQuery(con, "SELECT * from update_log"))
     ## 1 1212 2024-06-12 18:45:15Z  mal-formatted records removed 2024-05-31
     ## 2 1337 2024-08-02 23:45:15Z   after July 2024 data refresh 2024-07-31
     ## 3 1338 2024-09-03 22:12:00Z after August 2024 data refresh 2024-08-31
+
+``` r
+# commit transaction
+dbCommit(con)
+```
 
 Display our views.
 
