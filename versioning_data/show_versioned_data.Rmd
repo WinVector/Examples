@@ -22,13 +22,15 @@ con <- dbConnect(
 ```{r}
 dbGetQuery(
   con, 
-  "SELECT * from update_log ORDER BY _usi")
+  "SELECT * from update_log ORDER BY _usi") |>
+  knitr::kable()
 ```
 
 ```{r}
-head(dbGetQuery(
+dbGetQuery(
   con, 
-  "SELECT * from d_data_log ORDER BY _fi, _usi"), n = 6)
+  "SELECT * from d_data_log ORDER BY _fi, _usi LIMIT 6") |>
+  knitr::kable()
 ```
 
 
@@ -55,7 +57,9 @@ d_before_August <- dbGetQuery(
 
 
 ```{r}
-head(d_before_August, n=3)
+d_before_August |>
+  head(n=3) |>
+  knitr::kable()
 ```
 
 
@@ -75,14 +79,17 @@ d_after_August <- dbGetQuery(
 
 
 ```{r}
-head(d_after_August, n=3)
+d_after_August |>
+  head(n=3) |>
+  knitr::kable()
 ```
 
 
 ```{r}
 dbGetQuery(
   con, 
-  "SELECT * FROM d_row_deletions ORDER BY _usi, _fi")
+  "SELECT * FROM d_row_deletions ORDER BY _usi, _fi") |>
+  knitr::kable()
 ```
 
 
