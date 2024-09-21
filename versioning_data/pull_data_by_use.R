@@ -22,7 +22,8 @@ data_scan AS (
 -- with _usi no larger than target_usi
 deletion_scan AS (
    SELECT
-     _fi
+     _fi,
+     MAX(_usi) AS _usi
    FROM 
      d_row_deletions
    WHERE
@@ -30,11 +31,12 @@ deletion_scan AS (
    GROUP BY
      _fi
 ),
--- simulate an anti-join to mark 
+-- simulate an sequence ordered anti-join to mark 
 -- which rows not considered deleted
-chosen_fi AS (  
+chosen_marks AS (
   SELECT
-    data_scan.*,
+    data_scan._fi AS _fi,
+    data_scan._usi AS _usi,
     deletion_scan._fi AS _deleted_fi
   FROM
     data_scan
@@ -42,6 +44,7 @@ chosen_fi AS (
     deletion_scan
   ON
     data_scan._fi = deletion_scan._fi
+    AND data_scan._usi <= deletion_scan._usi
 )
 -- Use chosen ids to pull correct rows
 -- target_usi = {target_usi}
@@ -50,12 +53,12 @@ SELECT
 FROM
    d_data_log
 INNER JOIN
-   chosen_fi
+   chosen_marks
 ON
-  d_data_log._fi = chosen_fi._fi
-  AND d_data_log._usi = chosen_fi._usi
+  d_data_log._fi = chosen_marks._fi
+  AND d_data_log._usi = chosen_marks._usi
 WHERE
-   chosen_fi._deleted_fi is NULL
+   chosen_marks._deleted_fi is NULL
 ORDER BY
    d_data_log._fi,
    d_data_log._usi
