@@ -18,7 +18,7 @@ data_scan AS (
    GROUP BY
      _fi
 ),
--- find any row deletions
+-- find any relevant row deletions
 -- with _usi no larger than target_usi
 deletion_scan AS (
    SELECT
@@ -31,20 +31,20 @@ deletion_scan AS (
    GROUP BY
      _fi
 ),
--- simulate an sequence ordered anti-join to mark 
--- which rows not considered deleted
+-- collect state of each row
+-- including possibly relevant deletions
 chosen_marks AS (
   SELECT
     data_scan._fi AS _fi,
     data_scan._usi AS _usi,
-    deletion_scan._fi AS _deleted_fi
+    deletion_scan._fi AS _deleted_fi,
+    deletion_scan._usi AS _deleted_usi
   FROM
     data_scan
   LEFT JOIN
     deletion_scan
   ON
     data_scan._fi = deletion_scan._fi
-    AND data_scan._usi <= deletion_scan._usi
 )
 -- Use chosen ids to pull correct rows
 -- target_usi = {target_usi}
@@ -58,7 +58,8 @@ ON
   d_data_log._fi = chosen_marks._fi
   AND d_data_log._usi = chosen_marks._usi
 WHERE
-   chosen_marks._deleted_fi is NULL
+   (chosen_marks._deleted_fi is NULL)
+   OR (chosen_marks._deleted_usi <= chosen_marks._usi)
 ORDER BY
    d_data_log._fi,
    d_data_log._usi
