@@ -68,12 +68,12 @@ d |>
 
 | Date       | Movie                                                | Time    | Attendance |
 |:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |          6 |
 | 2024-08-01 | Eno                                                  | 6:40 pm |         10 |
 | 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |
 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |
 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        204 |
 | 2024-08-02 | Lyd                                                  | 6:30 pm |        213 |
-| 2024-08-02 | The Red Shoes                                        | 8:45 pm |        230 |
 
 Our business goal is to build a model relating attendance to popcorn
 sales, which we will apply to future data in order to predict future
@@ -123,12 +123,12 @@ popcorn_sales |>
 
 | Date       | PopcornSales |
 |:-----------|-------------:|
-| 2024-08-01 |           28 |
-| 2024-08-02 |           82 |
-| 2024-08-03 |           65 |
-| 2024-08-04 |           67 |
-| 2024-08-05 |           15 |
-| 2024-08-06 |           81 |
+| 2024-08-01 |           25 |
+| 2024-08-02 |          102 |
+| 2024-08-03 |           76 |
+| 2024-08-04 |           65 |
+| 2024-08-05 |           13 |
+| 2024-08-06 |           80 |
 
 ``` r
 d_train <- d |>
@@ -144,12 +144,12 @@ d_train |>
 
 | Date       | Attendance | PopcornSales |
 |:-----------|-----------:|-------------:|
-| 2024-08-01 |        147 |           28 |
-| 2024-08-02 |        648 |           82 |
-| 2024-08-03 |        439 |           65 |
-| 2024-08-04 |        377 |           67 |
-| 2024-08-05 |         91 |           15 |
-| 2024-08-06 |        472 |           81 |
+| 2024-08-01 |        153 |           25 |
+| 2024-08-02 |        648 |          102 |
+| 2024-08-03 |        439 |           76 |
+| 2024-08-04 |        371 |           65 |
+| 2024-08-05 |         91 |           13 |
+| 2024-08-06 |        472 |           80 |
 
 ``` r
 # model popcorn sales as a function of attendance
@@ -167,18 +167,18 @@ summary(model)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -17.2124  -2.8715  -0.1313   3.1903  11.4406 
+    ## -11.1726  -2.2676   0.5702   3.2467   7.3703 
     ## 
     ## Coefficients:
-    ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) 2.005205   2.237771   0.896     0.38    
-    ## Attendance  0.150011   0.006634  22.614   <2e-16 ***
+    ##              Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) -2.684809   1.897652  -1.415    0.171    
+    ## Attendance   0.164917   0.006236  26.445   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 6.09 on 22 degrees of freedom
-    ## Multiple R-squared:  0.9588, Adjusted R-squared:  0.9569 
-    ## F-statistic: 511.4 on 1 and 22 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 5.047 on 22 degrees of freedom
+    ## Multiple R-squared:  0.9695, Adjusted R-squared:  0.9681 
+    ## F-statistic: 699.4 on 1 and 22 DF,  p-value: < 2.2e-16
 
 We get what *appears* to be a good result: a *highly* predictive model
 that shows about a 15% attachment rate from attendance to popcorn
@@ -264,12 +264,12 @@ d |>
 
 |     | Date       | Movie                                                                      | Time    | Attendance | PredictedPopcorn |
 |:----|:-----------|:---------------------------------------------------------------------------|:--------|-----------:|-----------------:|
-| 188 | 2024-09-26 | Girls Will Be Girls                                                        | 6:30 pm |        233 |             37.0 |
-| 189 | 2024-09-26 | To Be Destroyed / It’s Okay with Dave Eggers                               | 6:30 pm |        233 |             37.0 |
-| 190 | 2024-09-26 | LeatherWeek: Puppies and Leather and Boys!                                 | 8:40 pm |        233 |             37.0 |
-| 191 | 2024-09-27 | Floating Features: Pirates of the Caribbean – The Curse of the Black Pearl | 6:30 pm |        233 |             37.0 |
-| 192 | 2024-09-27 | All Shall Be Well                                                          | 6:30 pm |         47 |              9.1 |
-| 193 | 2024-09-28 | BloodSisters                                                               | 4:00 pm |        233 |             37.0 |
+| 189 | 2024-09-26 | Girls Will Be Girls                                                        | 6:30 pm |        233 |             35.7 |
+| 190 | 2024-09-26 | To Be Destroyed / It’s Okay with Dave Eggers                               | 6:30 pm |        233 |             35.7 |
+| 191 | 2024-09-26 | LeatherWeek: Puppies and Leather and Boys!                                 | 8:40 pm |        233 |             35.7 |
+| 192 | 2024-09-27 | Floating Features: Pirates of the Caribbean – The Curse of the Black Pearl | 6:30 pm |        233 |             35.7 |
+| 193 | 2024-09-27 | All Shall Be Well                                                          | 6:30 pm |         47 |              5.1 |
+| 194 | 2024-09-28 | BloodSisters                                                               | 4:00 pm |        233 |             35.7 |
 
 This looks like only a few different attendance values are reported.
 Let’s dig deeper into that.
@@ -339,11 +339,11 @@ d_est |>
 | Date       | Movie                                                | Time    | EstimatedAttendance |
 |:-----------|:-----------------------------------------------------|:--------|--------------------:|
 | 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |                  47 |
+| 2024-08-01 | Eno                                                  | 6:40 pm |                 233 |
 | 2024-08-01 | Longlegs                                             | 8:35 pm |                 233 |
 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |                  47 |
 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |                 233 |
 | 2024-08-02 | Lyd                                                  | 6:30 pm |                 233 |
-| 2024-08-02 | The Red Shoes                                        | 8:45 pm |                 233 |
 
 Let’s repeat our modeling effort with the uncorrected (not retouched)
 data.

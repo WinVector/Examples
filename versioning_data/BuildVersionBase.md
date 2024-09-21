@@ -76,11 +76,11 @@ dbGetQuery(con, "SELECT * from d_data_log") |>
 |  \_fi | \_usi | Date       | Movie                                                | Time    | Attendance |
 |------:|------:|:-----------|:-----------------------------------------------------|:--------|-----------:|
 | 87777 |  1337 | 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |         47 |
-| 87778 |  1337 | 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
-| 87779 |  1337 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
-| 87780 |  1337 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
-| 87781 |  1337 | 2024-08-02 | Lyd                                                  | 6:30 pm |        233 |
-| 87782 |  1337 | 2024-08-02 | The Red Shoes                                        | 8:45 pm |        233 |
+| 87778 |  1337 | 2024-08-01 | Eno                                                  | 6:40 pm |        233 |
+| 87779 |  1337 | 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
+| 87780 |  1337 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
+| 87781 |  1337 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
+| 87782 |  1337 | 2024-08-02 | Lyd                                                  | 6:30 pm |        233 |
 
 ``` r
 d_row_deletions <- data.frame(
@@ -250,11 +250,10 @@ dbGetQuery(con, "SELECT * from d_row_deletions")  |>
   knitr::kable()
 ```
 
-| \_usi |  \_fi |
-|------:|------:|
-|  1212 |  3312 |
-|  1212 |  3313 |
-|  1338 | 87777 |
+| \_usi | \_fi |
+|------:|-----:|
+|  1212 | 3312 |
+|  1212 | 3313 |
 
 Display our views.
 
@@ -271,11 +270,11 @@ d_before_August_view |>
 | Date       | Movie                                                | Time    | Attendance |
 |:-----------|:-----------------------------------------------------|:--------|-----------:|
 | 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |         47 |
+| 2024-08-01 | Eno                                                  | 6:40 pm |        233 |
 | 2024-08-01 | Longlegs                                             | 8:35 pm |        233 |
 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         47 |
 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        233 |
 | 2024-08-02 | Lyd                                                  | 6:30 pm |        233 |
-| 2024-08-02 | The Red Shoes                                        | 8:45 pm |        233 |
 
 ``` r
 d_after_August_view <- pull_data_by_usi(con, 1338)
@@ -289,12 +288,12 @@ d_after_August_view |>
 
 | Date       | Movie                                                | Time    | Attendance |
 |:-----------|:-----------------------------------------------------|:--------|-----------:|
+| 2024-08-01 | Chronicles of a Wandering Saint                      | 6:40 pm |          6 |
+| 2024-08-01 | Eno                                                  | 6:40 pm |         10 |
 | 2024-08-01 | Longlegs                                             | 8:35 pm |        114 |
 | 2024-08-01 | Staff Pick: Melvin and Howard (35mm)                 | 8:45 pm |         23 |
 | 2024-08-02 | Made in England: The Films of Powell and Pressburger | 6:00 pm |        204 |
 | 2024-08-02 | Lyd                                                  | 6:30 pm |        213 |
-| 2024-08-02 | The Red Shoes                                        | 8:45 pm |        230 |
-| 2024-08-02 | Longlegs                                             | 8:50 pm |          1 |
 
 ``` r
 dbDisconnect(con)
