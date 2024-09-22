@@ -59,7 +59,7 @@ ON
   AND d_data_log._usi = chosen_marks._usi
 WHERE
    (chosen_marks._deleted_fi is NULL)
-   OR (chosen_marks._deleted_usi <= chosen_marks._usi)
+   OR (chosen_marks._deleted_usi < chosen_marks._usi)
 ORDER BY
    d_data_log._fi,
    d_data_log._usi
