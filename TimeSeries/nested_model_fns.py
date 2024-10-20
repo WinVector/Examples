@@ -315,7 +315,7 @@ def plot_forecast(
         )
         + geom_point(
             data=d_test,
-            mapping=aes(x='time_tick', y='y', shape='external_regressors')
+            mapping=aes(x='time_tick', y='y', shape='external_regressors', color='external_regressors')
         )
         + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"{model_name} out of sample forecast\ndots are actuals, lines are predictions")
