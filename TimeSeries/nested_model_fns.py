@@ -33,14 +33,16 @@ def build_example(
         zi = rng.choice((-1, 0, 1), p=(0.01, 0.98, 0.01), size=n_step)
         d_example[f"z_{i}"] = zi
     # start at typical points (most will be overwritten by forward time process)
-    y_auto = np.zeros(n_step) + b_auto_0 / (1 - np.sum(b_auto)) + rng.normal(size=n_step)
+    y_auto = np.maximum(
+        np.zeros(n_step) + b_auto_0 / (1 - np.sum(b_auto)) + rng.normal(size=n_step),
+        0)
     for idx in range(max_lag, n_step):
         y_auto_i = b_auto_0 + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
         for i, b_z_i in enumerate(b_z):
             y_auto_i = y_auto_i + b_z_i * d_example[f"z_{i}"][idx]
         for i, lag in enumerate(generating_lags):
             y_auto_i = y_auto_i + b_auto[i] * y_auto[idx - lag]
-        y_auto[idx] = y_auto_i
+        y_auto[idx] = max(0, y_auto_i)
     y = y_auto + 0.5 * rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(b_x):
         xi = rng.binomial(n=1, p=0.35, size=n_step)
@@ -109,15 +111,15 @@ def _generate_Stan_model_def(
 data {
   int<lower=1> N_y_observed;                  // number of observed y outcomes
   int<lower=1> N_y_future;                    // number of future outcomes to infer
-  vector[N_y_observed] y_observed;            // observed outcomes"""
+  vector<lower=0>[N_y_observed] y_observed;            // observed outcomes"""
     + x_data_decls
     + "\n}"
     + f"""
 parameters {{
   real b_auto_0;                      // auto-regress intercept
   vector[{n_lags}] b_auto;                           // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
-  vector[N_y_future] y_future;                // to be inferred future state
-  vector[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
+  vector<lower=0>[N_y_future] y_future;                // to be inferred future state
+  vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
   real<lower=0> b_var_y;                      // presumed y (transient) noise variance
 }}
