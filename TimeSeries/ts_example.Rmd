@@ -33,7 +33,8 @@ preds <- (
     model(
       ARIMA(y ~ 
               1  # turn off must specify constant warning
-            + x_0   # external regressor (can also use xreg(x_0)
+            + z_0   # external regressor (can also use xreg(z_0))
+            + x_0   # external regressor (can also use xreg(x_0))
             + pdq(2, 0, 2)   # AR=MA=2, I=0
             + PDQ(0, 0, 0)   # turn off seasonality (help(ARIMA))
             )
@@ -62,13 +63,7 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['fable ARIMAX prediction']])**2))
 ) 
 ```
 
-```{r}
 
-```
-
-```{r}
-
-```
 
 
 Show fitting with an external regressor using the forecast package.
@@ -81,9 +76,10 @@ d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
 model <- Arima(
   ts(d_train[['y']], start=d_train[['time_tick']][1]), 
   order=c(2, 0, 2), 
-  xreg=ts(d_train[['x_0']], start=d_train[['time_tick']][1])
+  xreg=ts(d_train[, c('z_0', 'x_0')], start=d_train[['time_tick']][1])
   )
-preds <- forecast(model, xreg=ts(d_test[['x_0']], start=d_test[['time_tick']][1]))
+preds <- forecast(model, xreg=ts(d_test[, c('z_0', 'x_0')], 
+                                 start=d_test[['time_tick']][1]))
 d_test['forecast ARIMAX'] <- as.numeric(preds$mean)
 
 # Rsquared

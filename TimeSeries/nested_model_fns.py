@@ -16,7 +16,8 @@ def build_example(
     rng,
     generating_lags: Iterable[int],
     b_auto: Iterable[float],
-    b_auto_intercept: float,
+    b_auto_0: float,
+    b_z: Iterable[float],
     b_x: Iterable[float],
     n_step: int = 1000,
 ) -> pd.DataFrame:
@@ -27,14 +28,19 @@ def build_example(
     assert len(generating_lags) > 0
     assert len(generating_lags) == len(set(generating_lags))
     max_lag = np.max(generating_lags)
+    d_example = {"time_tick": range(n_step)}
+    for i, b_z_i in enumerate(b_z):
+        zi = rng.choice((-1, 0, 1), p=(0.01, 0.98, 0.01), size=n_step)
+        d_example[f"z_{i}"] = zi
     # start at typical points (most will be overwritten by forward time process)
-    y_auto = np.zeros(n_step) + b_auto_intercept / (1 - np.sum(b_auto)) + rng.normal(size=n_step)
+    y_auto = np.zeros(n_step) + b_auto_0 / (1 - np.sum(b_auto)) + rng.normal(size=n_step)
     for idx in range(max_lag, n_step):
-        y_auto_i = b_auto_intercept + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
+        y_auto_i = b_auto_0 + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
+        for i, b_z_i in enumerate(b_z):
+            y_auto_i = y_auto_i + b_z_i * d_example[f"z_{i}"][idx]
         for i, lag in enumerate(generating_lags):
             y_auto_i = y_auto_i + b_auto[i] * y_auto[idx - lag]
         y_auto[idx] = y_auto_i
-    d_example = {"time_tick": range(n_step)}
     y = y_auto + 0.5 * rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(b_x):
         xi = rng.binomial(n=1, p=0.35, size=n_step)
@@ -56,18 +62,15 @@ def train_test_split(d_example: pd.DataFrame, *, test_length: int = 50) -> Tuple
 def _generate_Stan_model_def(
         *,
         application_lags: Iterable[int],
-        n_impermanent_external_regressors: int = 0,
+        n_transient_external_regressors: int = 0,
         n_durable_external_regressors: int = 0,
-        n_joint_external_regressors: int = 0,
 ):
     application_lags = list(application_lags)
     n_lags = len(application_lags)
     assert n_lags == len(set(application_lags))
     assert n_lags > 0
-    assert n_impermanent_external_regressors >= 0
+    assert n_transient_external_regressors >= 0
     assert n_durable_external_regressors >= 0
-    assert n_joint_external_regressors >= 0
-    assert n_joint_external_regressors <= np.min([n_impermanent_external_regressors, n_durable_external_regressors])
     max_lag = np.max(application_lags)
     # specify Stan program file
     auto_terms = [
@@ -82,16 +85,16 @@ def _generate_Stan_model_def(
     ext_terms_imp = ''
     ext_terms_dur = ''
     x_data_decls = ''
-    if n_impermanent_external_regressors > 0:
-        b_x_imp_decl = f'\n  vector[{n_impermanent_external_regressors}] b_x_imp;                          // impermanent external regressor coefficients'
+    if n_transient_external_regressors > 0:
+        b_x_imp_decl = f'\n  vector[{n_transient_external_regressors}] b_x_imp;                          // transient external regressor coefficients'
         b_x_imp_dist = '\n  b_x_imp ~ normal(0, 10);'
         ext_terms_imp = [
-            f'b_x_imp[{i+1}] * x_imp_{i+1}' for i in range(n_impermanent_external_regressors)
+            f'b_x_imp[{i+1}] * x_imp_{i+1}' for i in range(n_transient_external_regressors)
         ]
         ext_terms_imp  = ' \n     + ' + '\n     + '.join(ext_terms_imp)
         x_data_decls = x_data_decls + "  ".join([f"""
-  vector[N_y_observed + N_y_future] x_imp_{i+1};  // observed impermanent external regressor"""
-                for i in range(n_impermanent_external_regressors)])
+  vector[N_y_observed + N_y_future] x_imp_{i+1};  // observed transient external regressor"""
+                for i in range(n_transient_external_regressors)])
     if n_durable_external_regressors > 0:
         b_x_dur_decl = f'\n  vector[{n_durable_external_regressors}] b_x_dur;                          // durable external regressor coefficients'
         b_x_dur_dist = '\n  b_x_dur ~ normal(0, 10);'
@@ -102,9 +105,6 @@ def _generate_Stan_model_def(
         x_data_decls = x_data_decls + "  ".join([f"""
   vector[N_y_observed + N_y_future] x_dur_{i+1};  // observed durable external regressor"""
                 for i in range(n_durable_external_regressors)])
-    if n_joint_external_regressors > 0:
-        b_x_joint_dist = f"""
-  b_x_imp[1:{n_joint_external_regressors}] .* b_x_dur[1:{n_joint_external_regressors}] ~ normal(0, 0.1);       // punish picking both variables"""
     nested_model_stan_str = ("""
 data {
   int<lower=1> N_y_observed;                  // number of observed y outcomes
@@ -114,12 +114,12 @@ data {
     + "\n}"
     + f"""
 parameters {{
-  real b_auto_intercept;                      // auto-regress intercept
+  real b_auto_0;                      // auto-regress intercept
   vector[{n_lags}] b_auto;                           // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
   vector[N_y_future] y_future;                // to be inferred future state
   vector[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
-  real<lower=0> b_var_y;                      // presumed y (impermanent) noise variance
+  real<lower=0> b_var_y;                      // presumed y (transient) noise variance
 }}
 transformed parameters {{
         // y_observed and y_future in one notation (for subscripting)
@@ -129,13 +129,13 @@ transformed parameters {{
 }}
 model {{
   b_var_y_auto ~ chi_square(1);               // prior for y_auto (durable) noise variance
-  b_var_y ~ chi_square(1);                    // prior for y (impermanent) noise variance
+  b_var_y ~ chi_square(1);                    // prior for y (transient) noise variance
         // priors for parameter estimates
-  b_auto_intercept ~ normal(0, 10);
+  b_auto_0 ~ normal(0, 10);
   b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
-    b_auto_intercept 
+    b_auto_0 
      + {auto_terms}{ext_terms_dur},
     b_var_y_auto);
         // how observations are formed
@@ -165,15 +165,13 @@ def _build_Stan_model_from_src(
 def define_Stan_model_with_forecast_period(
         *,
         application_lags: Iterable[int],
-        n_impermanent_external_regressors: int = 0,
+        n_transient_external_regressors: int = 0,
         n_durable_external_regressors: int = 0,
-        n_joint_external_regressors: int = 0,
 ):
     nested_model_stan_str = _generate_Stan_model_def(
         application_lags=application_lags,
-        n_impermanent_external_regressors=n_impermanent_external_regressors,
+        n_transient_external_regressors=n_transient_external_regressors,
         n_durable_external_regressors=n_durable_external_regressors,
-        n_joint_external_regressors=n_joint_external_regressors,
     )
     return _build_Stan_model_from_src(nested_model_stan_str), nested_model_stan_str
 
@@ -196,13 +194,13 @@ def solve_forecast_by_Stan(
         *,
         d_train: pd.DataFrame,
         d_apply: pd.DataFrame, 
-        impermanent_external_regressors: Optional[Iterable[str]] = None,
+        transient_external_regressors: Optional[Iterable[str]] = None,
         durable_external_regressors: Optional[Iterable[str]] = None,
         ) -> pd.DataFrame:
-    if impermanent_external_regressors is not None:
-        impermanent_external_regressors = list(impermanent_external_regressors)
+    if transient_external_regressors is not None:
+        transient_external_regressors = list(transient_external_regressors)
     else:
-        impermanent_external_regressors = []
+        transient_external_regressors = []
     if durable_external_regressors is not None:
         durable_external_regressors = list(durable_external_regressors)
     else:
@@ -216,11 +214,11 @@ def solve_forecast_by_Stan(
 "N_y_observed" : {d_train.shape[0]},
 "N_y_future" : {d_apply.shape[0]},
 "y_observed" : {list(d_train['y'])}""")
-    if len(impermanent_external_regressors) > 0:
+    if len(transient_external_regressors) > 0:
         nested_model_data_str = nested_model_data_str + "".join([f""",
 "x_imp_{i+1}" : {list(d_train[v]) + list(d_apply[v])}
 """
-        for i, v in enumerate(impermanent_external_regressors)])
+        for i, v in enumerate(transient_external_regressors)])
     if len(durable_external_regressors) > 0:
         nested_model_data_str = nested_model_data_str + "".join([f""",
 "x_dur_{i+1}" : {list(d_train[v]) + list(d_apply[v])}
@@ -335,7 +333,7 @@ def evolve_fwd_est(
     recent_indexes = list(recent_indexes)
     fwd_est = forecast_soln.loc[
         :,
-        ['b_auto_intercept'] + [f'b_auto[{i}]' for i in range(len(generating_lags))] + [f'b_x_imp[{i}]' for i in range(n_external_regressors)]
+        ['b_auto_0'] + [f'b_auto[{i}]' for i in range(len(generating_lags))] + [f'b_x_imp[{i}]' for i in range(n_external_regressors)]
         + [f'y_auto[{i}]' for i in recent_indexes]
     ].reset_index(drop=True, inplace=False)
     # evolve estimate forward with usual time series "plug in expected value of 1 step"
@@ -344,11 +342,11 @@ def evolve_fwd_est(
     last_idx = np.max(d_both['time_tick'])
     while idx <= last_idx:
         # apply auto regressive step
-        e_state = fwd_est['b_auto_intercept']
+        e_state = fwd_est['b_auto_0']
         for lag_i, lag_dist in enumerate(generating_lags):
             e_state = e_state + fwd_est[f'b_auto[{lag_i}]'] * fwd_est[f'y_auto[{idx - lag_dist }]']
         fwd_est[f'y_auto[{idx}]'] = e_state
-        # add in impermanent external regressors
+        # add in transient external regressors
         d_row = d_both.loc[d_both['time_tick'] == idx, :].reset_index(drop=True, inplace=False)
         for i in range(n_external_regressors):
             e_state =  e_state + d_row.loc[0, f'x_{i}'] * fwd_est[f'b_x_imp[{i}]']
@@ -657,7 +655,7 @@ def apply_linear_model_bundle_method(
     *,
     modeling_lags: Iterable[int],
     durable_external_regressors: Optional[Iterable[str]] = None,
-    impermanent_external_regressors: Optional[Iterable[str]] = None,
+    transient_external_regressors: Optional[Iterable[str]] = None,
     d_train: pd.DataFrame,
     d_apply: pd.DataFrame,
 ):
@@ -667,28 +665,28 @@ def apply_linear_model_bundle_method(
         durable_external_regressors = []
     else:
         durable_external_regressors = list(durable_external_regressors)
-    if impermanent_external_regressors is None:
-        impermanent_external_regressors = []
+    if transient_external_regressors is None:
+        transient_external_regressors = []
     else:
-        impermanent_external_regressors = list(impermanent_external_regressors)
+        transient_external_regressors = list(transient_external_regressors)
     train_frame = d_train.loc[
         :, 
-        ['y'] + sorted(set(durable_external_regressors + impermanent_external_regressors))].reset_index(
+        ['y'] + sorted(set(durable_external_regressors + transient_external_regressors))].reset_index(
             drop=True, inplace=False)  # copy, no side effects
     apply_frame = d_apply.loc[
         :, 
-        ['y'] + sorted(set(durable_external_regressors + impermanent_external_regressors))].reset_index(
+        ['y'] + sorted(set(durable_external_regressors + transient_external_regressors))].reset_index(
             drop=True, inplace=False)  # copy, no side effects
-    # pull off impermanent regressors
-    if len(impermanent_external_regressors) > 0:
+    # pull off transient regressors
+    if len(transient_external_regressors) > 0:
         ext_model = fit_external_regressors(
             modeling_lags=modeling_lags,
-            external_regressors=impermanent_external_regressors,
+            external_regressors=transient_external_regressors,
             d_train=d_train, 
         )
-        external_train_effects = ext_model.predict(train_frame.loc[:, impermanent_external_regressors])
+        external_train_effects = ext_model.predict(train_frame.loc[:, transient_external_regressors])
         train_frame['y'] = train_frame['y'] - external_train_effects
-        external_apply_effects = ext_model.predict(apply_frame.loc[:, impermanent_external_regressors])
+        external_apply_effects = ext_model.predict(apply_frame.loc[:, transient_external_regressors])
         apply_frame['y'] = apply_frame['y'] - external_apply_effects
     # model the auto correlated or lags section of the problem
     model_vars = list(durable_external_regressors)
@@ -716,6 +714,6 @@ def apply_linear_model_bundle_method(
                 for v in durable_external_regressors:
                     apply_row[v] = x_apply_frame.loc[apply_i, v]
             preds[apply_i] = model.predict(apply_row)[0]
-    if len(impermanent_external_regressors) > 0:
+    if len(transient_external_regressors) > 0:
         preds = preds + external_apply_effects
     return preds
