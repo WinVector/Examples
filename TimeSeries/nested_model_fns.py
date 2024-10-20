@@ -43,7 +43,7 @@ def build_example(
         for i, lag in enumerate(generating_lags):
             y_auto_i = y_auto_i + b_auto[i] * y_auto[idx - lag]
         y_auto[idx] = max(0, y_auto_i)
-    y = y_auto + 0.5 * rng.normal(size=n_step)  # transient MA-style noise
+    y = y_auto + rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(b_x):
         xi = rng.binomial(n=1, p=0.35, size=n_step)
         d_example[f"x_{i}"] = xi
