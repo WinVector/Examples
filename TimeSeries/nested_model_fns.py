@@ -67,6 +67,7 @@ def _generate_Stan_model_def(
         n_transient_external_regressors: int = 0,
         n_durable_external_regressors: int = 0,
 ):
+    # for any variables known to be both transient and durable- probably want to introduce a complementarity bias by saying their product is distributed like a small number
     application_lags = list(application_lags)
     n_lags = len(application_lags)
     assert n_lags == len(set(application_lags))
