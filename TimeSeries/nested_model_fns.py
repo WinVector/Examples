@@ -316,7 +316,8 @@ def plot_forecast(
         )
         + geom_point(
             data=d_test,
-            mapping=aes(x='time_tick', y='y', shape='external_regressors', color='external_regressors')
+            mapping=aes(x='time_tick', y='y', shape='external_regressors', color='external_regressors'),
+            size=2,
         )
         + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"{model_name} out of sample forecast\ndots are actuals, lines are predictions")
@@ -376,7 +377,7 @@ def plot_model_quality(
             slope=1, 
             color='blue', 
             alpha=0.5)
-        + geom_point(mapping=aes(color='time_tick'))
+        + geom_point(mapping=aes(color='time_tick'), size=2)
         + scale_colour_gradient(low='#253494', high='#a1dab4')
         + ylim(plt_bounds)
         + xlim(plt_bounds)
@@ -415,7 +416,7 @@ def plot_model_quality_by_prefix(
             mapping=aes(x='max(time_tick)', y='rmse')
         ) 
         + geom_line()
-        + geom_point()
+        + geom_point(size=2)
         + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"{result_name}\nquality by forecast horizon")
     )
