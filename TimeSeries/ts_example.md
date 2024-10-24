@@ -52,7 +52,7 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['fable ARIMAX prediction']])**2))
     mapping=aes(x=time_tick)
   )
   + geom_step(mapping=aes(y=`fable ARIMAX prediction`), direction='mid', color='blue')
-  + geom_point(mapping=aes(y=y, shape=as.character(x_0)))
+  + geom_point(mapping=aes(y=y, shape=as.character(x_0)), size=2)
   + guides(shape = guide_legend(reverse=TRUE))
   + ggtitle(paste0("fable package on held out data, rmse: ", 
     sprintf('%.2f', rmse), ', rsq: ', sprintf('%.2f', rsq)))
@@ -90,7 +90,7 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['forecast ARIMAX']])**2))
     mapping=aes(x=time_tick)
   )
   + geom_step(mapping=aes(y=`forecast ARIMAX`), direction='mid', color='blue')
-  + geom_point(mapping=aes(y=y, shape=as.character(x_0)))
+  + geom_point(mapping=aes(y=y, shape=as.character(x_0)), size=2)
   + guides(shape = guide_legend(reverse=TRUE))
   + ggtitle(paste0(
     "forecast package on held out data, rmse: ", 
