@@ -1,7 +1,6 @@
 ---
 title: "ts_example"
 output: github_document
-date: "2024-08-03"
 ---
 
 R packages re-doing of [our nested model time series example](https://github.com/WinVector/Examples/blob/main/TimeSeries/nested_model_example.ipynb).
@@ -16,10 +15,23 @@ library(lubridate)
 library(dplyr)
 library(ggplot2)
 library(forecast)
+library(jsonlite)
 ```
 
+## The problem
 
-Show fitting with an external regressor using the fable package.
+We want to fit a time series with both durable and transient external regressors.
+
+First let's show the generating parameters we are attempting to recover.
+
+```{r}
+fromJSON("generating_params.json")
+```
+
+What we hope is to find `b_x_dur ~ b_z` and `b_x_imp ~ b_x`.
+
+
+## Fitting with external regressors using the fable package
 
 ```{r}
 
@@ -27,7 +39,7 @@ Show fitting with an external regressor using the fable package.
 d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
 d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
 
-preds <- (
+fable_model <- (
   d_train %>%
     tsibble(index=time_tick) %>%
     model(
@@ -38,9 +50,20 @@ preds <- (
             + pdq(2, 0, 2)   # AR=MA=2, I=0
             + PDQ(0, 0, 0)   # turn off seasonality (help(ARIMA))
             )
-    ) %>%
+    )
+)
+coef(fable_model)
+
+```
+
+Notice the recovered durable effect coefficient is way too low.
+
+
+```{r}
+preds <-  (
+  fable_model %>%
     forecast(new_data=tsibble(d_test, index=time_tick)) 
-  )
+)
 d_test['fable ARIMAX prediction'] = preds['.mean']
 
 # Rsquared
@@ -73,13 +96,23 @@ Show fitting with an external regressor using the forecast package.
 # https://otexts.com/fpp3/regarima.html
 d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
 d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
-model <- Arima(
+forecast_model <- Arima(
   ts(d_train[['y']], start=d_train[['time_tick']][1]), 
   order=c(2, 0, 2), 
   xreg=ts(d_train[, c('z_0', 'x_0')], start=d_train[['time_tick']][1])
   )
-preds <- forecast(model, xreg=ts(d_test[, c('z_0', 'x_0')], 
-                                 start=d_test[['time_tick']][1]))
+
+forecast_model
+```
+
+Notice the recovered durable effect coefficient is way too low.
+
+
+```{r}
+preds <- forecast(
+  forecast_model, 
+  xreg=ts(d_test[, c('z_0', 'x_0')], 
+  start=d_test[['time_tick']][1]))
 d_test['forecast ARIMAX'] <- as.numeric(preds$mean)
 
 # Rsquared
