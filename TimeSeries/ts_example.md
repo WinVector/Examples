@@ -112,6 +112,12 @@ is well served by ARIMAX. The research community moved on from ARIMAX.
 And, the business community *wishes* ARIMAX was in fact the dominant
 method, as it is the dominant software offered.
 
+An odd point in this direction is: ARIMA prediction of tides. In fact
+tides are formed by external regressors: the gravitational attraction of
+the sun and moon. However just giving the ARIMA the exact periodicities
+of these regressors is enough for it to model the entire system
+*without* those inputs.
+
 ``` r
 # https://otexts.com/fpp3/regarima.html
 d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
