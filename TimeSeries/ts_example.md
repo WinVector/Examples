@@ -67,7 +67,7 @@ the data).
 
 ## Fitting with external regressors using the fable package
 
-Fable formulation:
+General Fable formulation:
 
 <code> (1 - φ<sub>1</sub> B - … - φ<sub>p</sub> B<sup>p</sup>)(1 -
 B)<sup>d</sup> y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - … -
@@ -75,8 +75,39 @@ B)<sup>d</sup> y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - … -
 
 where <code>c = mean(1 - φ<sub>1</sub> - … - φ<sub>p</sub>)</code>.
 
+In our `pdq(2, 0, 2)` case this specializes to:
+
+<code> (1 - φ<sub>1</sub> B - φ<sub>2</sub> B<sup>2</sup>)</sup>
+y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - θ<sub>2</sub> B<sup>2</sup>)
+ε<sub>t</sub> </code>
+
+And knowing this is “regression with ARIMA residuals” when we add the
+external regressors this should be:
+
+<code> (1 - φ<sub>1</sub> B - φ<sub>2</sub> B<sup>2</sup>)</sup>
+(y<sub>t</sub> - β<sub>0</sub> - β<sub>x</sub> x - β<sub>z</sub> z) =
+c + (1 - θ<sub>1</sub> B - θ<sub>2</sub> B<sup>2</sup>) ε<sub>t</sub>
+</code>
+
+Given the `pdq(2, 0, 2)` specification, the modeling system then fits
+for <code>φ, β, θ</code>. Note: I agree with the Prophet authors that
+the user has to be involved in specifying `pdq(2, 0, 2)`. Many
+auto-ARIMA systems seem to silently fail in presence of external
+regressors.
+
 This is what we meant about the chosen package specifying the modeling
-recurrance equations (i.e. taking that choice out of our hands).
+recurrence equations (i.e. taking that choice out of our hands). We can
+specify modeling the total, but not unobserved sub-populations of the
+system.
+
+Frankly ARIMAX/SARIMAX appears to be a false path for business modelers.
+Major references such as *Time Series Analysis* and *System
+Identification: Theory for the User*, don’t stop at or centralize on
+this terminology. Instead transfer function methods and other more
+further developed systems are studied. Roughly: the scientific community
+is well served by ARIMAX. The research community moved on from ARIMAX.
+And, the business community *wishes* ARIMAX was in fact the dominant
+method, as it is the dominant software offered.
 
 ``` r
 # https://otexts.com/fpp3/regarima.html
