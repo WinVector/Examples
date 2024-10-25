@@ -32,6 +32,9 @@ model_specification
     ## $b_auto_0
     ## [1] 1.280413
     ## 
+    ## $b_imp_0
+    ## [1] 10.4
+    ## 
     ## $b_auto
     ## [1]  1.975377 -1.000000
     ## 
@@ -100,12 +103,12 @@ coef(fable_model)
     ##   .model                            term  estimate std.error statistic   p.value
     ##   <chr>                             <chr>    <dbl>     <dbl>     <dbl>     <dbl>
     ## 1 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar1     1.92      0.0112    172.   0        
-    ## 2 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar2    -0.951     0.0111    -85.9  0        
-    ## 3 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma1    -0.367     0.0345    -10.6  4.30e- 25
-    ## 4 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma2     0.0585    0.0327      1.79 7.43e-  2
-    ## 5 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… z_0     1.43      0.401       3.56 3.86e-  4
-    ## 6 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… x_0    16.0       0.104     154.   0        
-    ## 7 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… inte…  52.6       2.15       24.5  1.24e-103
+    ## 2 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar2    -0.951     0.0111    -86.0  0        
+    ## 3 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma1    -0.366     0.0345    -10.6  6.34e- 25
+    ## 4 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma2     0.0559    0.0327      1.71 8.79e-  2
+    ## 5 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… z_0     1.44      0.401       3.59 3.51e-  4
+    ## 6 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… x_0    16.0       0.104     155.   0        
+    ## 7 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… inte…  63.0       2.15       29.3  2.71e-136
 
 Notice we recovered good estimates of the autoregressive terms `b_auto`
 (`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_0`). We
@@ -123,6 +126,9 @@ model_specification
 
     ## $b_auto_0
     ## [1] 1.280413
+    ## 
+    ## $b_imp_0
+    ## [1] 10.4
     ## 
     ## $b_auto
     ## [1]  1.975377 -1.000000
@@ -197,11 +203,11 @@ forecast_model
     ## 
     ## Coefficients:
     ##          ar1      ar2      ma1     ma2  intercept     z_0      x_0
-    ##       1.9209  -0.9507  -0.3669  0.0585    52.5993  1.4290  16.0277
-    ## s.e.  0.0112   0.0111   0.0345  0.0327     2.1489  0.4012   0.1038
+    ##       1.9209  -0.9507  -0.3655  0.0559    63.0063  1.4387  16.0378
+    ## s.e.  0.0112   0.0111   0.0345  0.0327     2.1477  0.4011   0.1038
     ## 
-    ## sigma^2 = 8.471:  log likelihood = -2437.45
-    ## AIC=4890.9   AICc=4891.05   BIC=4930
+    ## sigma^2 = 8.488:  log likelihood = -2438.42
+    ## AIC=4892.84   AICc=4892.99   BIC=4931.94
 
 Notice the recovered durable effect coefficient is way too low.
 

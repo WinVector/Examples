@@ -18,6 +18,7 @@ def build_example(
     b_auto: Iterable[float],
     b_auto_0: float,
     b_z: Iterable[float],
+    b_imp_0: float,
     b_x: Iterable[float],
     n_step: int = 1000,
 ) -> pd.DataFrame:
@@ -48,7 +49,7 @@ def build_example(
         xi = rng.binomial(n=1, p=0.35, size=n_step)
         d_example[f"x_{i}"] = xi
         y = y + b_x_i * xi
-    d_example["y"] = np.maximum(0, y)
+    d_example["y"] = np.maximum(0, y + b_imp_0)
     return pd.DataFrame(d_example)
 
 
@@ -126,12 +127,13 @@ def _generate_Stan_model_def(
 data {
   int<lower=1> N_y_observed;                  // number of observed y outcomes
   int<lower=1> N_y_future;                    // number of future outcomes to infer
-  vector<lower=0>[N_y_observed] y_observed;            // observed outcomes"""
+  vector<lower=0>[N_y_observed] y_observed;   // observed outcomes"""
         + x_data_decls
         + "\n}"
         + f"""
 parameters {{
   real b_auto_0;                      // auto-regress intercept
+  real b_imp_0;                       // total/impulse/transient intercept
   vector[{n_lags}] b_auto;                           // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
   vector<lower=0>[N_y_future] y_future;                // to be inferred future state
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
@@ -149,6 +151,7 @@ model {{
   b_var_y ~ chi_square(1);                    // prior for y (transient) noise variance
         // priors for parameter estimates
   b_auto_0 ~ normal(0, 10);
+  b_imp_0 ~ normal(0, 10);
   b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
@@ -157,7 +160,7 @@ model {{
     b_var_y_auto);
         // how observations are formed
   y ~ normal(
-    y_auto{ext_terms_imp}, 
+    b_imp_0 + y_auto{ext_terms_imp}, 
     b_var_y);
 }}
 """
