@@ -25,16 +25,31 @@ We want to fit a time series with both durable and transient external regressors
 First let's show the generating parameters we are attempting to recover.
 
 ```{r}
-fromJSON("generating_params.json")
+model_specification <- fromJSON("generating_params.json")
+
+model_specification
 ```
 
 What we hope is to find `b_x_dur ~ b_z` and `b_x_imp ~ b_x`.
 
+The generating and modeling lags specify translate into ARIMA terms as `p = 2, i = 0`. We take our own  advice from [A Time Series Apologia](https://github.com/WinVector/Examples/blob/main/TS/TS_example.md) and pick `q = p`. So in ARIMAX terms we try fitting a `pdq(2, 0, 2)` system.
+
+We don't have any way to specify the nature of external regressors, with act as transient effects in the "regression with ARIMA residuals" formulation favored by the fable and forecast packages. This will lead to a degredation in fit quality and an inability to properly estimate `b_z` (as we can't specify the for of the effect we believe it has in the data).
 
 ## Fitting with external regressors using the fable package
 
-```{r}
+Fable formulation:
 
+<code>
+(1 - &phi;<sub>1</sub> B - ... - &phi;<sub>p</sub> B<sup>p</sup>)(1 - B)<sup>d</sup> y<sub>t</sub> = c + (1 - &theta;<sub>1</sub> B - ... - &theta;<sub>q</sub> B<sup>q</sup>) &epsilon;<sub>t</sub>
+</code>
+
+where <code>c = mean(1 - &phi;<sub>1</sub> - ... - &phi;<sub>p</sub>)</code>.
+
+This is what we meant about the chosen package specifying the modeling recurrance equations (i.e. taking that choice out of our hands).
+
+
+```{r}
 # https://otexts.com/fpp3/regarima.html
 d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
 d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
@@ -56,7 +71,13 @@ coef(fable_model)
 
 ```
 
-Notice the recovered durable effect coefficient is way too low.
+Notice we recovered good estimates of the autoregressive terms `b_auto` (`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_0`). We did not get a good estimate of the durable external effect coefficient `z_0` (`b_z`), so we did not infer how changes in this variable affect results. 
+
+We would be able to forecast, as the auto-regressive terms dominate. We would not be able to plan, as we don't have a good estimate of `z_0` (`b_z`).
+
+```{r}
+model_specification
+```
 
 
 ```{r}
@@ -89,7 +110,15 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['fable ARIMAX prediction']])**2))
 
 
 
-Show fitting with an external regressor using the forecast package.
+## Fitting with an external regressor using the forecast package
+
+Forecast formulation:
+
+<code>
+(1 - &phi;<sub>1</sub> B - ... - &phi;<sub>p</sub> B<sup>p</sup>) (y<sup>&prime;</sup><sub>t</sub> - &mu;) = c + (1 - &theta;<sub>1</sub> B - ... - &theta;<sub>q</sub> B<sup>q</sup>) &epsilon;<sub>t</sub>
+</code>
+
+where <code>y<sup>&prime;</sup><sub>t</sub> = (1 - B)<sup>d</sup> y<sub>t</sub></code>, <code>&mu; = mean(y<sup>&prime;</sup><sub>t</sub>)</code>.
 
 
 ```{r}

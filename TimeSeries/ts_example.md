@@ -24,7 +24,9 @@ regressors.
 First let’s show the generating parameters we are attempting to recover.
 
 ``` r
-fromJSON("generating_params.json")
+model_specification <- fromJSON("generating_params.json")
+
+model_specification
 ```
 
     ## $b_auto_0
@@ -47,7 +49,31 @@ fromJSON("generating_params.json")
 
 What we hope is to find `b_x_dur ~ b_z` and `b_x_imp ~ b_x`.
 
+The generating and modeling lags specify translate into ARIMA terms as
+`p = 2, i = 0`. We take our own advice from [A Time Series
+Apologia](https://github.com/WinVector/Examples/blob/main/TS/TS_example.md)
+and pick `q = p`. So in ARIMAX terms we try fitting a `pdq(2, 0, 2)`
+system.
+
+We don’t have any way to specify the nature of external regressors, with
+act as transient effects in the “regression with ARIMA residuals”
+formulation favored by the fable and forecast packages. This will lead
+to a degredation in fit quality and an inability to properly estimate
+`b_z` (as we can’t specify the for of the effect we believe it has in
+the data).
+
 ## Fitting with external regressors using the fable package
+
+Fable formulation:
+
+<code> (1 - φ<sub>1</sub> B - … - φ<sub>p</sub> B<sup>p</sup>)(1 -
+B)<sup>d</sup> y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - … -
+θ<sub>q</sub> B<sup>q</sup>) ε<sub>t</sub> </code>
+
+where <code>c = mean(1 - φ<sub>1</sub> - … - φ<sub>p</sub>)</code>.
+
+This is what we meant about the chosen package specifying the modeling
+recurrance equations (i.e. taking that choice out of our hands).
 
 ``` r
 # https://otexts.com/fpp3/regarima.html
@@ -81,7 +107,37 @@ coef(fable_model)
     ## 6 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… x_0    16.0       0.104     154.   0        
     ## 7 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… inte…  52.6       2.15       24.5  1.24e-103
 
-Notice the recovered durable effect coefficient is way too low.
+Notice we recovered good estimates of the autoregressive terms `b_auto`
+(`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_0`). We
+did not get a good estimate of the durable external effect coefficient
+`z_0` (`b_z`), so we did not infer how changes in this variable affect
+results.
+
+We would be able to forecast, as the auto-regressive terms dominate. We
+would not be able to plan, as we don’t have a good estimate of `z_0`
+(`b_z`).
+
+``` r
+model_specification
+```
+
+    ## $b_auto_0
+    ## [1] 1.280413
+    ## 
+    ## $b_auto
+    ## [1]  1.975377 -1.000000
+    ## 
+    ## $b_z
+    ## [1] 14.2
+    ## 
+    ## $b_x
+    ## [1] 16.1
+    ## 
+    ## $generating_lags
+    ## [1] 1 2
+    ## 
+    ## $modeling_lags
+    ## [1] 1 2
 
 ``` r
 preds <-  (
@@ -110,9 +166,18 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['fable ARIMAX prediction']])**2))
 ) 
 ```
 
-![](ts_example_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](ts_example_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-Show fitting with an external regressor using the forecast package.
+## Fitting with an external regressor using the forecast package
+
+Forecast formulation:
+
+<code> (1 - φ<sub>1</sub> B - … - φ<sub>p</sub> B<sup>p</sup>)
+(y<sup>′</sup><sub>t</sub> - μ) = c + (1 - θ<sub>1</sub> B - … -
+θ<sub>q</sub> B<sup>q</sup>) ε<sub>t</sub> </code>
+
+where <code>y<sup>′</sup><sub>t</sub> = (1 - B)<sup>d</sup>
+y<sub>t</sub></code>, <code>μ = mean(y<sup>′</sup><sub>t</sub>)</code>.
 
 ``` r
 # https://otexts.com/fpp3/regarima.html
@@ -169,4 +234,4 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['forecast ARIMAX']])**2))
 ) 
 ```
 
-![](ts_example_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](ts_example_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
