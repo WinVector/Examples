@@ -101,9 +101,8 @@ specify modeling the total, but not unobserved sub-populations of the
 system.
 
 Frankly ARIMAX/SARIMAX appears to be a false path for business modelers.
-Major references such as *Time Series Analysis* and *System
-Identification: Theory for the User*, don’t stop at or centralize on
-this terminology. Instead transfer function methods and other more
+Time series research didn’t actually stop at or actually consolidate on
+this terminology. Instead, transfer function methods and other more
 further developed systems are studied. Roughly: the scientific community
 is well served by ARIMAX. The research community moved on from ARIMAX.
 And, the business community *wishes* ARIMAX was in fact the dominant
