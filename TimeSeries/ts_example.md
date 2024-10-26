@@ -73,7 +73,12 @@ General Fable formulation:
 B)<sup>d</sup> y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - … -
 θ<sub>q</sub> B<sup>q</sup>) ε<sub>t</sub> </code>
 
-where <code>c = mean(1 - φ<sub>1</sub> - … - φ<sub>p</sub>)</code>.
+where <code>B</code> is the shift operator such that <code>B
+u<sub>t</sub> = u<sub>t-1</sub></code>, and <code>c = mean(1 -
+φ<sub>1</sub> - … - φ<sub>p</sub>)</code>. We solve for
+<code>ε<sub>t</sub></code> being small. We very much prefer calling the
+<code>ε<sub>t</sub></code> “the external shocks”, and not calling them
+“errors.”
 
 In our `pdq(2, 0, 2)` case this specializes to:
 
@@ -81,13 +86,13 @@ In our `pdq(2, 0, 2)` case this specializes to:
 y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - θ<sub>2</sub> B<sup>2</sup>)
 ε<sub>t</sub> </code>
 
-And knowing this is “regression with ARIMA residuals” when we add the
+And knowing this is “regression with ARIMA residuals”, when we add the
 external regressors this should be:
 
 <code> (1 - φ<sub>1</sub> B - φ<sub>2</sub> B<sup>2</sup>)</sup>
-(y<sub>t</sub> - β<sub>0</sub> - β<sub>x</sub> x - β<sub>z</sub> z) =
-c + (1 - θ<sub>1</sub> B - θ<sub>2</sub> B<sup>2</sup>) ε<sub>t</sub>
-</code>
+(y<sub>t</sub> - β<sub>0</sub> - β<sub>x</sub> x<sub>t</sub> -
+β<sub>z</sub> z<sub>t</sub>) = c + (1 - θ<sub>1</sub> B - θ<sub>2</sub>
+B<sup>2</sup>) ε<sub>t</sub> </code>
 
 Given the `pdq(2, 0, 2)` specification, the modeling system then fits
 for <code>φ, β, θ</code>. Note: I agree with the Prophet authors that
@@ -104,13 +109,13 @@ recurrence equations (i.e. taking that choice out of our hands). We can
 specify modeling the total, but not unobserved sub-populations of the
 system.
 
-Frankly ARIMAX/SARIMAX appears to be a false path for business modelers.
-Time series research didn’t actually stop at or actually consolidate on
-this terminology. Instead, transfer function methods and other more
-further developed systems are studied. Roughly: the scientific community
-is well served by ARIMAX. The research community moved on from ARIMAX.
-And, the business community *wishes* ARIMAX was in fact the dominant
-method, as it is the dominant software offered.
+Frankly ARIMAX/SARIMAX can be a false path for business modelers. Time
+series research didn’t actually stop at or actually consolidate on this
+terminology. Instead, transfer function methods and other more further
+developed systems are studied. Roughly: the scientific community is well
+served by ARIMAX. The research community moved on from ARIMAX. And, the
+business community *wishes* ARIMAX was in fact the dominant method, as
+it is the dominant software offered.
 
 An odd point in this direction is: ARIMA prediction of tides. In fact
 tides are formed by external regressors: the gravitational attraction of
@@ -205,8 +210,7 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['fable ARIMAX prediction']])**2))
     mapping=aes(x=time_tick)
   )
   + geom_step(mapping=aes(y=`fable ARIMAX prediction`), direction='mid', color='blue')
-  + geom_point(mapping=aes(y=y, shape=as.character(x_0)), size=2)
-  + guides(shape = guide_legend(reverse=TRUE))
+  + geom_point(mapping=aes(y=y, shape=ext_regressors, color=ext_regressors), size=2)
   + ggtitle(paste0("fable package on held out data, rmse: ", 
     sprintf('%.2f', rmse), ', rsq: ', sprintf('%.2f', rsq)))
 ) 
@@ -272,8 +276,7 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['forecast ARIMAX']])**2))
     mapping=aes(x=time_tick)
   )
   + geom_step(mapping=aes(y=`forecast ARIMAX`), direction='mid', color='blue')
-  + geom_point(mapping=aes(y=y, shape=as.character(x_0)), size=2)
-  + guides(shape = guide_legend(reverse=TRUE))
+  + geom_point(mapping=aes(y=y, shape=ext_regressors, color=ext_regressors), size=2)
   + ggtitle(paste0(
     "forecast package on held out data, rmse: ", 
     sprintf('%.2f', rmse), ', rsq: ', sprintf('%.2f', rsq)))
