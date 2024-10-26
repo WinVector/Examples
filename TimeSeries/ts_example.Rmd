@@ -58,9 +58,25 @@ And knowing this is "regression with ARIMA residuals", when we add the external 
 (1 - &phi;<sub>1</sub> B -  &phi;<sub>2</sub> B<sup>2</sup>)</sup> (y<sub>t</sub> - &beta;<sub>0</sub> - &beta;<sub>x</sub> x<sub>t</sub> - &beta;<sub>z</sub> z<sub>t</sub>) = c + (1 - &theta;<sub>1</sub> B - &theta;<sub>2</sub> B<sup>2</sup>) &epsilon;<sub>t</sub>
 </code>
 
-All of the above is an expansion of saying: "given the `pdq(2, 0, 2)` specification and <code>y, x, z</code>, the modeling system then fits for <code>&phi;, &beta;, &theta;, &epsilon;</code> (with <code>&epsilon;</code> small norm)."
+Removing the <code>B</code> shift notation and assuming <code>mean(y<sub>t</sub> - &beta;<sub>0</sub> - &beta;<sub>x</sub> x<sub>t</sub> - &beta;<sub>z</sub> z<sub>t</sub>)</code> is zero gives us.
 
-Note: I agree with the Prophet authors that the user has to be involved in specifying `pdq(2, 0, 2)`. Many auto-ARIMA systems seem to silently fail in presence of external regressors. Also, noramlly we don't have to care so much about model structure- as we are protected from that by calling `predict()` or `forecast()`. However, in this case we are very concerned if model structure will or will not allow us to express what we think the external regressors actually do (i.e. model structure).
+<pre>
+<code>
+(y<sub>t</sub> - &beta;<sub>0</sub> - &beta;<sub>x</sub> x<sub>t</sub> - &beta;<sub>z</sub> z<sub>t</sub>)
+- &phi;<sub>1</sub> (y<sub>t-1</sub> - &beta;<sub>0</sub> - &beta;<sub>x</sub> x<sub>t-1</sub> - &beta;<sub>z</sub> z<sub>t-1</sub>)
+- &phi;<sub>2</sub> (y<sub>t-2</sub> - &beta;<sub>0</sub> - &beta;<sub>x</sub> x<sub>t-2</sub> - &beta;<sub>z</sub> z<sub>t-2</sub>)
+= &epsilon;<sub>t</sub> - &theta;<sub>1</sub> &epsilon;<sub>t-1</sub> - &theta;<sub>2</sub> &epsilon;<sub>t-2</sub>
+</code>
+</pre>
+
+This shows us the grace of the <code>B</code> shift notation. This equation block is repeated for all <code>t</code> (with out of range indices denoting zero values). For a <code>T</code> time step system we get a system of <code>T</code> equalities in <code>T + 7</code> equations (minimizing norm <code>&epsilon;</code>). This also shows us that while the system is linear in the data, it is non-linear in the fit coefficients.
+
+
+All of the above is a long way of saying: "given the `pdq(2, 0, 2)` specification and <code>y, x, z</code>, the modeling system then fits for <code>&phi;, &beta;, &theta;, &epsilon;</code> (with <code>&epsilon;</code> small norm)." I.e., we don't have to worry over the above transformations- that is the job of the solver.
+
+Note: I agree with the Prophet authors that the user has to be involved in specifying `pdq(2, 0, 2)`. Many auto-ARIMA systems seem to silently fail in presence of external regressors. Here is an example of "hey let's use auto-arima" failing for tides and even its own package help example: [https://github.com/WinVector/Examples/blob/main/Tides/TideR_ARIMA.md](https://github.com/WinVector/Examples/blob/main/Tides/TideR_ARIMA.md). All mean mean to say is: we can give ourselves permission to use non-ARIMA methods (more on this in ["A Time Series Apologia"](https://github.com/WinVector/Examples/blob/16f31262873a649af2ad8aaa4c01f550ee60e72f/TS/TS_example.md)) in addition to trying ARIMA methods. The additional ARIMA driven concerns and checks (such as looking for unit roots, worrying about co-linear regressors) are more to do with the solution formulation (recursive equations) than the nature of forecast problems.
+
+Normally, we don't have to care so much about model structure- as we are protected from that by calling `predict()` or `forecast()`. However, in this case we are very concerned if model structure will or will not allow us to express what we think the external regressors actually do (i.e. model structure).
 
 This is what we meant about the chosen package specifying the modeling recurrence equations (i.e. taking that choice out of our hands). We can specify modeling the total, but not unobserved sub-populations of the system.
 
