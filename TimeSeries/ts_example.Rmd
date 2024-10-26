@@ -44,7 +44,7 @@ General Fable formulation:
 (1 - &phi;<sub>1</sub> B - ... - &phi;<sub>p</sub> B<sup>p</sup>)(1 - B)<sup>d</sup> y<sub>t</sub> = c + (1 - &theta;<sub>1</sub> B - ... - &theta;<sub>q</sub> B<sup>q</sup>) &epsilon;<sub>t</sub>
 </code>
 
-where <code>B</code> is the shift operator such that <code>B u<sub>t</sub> = u<sub>t-1</sub></code>, and <code>c = mean(1 - &phi;<sub>1</sub> - ... - &phi;<sub>p</sub>)</code>. We solve for <code>&epsilon;<sub>t</sub></code> being small. We very much prefer calling the <code>&epsilon;<sub>t</sub></code> "the external shocks", and not calling them "errors."
+where <code>B</code> is the shift operator such that <code>B u<sub>t</sub> = u<sub>t-1</sub></code>, <code>&mu;</code> is the mean of <code>(1 - B)<sup>d</sup> y<sub>t</sub></code> and <code>c = &mu; (1 - &phi;<sub>1</sub> - ... - &phi;<sub>p</sub>)</code>. We solve for <code>&epsilon;<sub>t</sub></code> being small. We very much prefer calling the <code>&epsilon;<sub>t</sub></code> "the external shocks", and not calling them "errors."
 
 In our `pdq(2, 0, 2)` case this specializes to:
 
@@ -58,7 +58,9 @@ And knowing this is "regression with ARIMA residuals", when we add the external 
 (1 - &phi;<sub>1</sub> B -  &phi;<sub>2</sub> B<sup>2</sup>)</sup> (y<sub>t</sub> - &beta;<sub>0</sub> - &beta;<sub>x</sub> x<sub>t</sub> - &beta;<sub>z</sub> z<sub>t</sub>) = c + (1 - &theta;<sub>1</sub> B - &theta;<sub>2</sub> B<sup>2</sup>) &epsilon;<sub>t</sub>
 </code>
 
-Given the `pdq(2, 0, 2)` specification, the modeling system then fits for <code>&phi;, &beta;, &theta;</code>. Note: I agree with the Prophet authors that the user has to be involved in specifying `pdq(2, 0, 2)`. Many auto-ARIMA systems seem to silently fail in presence of external regressors. Also, noramlly we don't have to care so much about model structure- as we are protected from that by calling `predict()` or `forecast()`. However, in this case we are very concerned if model structure will or will not allow us to express what we think the external regressors actually do (i.e. model structure).
+All of the above is an expansion of saying: "given the `pdq(2, 0, 2)` specification and <code>y, x, z</code>, the modeling system then fits for <code>&phi;, &beta;, &theta;, &epsilon;</code> (with <code>&epsilon;</code> small norm)."
+
+Note: I agree with the Prophet authors that the user has to be involved in specifying `pdq(2, 0, 2)`. Many auto-ARIMA systems seem to silently fail in presence of external regressors. Also, noramlly we don't have to care so much about model structure- as we are protected from that by calling `predict()` or `forecast()`. However, in this case we are very concerned if model structure will or will not allow us to express what we think the external regressors actually do (i.e. model structure).
 
 This is what we meant about the chosen package specifying the modeling recurrence equations (i.e. taking that choice out of our hands). We can specify modeling the total, but not unobserved sub-populations of the system.
 

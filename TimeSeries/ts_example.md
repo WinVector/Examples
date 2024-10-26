@@ -74,7 +74,8 @@ B)<sup>d</sup> y<sub>t</sub> = c + (1 - θ<sub>1</sub> B - … -
 θ<sub>q</sub> B<sup>q</sup>) ε<sub>t</sub> </code>
 
 where <code>B</code> is the shift operator such that <code>B
-u<sub>t</sub> = u<sub>t-1</sub></code>, and <code>c = mean(1 -
+u<sub>t</sub> = u<sub>t-1</sub></code>, <code>μ</code> is the mean of
+<code>(1 - B)<sup>d</sup> y<sub>t</sub></code> and <code>c = μ (1 -
 φ<sub>1</sub> - … - φ<sub>p</sub>)</code>. We solve for
 <code>ε<sub>t</sub></code> being small. We very much prefer calling the
 <code>ε<sub>t</sub></code> “the external shocks”, and not calling them
@@ -94,15 +95,17 @@ external regressors this should be:
 β<sub>z</sub> z<sub>t</sub>) = c + (1 - θ<sub>1</sub> B - θ<sub>2</sub>
 B<sup>2</sup>) ε<sub>t</sub> </code>
 
-Given the `pdq(2, 0, 2)` specification, the modeling system then fits
-for <code>φ, β, θ</code>. Note: I agree with the Prophet authors that
-the user has to be involved in specifying `pdq(2, 0, 2)`. Many
-auto-ARIMA systems seem to silently fail in presence of external
-regressors. Also, noramlly we don’t have to care so much about model
-structure- as we are protected from that by calling `predict()` or
-`forecast()`. However, in this case we are very concerned if model
-structure will or will not allow us to express what we think the
-external regressors actually do (i.e. model structure).
+All of the above is an expansion of saying: “given the `pdq(2, 0, 2)`
+specification and <code>y, x, z</code>, the modeling system then fits
+for <code>φ, β, θ, ε</code> (with <code>ε</code> small norm).”
+
+Note: I agree with the Prophet authors that the user has to be involved
+in specifying `pdq(2, 0, 2)`. Many auto-ARIMA systems seem to silently
+fail in presence of external regressors. Also, noramlly we don’t have to
+care so much about model structure- as we are protected from that by
+calling `predict()` or `forecast()`. However, in this case we are very
+concerned if model structure will or will not allow us to express what
+we think the external regressors actually do (i.e. model structure).
 
 This is what we meant about the chosen package specifying the modeling
 recurrence equations (i.e. taking that choice out of our hands). We can
