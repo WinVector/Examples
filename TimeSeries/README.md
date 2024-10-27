@@ -13,7 +13,9 @@ Our organizing thesis is:  In business forecasting: ability to specify actionabl
 Our group is available to give on-site or remote training on these tools and techniques.
 
 
-This will be publicly presented here:
+The slides for of the material is here: https://github.com/WinVector/Examples/blob/main/TimeSeries/TimeSeries.pdf
+
+And the tutorial/training will be publicly presented here:
 
 
 <a href="https://odsc.com/california/odsc-west-schedule-2024/">
