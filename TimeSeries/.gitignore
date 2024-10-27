@@ -1,3 +1,7 @@
 *.tmp
 nested_model_tmp*
-
+stan_test_data.json
+stan_test_src
+stan_test_src.hpp
+stan_test_src.stan
+        
