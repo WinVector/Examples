@@ -302,6 +302,7 @@ def solve_forecast_by_Stan(
     return res
 
 
+
 def plot_forecast(
     forecast_soln: pd.DataFrame,
     d_test: pd.DataFrame,
@@ -355,11 +356,17 @@ def plot_forecast(
     sf_p = sf_frame.pivot(index="time_tick", columns="quantile")
     sf_p.columns = [c[1] for c in sf_p.columns]
     sf_p = sf_p.reset_index(drop=False, inplace=False)
+    # jitter to get ribbon
+    sf_p_l = sf_p.copy()
+    sf_p_l['time_tick'] = sf_p_l['time_tick'] - 0.49
+    sf_p_h = sf_p.copy()
+    sf_p_h['time_tick'] = sf_p_h['time_tick'] + 0.49
+    sf_p_j = pd.concat([sf_p_l, sf_p, sf_p_h], ignore_index=True)
     # plot quality of out of forecasts
     plt = ggplot()
     for r_min, r_max in ribbon_pairs:
         plt = plt + geom_ribbon(
-            data=sf_p,
+            data=sf_p_j,
             mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
             fill=plotting_colors[r_min],
             alpha=0.4,
@@ -389,6 +396,113 @@ def plot_forecast(
         )
     )
     return plt, sf_frame
+
+
+def plot_past_and_future(
+    *,
+    forecast_soln_i: pd.DataFrame,
+    d_train: pd.DataFrame,
+    d_test: pd.DataFrame,
+):
+    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+    plotting_colors = {
+        "0.05": "#66c2a4",
+        "0.1": "#2ca25f",
+        "0.25": "#006d2c",
+        "0.5": "#005824",
+        "0.75": "#006d2c",
+        "0.9": "#2ca25f",
+        "0.95": "#66c2a4",
+    }
+    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
+    sf_frame = forecast_soln_i.loc[
+        :, [c.startswith("y[") for c in forecast_soln_i.columns]
+    ].reset_index(drop=True, inplace=False)
+    sf_frame["trajectory_id"] = range(sf_frame.shape[0])
+    sf_frame = sf_frame.melt(
+        id_vars=["trajectory_id"], var_name="time_tick", value_name="y"
+    )
+    sf_frame["time_tick"] = [
+        int(c.replace("y[", "").replace("]", "")) for c in sf_frame["time_tick"]
+    ]
+    sf_frame = (
+        sf_frame.loc[:, ["time_tick", "y"]]
+        .groupby(["time_tick"])
+        .quantile(plotting_quantiles)
+        .reset_index(drop=False)
+    )
+    sf_frame.rename(columns={"level_1": "quantile"}, inplace=True)
+    sf_frame["quantile"] = [str(v) for v in sf_frame["quantile"]]
+    sf_p = sf_frame.pivot(index="time_tick", columns="quantile")
+    sf_p.columns = [c[1] for c in sf_p.columns]
+    sf_p = sf_p.reset_index(drop=False, inplace=False)
+    # jitter to get ribbon
+    sf_p_l = sf_p.copy()
+    sf_p_l['time_tick'] = sf_p_l['time_tick'] - 0.49
+    sf_p_h = sf_p.copy()
+    sf_p_h['time_tick'] = sf_p_h['time_tick'] + 0.49
+    sf_p_j = pd.concat([sf_p_l, sf_p, sf_p_h], ignore_index=True)
+    plt = ggplot()
+    plt = (
+        plt
+        + geom_point(
+            data=d_train,
+            mapping=aes(x="time_tick", y="y"),
+            size=2,
+        )
+        + geom_step(
+            data=sf_frame.loc[sf_frame["quantile"] == "0.5", :],
+            mapping=aes(x="time_tick", y="y"),
+            direction="mid",
+            color="#005824",
+        )
+    )
+    for r_min, r_max in ribbon_pairs:
+        plt = plt + geom_ribbon(
+            data=sf_p_j,
+            mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
+            fill=plotting_colors[r_min],
+            alpha=0.4,
+            linetype="",
+        )
+    plt_train_only = plt + xlim(900, 1000) + ggtitle("data leading to a projection into the future")
+    plt = ggplot()
+    plt = (
+        plt
+        + geom_point(
+            data=d_test,
+            mapping=aes(x="time_tick", y="y"),
+            size=2,
+        )
+        + geom_point(
+            data=d_train,
+            mapping=aes(x="time_tick", y="y"),
+            size=2,
+        )
+        + geom_step(
+            data=sf_frame.loc[sf_frame["quantile"] == "0.5", :],
+            mapping=aes(x="time_tick", y="y"),
+            direction="mid",
+            color="#005824",
+        )
+    )
+    for r_min, r_max in ribbon_pairs:
+        plt = plt + geom_ribbon(
+            data=sf_p_j,
+            mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
+            fill=plotting_colors[r_min],
+            alpha=0.4,
+            linetype="",
+        )
+    plt_train_test = (
+        plt
+        + xlim(900, 1000)
+        + ggtitle(
+            "data leading to a projection into the future, matched to held out future"
+        )
+    )
+    return (plt_train_only, plt_train_test)
+
 
 
 def extract_sframe_result(s_frame: pd.DataFrame):
@@ -703,104 +817,7 @@ def apply_linear_model_bundle_method(
     return np.maximum(preds, 0)  # Could use a Tobit regression pattern here
 
 
-def plot_past_and_future(
-    *,
-    forecast_soln_i: pd.DataFrame,
-    d_train: pd.DataFrame,
-    d_test: pd.DataFrame,
-):
-    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
-    plotting_colors = {
-        "0.05": "#66c2a4",
-        "0.1": "#2ca25f",
-        "0.25": "#006d2c",
-        "0.5": "#005824",
-        "0.75": "#006d2c",
-        "0.9": "#2ca25f",
-        "0.95": "#66c2a4",
-    }
-    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
-    sf_frame = forecast_soln_i.loc[
-        :, [c.startswith("y[") for c in forecast_soln_i.columns]
-    ].reset_index(drop=True, inplace=False)
-    sf_frame["trajectory_id"] = range(sf_frame.shape[0])
-    sf_frame = sf_frame.melt(
-        id_vars=["trajectory_id"], var_name="time_tick", value_name="y"
-    )
-    sf_frame["time_tick"] = [
-        int(c.replace("y[", "").replace("]", "")) for c in sf_frame["time_tick"]
-    ]
-    sf_frame = (
-        sf_frame.loc[:, ["time_tick", "y"]]
-        .groupby(["time_tick"])
-        .quantile(plotting_quantiles)
-        .reset_index(drop=False)
-    )
-    sf_frame.rename(columns={"level_1": "quantile"}, inplace=True)
-    sf_frame["quantile"] = [str(v) for v in sf_frame["quantile"]]
-    sf_p = sf_frame.pivot(index="time_tick", columns="quantile")
-    sf_p.columns = [c[1] for c in sf_p.columns]
-    sf_p = sf_p.reset_index(drop=False, inplace=False)
-    plt = ggplot()
-    plt = (
-        plt
-        + geom_point(
-            data=d_train,
-            mapping=aes(x="time_tick", y="y"),
-            size=2,
-        )
-        + geom_step(
-            data=sf_frame.loc[sf_frame["quantile"] == "0.5", :],
-            mapping=aes(x="time_tick", y="y"),
-            direction="mid",
-            color="#005824",
-        )
-    )
-    for r_min, r_max in ribbon_pairs:
-        plt = plt + geom_ribbon(
-            data=sf_p,
-            mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
-            fill=plotting_colors[r_min],
-            alpha=0.4,
-            linetype="",
-        )
-    plt_train_only = plt + xlim(900, 1000) + ggtitle("data leading to a projection into the future")
-    plt = ggplot()
-    plt = (
-        plt
-        + geom_point(
-            data=d_test,
-            mapping=aes(x="time_tick", y="y"),
-            size=2,
-        )
-        + geom_point(
-            data=d_train,
-            mapping=aes(x="time_tick", y="y"),
-            size=2,
-        )
-        + geom_step(
-            data=sf_frame.loc[sf_frame["quantile"] == "0.5", :],
-            mapping=aes(x="time_tick", y="y"),
-            direction="mid",
-            color="#005824",
-        )
-    )
-    for r_min, r_max in ribbon_pairs:
-        plt = plt + geom_ribbon(
-            data=sf_p,
-            mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
-            fill=plotting_colors[r_min],
-            alpha=0.4,
-            linetype="",
-        )
-    plt_train_test = (
-        plt
-        + xlim(900, 1000)
-        + ggtitle(
-            "data leading to a projection into the future, matched to held out future"
-        )
-    )
-    return (plt_train_only, plt_train_test)
+
 
 
 def plot_decomposition(
@@ -824,21 +841,34 @@ def plot_decomposition(
     history_frame = history_frame.melt(id_vars=['trajectory_id'])
     history_frame['time_tick'] = [int(re.sub(r'^.*\[', '', v).replace(']', '')) for v in history_frame['variable']]
     history_frame['variable'] = [re.sub(r'\[.*\]', '', v) for v in history_frame['variable']]
+    # get quantiles
+    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+    plotting_colors = {
+        "0.05": "#66c2a4",
+        "0.1": "#2ca25f",
+        "0.25": "#006d2c",
+        "0.5": "#005824",
+        "0.75": "#006d2c",
+        "0.9": "#2ca25f",
+        "0.95": "#66c2a4",
+    }
     history_plot = (
         history_frame
             .loc[:, ['variable', 'value', 'time_tick']]
             .groupby(['variable', 'time_tick'])
-            .median()
+            .quantile(plotting_quantiles)
             .reset_index(drop=False, inplace=False)
     )
+    history_plot.rename(columns={"level_2": "quantile"}, inplace=True)
+    history_plot["quantile"] = [str(v) for v in history_plot["quantile"]]
     idx0 = d_train.shape[0] - 2 * d_test.shape[0]
     d_actuals_train = d_train.loc[:, ['time_tick', 'y', 'ext_regressors']].reset_index(drop=True, inplace=False)
     d_actuals_train['variable'] = 'y'
     d_actuals_test = d_test.loc[:, ['time_tick', 'y', 'ext_regressors']].reset_index(drop=True, inplace=False)
     d_actuals_test['variable'] = 'y'
-    return (
+    plt = (
         ggplot(
-            data=history_plot.loc[history_plot['time_tick'] >= idx0, :],
+            data=history_plot.loc[(history_plot['time_tick'] >= idx0) & (history_plot['quantile'] =='0.5'), :],
             mapping=aes(x='time_tick', y='value')
         )
         + annotate(
@@ -851,7 +881,7 @@ def plot_decomposition(
             fill='#e0d7c6',
         )
         + facet_wrap('variable', ncol=1, scales='free_y')
-        + geom_step(direction="mid", size=1)
+        + geom_step(direction="mid")
         + geom_vline(xintercept=d_train.shape[0], alpha=0.5, linetype='dashed')
         + geom_point(
             data=d_actuals_train.loc[d_actuals_train['time_tick'] >= idx0, :],
@@ -862,10 +892,47 @@ def plot_decomposition(
             data=d_actuals_test.loc[d_actuals_test['time_tick'] >= idx0, :],
             mapping=aes(x='time_tick', y='y', color='ext_regressors', shape='ext_regressors'),
             size=1,
-            alpha=0.5,
         )
         + ggtitle('past and future visits decomposed into sub-populations\n(left side training, right side forecast)')
     )
+    # add in annotation regions
+    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
+    for rp in ribbon_pairs:
+        rp_low = (
+            history_plot
+                .loc[history_plot['quantile'] == rp[0], ['variable', 'time_tick', 'value']]
+                .reset_index(drop=True, inplace=False)
+        )
+        rp_low.rename(columns={'value': 'v_low'}, inplace=True)
+        rp_high = (
+            history_plot
+                .loc[history_plot['quantile'] == rp[1], ['variable', 'time_tick', 'value']]
+                .reset_index(drop=True, inplace=False)
+        )
+        rp_high.rename(columns={'value': 'v_high'}, inplace=True)
+        range_frame = pd.merge(
+            rp_low,
+            rp_high,
+            how='inner',
+            on=['variable', 'time_tick']
+        )
+        r_left = range_frame.copy()
+        r_right = range_frame.copy()
+        r_left['time_tick'] = r_left['time_tick'] - 0.49
+        r_right['time_tick'] = r_right['time_tick'] + 0.49
+        block_frame = pd.concat([r_left, range_frame, r_right], ignore_index=True)
+        plt = (
+            plt + 
+                geom_ribbon(
+                        data=block_frame.loc[block_frame['time_tick'] >= idx0, :],
+                        mapping=aes(x="time_tick", ymin='v_low', ymax='v_high'),
+                        inherit_aes=False,
+                        fill=plotting_colors[rp[0]],
+                        alpha=0.3,
+                        linetype="",
+                    )
+        )
+    return plt
 
 
 def plot_params(
