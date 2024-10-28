@@ -264,8 +264,8 @@ def solve_forecast_by_Stan(
     model = CmdStanModel(stan_file=stan_file_name)
     fit = model.sample(
         data=data_file_name,
-        # iter_warmup=8000,
-        # iter_sampling=8000,
+        iter_warmup=8000,
+        iter_sampling=8000,
         show_progress=False,
         show_console=False,
     )
