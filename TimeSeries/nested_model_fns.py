@@ -701,3 +701,201 @@ def apply_linear_model_bundle_method(
     if len(transient_external_regressors) > 0:
         preds = preds + external_apply_effects
     return np.maximum(preds, 0)  # Could use a Tobit regression pattern here
+
+
+def plot_past_and_future(
+    *,
+    forecast_soln_i: pd.DataFrame,
+    d_train: pd.DataFrame,
+    d_test: pd.DataFrame,
+):
+    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
+    plotting_colors = {
+        "0.05": "#66c2a4",
+        "0.1": "#2ca25f",
+        "0.25": "#006d2c",
+        "0.5": "#005824",
+        "0.75": "#006d2c",
+        "0.9": "#2ca25f",
+        "0.95": "#66c2a4",
+    }
+    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
+    sf_frame = forecast_soln_i.loc[
+        :, [c.startswith("y[") for c in forecast_soln_i.columns]
+    ].reset_index(drop=True, inplace=False)
+    sf_frame["trajectory_id"] = range(sf_frame.shape[0])
+    sf_frame = sf_frame.melt(
+        id_vars=["trajectory_id"], var_name="time_tick", value_name="y"
+    )
+    sf_frame["time_tick"] = [
+        int(c.replace("y[", "").replace("]", "")) for c in sf_frame["time_tick"]
+    ]
+    sf_frame = (
+        sf_frame.loc[:, ["time_tick", "y"]]
+        .groupby(["time_tick"])
+        .quantile(plotting_quantiles)
+        .reset_index(drop=False)
+    )
+    sf_frame.rename(columns={"level_1": "quantile"}, inplace=True)
+    sf_frame["quantile"] = [str(v) for v in sf_frame["quantile"]]
+    sf_p = sf_frame.pivot(index="time_tick", columns="quantile")
+    sf_p.columns = [c[1] for c in sf_p.columns]
+    sf_p = sf_p.reset_index(drop=False, inplace=False)
+    plt = ggplot()
+    plt = (
+        plt
+        + geom_point(
+            data=d_train,
+            mapping=aes(x="time_tick", y="y"),
+            size=2,
+        )
+        + geom_step(
+            data=sf_frame.loc[sf_frame["quantile"] == "0.5", :],
+            mapping=aes(x="time_tick", y="y"),
+            direction="mid",
+            color="#005824",
+        )
+    )
+    for r_min, r_max in ribbon_pairs:
+        plt = plt + geom_ribbon(
+            data=sf_p,
+            mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
+            fill=plotting_colors[r_min],
+            alpha=0.4,
+            linetype="",
+        )
+    plt_train_only = plt + xlim(900, 1000) + ggtitle("data leading to a projection into the future")
+    plt = ggplot()
+    plt = (
+        plt
+        + geom_point(
+            data=d_test,
+            mapping=aes(x="time_tick", y="y"),
+            size=2,
+        )
+        + geom_point(
+            data=d_train,
+            mapping=aes(x="time_tick", y="y"),
+            size=2,
+        )
+        + geom_step(
+            data=sf_frame.loc[sf_frame["quantile"] == "0.5", :],
+            mapping=aes(x="time_tick", y="y"),
+            direction="mid",
+            color="#005824",
+        )
+    )
+    for r_min, r_max in ribbon_pairs:
+        plt = plt + geom_ribbon(
+            data=sf_p,
+            mapping=aes(x="time_tick", ymin=r_min, ymax=r_max),
+            fill=plotting_colors[r_min],
+            alpha=0.4,
+            linetype="",
+        )
+    plt_train_test = (
+        plt
+        + xlim(900, 1000)
+        + ggtitle(
+            "data leading to a projection into the future, matched to held out future"
+        )
+    )
+    return (plt_train_only, plt_train_test)
+
+
+def plot_decomposition(
+        forecast_soln_i: pd.DataFrame,
+        *,
+        d_train: pd.DataFrame,
+        d_test: pd.DataFrame,
+):
+    # get distribution of breakdown of predictions
+    history_frame = (
+        forecast_soln_i
+            .loc[:, [c for c in forecast_soln_i.columns if c.startswith('y[') or c.startswith('y_auto[')]]
+            .reset_index(drop=True, inplace=False)
+    )
+    idx_max = np.max([int(c.replace('y[', '').replace(']', '')) for c in history_frame.columns if c.startswith('y[')])
+    new_cols = {}
+    for i in range(idx_max + 1):
+        new_cols[f'y_transient[{i}]'] = history_frame[f'y[{i}]'] - history_frame[f'y_auto[{i}]']
+    history_frame = pd.concat([history_frame, pd.DataFrame(new_cols)], axis=1)
+    history_frame['trajectory_id'] = range(history_frame.shape[0])
+    history_frame = history_frame.melt(id_vars=['trajectory_id'])
+    history_frame['time_tick'] = [int(re.sub(r'^.*\[', '', v).replace(']', '')) for v in history_frame['variable']]
+    history_frame['variable'] = [re.sub(r'\[.*\]', '', v) for v in history_frame['variable']]
+    history_plot = (
+        history_frame
+            .loc[:, ['variable', 'value', 'time_tick']]
+            .groupby(['variable', 'time_tick'])
+            .median()
+            .reset_index(drop=False, inplace=False)
+    )
+    idx0 = d_train.shape[0] - 2 * d_test.shape[0]
+    d_actuals_train = d_train.loc[:, ['time_tick', 'y', 'ext_regressors']].reset_index(drop=True, inplace=False)
+    d_actuals_train['variable'] = 'y'
+    d_actuals_test = d_test.loc[:, ['time_tick', 'y', 'ext_regressors']].reset_index(drop=True, inplace=False)
+    d_actuals_test['variable'] = 'y'
+    return (
+        ggplot(
+            data=history_plot.loc[history_plot['time_tick'] >= idx0, :],
+            mapping=aes(x='time_tick', y='value')
+        )
+        + annotate(
+            "rect",
+            xmin=-np.inf, 
+            xmax=d_train.shape[0], 
+            ymin=-np.inf, 
+            ymax=np.inf,
+            alpha=0.5,
+            fill='#e0d7c6',
+        )
+        + facet_wrap('variable', ncol=1, scales='free_y')
+        + geom_step(direction="mid", size=1)
+        + geom_vline(xintercept=d_train.shape[0], alpha=0.5, linetype='dashed')
+        + geom_point(
+            data=d_actuals_train.loc[d_actuals_train['time_tick'] >= idx0, :],
+            mapping=aes(x='time_tick', y='y', color='ext_regressors', shape='ext_regressors'),
+            size=2,
+        )
+        + geom_point(
+            data=d_actuals_test.loc[d_actuals_test['time_tick'] >= idx0, :],
+            mapping=aes(x='time_tick', y='y', color='ext_regressors', shape='ext_regressors'),
+            size=1,
+            alpha=0.5,
+        )
+        + ggtitle('past and future visits decomposed into sub-populations\n(left side training, right side forecast)')
+    )
+
+
+def plot_params(
+    *,
+    forecast_soln_i: pd.DataFrame,
+    generating_params,
+):
+    answer_frame = pd.DataFrame(
+        {
+            "b_x_dur[0]": [generating_params["b_z"][0]],
+            "b_x_imp[0]": [generating_params["b_x"][0]],
+        }
+    )
+    parameter_plt_frame = forecast_soln_i.loc[:, [c for c in answer_frame.columns]].melt()
+    return (
+        ggplot()
+        + geom_density(
+            data=parameter_plt_frame,
+            mapping=aes(x="value", fill="variable", color="variable"),
+            linetype="",
+            alpha=0.5,
+        )
+        + geom_vline(
+            data=answer_frame.melt(),
+            mapping=aes(xintercept="value", color="variable", fill="variable"),
+            linetype="dashed",
+            size=1,
+        )
+        + facet_wrap("variable", scales="free")
+        + scale_color_brewer(type="qualitative", palette="Dark2")
+        + scale_fill_brewer(type="qualitative", palette="Dark2")
+        + ggtitle("Stan inferred parameter distributions\n(generating values dashed lines)")
+    )
