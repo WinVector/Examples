@@ -1,5 +1,6 @@
 from typing import Iterable, Optional, Tuple
 import re
+import os
 
 import numpy as np
 import pandas as pd
@@ -64,7 +65,7 @@ def train_test_split(
     return d_train, d_test
 
 
-def _generate_Stan_model_def(
+def generate_Stan_model_def(
     *,
     application_lags: Iterable[int],
     n_transient_external_regressors: int = 0,
@@ -93,7 +94,7 @@ def _generate_Stan_model_def(
     ext_terms_dur = ""
     x_data_decls = ""
     if n_transient_external_regressors > 0:
-        b_x_imp_decl = f"\n  vector[{n_transient_external_regressors}] b_x_imp;                          // transient external regressor coefficients"
+        b_x_imp_decl = f"\n  vector[{n_transient_external_regressors}] b_x_imp;                                 // transient external regressor coefficients"
         b_x_imp_dist = "\n  b_x_imp ~ normal(0, 10);"
         ext_terms_imp = [
             f"b_x_imp[{i+1}] * x_imp_{i+1}"
@@ -132,9 +133,9 @@ data {
         + "\n}"
         + f"""
 parameters {{
-  real b_auto_0;                      // auto-regress intercept
-  real b_imp_0;                       // total/impulse/transient intercept
-  vector[{n_lags}] b_auto;                           // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
+  real b_auto_0;                              // auto-regress intercept
+  real b_imp_0;                               // total/impulse/transient intercept
+  vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
   vector<lower=0>[N_y_future] y_future;                // to be inferred future state
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
@@ -160,39 +161,12 @@ model {{
     b_var_y_auto);
         // how observations are formed
   y ~ normal(
-    b_imp_0 + y_auto{ext_terms_imp}, 
+    b_imp_0{ext_terms_imp} + y_auto, 
     b_var_y);
 }}
 """
     )
     return nested_model_stan_str
-
-
-def _build_Stan_model_from_src(nested_model_stan_str: str):
-    stan_file = "nested_model_tmp.stan"
-    with open(stan_file, "w", encoding="utf8") as file:
-        file.write(nested_model_stan_str)
-    # instantiate the model object
-    model = CmdStanModel(stan_file=stan_file)
-    ## inspect model object
-    ## print(model)
-    ## inspect compiled model
-    # print(model.exe_info())
-    return model
-
-
-def define_Stan_model_with_forecast_period(
-    *,
-    application_lags: Iterable[int],
-    n_transient_external_regressors: int = 0,
-    n_durable_external_regressors: int = 0,
-):
-    nested_model_stan_str = _generate_Stan_model_def(
-        application_lags=application_lags,
-        n_transient_external_regressors=n_transient_external_regressors,
-        n_durable_external_regressors=n_durable_external_regressors,
-    )
-    return _build_Stan_model_from_src(nested_model_stan_str), nested_model_stan_str
 
 
 # chat gpt soln to "In Python how do your write code to replace "[k]" with "[k-1]" in a string?"
@@ -214,7 +188,7 @@ def write_Stan_data(
     d_apply: pd.DataFrame,
     transient_external_regressors: Optional[Iterable[str]] = None,
     durable_external_regressors: Optional[Iterable[str]] = None,
-    data_file: str,
+    data_file_name: str,
 ):
     # prep arguments
     if transient_external_regressors is not None:
@@ -252,45 +226,52 @@ def write_Stan_data(
             ]
         )
     nested_model_data_str = nested_model_data_str + "}"
-    with open(data_file, "w", encoding="utf8") as file:
+    with open(data_file_name, "w", encoding="utf8") as file:
         file.write(nested_model_data_str)
 
 
 def solve_forecast_by_Stan(
-    model,
+    model_src: str,
     *,
     d_train: pd.DataFrame,
     d_apply: pd.DataFrame,
     transient_external_regressors: Optional[Iterable[str]] = None,
     durable_external_regressors: Optional[Iterable[str]] = None,
+    cache_file_name: Optional[str] = None,
 ) -> pd.DataFrame:
     """
     Fit a forecast through d_train, and then apply the forecast in the d_apply region (d_apply doesn't need y value).
+    Caching is oblivious of the inputs (user must invalidate the cache on their own).
     """
+    if (cache_file_name is not None) and (os.path.isfile(cache_file_name)):
+        return pd.read_csv(cache_file_name)
     # specify data file
-    data_file = "nested_model_tmp.data.json"
+    data_file_name: str = "nested_model_tmp.data.json"
     # write data
     write_Stan_data(
         d_train=d_train,
         d_apply=d_apply,
         transient_external_regressors=transient_external_regressors,
         durable_external_regressors=durable_external_regressors,
-        data_file=data_file,
+        data_file_name=data_file_name,
     )
     # fit the model and draw observations
     # https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.sample
-    # https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.optimize
+    stan_file_name = "nested_model_tmp.stan"
+    with open(stan_file_name, "w", encoding="utf8") as file:
+        file.write(model_src)
+    # instantiate the model object
+    model = CmdStanModel(stan_file=stan_file_name)
     fit = model.sample(
-        data=data_file,
+        data=data_file_name,
         # iter_warmup=8000,
         # iter_sampling=8000,
-        # adapt_engaged=True,
         show_progress=False,
         show_console=False,
     )
     # get the samples
-    res = fit.draws_pd()
-    # re-number from zero
+    res = fit.draws_pd().reset_index(drop=True, inplace=False)  # force copy just in case
+    # re-number from zero for Python convenience
     res = res.rename(
         columns={
             k: _replace_k_with_k_minus_1(k)
@@ -299,8 +280,9 @@ def solve_forecast_by_Stan(
         },
         inplace=False,
     )
+    if cache_file_name is not None:
+        res.to_csv(cache_file_name, index=False)
     return res
-
 
 
 def plot_forecast(
