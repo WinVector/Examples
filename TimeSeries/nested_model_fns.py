@@ -208,14 +208,15 @@ def _replace_k_with_k_minus_1(string):
     return result
 
 
-def solve_forecast_by_Stan(
-    model,
+def write_Stan_data(
     *,
     d_train: pd.DataFrame,
     d_apply: pd.DataFrame,
     transient_external_regressors: Optional[Iterable[str]] = None,
     durable_external_regressors: Optional[Iterable[str]] = None,
-) -> pd.DataFrame:
+    data_file: str,
+):
+    # prep arguments
     if transient_external_regressors is not None:
         transient_external_regressors = list(transient_external_regressors)
     else:
@@ -224,8 +225,6 @@ def solve_forecast_by_Stan(
         durable_external_regressors = list(durable_external_regressors)
     else:
         durable_external_regressors = []
-    # specify data file
-    data_file = "nested_model_tmp.data.json"
     # write data
     nested_model_data_str = (
         "{"
@@ -255,6 +254,29 @@ def solve_forecast_by_Stan(
     nested_model_data_str = nested_model_data_str + "}"
     with open(data_file, "w", encoding="utf8") as file:
         file.write(nested_model_data_str)
+
+
+def solve_forecast_by_Stan(
+    model,
+    *,
+    d_train: pd.DataFrame,
+    d_apply: pd.DataFrame,
+    transient_external_regressors: Optional[Iterable[str]] = None,
+    durable_external_regressors: Optional[Iterable[str]] = None,
+) -> pd.DataFrame:
+    """
+    Fit a forecast through d_train, and then apply the forecast in the d_apply region (d_apply doesn't need y value).
+    """
+    # specify data file
+    data_file = "nested_model_tmp.data.json"
+    # write data
+    write_Stan_data(
+        d_train=d_train,
+        d_apply=d_apply,
+        transient_external_regressors=transient_external_regressors,
+        durable_external_regressors=durable_external_regressors,
+        data_file=data_file,
+    )
     # fit the model and draw observations
     # https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.sample
     # https://mc-stan.org/cmdstanpy/api.html#cmdstanpy.CmdStanModel.optimize
@@ -268,6 +290,7 @@ def solve_forecast_by_Stan(
     )
     # get the samples
     res = fit.draws_pd()
+    # re-number from zero
     res = res.rename(
         columns={
             k: _replace_k_with_k_minus_1(k)
