@@ -134,7 +134,7 @@ data {
         + f"""
 parameters {{
   real b_auto_0;                              // auto-regress intercept
-  real b_imp_0;                               // total/impulse/transient intercept
+  real<lower=0> b_imp_0;                      // total/impulse/transient intercept
   vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
   vector<lower=0>[N_y_future] y_future;                // to be inferred future state
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
@@ -152,7 +152,7 @@ model {{
   b_var_y ~ chi_square(1);                    // prior for y (transient) noise variance
         // priors for parameter estimates
   b_auto_0 ~ normal(0, 10);
-  b_imp_0 ~ normal(0, 10);
+  b_imp_0 ~ chi_square(1);
   b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
@@ -264,8 +264,8 @@ def solve_forecast_by_Stan(
     model = CmdStanModel(stan_file=stan_file_name)
     fit = model.sample(
         data=data_file_name,
-        iter_warmup=8000,
-        iter_sampling=8000,
+        # iter_warmup=8000,
+        # iter_sampling=8000,
         show_progress=False,
         show_console=False,
     )
