@@ -3,12 +3,12 @@ from dash import (
 )
 import numpy as np
 import pandas as pd
-from gcd_table import build_gcd_table
+from gcd_table import build_gcd_table_filled
 
 
 a_0 = 27
 b_0 = 18
-df_columns = list(build_gcd_table(a_0, b_0).columns)
+df_columns = list(build_gcd_table_filled(a_0, b_0).columns)
 
 app = Dash()
 
@@ -78,7 +78,7 @@ def update_table(n_clicks, a, b):
     ):  # Prevents update on initial load
         return no_update
     last_clicks = n_clicks
-    return build_gcd_table(a, b).to_dict("records")
+    return build_gcd_table_filled(a, b).to_dict("records")
 
 
 if __name__ == "__main__":
