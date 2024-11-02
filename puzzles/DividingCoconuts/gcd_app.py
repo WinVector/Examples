@@ -31,7 +31,7 @@ def build_gcd_table(a: int, b: int) -> pd.DataFrame:
             assert np.all(result['u'] * result['a'] + result['v'] * result['b'] == result['GCD(a, b)'])
             return result
         d = a // b       # quotient
-        r = a - b * d    # remainder  
+        r = a - b * d    # remainder
         result = pd.concat([
             result,
             pd.DataFrame({
@@ -53,7 +53,24 @@ app.layout = [
     dash_table.DataTable(
         id='data-table',
         columns=[{"name": i, "id": i} for i in df_columns],
-        #data=df.to_dict('records')
+        fill_width=False,
+        style_data={
+            'color': 'black',
+            'backgroundColor': 'white',
+            'whiteSpace': 'normal',
+            'height': 'auto',
+        },
+        style_data_conditional=[
+            {
+                'if': {'row_index': 'odd'},
+                'backgroundColor': 'rgb(220, 220, 220)',
+            }
+        ],
+        style_header={
+            'backgroundColor': 'rgb(180, 180, 180)',
+            'color': 'black',
+            'fontWeight': 'bold'
+        },
     )
 ]
 
