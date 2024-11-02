@@ -81,14 +81,18 @@ app = Dash()
 app.layout = [
     dcc.Markdown('''
 This is a an example of the use of the extended Euclidean algorithm.
+
 The result is integers `u`, `v`, `GCD(a, b)` such that `u * a + v * b = GCD(a, b)`,
 and `GCD(a, b)` is the greatest common divisor of `a` and `b`.
-The method calculates gcd(a, b) by building table row by row, and
-then back-filling the columns `GCD(a, b)`, `u`, and `v`.
+
+The method calculates `GCD(a, b)` by building table forward row by row, using 
+the reduction `GCD(a, b) = GCD(b, a % b)` when `b >= 1, a >= b`. Then `GCD(a, b)`, `u`, and `v`
+and are back-filled from the last row (where these values are known).
 
 To use: enter integers for `a` and `b`, and then press "Update Table".
 
-A description of the methodology can be found [here](https://github.com/WinVector/Examples/blob/main/puzzles/DividingCoconuts/Monkey_and_Coconuts.ipynb).
+A description of the methodology can be found 
+[here](https://github.com/WinVector/Examples/blob/main/puzzles/DividingCoconuts/Monkey_and_Coconuts.ipynb).
     '''),
     html.Div(
         [
