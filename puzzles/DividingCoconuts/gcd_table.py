@@ -38,8 +38,7 @@ def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
     :return: extended GCD work table (not backfilled, see back_fill_gcd_table())
     Note: may swap a, b to establish entry invariant.
     """
-    a = int(np.abs(a))
-    b = int(np.abs(b))
+    a, b = int(np.abs(a)), int(np.abs(b))
     if b > a:
         a, b = b, a
     assert (a >= b) and (b >= 0)
@@ -50,7 +49,8 @@ def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
         result = pd.concat([
                 result,
                 pd.DataFrame({
-                    "a": [a], "b": [b], "a%b": [r], "u": [None], "a//b": [d], "v": [None], "GCD(a, b)": [None],
+                    "a": [a], "b": [b],
+                    "a%b": [r], "u": [None], "a//b": [d], "v": [None],
                 }),
             ],
             ignore_index=True)
@@ -60,7 +60,8 @@ def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
     result = pd.concat([
             result,
             pd.DataFrame({
-                "a": [a], "b": [b], "a%b": ["N/A"], "u": [1], "a//b": ["N/A"], "v": [0], "GCD(a, b)": [a],
+                "a": [a], "b": [b],
+                "a%b": ["N/A"], "u": [1], "a//b": ["N/A"], "v": [0],
             }),
         ],
         ignore_index=True)
@@ -76,7 +77,8 @@ def back_fill_gcd_table(result: pd.DataFrame, *, verbose: bool = False) -> None:
     """
     for i in reversed(range(result.shape[0] - 1)):
         result.loc[i, "u"] = result.loc[i + 1, "v"]
-        result.loc[i, "v"] = (result.loc[i + 1, "u"] - result.loc[i, "a//b"] * result.loc[i + 1, "v"])
+        result.loc[i, "v"] = (result.loc[i + 1, "u"] 
+                              - result.loc[i, "a//b"] * result.loc[i + 1, "v"])
         _display_backfill_step(result, i=i, do_display=verbose)
     assert np.all(result["u"] * result["a"] + result["v"] * result["b"] == result["GCD(a, b)"])
 
