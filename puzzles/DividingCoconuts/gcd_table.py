@@ -4,14 +4,19 @@ import pandas as pd
 from IPython.display import display
 
 
+captured_tables = []
+
+
 def _display_intermediate_forward_table(
         result: List[pd.DataFrame],
         *, 
         do_display: bool = True,
         row_count_hint: Optional[int] = None) -> None:
+    global captured_tables
     if not do_display:
         return
     result = pd.concat(result, ignore_index=True)
+    result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
     row_id = result.shape[0] - 1
     if row_count_hint is not None:
         while result.shape[0] < row_count_hint:
@@ -19,25 +24,35 @@ def _display_intermediate_forward_table(
     def highlight_rowval(x):
         return ['background-color: yellow; font-weight: bold' if (x.name == row_id) and (not pd.isna(cell)) else '' for cell in x]
     display(f"build row {row_id}")
-    display(result.style.apply(highlight_rowval, axis=1).format(na_rep=''))
+    styled_table = result.style.apply(highlight_rowval, axis=1).format(na_rep='')
+    captured_tables.append(styled_table)
+    display(styled_table)
 
 
 def _display_final_forward_table(result: pd.DataFrame, *, do_display: bool = True) -> None:
+    global captured_tables
     if not do_display:
         return
+    result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
     def highlight_rowcol(x):
         return ['background-color: yellow; font-weight: bold' if (x.name == result.shape[0] - 1) or (col_name == 'GCD(a, b)') else '' for col_name in x.index]
     display(f"finish with row {result.shape[0] - 1}")
-    display(result.style.apply(highlight_rowcol, axis=1).format(na_rep=''))
+    styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
+    captured_tables.append(styled_table)
+    display(styled_table)
 
 
 def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = True) -> None:
+    global captured_tables
     if not do_display:
         return
+    result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
     display(f"back fill row {i}")
     def highlight_rowcol(x):
        return ['background-color: yellow; font-weight: bold' if (x.name == i) and (col_name in ['u', 'v']) else '' for col_name in x.index]
-    display(result.style.apply(highlight_rowcol, axis=1).format(na_rep=''))
+    styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
+    captured_tables.append(styled_table)
+    display(styled_table)
 
 
 def build_gcd_table(a: int, b: int, 
@@ -50,6 +65,7 @@ def build_gcd_table(a: int, b: int,
     :return: extended GCD work table (not backfilled, see back_fill_gcd_table())
     Note: may swap a, b to establish entry invariant.
     """
+    global captured_tables
     a, b = int(np.abs(a)), int(np.abs(b))
     if b > a:
         a, b = b, a
@@ -57,6 +73,7 @@ def build_gcd_table(a: int, b: int,
     row_count_hint = None
     if verbose:
         row_count_hint = build_gcd_table(a, b, verbose=False).shape[0]
+        captured_tables.clear()
     result = []
     while (b > 0) and (a > b):
         q = a // b  # quotient
