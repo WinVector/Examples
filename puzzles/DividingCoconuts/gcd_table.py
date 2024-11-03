@@ -1,12 +1,13 @@
-
+from typing import List
 import numpy as np
 import pandas as pd
 from IPython.display import display
 
 
-def _display_intermediate_forward_table(result: pd.DataFrame, *, do_display: bool = True) -> None:
+def _display_intermediate_forward_table(result: List[pd.DataFrame], *, do_display: bool = True) -> None:
     if not do_display:
         return
+    result = pd.concat(result, ignore_index=True)
     def highlight_rowval(x):
         return ['background-color: yellow; font-weight: bold' if (x.name == result.shape[0] - 1) and (not pd.isna(cell)) else '' for cell in x]
     display(f"build row {result.shape[0] - 1}")
@@ -31,7 +32,7 @@ def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = Tr
     display(result.style.apply(highlight_rowcol, axis=1).format(na_rep=''))
 
 
-def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
+def build_gcd_table(a: int, b: int, *, add_quotients: bool = True, verbose: bool = False) -> pd.DataFrame:
     """
     :param a: positive int
     :param b: non-negative int with b < a
@@ -42,28 +43,25 @@ def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
     if b > a:
         a, b = b, a
     assert (a >= b) and (b >= 0)
-    result = None
+    result = []
     while (b > 0) and (a > b):
-        d = a // b  # quotient
-        r = a - b * d  # remainder
-        result = pd.concat([
-                result,
-                pd.DataFrame({
-                    "a": [a], "b": [b], "a%b": [r], "a//b": [d]}),
-            ],
-            ignore_index=True)
+        q = a // b  # quotient
+        r = a - b * q  # remainder
+        row = pd.DataFrame({"a": [a], "b": [b], "a%b": [r]})
+        if add_quotients:
+            row["a//b"] = q
+        result.append(row)
         _display_intermediate_forward_table(result, do_display=verbose)
         # prepare for next step using gcd(a, b) = gcd(b, r)
         a, b = b, r
-    result = pd.concat([
-            result,
-            pd.DataFrame({
-                "a": [a], "b": [b], "a%b": ["N/A"], "a//b": ["N/A"]}),
-        ],
-        ignore_index=True)
-    result["GCD(a, b)"] = a
-    _display_final_forward_table(result, do_display=verbose)
-    return result
+    row = pd.DataFrame({"a": [a], "b": [b], "a%b": ["N/A"]})
+    if add_quotients:
+        row["a//b"] = "N/A"
+    result.append(row)
+    gcd_table = pd.concat(result, ignore_index=True)
+    gcd_table["GCD(a, b)"] = a
+    _display_final_forward_table(gcd_table, do_display=verbose)
+    return gcd_table
 
 
 def back_fill_gcd_table(result: pd.DataFrame, *, verbose: bool = False) -> None:
