@@ -1,16 +1,24 @@
-from typing import List
+from typing import List, Optional
 import numpy as np
 import pandas as pd
 from IPython.display import display
 
 
-def _display_intermediate_forward_table(result: List[pd.DataFrame], *, do_display: bool = True) -> None:
+def _display_intermediate_forward_table(
+        result: List[pd.DataFrame],
+        *, 
+        do_display: bool = True,
+        row_count_hint: Optional[int] = None) -> None:
     if not do_display:
         return
     result = pd.concat(result, ignore_index=True)
+    row_id = result.shape[0] - 1
+    if row_count_hint is not None:
+        while result.shape[0] < row_count_hint:
+            result.loc[result.shape[0]] = [None] * result.shape[1]
     def highlight_rowval(x):
-        return ['background-color: yellow; font-weight: bold' if (x.name == result.shape[0] - 1) and (not pd.isna(cell)) else '' for cell in x]
-    display(f"build row {result.shape[0] - 1}")
+        return ['background-color: yellow; font-weight: bold' if (x.name == row_id) and (not pd.isna(cell)) else '' for cell in x]
+    display(f"build row {row_id}")
     display(result.style.apply(highlight_rowval, axis=1).format(na_rep=''))
 
 
@@ -32,7 +40,10 @@ def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = Tr
     display(result.style.apply(highlight_rowcol, axis=1).format(na_rep=''))
 
 
-def build_gcd_table(a: int, b: int, *, add_quotients: bool = True, verbose: bool = False) -> pd.DataFrame:
+def build_gcd_table(a: int, b: int, 
+    *, 
+    add_quotients: bool = True,
+    verbose: bool = False) -> pd.DataFrame:
     """
     :param a: positive int
     :param b: non-negative int with b < a
@@ -43,6 +54,9 @@ def build_gcd_table(a: int, b: int, *, add_quotients: bool = True, verbose: bool
     if b > a:
         a, b = b, a
     assert (a >= b) and (b >= 0)
+    row_count_hint = None
+    if verbose:
+        row_count_hint = build_gcd_table(a, b, add_quotients=False, verbose=False).shape[0]
     result = []
     while (b > 0) and (a > b):
         q = a // b  # quotient
@@ -51,7 +65,7 @@ def build_gcd_table(a: int, b: int, *, add_quotients: bool = True, verbose: bool
         if add_quotients:
             row["a//b"] = q
         result.append(row)
-        _display_intermediate_forward_table(result, do_display=verbose)
+        _display_intermediate_forward_table(result, do_display=verbose, row_count_hint=row_count_hint)
         # prepare for next step using gcd(a, b) = gcd(b, r)
         a, b = b, r
     row = pd.DataFrame({"a": [a], "b": [b], "a%b": ["N/A"]})
