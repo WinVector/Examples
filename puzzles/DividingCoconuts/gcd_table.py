@@ -56,7 +56,7 @@ def build_gcd_table(a: int, b: int,
     assert (a >= b) and (b >= 0)
     row_count_hint = None
     if verbose:
-        row_count_hint = build_gcd_table(a, b, add_quotients=False, verbose=False).shape[0]
+        row_count_hint = build_gcd_table(a, b, verbose=False).shape[0]
     result = []
     while (b > 0) and (a > b):
         q = a // b  # quotient
