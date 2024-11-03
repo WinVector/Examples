@@ -49,9 +49,7 @@ def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
         result = pd.concat([
                 result,
                 pd.DataFrame({
-                    "a": [a], "b": [b],
-                    "a%b": [r], "u": [None], "a//b": [d], "v": [None],
-                }),
+                    "a": [a], "b": [b], "a%b": [r], "a//b": [d]}),
             ],
             ignore_index=True)
         _display_intermediate_forward_table(result, do_display=verbose)
@@ -60,9 +58,7 @@ def build_gcd_table(a: int, b: int, *, verbose: bool = False) -> pd.DataFrame:
     result = pd.concat([
             result,
             pd.DataFrame({
-                "a": [a], "b": [b],
-                "a%b": ["N/A"], "u": [1], "a//b": ["N/A"], "v": [0],
-            }),
+                "a": [a], "b": [b], "a%b": ["N/A"], "a//b": ["N/A"]}),
         ],
         ignore_index=True)
     result["GCD(a, b)"] = a
@@ -75,6 +71,11 @@ def back_fill_gcd_table(result: pd.DataFrame, *, verbose: bool = False) -> None:
     Back fill u, v into extended GCD table.
     See: build_gcd_table(), build_gcd_table_filled().
     """
+    result["u"] = None
+    result.loc[result.shape[0] - 1, "u"] = 1
+    result["v"] = None
+    result.loc[result.shape[0] - 1, "v"] = 0
+    _display_backfill_step(result, i=result.shape[0] - 1, do_display=verbose)
     for i in reversed(range(result.shape[0] - 1)):
         result.loc[i, "u"] = result.loc[i + 1, "v"]
         result.loc[i, "v"] = (result.loc[i + 1, "u"] 
