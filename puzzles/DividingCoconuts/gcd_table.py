@@ -22,8 +22,15 @@ def _display_intermediate_forward_table(
         while result.shape[0] < row_count_hint:
             result.loc[result.shape[0]] = [None] * result.shape[1]
     def highlight_rowval(x):
-        return ['background-color: yellow; font-weight: bold' if (x.name == row_id) and (not pd.isna(cell)) else '' for cell in x]
-    display(f"build row {row_id}")
+        if x.name == row_id:
+            return ['background-color: yellow; font-weight: bold' if not pd.isna(cell) else '' for cell in x]
+        if x.name == row_id - 1:
+            return ['background-color: lightgreen' if col_name in ['b', 'a%b'] else '' for col_name in x.index]
+        return ['' for _ in x]
+    if row_id <= 0:
+        display(f"build row {row_id}: start (a > b)")
+    else:
+        display(f"build row {row_id}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}]")
     styled_table = result.style.apply(highlight_rowval, axis=1).format(na_rep='')
     captured_tables.append(styled_table)
     display(styled_table)
@@ -34,9 +41,18 @@ def _display_final_forward_table(result: pd.DataFrame, *, do_display: bool = Tru
     if not do_display:
         return
     result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
+    row_id = result.shape[0] - 1
     def highlight_rowcol(x):
-        return ['background-color: yellow; font-weight: bold' if (x.name == result.shape[0] - 1) or (col_name == 'GCD(a, b)') else '' for col_name in x.index]
-    display(f"finish with row {result.shape[0] - 1}")
+        res = ['background-color: yellow; font-weight: bold' if col_name == 'GCD(a, b)' else '' for col_name in x.index]
+        if x.name == result.shape[0] - 1:
+            for i in range(len(x)):
+                res[i] = 'background-color: yellow; font-weight: bold'
+        if x.name == result.shape[0] - 2:
+            for i, col_name in enumerate(x.index):
+                if col_name in ['b', 'a%b']:
+                    res[i] = 'background-color: lightgreen'
+        return res
+    display(f"finish with row {result.shape[0] - 1}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}], GCD= a[{row_id}]")
     styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
     captured_tables.append(styled_table)
     display(styled_table)
@@ -47,9 +63,23 @@ def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = Tr
     if not do_display:
         return
     result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
-    display(f"back fill row {i}")
+    if i == result.shape[0] - 1:
+        display(f"back fill row {i}: u[{i}]=1, v[{i}]=0")
+    else:
+        display(f"back fill row {i}: u[{i}]=v[{i+1}], v[{i}] = u[{i+1}] - (a//b)[{i}] * v[{i+1}]")
     def highlight_rowcol(x):
-       return ['background-color: yellow; font-weight: bold' if (x.name == i) and (col_name in ['u', 'v']) else '' for col_name in x.index]
+        res = ['' for _ in x]
+        if (x.name == i):
+            for col_i, col_name in enumerate(x.index):
+                if col_name in ['u', 'v']:
+                    res[col_i] = 'background-color: yellow; font-weight: bold'
+                elif (col_name == 'a//b') and (i < result.shape[0] - 1):
+                    res[col_i] = 'background-color: lightgreen'
+        if (x.name == i+1):
+            for col_i, col_name in enumerate(x.index):
+                if col_name in ['u', 'v']:
+                    res[col_i] = 'background-color: lightgreen'
+        return res
     styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
     captured_tables.append(styled_table)
     display(styled_table)
@@ -57,7 +87,6 @@ def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = Tr
 
 def build_gcd_table(a: int, b: int, 
     *, 
-    add_quotients: bool = True,
     verbose: bool = False) -> pd.DataFrame:
     """
     :param a: positive int
@@ -78,16 +107,12 @@ def build_gcd_table(a: int, b: int,
     while (b > 0) and (a > b):
         q = a // b  # quotient
         r = a - b * q  # remainder
-        row = pd.DataFrame({"a": [a], "b": [b], "a%b": [r]})
-        if add_quotients:
-            row["a//b"] = q
+        row = pd.DataFrame({"a": [a], "b": [b], "a%b": [r], "a//b": [q], "GCD(a, b)": None})
         result.append(row)
         _display_intermediate_forward_table(result, do_display=verbose, row_count_hint=row_count_hint)
         # prepare for next step using gcd(a, b) = gcd(b, r)
         a, b = b, r
-    row = pd.DataFrame({"a": [a], "b": [b], "a%b": ["N/A"]})
-    if add_quotients:
-        row["a//b"] = "N/A"
+    row = pd.DataFrame({"a": [a], "b": [b], "a%b": ["N/A"], "a//b": ["N/A"], "GCD(a, b)": None})
     result.append(row)
     gcd_table = pd.concat(result, ignore_index=True)
     gcd_table["GCD(a, b)"] = a
