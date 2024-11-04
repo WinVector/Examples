@@ -28,11 +28,12 @@ def _display_intermediate_forward_table(
             return ['background-color: lightgreen' if col_name in ['b', 'a%b'] else '' for col_name in x.index]
         return ['' for _ in x]
     if row_id <= 0:
-        display(f"build row {row_id}: start (a > b)")
+        result.attrs['note'] = f"build row {row_id}: start (a > b)"
     else:
-        display(f"build row {row_id}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}]")
+        result.attrs['note'] = f"build row {row_id}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}]"
     styled_table = result.style.apply(highlight_rowval, axis=1).format(na_rep='')
     captured_tables.append(styled_table)
+    display(styled_table.data.attrs['note'])
     display(styled_table)
 
 
@@ -52,9 +53,10 @@ def _display_final_forward_table(result: pd.DataFrame, *, do_display: bool = Tru
                 if col_name in ['b', 'a%b']:
                     res[i] = 'background-color: lightgreen'
         return res
-    display(f"finish with row {result.shape[0] - 1}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}], GCD= a[{row_id}]")
+    result.attrs['note'] = f"finish with row {result.shape[0] - 1}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}], GCD= a[{row_id}]"
     styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
     captured_tables.append(styled_table)
+    display(styled_table.data.attrs['note'])
     display(styled_table)
 
 
@@ -64,9 +66,9 @@ def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = Tr
         return
     result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
     if i == result.shape[0] - 1:
-        display(f"back fill row {i}: u[{i}]=1, v[{i}]=0")
+        result.attrs['note'] = f"back fill row {i}: u[{i}]=1, v[{i}]=0"
     else:
-        display(f"back fill row {i}: u[{i}]=v[{i+1}], v[{i}] = u[{i+1}] - (a//b)[{i}] * v[{i+1}]")
+        result.attrs['note'] = f"back fill row {i}: u[{i}]=v[{i+1}], v[{i}] = u[{i+1}] - (a//b)[{i}] * v[{i+1}]"
     def highlight_rowcol(x):
         res = ['' for _ in x]
         if (x.name == i):
@@ -82,6 +84,7 @@ def _display_backfill_step(result: pd.DataFrame, *, i:int, do_display: bool = Tr
         return res
     styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
     captured_tables.append(styled_table)
+    display(styled_table.data.attrs['note'])
     display(styled_table)
 
 
