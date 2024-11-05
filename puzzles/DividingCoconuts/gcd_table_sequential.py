@@ -20,7 +20,12 @@ def _display_initial_forward_table(
     def highlight_rowval(x):
         return ['background-color: yellow; font-weight: bold' if not pd.isna(cell) else '' for cell in x]
     result.attrs['note'] = "Initial table"
-    styled_table = result.style.apply(highlight_rowval, axis=1).format(na_rep='')
+    styled_table = (
+        result.style
+            .set_properties(**{'min-width': '100px'})
+            .apply(highlight_rowval, axis=1)
+            .format(na_rep='')   
+    )
     if captured_tables is not None:
         captured_tables.append(styled_table)
     display(styled_table.data.attrs['note'])
@@ -52,7 +57,12 @@ def _display_intermediate_forward_table(
         result.attrs['note'] = f"build row {row_id}: start (a >= b)"
     else:
         result.attrs['note'] = f"build row {row_id}: r[{row_id}] = r[{row_id-2}] % r[{row_id-1}], q[{row_id}] = r[{row_id-2}] // r[{row_id-1}]"
-    styled_table = result.style.apply(highlight_rowval, axis=1).format(na_rep='')
+    styled_table = (
+        result.style
+            .set_properties(**{'min-width': '100px'})
+            .apply(highlight_rowval, axis=1)
+            .format(na_rep='')    
+    )
     if captured_tables is not None:
         captured_tables.append(styled_table)
     display(styled_table.data.attrs['note'])
@@ -83,7 +93,12 @@ def _display_backfill_step(
                 if col_name in ['q', 'u', 'v']:
                     res[col_i] = 'background-color: lightgreen'
         return res
-    styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
+    styled_table = (
+        result.style
+            .set_properties(**{'min-width': '100px'})
+            .apply(highlight_rowcol, axis=1)
+            .format(na_rep='')
+    )
     if captured_tables is not None:
         captured_tables.append(styled_table)
     display(styled_table.data.attrs['note'])
@@ -112,6 +127,8 @@ def build_gcd_table(a: int, b: int,
     start = pd.DataFrame({"r": [a, b]})
     if record_q:
         start["q"] = None
+        start["u"] = None
+        start["v"] = None
     result = [start]
     _display_initial_forward_table(
         start, do_display=verbose, row_count_hint=row_count_hint, captured_tables=captured_tables)
@@ -121,6 +138,8 @@ def build_gcd_table(a: int, b: int,
         row = pd.DataFrame({"r": [r]})
         if record_q:
             row["q"] = q
+            row["u"] = None
+            row["v"] = None
         result.append(row)
         _display_intermediate_forward_table(
             result, do_display=verbose, row_count_hint=row_count_hint, captured_tables=captured_tables)
