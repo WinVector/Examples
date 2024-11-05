@@ -19,7 +19,9 @@ def _display_initial_forward_table(
             result.loc[result.shape[0]] = [None] * result.shape[1]
     def highlight_rowval(x):
         return ['background-color: yellow; font-weight: bold' if not pd.isna(cell) else '' for cell in x]
-    result.attrs['note'] = "Initial table"
+    a = result.loc[0, 'r']
+    b = result.loc[1, 'r']
+    result.attrs['note'] = f"Initial table: a = {a}, b = {b}"
     styled_table = (
         result.style
             .set_properties(**{'min-width': '100px'})
@@ -53,10 +55,7 @@ def _display_intermediate_forward_table(
         if (x.name == row_id - 1) or (x.name == row_id - 2):
             return ['background-color: lightgreen' if col_name == 'r' else '' for col_name in x.index]
         return ['' for _ in x]
-    if row_id <= 0:
-        result.attrs['note'] = f"build row {row_id}: start (a >= b)"
-    else:
-        result.attrs['note'] = f"build row {row_id}: r[{row_id}] = r[{row_id-2}] % r[{row_id-1}], q[{row_id}] = r[{row_id-2}] // r[{row_id-1}]"
+    result.attrs['note'] = f"build row {row_id}: r[{row_id}] = r[{row_id-2}] % r[{row_id-1}], q[{row_id}] = r[{row_id-2}] // r[{row_id-1}]"
     styled_table = (
         result.style
             .set_properties(**{'min-width': '100px'})
@@ -79,18 +78,26 @@ def _display_backfill_step(
         return
     result = result.reset_index(drop=True, inplace=False)  # copy to prevent interference
     if i == result.shape[0] - 1:
-        result.attrs['note'] = f"fill row {i}: u[{i}]=1, v[{i}]=0"
+        result.attrs['note'] = f"fill bottom of table: vu[{result.shape[0]-2}] = 1, vu[{result.shape[0]-1}] = 0"
     else:
-        result.attrs['note'] = f"back fill row {i}: u[{i}]=v[{i+1}], v[{i}] = u[{i+1}] - q[{i+1}] * v[{i+1}]"
+        result.attrs['note'] = f"back fill row {i}: vu[{i}] = vu[{i+2}] - q[{i+1}] * vu[{i+1}]"
     def highlight_rowcol(x):
         res = ['' for _ in x]
+        if (i >= result.shape[0] - 1) and (x.name == i - 1):
+            for col_i, col_name in enumerate(x.index):
+                if col_name == 'vu':
+                    res[col_i] = 'background-color: yellow; font-weight: bold'
         if (x.name == i):
             for col_i, col_name in enumerate(x.index):
-                if col_name in ['u', 'v']:
+                if col_name == 'vu':
                     res[col_i] = 'background-color: yellow; font-weight: bold'
         if (x.name == i+1):
             for col_i, col_name in enumerate(x.index):
-                if col_name in ['q', 'u', 'v']:
+                if col_name in ['q', 'vu']:
+                    res[col_i] = 'background-color: lightgreen'
+        if (x.name == i+2):
+            for col_i, col_name in enumerate(x.index):
+                if col_name == 'vu':
                     res[col_i] = 'background-color: lightgreen'
         return res
     styled_table = (
@@ -127,8 +134,7 @@ def build_gcd_table(a: int, b: int,
     start = pd.DataFrame({"r": [a, b]})
     if record_q:
         start["q"] = None
-        start["u"] = None
-        start["v"] = None
+        start["vu"] = None
     result = [start]
     _display_initial_forward_table(
         start, do_display=verbose, row_count_hint=row_count_hint, captured_tables=captured_tables)
@@ -138,8 +144,7 @@ def build_gcd_table(a: int, b: int,
         row = pd.DataFrame({"r": [r]})
         if record_q:
             row["q"] = q
-            row["u"] = None
-            row["v"] = None
+            row["vu"] = None
         result.append(row)
         _display_intermediate_forward_table(
             result, do_display=verbose, row_count_hint=row_count_hint, captured_tables=captured_tables)
@@ -156,29 +161,26 @@ def back_fill_gcd_table(result: pd.DataFrame, *, verbose: bool = False) -> None:
     Back fill u, v into extended GCD table.
     See: build_gcd_table(), build_gcd_table_filled().
     """
-    result["u"] = None
-    result.loc[result.shape[0] - 1, "u"] = 1
-    result["v"] = None
-    result.loc[result.shape[0] - 1, "v"] = 0
+    result["vu"] = None
+    result.loc[result.shape[0] - 2, "vu"] = 1
+    result.loc[result.shape[0] - 1, "vu"] = 0
     try:
         captured_tables = result.attrs['captured_tables']
     except KeyError:
         captured_tables = None
     _display_backfill_step(
         result, i=result.shape[0] - 1, do_display=verbose, captured_tables=captured_tables)
-    for i in reversed(range(1, result.shape[0] - 1)):
-        result.loc[i, "u"] = result.loc[i + 1, "v"]
-        result.loc[i, "v"] = (result.loc[i + 1, "u"] 
-                              - result.loc[i + 1, "q"] * result.loc[i + 1, "v"])
+    for i in reversed(range(1, result.shape[0] - 2)):
+        result.loc[i, "vu"] = (result.loc[i + 2, "vu"] - result.loc[i + 1, "q"] * result.loc[i + 1, "vu"])
         _display_backfill_step(result, i=i, do_display=verbose, captured_tables=captured_tables)
     # save extended solution
-    result.attrs['u'] = result.loc[1, 'u']
-    result.attrs['v'] = result.loc[1, 'v']
+    result.attrs['v'] = result.loc[1, 'vu']
+    result.attrs['u'] = result.loc[2, 'vu']
     # check Bezout's identity
     gcd = result.loc[result.shape[0] - 2, 'r']
     lin_relns = [
-        result.loc[i + 1, 'u'] * result.loc[i, 'r'] + result.loc[i + 1, 'v'] * result.loc[i + 1, 'r'] 
-        for i in range(result.shape[0] - 1)]
+        result.loc[i + 2, 'vu'] * result.loc[i, 'r'] + result.loc[i + 1, 'vu'] * result.loc[i + 1, 'r']
+        for i in range(result.shape[0] - 2)]
     assert np.all(lin_relns == gcd)
 
 
