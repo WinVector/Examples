@@ -29,7 +29,12 @@ def _display_intermediate_forward_table(
         result.attrs['note'] = f"build row {row_id}: start (a >= b)"
     else:
         result.attrs['note'] = f"build row {row_id}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}]"
-    styled_table = result.style.apply(highlight_rowval, axis=1).format(na_rep='')
+    styled_table = (
+        result.style
+            .set_properties(**{'min-width': '100px'})
+            .apply(highlight_rowval, axis=1)
+            .format(na_rep='')
+    )
     if captured_tables is not None:
         captured_tables.append(styled_table)
     display(styled_table.data.attrs['note'])
@@ -57,7 +62,12 @@ def _display_final_forward_table(
                     res[i] = 'background-color: lightgreen'
         return res
     result.attrs['note'] = f"finish with row {result.shape[0] - 1}: a[{row_id}]=b[{row_id-1}], b[{row_id}]=(a%b)[{row_id-1}], GCD= a[{row_id}]"
-    styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
+    styled_table = (
+        result.style
+            .set_properties(**{'min-width': '100px'})
+            .apply(highlight_rowcol, axis=1)
+            .format(na_rep='')
+    )
     if captured_tables is not None:
         captured_tables.append(styled_table)
     display(styled_table.data.attrs['note'])
@@ -90,7 +100,12 @@ def _display_backfill_step(
                 if col_name in ['u', 'v']:
                     res[col_i] = 'background-color: lightgreen'
         return res
-    styled_table = result.style.apply(highlight_rowcol, axis=1).format(na_rep='')
+    styled_table = (
+        result.style
+            .set_properties(**{'min-width': '100px'})
+            .apply(highlight_rowcol, axis=1)
+            .format(na_rep='')
+    )
     if captured_tables is not None:
         captured_tables.append(styled_table)
     display(styled_table.data.attrs['note'])
