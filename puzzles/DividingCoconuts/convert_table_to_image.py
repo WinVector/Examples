@@ -1,7 +1,7 @@
 
 import tempfile
 import os
-from typing import Optional
+from typing import Optional, Tuple
 import numpy as np
 import pandas as pd
 import dataframe_image as dfi
@@ -16,8 +16,11 @@ def convert_styled_table_to_image(
         *, 
         add_note: bool = True,
         max_width: int = 800, max_height: int = 800,
-        ) -> str:
-    """Convert st to an image on disk and return file_path (temp file if None)."""
+        ) -> Tuple[str, int, int]:
+    """
+    Convert st to an image on disk and return file_path (temp file if None).
+    Return file path, width, height.
+    """
     if file_path is None:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as f:
             file_path = f.name
@@ -45,7 +48,7 @@ def convert_styled_table_to_image(
             (int(image.width * scale), int(image.height * scale)),
             PIL.Image.Resampling.LANCZOS)
     image.save(file_path)
-    return file_path
+    return file_path, image.width, image.height
 
 
 def display_styled_table(
@@ -54,8 +57,9 @@ def display_styled_table(
         add_note: bool = True,
         max_width: int = 800, max_height: int = 800,
         ) -> None:
-    file_path = convert_styled_table_to_image(
+    file_path, width, height = convert_styled_table_to_image(
         st, add_note=add_note, max_width=max_width, max_height=max_height)
-    image = IPython.display.Image(filename=file_path)
+    # https://ipython.readthedocs.io/en/8.26.0/api/generated/IPython.display.html
+    image = IPython.display.Image(filename=file_path, width=width, height=height)
     IPython.display.display(image)
     os.remove(file_path)
