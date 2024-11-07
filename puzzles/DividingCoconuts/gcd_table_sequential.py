@@ -1,7 +1,6 @@
 from typing import Any, List, Optional
 import numpy as np
 import pandas as pd
-from IPython.display import display
 
 
 def _display_initial_forward_table(
@@ -30,8 +29,6 @@ def _display_initial_forward_table(
     )
     if captured_tables is not None:
         captured_tables.append(styled_table)
-    display(styled_table.data.attrs['note'])
-    display(styled_table)
 
 
 def _display_intermediate_forward_table(
@@ -64,8 +61,6 @@ def _display_intermediate_forward_table(
     )
     if captured_tables is not None:
         captured_tables.append(styled_table)
-    display(styled_table.data.attrs['note'])
-    display(styled_table)
 
 
 def _display_backfill_step(
@@ -108,8 +103,6 @@ def _display_backfill_step(
     )
     if captured_tables is not None:
         captured_tables.append(styled_table)
-    display(styled_table.data.attrs['note'])
-    display(styled_table)
 
 
 def build_gcd_table(a: int, b: int, 
