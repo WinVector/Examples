@@ -1,0 +1,37 @@
+---
+title: "GCD by Herminte Normal Form"
+output: github_document
+date: "2024-11-17"
+---
+
+```{r}
+# extended GCD by Hermite normal form
+library(numbers)
+
+a = matrix(c(
+  723217 - 480608, 508811 - 480608),
+  nrow = 1, ncol = 2, byrow = TRUE)
+
+a
+```
+
+```{r}
+hnf <- hermiteNF(a)
+
+hnf
+```
+
+```{r}
+stopifnot(all(a %*% hnf$U == hnf$H))
+
+hnf$H  # GCD
+```
+
+```{r}
+hnf$U[ , 1]  # multipliers
+```
+
+```{r}
+hnf$U[1 , 1] * a[1, 1] + hnf$U[2 , 1] * a[1, 2]
+```
+
