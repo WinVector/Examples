@@ -2,6 +2,9 @@ GCD by Herminte Normal Form
 ================
 2024-11-17
 
+Extended GCD as Herminte normal form version of [the remainder
+problem](https://github.com/WinVector/Examples/blob/main/puzzles/DividingCoconuts/RemainderProblem.ipynb).
+
 ``` r
 # extended GCD by Hermite normal form
 library(numbers)
