@@ -1,0 +1,10 @@
+
+\begin{align*}
+subject^{treatment}_{i,j} &\sim N(\mu^{treatment}, \sigma_{i}^{2}) &\# \; \text{trying to infer} \; \mu^{treatment} \\
+subject^{control}_{i,j} &\sim N(\mu^{control}, \sigma_{i}^{2}) &\# \; \text{trying to infer} \; \mu^{control} \\
+mean_j(subject^{treatment}_{i,j}) - observed\_mean^{treatment}_{i} &\sim N(0, 0.01) &\# \; \text{force inferred to be near observed} \\
+mean_j(subject^{control}_{i,j}) - observed\_mean^{control}_{i} &\sim N(0, 0.01) &\# \; \text{force inferred near to be observed} \\
+var_j(subject^{treatment}_{i,j}) - observed\_var^{treatment}_{i} &\sim N(0, 0.01) &\# \; \text{force inferred to be near observed} \\
+var_j(subject^{control}_{i,j}) - observed\_var^{control}_{i} &\sim N(0, 0.01) &\# \; \text{force inferred near to be observed}
+\end{align*}
+

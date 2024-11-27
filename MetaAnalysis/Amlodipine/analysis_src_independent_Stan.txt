@@ -1,0 +1,255 @@
+
+
+// model_style: independent means
+data {
+  int<lower=1> n_studies;  // number of studies
+  array[n_studies] int<lower=1> nE;  // number treated examples
+  vector[n_studies] meanE;  // mean observed treatment effect
+  vector<lower=0>[n_studies] varE;  // observed treatment effect variance
+  array[n_studies] int<lower=1> nC;  // number control examples
+  vector[n_studies] meanC;  // mean observed control effect
+  vector<lower=0>[n_studies] varC;  // observed control effect variance
+}
+parameters {
+  vector[n_studies] inferred_group_treatment_mean;  // unobserved per-group ideal treatment effect
+  vector[n_studies] inferred_group_control_mean;  // unobserved per-group ideal treatment effect
+  vector<lower=0>[n_studies] inferred_in_group_stddev;  // unobserved per-group treatment variance
+
+  vector[nE[1]] treatment_subject_1;  // unobserved per-group and subject treatment effects
+  vector[nC[1]] control_subject_1;  // unobserved per-group and subject control effects
+
+
+  vector[nE[2]] treatment_subject_2;  // unobserved per-group and subject treatment effects
+  vector[nC[2]] control_subject_2;  // unobserved per-group and subject control effects
+
+
+  vector[nE[3]] treatment_subject_3;  // unobserved per-group and subject treatment effects
+  vector[nC[3]] control_subject_3;  // unobserved per-group and subject control effects
+
+
+  vector[nE[4]] treatment_subject_4;  // unobserved per-group and subject treatment effects
+  vector[nC[4]] control_subject_4;  // unobserved per-group and subject control effects
+
+
+  vector[nE[5]] treatment_subject_5;  // unobserved per-group and subject treatment effects
+  vector[nC[5]] control_subject_5;  // unobserved per-group and subject control effects
+
+
+  vector[nE[6]] treatment_subject_6;  // unobserved per-group and subject treatment effects
+  vector[nC[6]] control_subject_6;  // unobserved per-group and subject control effects
+
+
+  vector[nE[7]] treatment_subject_7;  // unobserved per-group and subject treatment effects
+  vector[nC[7]] control_subject_7;  // unobserved per-group and subject control effects
+
+
+  vector[nE[8]] treatment_subject_8;  // unobserved per-group and subject treatment effects
+  vector[nC[8]] control_subject_8;  // unobserved per-group and subject control effects
+
+}
+transformed parameters {
+  vector[n_studies] sampled_meanE;
+  vector<lower=0>[n_studies] sampled_varE;
+  vector[n_studies] sampled_meanC;
+  vector<lower=0>[n_studies] sampled_varC;
+
+  sampled_meanE[1] = mean(treatment_subject_1);
+  sampled_varE[1] = variance(treatment_subject_1);
+  sampled_meanC[1] = mean(control_subject_1);
+  sampled_varC[1] = variance(control_subject_1);
+
+
+  sampled_meanE[2] = mean(treatment_subject_2);
+  sampled_varE[2] = variance(treatment_subject_2);
+  sampled_meanC[2] = mean(control_subject_2);
+  sampled_varC[2] = variance(control_subject_2);
+
+
+  sampled_meanE[3] = mean(treatment_subject_3);
+  sampled_varE[3] = variance(treatment_subject_3);
+  sampled_meanC[3] = mean(control_subject_3);
+  sampled_varC[3] = variance(control_subject_3);
+
+
+  sampled_meanE[4] = mean(treatment_subject_4);
+  sampled_varE[4] = variance(treatment_subject_4);
+  sampled_meanC[4] = mean(control_subject_4);
+  sampled_varC[4] = variance(control_subject_4);
+
+
+  sampled_meanE[5] = mean(treatment_subject_5);
+  sampled_varE[5] = variance(treatment_subject_5);
+  sampled_meanC[5] = mean(control_subject_5);
+  sampled_varC[5] = variance(control_subject_5);
+
+
+  sampled_meanE[6] = mean(treatment_subject_6);
+  sampled_varE[6] = variance(treatment_subject_6);
+  sampled_meanC[6] = mean(control_subject_6);
+  sampled_varC[6] = variance(control_subject_6);
+
+
+  sampled_meanE[7] = mean(treatment_subject_7);
+  sampled_varE[7] = variance(treatment_subject_7);
+  sampled_meanC[7] = mean(control_subject_7);
+  sampled_varC[7] = variance(control_subject_7);
+
+
+  sampled_meanE[8] = mean(treatment_subject_8);
+  sampled_varE[8] = variance(treatment_subject_8);
+  sampled_meanC[8] = mean(control_subject_8);
+  sampled_varC[8] = variance(control_subject_8);
+
+}
+model {
+  // priors
+  inferred_group_treatment_mean ~ normal(0, 1);
+  inferred_group_control_mean ~ normal(0, 1);
+  inferred_in_group_stddev ~ lognormal(0, 1);
+  // more peaked/informative stuff
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_1 ~ normal(inferred_group_treatment_mean[1], inferred_in_group_stddev[1]);
+  // match observed summaries
+  sampled_meanE[1] ~ normal(meanE[1], 0.01);
+  sampled_varE[1] ~ normal(varE[1], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_1 ~ normal(inferred_group_control_mean[1], inferred_in_group_stddev[1]);
+  // match observed summaries
+  sampled_meanC[1] ~ normal(meanC[1], 0.01);
+  sampled_varC[1] ~ normal(varC[1], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_2 ~ normal(inferred_group_treatment_mean[2], inferred_in_group_stddev[2]);
+  // match observed summaries
+  sampled_meanE[2] ~ normal(meanE[2], 0.01);
+  sampled_varE[2] ~ normal(varE[2], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_2 ~ normal(inferred_group_control_mean[2], inferred_in_group_stddev[2]);
+  // match observed summaries
+  sampled_meanC[2] ~ normal(meanC[2], 0.01);
+  sampled_varC[2] ~ normal(varC[2], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_3 ~ normal(inferred_group_treatment_mean[3], inferred_in_group_stddev[3]);
+  // match observed summaries
+  sampled_meanE[3] ~ normal(meanE[3], 0.01);
+  sampled_varE[3] ~ normal(varE[3], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_3 ~ normal(inferred_group_control_mean[3], inferred_in_group_stddev[3]);
+  // match observed summaries
+  sampled_meanC[3] ~ normal(meanC[3], 0.01);
+  sampled_varC[3] ~ normal(varC[3], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_4 ~ normal(inferred_group_treatment_mean[4], inferred_in_group_stddev[4]);
+  // match observed summaries
+  sampled_meanE[4] ~ normal(meanE[4], 0.01);
+  sampled_varE[4] ~ normal(varE[4], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_4 ~ normal(inferred_group_control_mean[4], inferred_in_group_stddev[4]);
+  // match observed summaries
+  sampled_meanC[4] ~ normal(meanC[4], 0.01);
+  sampled_varC[4] ~ normal(varC[4], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_5 ~ normal(inferred_group_treatment_mean[5], inferred_in_group_stddev[5]);
+  // match observed summaries
+  sampled_meanE[5] ~ normal(meanE[5], 0.01);
+  sampled_varE[5] ~ normal(varE[5], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_5 ~ normal(inferred_group_control_mean[5], inferred_in_group_stddev[5]);
+  // match observed summaries
+  sampled_meanC[5] ~ normal(meanC[5], 0.01);
+  sampled_varC[5] ~ normal(varC[5], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_6 ~ normal(inferred_group_treatment_mean[6], inferred_in_group_stddev[6]);
+  // match observed summaries
+  sampled_meanE[6] ~ normal(meanE[6], 0.01);
+  sampled_varE[6] ~ normal(varE[6], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_6 ~ normal(inferred_group_control_mean[6], inferred_in_group_stddev[6]);
+  // match observed summaries
+  sampled_meanC[6] ~ normal(meanC[6], 0.01);
+  sampled_varC[6] ~ normal(varC[6], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_7 ~ normal(inferred_group_treatment_mean[7], inferred_in_group_stddev[7]);
+  // match observed summaries
+  sampled_meanE[7] ~ normal(meanE[7], 0.01);
+  sampled_varE[7] ~ normal(varE[7], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_7 ~ normal(inferred_group_control_mean[7], inferred_in_group_stddev[7]);
+  // match observed summaries
+  sampled_meanC[7] ~ normal(meanC[7], 0.01);
+  sampled_varC[7] ~ normal(varC[7], 0.01);
+
+
+  // each group generates an unobserved treatment response
+  // treatment subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  treatment_subject_8 ~ normal(inferred_group_treatment_mean[8], inferred_in_group_stddev[8]);
+  // match observed summaries
+  sampled_meanE[8] ~ normal(meanE[8], 0.01);
+  sampled_varE[8] ~ normal(varE[8], 0.01);
+  // each group generates an unobserved control response
+  // control subjects experience effects a function of unobserved group response
+  // in the normal distribution case could avoid forming individual observations as we know
+  // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
+  control_subject_8 ~ normal(inferred_group_control_mean[8], inferred_in_group_stddev[8]);
+  // match observed summaries
+  sampled_meanC[8] ~ normal(meanC[8], 0.01);
+  sampled_varC[8] ~ normal(varC[8], 0.01);
+
+}
+
