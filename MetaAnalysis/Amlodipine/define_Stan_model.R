@@ -136,7 +136,7 @@ idx_blocks("
         c("{/between_group_stddev_lines/}", ""),
         c("{/group_mean_def_lines/}", ""),
         c("{/grouped_subject_mean_lines/}", ""),
-        c("{/pooled_subject_mean_lines/}", "#")))
+        c("{/pooled_subject_mean_lines/}", "//#")))
     src_Latex <- "
 \\begin{align*}
 \\mu^{treatment}_{i} &\\sim N(\\mu^{treatment}, \\sigma^2) &\\# \\; \\text{trying to infer} \\; \\mu^{treatment} \\\\
@@ -153,12 +153,12 @@ var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) 
     src_Stan <- substitute_symbols(
       src_Stan,
       list(
-        c("{/group_means_lines/}", "#"),
-        c("{/grand_mean_decl_lines/}", "#"),
+        c("{/group_means_lines/}", "//#"),
+        c("{/grand_mean_decl_lines/}", "//#"),
         c("{/group_mean_def_lines/}", ""),
-        c("{/between_group_stddev_lines/}", "#"),
+        c("{/between_group_stddev_lines/}", "//#"),
         c("{/grouped_subject_mean_lines/}", ""),
-        c("{/pooled_subject_mean_lines/}", "#")))
+        c("{/pooled_subject_mean_lines/}", "//#")))
     src_Latex <- "
 \\begin{align*}
 subject^{treatment}_{i,j} &\\sim N(\\mu^{treatment}_{i}, \\sigma_{i}^{2}) &\\# \\; \\text{trying to infer} \\; \\mu^{treatment}_{i} \\\\
@@ -173,11 +173,11 @@ var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) 
     src_Stan <- substitute_symbols(
       src_Stan,
       list(
-        c("{/group_means_lines/}", "#"),
+        c("{/group_means_lines/}", "//#"),
         c("{/grand_mean_decl_lines/}", ""),
-        c("{/group_mean_def_lines/}", "#"),
-        c("{/between_group_stddev_lines/}", "#"),
-        c("{/grouped_subject_mean_lines/}", "#"),
+        c("{/group_mean_def_lines/}", "//#"),
+        c("{/between_group_stddev_lines/}", "//#"),
+        c("{/grouped_subject_mean_lines/}", "//#"),
         c("{/pooled_subject_mean_lines/}", "")))
     src_Latex <- "
 \\begin{align*}
