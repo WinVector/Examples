@@ -14,7 +14,7 @@ run_cached <- function(f, arg_list, prefix='') {
   if(file.exists(path)) {
     return(readRDS(path))
   }
-  result = do.call(f, arg_list)
+  result = do.call(f, args = arg_list)
   saveRDS(result, path)
   return(result)
 }
