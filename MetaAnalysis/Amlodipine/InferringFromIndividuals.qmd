@@ -12,6 +12,8 @@ Joseph Rickert and I put together an experiment trying to both run a standard me
 
 In this note we examine how inference would work *if studies shared the data* instead of sharing summary statistics.
 
+When mean and variance are [sufficient statistics](https://en.wikipedia.org/wiki/Sufficient_statistic) the theory tells us: the inference from summaries should be best possible. That is the inferrence made off summaries should be the same as made off of individuals. Let's confirm this for our example by performing aan analysis from summaries and simulating an analysis from individuals.
+
 ## Example
 
 Let's begin: load the required required packages and read in the data.
@@ -43,7 +45,7 @@ The data set contains eight rows each representing the measured effects of treat
   * `meanC` mean control effect observed.
   * `varC` variance of control effect observed.
 
-### Bayesian analysis
+## Bayesian analysis from sufficient summary statistics
 
 Let's re-run the Bayesian analysis, this time capturing plausible example data.
 
@@ -158,7 +160,7 @@ unpack[
   vectors = vectors] := run_cached(
   whole_job_fn,
   list(),
-  prefix="Amlodipine_joint_individuals"
+  prefix="Amlodipine_joint_summaries"
 )
 ```
 
@@ -192,7 +194,9 @@ We also plot the estimated net difference in treatment and control effects.
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
+
 # plot the grand group inferences 
+sd_t <- sd(plt_frame[['delta']])
 ggplot(
   data = plt_frame,
   mapping = aes(x=delta),
@@ -202,18 +206,104 @@ ggplot(
     xintercept = inference['delta'][[1]], 
     linetype=2,
     alpha=0.8) +
-  ggtitle("estimated distribution of treatment minus control effect")
+  ggtitle("estimated distribution of treatment minus control effect",
+          subtitle = paste0("( sd=", sprintf('%5.3f', sd_t), ")"))
 ```
 
+## Bayesian analysis from simulated indidual level data.
+
 Let's extract some sampled individuals to simulate how the analysis would work if the individual outcomes had been shared. We don't expect we have de-censored or guessed the actual individual data. However we know by our sampling specification these example are considired similar to the actual data conditioned on the shared summary statistics. So if we *pretend* these were the data we can estimate uncertainty that would have been present when estimated parameters from this data and then compare that to the uncertainty we just plotted when trying to estimate parameters from statistical summaries.
+
+The modified Stan source code to infer from individual level data is [here](analysis_src_individuals_Stan.txt).
 
 
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 
-vectors
+stan_src_i <- readLines('analysis_src_individuals_Stan.txt')
+stan_src_i <- paste0(stan_src_i, collapse = "\n")
+stan_data_i = list(
+  n_studies = n_studies,
+  nE = array(angina$nE, dim = n_studies),
+  nC = array(angina$nC, dim = n_studies))
+for(nm in names(vectors)) {
+  vi <- as.numeric(vectors[[nm]])
+  stan_data_i[[nm]] <- array(vi, dim = length(vi))
+}
+fit_joint_i <- run_cached(
+  stan,
+  list(
+    model_code = stan_src_i,    # Stan program
+    data = stan_data_i,         # named list of data
+    chains = 4,                 # number of Markov chains
+    warmup = 2000,              # number of warmup iterations per chain
+    iter = 4000,                # total number of iterations per chain
+    cores = 4,                  # number of cores (could use one per chain)
+    refresh = 0,                # no progress shown
+    pars = c("lp__",  # parameters to bring back
+           "inferred_grand_treatment_mean", "inferred_grand_control_mean", 
+           "inferred_between_group_stddev",
+           "inferred_group_treatment_mean", "inferred_group_control_mean",
+           "inferred_in_group_stddev")
+    ),
+    prefix="Amlodipine_joint_individuals"
+  )
+fit_joint_i <- fit_joint_i |>
+  as.data.frame() 
+fit_joint_i['delta'] <- (
+  fit_joint_i['inferred_grand_treatment_mean'] 
+  - fit_joint_i['inferred_grand_control_mean'])
+inference_i <- fit_joint_i |>
+  (`[`)(c(
+    "inferred_grand_treatment_mean", 
+    "inferred_grand_control_mean", 
+    "inferred_between_group_stddev",
+    "delta")) |>
+  colMeans() |>
+  as.list() |>
+  data.frame()
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+
+knitr::kable(inference_i)
+```
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# plot the grand group inferences 
+dual_density_plot(
+  fit_joint_i, 
+  c1 = 'inferred_grand_treatment_mean', 
+  c2 = 'inferred_grand_control_mean',
+  title = 'effect estimates, hierarchical model with known individual observations')
 ```
 
 
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
 
+# plot the grand group inferences 
+sd_t_i <- sd(fit_joint_i[['delta']])
+ggplot(
+  data = fit_joint_i,
+  mapping = aes(x=delta),
+  ) +
+  geom_density(fill='green', alpha=0.5) +
+  geom_vline(
+    xintercept = inference_i['delta'][[1]], 
+    linetype=2,
+    alpha=0.8) +
+  ggtitle("estimated distribution of treatment minus control effect (individual data)",
+          subtitle = paste0("( sd=", sprintf('%5.3f', sd_t_i), ")"))
+```
+
+## Conclusion
+
+And we confirm: there was no real loss of power in running the inference from summaries instead of from individual data.
