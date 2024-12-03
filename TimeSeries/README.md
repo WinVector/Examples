@@ -53,5 +53,5 @@ A variation of this will be presented here.
 PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 
 12-05, 17:00–17:30 (UTC), General Track
 
-<img src="(prob_env) johnmount@JAMiMac TimeSeries % mv ~/Desktop/">
+<img src="PyData2024.png">
 </p>
