@@ -1,6 +1,7 @@
-# Examining Meta-Analysis
+Examining Meta-Analysis
+================
 John Mount, Joseph Rickert
-2024-11-25
+11/25/24
 
 In this post (shared [here](https://rworks.dev/posts/meta-analysis/) and
 [here](https://github.com/WinVector/Examples/blob/main/MetaAnalysis/Amlodipine/ExaminingMetaAnalysis.md))
@@ -36,7 +37,7 @@ your own work.
 
 Let’s begin: load the required required packages and read in the data.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -88,7 +89,7 @@ pooling also lacks standard diagnostic procedures and indications.
 
 That being said let’s form the naive pooled estimate.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -111,7 +112,7 @@ noisy estimate of *δ*.
 
 Such a study is summarized as follows.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -163,10 +164,10 @@ Also, a number of diagnostics seem “okay.” From the forest plot it is
 easy to see that the Amlodipine treatment is not statistically
 significant for four of the protocols, but the overall effect of the
 difference between the treatment and the control is statistically
-significant. The plot also shows the test for heterogenity which
-indicates that there is no evidence against homogenity.
+significant. The plot also shows the test for heterogeneity which
+indicates that there is no evidence against homogeneity.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -198,18 +199,18 @@ The underlying assumption for the random-effects model is that each
 study has its own true underlying treatment effect, *δ*<sub>*i*</sub>,
 with variance *σ*<sub>*i*</sub><sup>2</sup> that is estimated by
 $\hat{\delta_i}$ Furthermore, all of the *δ*<sub>*i*</sub> follow a
-*N*(*δ*, *τ*<sup>2</sup>) distribution. Hence,
+*N*(*δ*,*τ*<sup>2</sup>) distribution. Hence,
 
 $$
 \begin{align\*}
-\hat{\delta_i} &\sim N(\delta,\sigma_i^2) \\
+\hat{\delta_i} &\sim N(\delta,\sigma_i^2) \\\\
 \delta_i &\sim N(\delta,\tau^2)
 \end{align\*}
 $$
 
 ### Fit the Random-Effects Model
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -255,7 +256,7 @@ summary(random.angina)
     - Q-Profile method for confidence interval of tau^2 and tau
     - Calculation of I^2 based on Q
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -322,7 +323,7 @@ To get this to work we use two Stan tricks or patterns:
 
 First, load the required packages.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -337,7 +338,7 @@ source("define_Stan_model.R")
 
 And then, prepare the study names for display.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -369,7 +370,7 @@ The modeling principles are as follows:
 
 Here we define the Stan model in both Latex and Stan source code here.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -407,7 +408,7 @@ It is mechanical to translate the above relations into a Stan source
 model to make the desired inferences. The Stan code is
 [here](analysis_src_joint_Stan.txt).
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -426,11 +427,11 @@ stan_data = list(
 
 This code runs the procedure. The function `run_cache()` runs the
 standard `stan()` function, saving the result to a file cache for quick
-and deterministic re-rendings of the notebook. The caching is not
+and deterministic re-renderings of the notebook. The caching is not
 required, but the runs took about five minutes on an old Intel based
 Mac.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -461,7 +462,7 @@ fit_joint <- run_cached(
 
 And then, we extract the results.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -480,9 +481,9 @@ inference |>
 
 </details>
 
-| inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev | delta |
+| inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev |     delta |
 |---------------------:|--------------------:|---------------------:|-------:|
-| 0.2002296 | 0.0387961 | 0.0650054 | 0.1614335 |
+|                     0.2002296 |                   0.0387961 |                     0.0650054 | 0.1614335 |
 
 And our new estimate is: 0.1614335 which is very similar to the previous
 results. We can graph the inferred posterior distribution of effect size
@@ -495,7 +496,7 @@ variance studies have a diminished influence on the overall estimated
 effect sizes. Running all of the simulated data together without
 maintaining the trial structure would produce an inflated `0.2` again.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -520,7 +521,7 @@ study, with and without pooling analysis.
 
 To do this we define an additional “the studies are unrelated model”.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -543,7 +544,7 @@ The new Stan source code is [here](analysis_src_independent_Stan.txt).
 
 We then fit the model, or use previously cached results.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -582,7 +583,7 @@ pulled in, the third pushed out, and behavior varies by group from then
 on. Notice in Protocol 162, the inferred means are reversed. These
 graphs are the Bayesian analogues of the forest plots above.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -622,7 +623,7 @@ If desired, we can also try a shared mean, per-group variances approach.
 Which approach is the more appropriate analysis is a matter of which one
 most closely matches domain specific modeling assumptions.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -662,7 +663,7 @@ The Stan source code is [here](analysis_src_shared_mean_Stan.txt).
 
 The shared mean inference is as follows.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -685,7 +686,7 @@ knitr::kable(inference_shared_mean)
 
 We can plot the distribution of estimates as follows.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r

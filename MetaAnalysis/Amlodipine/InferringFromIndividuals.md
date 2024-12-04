@@ -1,6 +1,7 @@
-# Infering From Individuals
+Inferring From Individuals
+================
 John Mount
-2024-11-29
+11/29/24
 
 Joseph Rickert and I put together an experiment trying to both run a
 standard meta-analysis and then reproduce similar results directly using
@@ -15,15 +16,15 @@ data* instead of sharing summary statistics.
 When mean and variance are [sufficient
 statistics](https://en.wikipedia.org/wiki/Sufficient_statistic) the
 theory tells us: the inference from summaries should be best possible.
-That is the inferrence made off summaries should be the same as made off
-of individuals. Let’s confirm this for our example by performing aan
+That is the inference made off summaries should be the same as made off
+of individuals. Let’s confirm this for our example by performing an
 analysis from summaries and simulating an analysis from individuals.
 
 ## Example
 
 Let’s begin: load the required required packages and read in the data.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -68,7 +69,7 @@ are:
 Let’s re-run the Bayesian analysis, this time capturing plausible
 example data.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -105,7 +106,7 @@ stan_data = list(
 ```
 
 </details>
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -182,7 +183,7 @@ unpack[
 ```
 
 </details>
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -193,14 +194,14 @@ inference |>
 
 </details>
 
-| inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev | delta |
+| inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev |     delta |
 |---------------------:|--------------------:|---------------------:|-------:|
-| 0.1995232 | 0.0392875 | 0.064698 | 0.1602357 |
+|                     0.1995232 |                   0.0392875 |                      0.064698 | 0.1602357 |
 
 We can plot the estimated distribution effects in the treatment and
 control groups.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -219,7 +220,7 @@ dual_density_plot(
 We also plot the estimated net difference in treatment and control
 effects.
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -242,12 +243,12 @@ ggplot(
 
 ![](InferringFromIndividuals.markdown_github_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
-## Bayesian analysis from simulated indidual level data.
+## Bayesian analysis from simulated individual level data.
 
 Let’s extract some sampled individuals to simulate how the analysis
 would work if the individual outcomes had been shared. We don’t expect
 we have de-censored or guessed the actual individual data. However we
-know by our sampling specification these example are considired similar
+know by our sampling specification these example are considered similar
 to the actual data conditioned on the shared summary statistics. So if
 we *pretend* these were the data we can estimate uncertainty that would
 have been present when estimated parameters from this data and then
@@ -257,7 +258,7 @@ parameters from statistical summaries.
 The modified Stan source code to infer from individual level data is
 [here](analysis_src_individuals_Stan.txt).
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -289,6 +290,20 @@ fit_joint_i <- run_cached(
     ),
     prefix="Amlodipine_joint_individuals"
   )
+```
+
+</details>
+
+    Warning: There were 1 divergent transitions after warmup. See
+    https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    to find out why this is a problem and how to eliminate them.
+
+    Warning: Examine the pairs() plot to diagnose sampling problems
+
+<details>
+<summary>Show the code</summary>
+
+``` r
 fit_joint_i <- fit_joint_i |>
   as.data.frame() 
 fit_joint_i['delta'] <- (
@@ -306,7 +321,7 @@ inference_i <- fit_joint_i |>
 ```
 
 </details>
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -315,11 +330,11 @@ knitr::kable(inference_i)
 
 </details>
 
-| inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev | delta |
+| inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev |     delta |
 |---------------------:|--------------------:|---------------------:|-------:|
-| 0.1981485 | 0.0408787 | 0.0679398 | 0.1572698 |
+|                     0.1983732 |                     0.04065 |                     0.0671234 | 0.1577232 |
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r
@@ -335,7 +350,7 @@ dual_density_plot(
 
 ![](InferringFromIndividuals.markdown_github_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
-<details class="code-fold">
+<details>
 <summary>Show the code</summary>
 
 ``` r

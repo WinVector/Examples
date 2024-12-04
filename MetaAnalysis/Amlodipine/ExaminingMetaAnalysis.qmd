@@ -74,7 +74,7 @@ fixed.angina <- metacont(
 summary(fixed.angina)
 ```
 
-The primary result of the summary is: the overall estimate for $\delta$ is `0.1619`, much smaller than the naive pooling estimate of `0.2013`. Also, a number of diagnostics seem "okay." From the forest plot it is easy to see that the Amlodipine treatment is not statistically significant for four of the protocols, but the overall effect of the difference between the treatment and the control is statistically significant. The plot also shows the test for heterogenity which indicates that there is no evidence against homogenity.
+The primary result of the summary is: the overall estimate for $\delta$ is `0.1619`, much smaller than the naive pooling estimate of `0.2013`. Also, a number of diagnostics seem "okay." From the forest plot it is easy to see that the Amlodipine treatment is not statistically significant for four of the protocols, but the overall effect of the difference between the treatment and the control is statistically significant. The plot also shows the test for heterogeneity which indicates that there is no evidence against homogeneity.
 
 
 ```{r, fig.width=10}
@@ -222,7 +222,7 @@ stan_data = list(
 
 
 
-This code runs the procedure. The function `run_cache()` runs the standard `stan()` function, saving the result to a file cache for quick and deterministic re-rendings of the notebook. The caching is not required, but the runs took about five minutes on an old Intel based Mac.
+This code runs the procedure. The function `run_cache()` runs the standard `stan()` function, saving the result to a file cache for quick and deterministic re-renderings of the notebook. The caching is not required, but the runs took about five minutes on an old Intel based Mac.
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"

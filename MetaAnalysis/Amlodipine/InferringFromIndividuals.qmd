@@ -1,5 +1,5 @@
 ---
-title: "Infering From Individuals"
+title: "Inferring From Individuals"
 author: John Mount
 date: "2024-11-29"
 format: markdown_github
@@ -12,7 +12,7 @@ Joseph Rickert and I put together an experiment trying to both run a standard me
 
 In this note we examine how inference would work *if studies shared the data* instead of sharing summary statistics.
 
-When mean and variance are [sufficient statistics](https://en.wikipedia.org/wiki/Sufficient_statistic) the theory tells us: the inference from summaries should be best possible. That is the inferrence made off summaries should be the same as made off of individuals. Let's confirm this for our example by performing aan analysis from summaries and simulating an analysis from individuals.
+When mean and variance are [sufficient statistics](https://en.wikipedia.org/wiki/Sufficient_statistic) the theory tells us: the inference from summaries should be best possible. That is the inference made off summaries should be the same as made off of individuals. Let's confirm this for our example by performing an analysis from summaries and simulating an analysis from individuals.
 
 ## Example
 
@@ -210,9 +210,9 @@ ggplot(
           subtitle = paste0("( sd=", sprintf('%5.3f', sd_t), ")"))
 ```
 
-## Bayesian analysis from simulated indidual level data.
+## Bayesian analysis from simulated individual level data.
 
-Let's extract some sampled individuals to simulate how the analysis would work if the individual outcomes had been shared. We don't expect we have de-censored or guessed the actual individual data. However we know by our sampling specification these example are considired similar to the actual data conditioned on the shared summary statistics. So if we *pretend* these were the data we can estimate uncertainty that would have been present when estimated parameters from this data and then compare that to the uncertainty we just plotted when trying to estimate parameters from statistical summaries.
+Let's extract some sampled individuals to simulate how the analysis would work if the individual outcomes had been shared. We don't expect we have de-censored or guessed the actual individual data. However we know by our sampling specification these example are considered similar to the actual data conditioned on the shared summary statistics. So if we *pretend* these were the data we can estimate uncertainty that would have been present when estimated parameters from this data and then compare that to the uncertainty we just plotted when trying to estimate parameters from statistical summaries.
 
 The modified Stan source code to infer from individual level data is [here](analysis_src_individuals_Stan.txt).
 
