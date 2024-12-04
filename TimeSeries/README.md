@@ -10,6 +10,23 @@ Materials for some of my teaching on using time series methods to solve business
 Our organizing thesis is:  In business forecasting: ability to specify actionable structure beats technique in forecasting.
 
 
+
+We are presenting an overview of the methodology and results here.
+
+https://www.youtube.com/watch?v=jbJqlTWgN9A
+
+<p>
+PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 
+12-05, 17:00–17:30 (UTC), General Track
+
+<img src="PyData2024.png">
+
+[slides](TS.pdf)
+</p>
+
+
+
+
 Our group is available to give on-site or remote training on these tools and techniques.
 
 
@@ -43,6 +60,7 @@ This work was presented here.
 Find at https://odsc.com/california/odsc-west-schedule-2024/ , Tutorials | Workshops, 30 Oct Day 2. 3:30 PM Pacific time, 1 hour long.
 </a>
 
+[slides](TimeSeries.pdf)
 
 (Hyatt Regency San Francisco Airport, 1333 Old Bayshore Highway, Burlingame, CA 94010)
 </p>
@@ -54,4 +72,6 @@ PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/
 12-05, 17:00–17:30 (UTC), General Track
 
 <img src="PyData2024.png">
+
+[slides](TS.pdf)
 </p>
