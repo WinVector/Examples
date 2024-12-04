@@ -13,16 +13,10 @@ Our organizing thesis is:  In business forecasting: ability to specify actionabl
 
 We are presenting an overview of the methodology and results here.
 
-https://www.youtube.com/watch?v=jbJqlTWgN9A
+  * [video](https://www.youtube.com/watch?v=jbJqlTWgN9A)
+  * [slides](TS.pdf)
+  * PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 12-05, 17:00–17:30 (UTC), General Track <img src="PyData2024.png">
 
-<p>
-PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 
-12-05, 17:00–17:30 (UTC), General Track
-
-<img src="PyData2024.png">
-
-[slides](TS.pdf)
-</p>
 
 
 
@@ -54,24 +48,17 @@ Support materials:
 
 This work was presented here.
 
-<p>
-<a href="https://odsc.com/california/odsc-west-schedule-2024/">
+ * [slides](TimeSeries.pdf)
+ * <a href="https://odsc.com/california/odsc-west-schedule-2024/">
 <img style="display:block; margin-left:auto; margin-right:auto;" src="https://win-vector.com/wp-content/uploads/2024/10/odsc_2024.png" alt="Odsc 2024" title="odsc_2024.png" border="0" width="598" height="260" /><p/>
 Find at https://odsc.com/california/odsc-west-schedule-2024/ , Tutorials | Workshops, 30 Oct Day 2. 3:30 PM Pacific time, 1 hour long.
 </a>
 
-[slides](TimeSeries.pdf)
 
-(Hyatt Regency San Francisco Airport, 1333 Old Bayshore Highway, Burlingame, CA 94010)
-</p>
 
 A variation of this will be presented here.
 
-<p>
-PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 
-12-05, 17:00–17:30 (UTC), General Track
+  * [video](https://www.youtube.com/watch?v=jbJqlTWgN9A)
+  * [slides](TS.pdf)
+  * PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 12-05, 17:00–17:30 (UTC), General Track <img src="PyData2024.png">
 
-<img src="PyData2024.png">
-
-[slides](TS.pdf)
-</p>
