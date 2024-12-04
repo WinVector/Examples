@@ -1,7 +1,7 @@
 Inferring From Individuals
 ================
 John Mount
-11/29/24
+12/4/24
 
 Joseph Rickert and I put together an experiment trying to both run a
 standard meta-analysis and then reproduce similar results directly using
@@ -256,7 +256,9 @@ compare that to the uncertainty we just plotted when trying to estimate
 parameters from statistical summaries.
 
 The modified Stan source code to infer from individual level data is
-[here](analysis_src_individuals_Stan.txt).
+[here](analysis_src_individuals_Stan.txt). We can play with some things,
+such as specifying a Cauchy distribution for the individual
+measurements.
 
 <details>
 <summary>Show the code</summary>
@@ -290,20 +292,6 @@ fit_joint_i <- run_cached(
     ),
     prefix="Amlodipine_joint_individuals"
   )
-```
-
-</details>
-
-    Warning: There were 1 divergent transitions after warmup. See
-    https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    to find out why this is a problem and how to eliminate them.
-
-    Warning: Examine the pairs() plot to diagnose sampling problems
-
-<details>
-<summary>Show the code</summary>
-
-``` r
 fit_joint_i <- fit_joint_i |>
   as.data.frame() 
 fit_joint_i['delta'] <- (
@@ -332,7 +320,7 @@ knitr::kable(inference_i)
 
 | inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev |     delta |
 |---------------------:|--------------------:|---------------------:|-------:|
-|                     0.1983732 |                     0.04065 |                     0.0671234 | 0.1577232 |
+|                     0.2037177 |                   0.0351755 |                     0.0648825 | 0.1685422 |
 
 <details>
 <summary>Show the code</summary>

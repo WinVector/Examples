@@ -1,7 +1,7 @@
 ---
 title: "Inferring From Individuals"
 author: John Mount
-date: "2024-11-29"
+date: "2024-12-04"
 format: markdown_github
 code-fold: true
 code-summary: "Show the code"
@@ -214,7 +214,7 @@ ggplot(
 
 Let's extract some sampled individuals to simulate how the analysis would work if the individual outcomes had been shared. We don't expect we have de-censored or guessed the actual individual data. However we know by our sampling specification these example are considered similar to the actual data conditioned on the shared summary statistics. So if we *pretend* these were the data we can estimate uncertainty that would have been present when estimated parameters from this data and then compare that to the uncertainty we just plotted when trying to estimate parameters from statistical summaries.
 
-The modified Stan source code to infer from individual level data is [here](analysis_src_individuals_Stan.txt).
+The modified Stan source code to infer from individual level data is [here](analysis_src_individuals_Stan.txt). We can play with some things, such as specifying a Cauchy distribution for the individual measurements.
 
 
 ```{r}

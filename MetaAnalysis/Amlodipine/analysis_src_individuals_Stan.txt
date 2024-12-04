@@ -45,103 +45,103 @@ model {
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_1 ~ normal(inferred_group_treatment_mean[1], inferred_in_group_stddev[1]);
+  treatment_subject_1 ~ cauchy(inferred_group_treatment_mean[1], inferred_in_group_stddev[1]);
   // each group generates an unobserved control response
   inferred_group_control_mean[1] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_1 ~ normal(inferred_group_control_mean[1], inferred_in_group_stddev[1]);
+  control_subject_1 ~ cauchy(inferred_group_control_mean[1], inferred_in_group_stddev[1]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[2] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_2 ~ normal(inferred_group_treatment_mean[2], inferred_in_group_stddev[2]);
+  treatment_subject_2 ~ cauchy(inferred_group_treatment_mean[2], inferred_in_group_stddev[2]);
   // each group generates an unobserved control response
   inferred_group_control_mean[2] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_2 ~ normal(inferred_group_control_mean[2], inferred_in_group_stddev[2]);
+  control_subject_2 ~ cauchy(inferred_group_control_mean[2], inferred_in_group_stddev[2]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[3] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_3 ~ normal(inferred_group_treatment_mean[3], inferred_in_group_stddev[3]);
+  treatment_subject_3 ~ cauchy(inferred_group_treatment_mean[3], inferred_in_group_stddev[3]);
   // each group generates an unobserved control response
   inferred_group_control_mean[3] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_3 ~ normal(inferred_group_control_mean[3], inferred_in_group_stddev[3]);
+  control_subject_3 ~ cauchy(inferred_group_control_mean[3], inferred_in_group_stddev[3]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[4] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_4 ~ normal(inferred_group_treatment_mean[4], inferred_in_group_stddev[4]);
+  treatment_subject_4 ~ cauchy(inferred_group_treatment_mean[4], inferred_in_group_stddev[4]);
   // each group generates an unobserved control response
   inferred_group_control_mean[4] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_4 ~ normal(inferred_group_control_mean[4], inferred_in_group_stddev[4]);
+  control_subject_4 ~ cauchy(inferred_group_control_mean[4], inferred_in_group_stddev[4]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[5] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_5 ~ normal(inferred_group_treatment_mean[5], inferred_in_group_stddev[5]);
+  treatment_subject_5 ~ cauchy(inferred_group_treatment_mean[5], inferred_in_group_stddev[5]);
   // each group generates an unobserved control response
   inferred_group_control_mean[5] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_5 ~ normal(inferred_group_control_mean[5], inferred_in_group_stddev[5]);
+  control_subject_5 ~ cauchy(inferred_group_control_mean[5], inferred_in_group_stddev[5]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[6] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_6 ~ normal(inferred_group_treatment_mean[6], inferred_in_group_stddev[6]);
+  treatment_subject_6 ~ cauchy(inferred_group_treatment_mean[6], inferred_in_group_stddev[6]);
   // each group generates an unobserved control response
   inferred_group_control_mean[6] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_6 ~ normal(inferred_group_control_mean[6], inferred_in_group_stddev[6]);
+  control_subject_6 ~ cauchy(inferred_group_control_mean[6], inferred_in_group_stddev[6]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[7] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_7 ~ normal(inferred_group_treatment_mean[7], inferred_in_group_stddev[7]);
+  treatment_subject_7 ~ cauchy(inferred_group_treatment_mean[7], inferred_in_group_stddev[7]);
   // each group generates an unobserved control response
   inferred_group_control_mean[7] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_7 ~ normal(inferred_group_control_mean[7], inferred_in_group_stddev[7]);
+  control_subject_7 ~ cauchy(inferred_group_control_mean[7], inferred_in_group_stddev[7]);
 
   // each group generates an unobserved treatment response
   inferred_group_treatment_mean[8] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  treatment_subject_8 ~ normal(inferred_group_treatment_mean[8], inferred_in_group_stddev[8]);
+  treatment_subject_8 ~ cauchy(inferred_group_treatment_mean[8], inferred_in_group_stddev[8]);
   // each group generates an unobserved control response
   inferred_group_control_mean[8] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
-  control_subject_8 ~ normal(inferred_group_control_mean[8], inferred_in_group_stddev[8]);
+  control_subject_8 ~ cauchy(inferred_group_control_mean[8], inferred_in_group_stddev[8]);
 }
 
