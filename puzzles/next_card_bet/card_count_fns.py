@@ -2,7 +2,6 @@ from functools import cache
 import numpy as np
 import pandas as pd
 from scipy.special import comb
-from IPython.display import display, Markdown
 from typing import List, Optional, Tuple
 
 
@@ -22,7 +21,7 @@ def run_bets(is_red, *, trajectory: Optional[List] = None) -> float:
         trajectory.append(stake)
     n_red_remaining = int(np.sum(is_red))
     n_black_remaining = len(is_red) - n_red_remaining
-    for i in range(len(is_red)):
+    for i, _ in enumerate(is_red):
         # form bet
         bet_red = 0
         bet_black = 0
@@ -59,17 +58,18 @@ def run_bets_int(
     initial_stake: int,
     satiation_point: int,
     bet_strategy,
+    limit_to_basic_strat: bool,
 ) -> float:
     stake = int(initial_stake)
     trajectory = [stake]
     n_red_remaining = int(np.sum(is_red))
     n_black_remaining = len(is_red) - n_red_remaining
-    for i in range(len(is_red)):
+    for i, _ in enumerate(is_red):
         # form bet
         bet_red = 0
         bet_black = 0
         net_bet = bet_strategy(
-            stake, n_black_remaining, n_red_remaining, satiation_point
+            stake, n_black_remaining, n_red_remaining, satiation_point, limit_to_basic_strat=limit_to_basic_strat,
         )
         assert np.abs(net_bet) <= stake
         if net_bet > 0:
@@ -102,7 +102,9 @@ def run_bets_int(
 
 
 def basic_bet_rules(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
+    *,
+    limit_to_basic_strat: bool,
 ) -> Optional[int]:
     """return signed bet (positive black, negative red) if implied by basic rules"""
     if (holdings <= 0) or (n_black_remaining == n_red_remaining):
@@ -117,14 +119,21 @@ def basic_bet_rules(
 
 
 def basic_bet_strategy(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
+    *,
+    limit_to_basic_strat: bool,
 ) -> int:
     """return signed bet (positive black, negative red)"""
     if n_red_remaining > n_black_remaining:
         return -basic_bet_strategy(
-            holdings, n_red_remaining, n_black_remaining, satiation_point
+            holdings=holdings, 
+            n_black_remaining=n_red_remaining,   # swap
+            n_red_remaining=n_black_remaining,
+            satiation_point=satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat,
         )
-    bet = basic_bet_rules(holdings, n_black_remaining, n_red_remaining, satiation_point)
+    bet = basic_bet_rules(holdings, n_black_remaining, n_red_remaining, satiation_point,
+                          limit_to_basic_strat=limit_to_basic_strat)
     if bet is not None:
         return bet
     v = int(
@@ -151,85 +160,90 @@ def basic_bet_strategy(
 
 
 @cache
-def _bet_amt_min_mean(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int
-) -> Tuple[int, int, float]:
-    """Compute unsigned bet size (internal function use bet_amt_min_mean() as public API)"""
+def _bet_amt_min(
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
+    *,
+    limit_to_basic_strat: bool,
+) -> Tuple[int, int]:
+    """Compute unsigned bet size (internal function use bet_amt_min() as public API)"""
     best_black_bet = None
     best_min_return = None
-    best_mean_return = None
+    basic_bet = None
+    if limit_to_basic_strat:
+        basic_bet = basic_bet_strategy(
+            holdings, n_black_remaining, n_red_remaining, satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat)
     for black_bet in range(holdings + 1):
-        a = bet_amt_min_mean(
+        if (limit_to_basic_strat) and (black_bet > 0) and (black_bet > basic_bet):
+            break
+        a = bet_amt_min(
             holdings + black_bet,
             n_black_remaining - 1,
             n_red_remaining,
             satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat,
         )
-        b = bet_amt_min_mean(
+        b = bet_amt_min(
             holdings - black_bet,
             n_black_remaining,
             n_red_remaining - 1,
             satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat,
         )
         min_return = int(min(a[1], b[1]))
-        mean_return = (n_black_remaining / (n_black_remaining + n_red_remaining)) * a[
-            2
-        ] + (n_red_remaining / (n_black_remaining + n_red_remaining)) * b[2]
-        if (
-            (best_black_bet is None)
-            or (min_return > best_min_return)
-            or ((min_return >= best_min_return) and (mean_return > best_mean_return))
-        ):
+        if (best_black_bet is None) or (min_return >= best_min_return):  # go for largest bet
             best_black_bet = black_bet
             best_min_return = min_return
-            best_mean_return = mean_return
-    return (best_black_bet, best_min_return, best_mean_return)
+    return (best_black_bet, best_min_return)
 
 
-def bet_amt_min_mean(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int
-) -> Tuple[int, int, float]:
+def bet_amt_min(
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
+    *,
+    limit_to_basic_strat: bool,
+) -> Tuple[int, int]:
     """Compute truncated unsigned bet size to achieve highest lower bound. Some value paths truncated by satiation_point."""
     # regularize and eliminate some cases
     if holdings <= 0:
-        return (0, 0, 0)
+        return (0, 0)
     if n_black_remaining < n_red_remaining:
         n_black_remaining, n_red_remaining = n_red_remaining, n_black_remaining
     # have n_black_remaining >= n_red_remaining and holdings > 0
     if n_black_remaining == n_red_remaining:
-        sub = bet_amt_min_mean(
-            holdings, n_black_remaining, n_red_remaining - 1, satiation_point
+        sub = bet_amt_min(
+            holdings, n_black_remaining, n_red_remaining - 1, satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat,
         )
-        return (0, sub[1], sub[2])
+        return (0, sub[1])
     # have n_black_remaining > n_red_remaining
     if n_red_remaining <= 0:
-        return (
-            holdings,
-            holdings * 2**n_black_remaining,
-            holdings * 2**n_black_remaining,
-        )
+        return (holdings, holdings * 2**n_black_remaining)
     if (
         holdings > satiation_point
     ):  # early exit to prevent tracking too many possible holdings
-        return (
-            0,
-            holdings,
-            holdings,
-        )  # artificial "don't bet" as not needed to establish minimum
-    return _bet_amt_min_mean(
-        holdings, n_black_remaining, n_red_remaining, satiation_point
+        return (0, holdings)  # artificial "don't bet" as not needed to establish minimum
+    return _bet_amt_min(
+        holdings, n_black_remaining, n_red_remaining, satiation_point,
+        limit_to_basic_strat=limit_to_basic_strat,
     )
 
 
 def dynprog_bet_strategy(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
+    *,
+    limit_to_basic_strat: bool,
 ) -> int:
     """return signed bet (positive black, negative red)"""
     if n_red_remaining > n_black_remaining:
         return -dynprog_bet_strategy(
-            holdings, n_red_remaining, n_black_remaining, satiation_point
+            holdings=holdings, 
+            n_black_remaining=n_red_remaining, # swap
+            n_red_remaining=n_black_remaining, 
+            satiation_point=satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat,
         )
-    bet = basic_bet_rules(holdings, n_black_remaining, n_red_remaining, satiation_point)
+    bet = basic_bet_rules(holdings, n_black_remaining, n_red_remaining, satiation_point,
+                          limit_to_basic_strat=limit_to_basic_strat)
     if bet is not None:
         return bet
     if holdings >= satiation_point:  # for large values, bet near ideal value
@@ -247,8 +261,9 @@ def dynprog_bet_strategy(
             )
         )
     else:
-        v = bet_amt_min_mean(
-            holdings, n_black_remaining, n_red_remaining, satiation_point
+        v = bet_amt_min(
+            holdings, n_black_remaining, n_red_remaining, satiation_point,
+            limit_to_basic_strat=limit_to_basic_strat,
         )[0]
     if (
         (v > 0)
@@ -260,12 +275,16 @@ def dynprog_bet_strategy(
     return v
 
 
-def mk_traj_frame(i, *, initial_stake: int, satiation_point: int, bet_strategy, decks):
+def mk_traj_frame(i, 
+                  *, 
+                  initial_stake: int, satiation_point: int, bet_strategy, decks,
+                  limit_to_basic_strat: bool):
     _, traj = run_bets_int(
         decks[i],
         initial_stake=initial_stake,
         satiation_point=satiation_point,
         bet_strategy=bet_strategy,
+        limit_to_basic_strat=limit_to_basic_strat,
     )
     return pd.DataFrame(
         {
