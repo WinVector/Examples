@@ -168,11 +168,9 @@ def _bet_amt_min(
     """Compute unsigned bet size (internal function use bet_amt_min() as public API)"""
     best_black_bet = None
     best_min_return = None
-    basic_bet = None
-    if limit_to_basic_strat:
-        basic_bet = basic_bet_strategy(
-            holdings, n_black_remaining, n_red_remaining, satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat)
+    basic_bet = basic_bet_strategy(
+        holdings, n_black_remaining, n_red_remaining, satiation_point,
+        limit_to_basic_strat=limit_to_basic_strat)
     for black_bet in range(holdings + 1):
         if (limit_to_basic_strat) and (black_bet > 0) and (black_bet > basic_bet):
             break
@@ -191,7 +189,8 @@ def _bet_amt_min(
             limit_to_basic_strat=limit_to_basic_strat,
         )
         min_return = int(min(a[1], b[1]))
-        if (best_black_bet is None) or (min_return >= best_min_return):  # go for largest bet
+        if (best_black_bet is None) or (min_return >= best_min_return):  
+            # go for largest bet subject to maximizing min_return
             best_black_bet = black_bet
             best_min_return = min_return
     return (best_black_bet, best_min_return)
