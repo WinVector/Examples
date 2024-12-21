@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from scipy.special import comb
 from IPython.display import display, Markdown
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 
 # define our deck shuffling tool
@@ -15,9 +15,11 @@ def k_array_with_t_true(k: int, t: int, *, rng):
 
 
 # implement our betting strategy
-def run_bets(is_red) -> float:
+def run_bets(is_red, *, trajectory: Optional[List] = None) -> float:
     """Run the Kelly betting strategy for continuous values"""
     stake = 1.0
+    if trajectory is not None:
+        trajectory.append(stake)
     n_red_remaining = int(np.sum(is_red))
     n_black_remaining = len(is_red) - n_red_remaining
     for i in range(len(is_red)):
@@ -39,6 +41,8 @@ def run_bets(is_red) -> float:
         else:
             stake = stake + 2 * bet_black
             n_black_remaining = n_black_remaining - 1
+        if trajectory is not None:
+            trajectory.append(stake)
     return stake
 
 
