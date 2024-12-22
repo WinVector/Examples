@@ -147,9 +147,10 @@ def basic_bet_strategy(
 
 @cache
 def _minmax_bet_value(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
     """Compute minmax value of position under optimal betting (internal function use minmax_bet_value() as public API) for non base cases"""
+    assert satiation_point is not None
     assert holdings > 0
     assert n_black_remaining > 0
     assert n_red_remaining > 0
@@ -201,8 +202,9 @@ def minmax_bet_value(
 
 @cache  # only called with non-enormous holdings
 def _dynprog_bet_strategy_cached(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
+    assert satiation_point is not None
     # retrieve a best bet from dynprog table with maximal expected 1 step log return
     best_black_bet = None
     best_min_return = None
