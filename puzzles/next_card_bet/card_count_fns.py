@@ -131,15 +131,17 @@ def basic_bet_strategy(
             n_red_remaining=n_black_remaining,
         )
     # ideal fractional bet is holdings * (n_black_remaining - n_red_remaining) / (n_black_remaining + n_red_remaining)
-    # for simplicity we just search for integer maximizing E[log(return)] instead of rounding
+    # search for integer maximizing E[log(return)] instead of rounding
+    fractional_bet = holdings * (n_black_remaining - n_red_remaining) / (n_black_remaining + n_red_remaining)
     best_black_bet = None
     best_log_return = None
     p_win = n_black_remaining / (n_black_remaining + n_red_remaining)
-    for black_bet in range(holdings):  # try all bets except all instead of rounding
-        log_return = p_win * np.log(holdings + black_bet) + (1 - p_win) * np.log(holdings - black_bet)
-        if (best_black_bet is None) or (log_return > best_log_return):
-            best_black_bet = black_bet
-            best_log_return = log_return
+    for black_bet in range(int(np.floor(fractional_bet)) - 5, int(np.ceil(fractional_bet) + 5)):   # use convexity to bracket soln
+        if (black_bet >= 0) and (black_bet < holdings):  # try all bets except all instead of rounding
+            log_return = p_win * np.log(holdings + black_bet) + (1 - p_win) * np.log(holdings - black_bet)
+            if (best_black_bet is None) or (log_return > best_log_return):
+                best_black_bet = black_bet
+                best_log_return = log_return
     return best_black_bet
 
 
