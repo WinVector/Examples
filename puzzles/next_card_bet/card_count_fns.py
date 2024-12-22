@@ -2,7 +2,7 @@ from functools import cache
 import numpy as np
 import pandas as pd
 from scipy.special import comb
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 
 # define our deck shuffling tool
@@ -56,9 +56,8 @@ def run_bets_int(
     *,
     verbose: bool = False,
     initial_stake: int,
-    satiation_point: int,
+    satiation_point: Optional[int],
     bet_strategy,
-    limit_to_basic_strat: bool,
 ) -> float:
     stake = int(initial_stake)
     trajectory = [stake]
@@ -69,7 +68,7 @@ def run_bets_int(
         bet_red = 0
         bet_black = 0
         net_bet = bet_strategy(
-            stake, n_black_remaining, n_red_remaining, satiation_point, limit_to_basic_strat=limit_to_basic_strat,
+            stake, n_black_remaining, n_red_remaining, satiation_point,
         )
         assert np.abs(net_bet) <= stake
         if net_bet > 0:
@@ -102,9 +101,8 @@ def run_bets_int(
 
 
 def basic_bet_rules(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
     *,
-    limit_to_basic_strat: bool,
+    holdings: int, n_black_remaining: int, n_red_remaining: int
 ) -> Optional[int]:
     """return signed bet (positive black, negative red) if implied by basic rules"""
     if (holdings <= 0) or (n_black_remaining == n_red_remaining):
@@ -113,29 +111,25 @@ def basic_bet_rules(
         return holdings  # forced win
     if n_black_remaining <= 0:
         return -holdings  # forced win
-    if (holdings <= 1) and (n_black_remaining > 0) and (n_red_remaining > 0):
+    # now know (holdings > 0) (n_black_remaining > 0) and (n_red_remaining > 0)
+    if holdings <= 1:
         return 0  # don't trade entire holdings into uncertainty
     return None
 
 
 def basic_bet_strategy(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
-    *,
-    limit_to_basic_strat: bool,
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int] = None,
 ) -> int:
     """return signed bet (positive black, negative red)"""
+    bet = basic_bet_rules(holdings=holdings, n_black_remaining=n_black_remaining, n_red_remaining=n_red_remaining)
+    if bet is not None:
+        return bet
     if n_red_remaining > n_black_remaining:
         return -basic_bet_strategy(
             holdings=holdings, 
             n_black_remaining=n_red_remaining,   # swap
             n_red_remaining=n_black_remaining,
-            satiation_point=satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat,
         )
-    bet = basic_bet_rules(holdings, n_black_remaining, n_red_remaining, satiation_point,
-                          limit_to_basic_strat=limit_to_basic_strat)
-    if bet is not None:
-        return bet
     v = int(
         max(
             0,
@@ -149,141 +143,111 @@ def basic_bet_strategy(
             ),
         )
     )
-    if (
-        (v > 0)
-        and (v >= holdings)
-        and (n_black_remaining > 0)
-        and (n_red_remaining > 0)
-    ):
+    if v >= holdings:
         v = v - 1  # don't trade entire holdings into uncertainty
     return v
 
 
 @cache
-def _bet_amt_min(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
-    *,
-    limit_to_basic_strat: bool,
-) -> Tuple[int, int]:
-    """Compute unsigned bet size (internal function use bet_amt_min() as public API)"""
-    best_black_bet = None
+def _minmax_bet_value(
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+) -> int:
+    """Compute minmax value of position under optimal betting (internal function use minmax_bet_value() as public API) for non base cases"""
+    assert holdings > 0
+    assert n_black_remaining > 0
+    assert n_red_remaining > 0
     best_min_return = None
-    basic_bet = basic_bet_strategy(
-        holdings, n_black_remaining, n_red_remaining, satiation_point,
-        limit_to_basic_strat=limit_to_basic_strat)
-    for black_bet in range(holdings + 1):
-        if (limit_to_basic_strat) and (black_bet > 0) and (black_bet > basic_bet):
-            break
-        a = bet_amt_min(
+    for black_bet in range(holdings):  # simulate betting on black, but do not bet all as there is remaining uncertainty
+        a = minmax_bet_value(   # black win case
             holdings + black_bet,
             n_black_remaining - 1,
             n_red_remaining,
             satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat,
         )
-        b = bet_amt_min(
+        b = minmax_bet_value(   # black lose case
             holdings - black_bet,
             n_black_remaining,
             n_red_remaining - 1,
             satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat,
         )
-        min_return = int(min(a[1], b[1]))
-        if (best_black_bet is None) or (min_return >= best_min_return):  
-            # go for largest bet subject to maximizing min_return
-            best_black_bet = black_bet
+        min_return = int(min(a, b))
+        if (best_min_return is None) or (min_return > best_min_return):
             best_min_return = min_return
-    return (best_black_bet, best_min_return)
+    assert best_min_return is not None
+    return best_min_return
 
 
-def bet_amt_min(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
-    *,
-    limit_to_basic_strat: bool,
-) -> Tuple[int, int]:
-    """Compute truncated unsigned bet size to achieve highest lower bound. Some value paths truncated by satiation_point."""
+def minmax_bet_value(
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+) -> int:
+    """Compute minmax value of satiation_point truncated position."""
     # regularize and eliminate some cases
-    if holdings <= 0:
-        return (0, 0)
-    if n_black_remaining < n_red_remaining:
+    if holdings <= 0:  # no continuation
+        return 0
+    if (n_black_remaining <= 0) or (n_red_remaining <= 0):  # sure thing
+        if satiation_point is None:
+            return holdings * 2**(n_black_remaining + n_red_remaining)  
+        else:
+            return int(min(holdings * 2**(n_black_remaining + n_red_remaining), satiation_point))
+    if n_black_remaining == n_red_remaining:  # no bet
+        return minmax_bet_value(holdings, n_black_remaining, n_red_remaining - 1, satiation_point)  # can decrement either by symmetry
+    if n_black_remaining < n_red_remaining:  # swap to canonical form
         n_black_remaining, n_red_remaining = n_red_remaining, n_black_remaining
-    # have n_black_remaining >= n_red_remaining and holdings > 0
-    if n_black_remaining == n_red_remaining:
-        sub = bet_amt_min(
-            holdings, n_black_remaining, n_red_remaining - 1, satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat,
-        )
-        return (0, sub[1])
-    # have n_black_remaining > n_red_remaining
-    if n_red_remaining <= 0:
-        return (holdings, holdings * 2**n_black_remaining)
-    if (
-        holdings > satiation_point
-    ):  # early exit to prevent tracking too many possible holdings
-        return (0, holdings)  # artificial "don't bet" as not needed to establish minimum
-    return _bet_amt_min(
+    # now have n_black_remaining > n_red_remaining > 0 and holdings > 0
+    if (satiation_point is not None) and (holdings >= satiation_point):  # early exit to prevent tracking too many possible holdings
+        return satiation_point  # artificial "don't bet" as not needed to establish minimum
+    return _minmax_bet_value(  # dynamic program: memonized recursion
         holdings, n_black_remaining, n_red_remaining, satiation_point,
-        limit_to_basic_strat=limit_to_basic_strat,
     )
 
 
 def dynprog_bet_strategy(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
-    *,
-    limit_to_basic_strat: bool,
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
 ) -> int:
     """return signed bet (positive black, negative red)"""
+    bet = basic_bet_rules(holdings=holdings, n_black_remaining=n_black_remaining, n_red_remaining=n_red_remaining)
+    if bet is not None:
+        return bet
+    if (satiation_point is not None) and (holdings >= satiation_point):  # for large values, bet near ideal value
+        return basic_bet_strategy(holdings, n_black_remaining, n_red_remaining)
     if n_red_remaining > n_black_remaining:
         return -dynprog_bet_strategy(
             holdings=holdings, 
             n_black_remaining=n_red_remaining, # swap
             n_red_remaining=n_black_remaining, 
             satiation_point=satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat,
         )
-    bet = basic_bet_rules(holdings, n_black_remaining, n_red_remaining, satiation_point,
-                          limit_to_basic_strat=limit_to_basic_strat)
-    if bet is not None:
-        return bet
-    if holdings >= satiation_point:  # for large values, bet near ideal value
-        v = int(
-            max(
-                0,
-                min(
-                    holdings,
-                    np.round(
-                        holdings
-                        * (n_black_remaining - n_red_remaining)
-                        / (n_black_remaining + n_red_remaining)
-                    ),
-                ),
-            )
+    # retrieve a best bet from dynprog table
+    best_black_bet = None
+    best_min_return = None
+    for black_bet in range(holdings):
+        a = minmax_bet_value(
+            holdings + black_bet,
+            n_black_remaining - 1,
+            n_red_remaining,
+            satiation_point,
         )
-    else:
-        v = bet_amt_min(
-            holdings, n_black_remaining, n_red_remaining, satiation_point,
-            limit_to_basic_strat=limit_to_basic_strat,
-        )[0]
-    if (
-        (v > 0)
-        and (v >= holdings)
-        and (n_black_remaining > 0)
-        and (n_red_remaining > 0)
-    ):
-        v = v - 1  # don't trade entire holdings into uncertainty
-    return v
+        b = minmax_bet_value(
+            holdings - black_bet,
+            n_black_remaining,
+            n_red_remaining - 1,
+            satiation_point,
+        )
+        min_return = int(min(a, b))
+        if (best_min_return is None) or (min_return >= best_min_return):
+            best_min_return = min_return
+            best_black_bet = black_bet
+    return best_black_bet
 
 
 def mk_traj_frame(i, 
                   *, 
-                  initial_stake: int, satiation_point: int, bet_strategy, decks,
-                  limit_to_basic_strat: bool):
+                  initial_stake: int, satiation_point: Optional[int], bet_strategy, decks):
     _, traj = run_bets_int(
         decks[i],
         initial_stake=initial_stake,
         satiation_point=satiation_point,
         bet_strategy=bet_strategy,
-        limit_to_basic_strat=limit_to_basic_strat,
     )
     return pd.DataFrame(
         {
