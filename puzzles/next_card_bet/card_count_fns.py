@@ -67,9 +67,9 @@ def run_bets_int(
         # form bet
         bet_red = 0
         bet_black = 0
-        net_bet = bet_strategy(
-            stake, n_black_remaining, n_red_remaining, satiation_point,
-        )
+        net_bet = bet_strategy(stake, n_black_remaining, n_red_remaining, satiation_point)
+        assert net_bet is not None
+        assert isinstance(net_bet, int)
         assert np.abs(net_bet) <= stake
         if net_bet > 0:
             assert n_black_remaining > 0
@@ -114,7 +114,7 @@ def basic_bet_rules(
     # now know (holdings > 0) (n_black_remaining > 0) and (n_red_remaining > 0)
     if holdings <= 1:
         return 0  # don't trade entire holdings into uncertainty
-    return None
+    return None  # bet not forced by basic rules
 
 
 def basic_bet_strategy(
@@ -130,22 +130,17 @@ def basic_bet_strategy(
             n_black_remaining=n_red_remaining,   # swap
             n_red_remaining=n_black_remaining,
         )
-    v = int(
-        max(
-            0,
-            min(
-                holdings,
-                np.round(
-                    holdings
-                    * (n_black_remaining - n_red_remaining)
-                    / (n_black_remaining + n_red_remaining)
-                ),
-            ),
-        )
-    )
-    if v >= holdings:
-        v = v - 1  # don't trade entire holdings into uncertainty
-    return v
+    # ideal fractional bet is holdings * (n_black_remaining - n_red_remaining) / (n_black_remaining + n_red_remaining)
+    # for simplicity we just search for integer maximizing E[log(return)] instead of rounding
+    best_black_bet = None
+    best_log_return = None
+    p_win = n_black_remaining / (n_black_remaining + n_red_remaining)
+    for black_bet in range(holdings):  # try all bets except all instead of rounding
+        log_return = p_win * np.log(holdings + black_bet) + (1 - p_win) * np.log(holdings - black_bet)
+        if (best_black_bet is None) or (log_return > best_log_return):
+            best_black_bet = black_bet
+            best_log_return = log_return
+    return best_black_bet
 
 
 @cache
@@ -156,6 +151,7 @@ def _minmax_bet_value(
     assert holdings > 0
     assert n_black_remaining > 0
     assert n_red_remaining > 0
+    assert n_black_remaining > n_red_remaining
     best_min_return = None
     for black_bet in range(holdings):  # simulate betting on black, but do not bet all as there is remaining uncertainty
         a = minmax_bet_value(   # black win case
@@ -217,10 +213,13 @@ def dynprog_bet_strategy(
             n_red_remaining=n_black_remaining, 
             satiation_point=satiation_point,
         )
-    # retrieve a best bet from dynprog table
+    # retrieve a best bet from dynprog table with maximal expected 1 step log return
     best_black_bet = None
     best_min_return = None
+    best_log_return = None
+    p_win = n_black_remaining / (n_black_remaining + n_red_remaining)
     for black_bet in range(holdings):
+        log_return = p_win * np.log(holdings + black_bet) + (1 - p_win) * np.log(holdings - black_bet)
         a = minmax_bet_value(
             holdings + black_bet,
             n_black_remaining - 1,
@@ -234,9 +233,14 @@ def dynprog_bet_strategy(
             satiation_point,
         )
         min_return = int(min(a, b))
-        if (best_min_return is None) or (min_return >= best_min_return):
-            best_min_return = min_return
+        if (
+            (best_black_bet is None) 
+            or (min_return > best_min_return)
+            or ((min_return >= best_min_return) and (log_return > best_log_return))
+        ):
             best_black_bet = black_bet
+            best_min_return = min_return
+            best_log_return = log_return
     return best_black_bet
 
 
