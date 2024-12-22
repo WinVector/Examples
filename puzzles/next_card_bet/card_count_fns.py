@@ -199,22 +199,10 @@ def minmax_bet_value(
     )
 
 
-def dynprog_bet_strategy(
+@cache  # only called with non-enormous holdings
+def _dynprog_bet_strategy_cached(
     holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
 ) -> int:
-    """return signed bet (positive black, negative red)"""
-    bet = basic_bet_rules(holdings=holdings, n_black_remaining=n_black_remaining, n_red_remaining=n_red_remaining)
-    if bet is not None:
-        return bet
-    if (satiation_point is not None) and (holdings >= satiation_point):  # for large values, bet near ideal value, prevents dynamic programming table blow up
-        return basic_bet_strategy(holdings, n_black_remaining, n_red_remaining)
-    if n_red_remaining > n_black_remaining:
-        return -dynprog_bet_strategy(
-            holdings=holdings, 
-            n_black_remaining=n_red_remaining, # swap
-            n_red_remaining=n_black_remaining, 
-            satiation_point=satiation_point,
-        )
     # retrieve a best bet from dynprog table with maximal expected 1 step log return
     best_black_bet = None
     best_min_return = None
@@ -246,6 +234,25 @@ def dynprog_bet_strategy(
     return best_black_bet
 
 
+def dynprog_bet_strategy(
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+) -> int:
+    """return signed bet (positive black, negative red)"""
+    bet = basic_bet_rules(holdings=holdings, n_black_remaining=n_black_remaining, n_red_remaining=n_red_remaining)
+    if bet is not None:
+        return bet
+    if (satiation_point is not None) and (holdings >= satiation_point):  # for large values, bet near ideal value, prevents dynamic programming table blow up
+        return basic_bet_strategy(holdings, n_black_remaining, n_red_remaining)
+    if n_red_remaining > n_black_remaining:
+        return -dynprog_bet_strategy(
+            holdings=holdings, 
+            n_black_remaining=n_red_remaining, # swap
+            n_red_remaining=n_black_remaining, 
+            satiation_point=satiation_point,
+        )
+    return _dynprog_bet_strategy_cached(holdings, n_black_remaining, n_red_remaining, satiation_point)
+
+
 def mk_traj_frame(i, 
                   *, 
                   initial_stake: int, satiation_point: Optional[int], bet_strategy, decks):
@@ -272,38 +279,46 @@ def find_worst_deck(
     satiation_point: Optional[int],
     bet_strategy,
 ):
+    """return worst deck, deck value, and estimated number such"""
     @cache
     def find_worst_deck_r_(holdings: int, n_black_remaining: int, n_red_remaining: int):
+        """return worst deck, deck value, and estimated number such"""
         # get base cases
         assert holdings >= 0
         assert n_black_remaining >= 0
         assert n_red_remaining >= 0
         if n_black_remaining + n_red_remaining <= 0:
-            return [], holdings
+            return [], holdings, 1
         if holdings <= 0:
-            return ([False] * n_black_remaining) + ([True] * n_red_remaining), 0
+            return (
+                ([False] * n_black_remaining) + ([True] * n_red_remaining), 
+                0,
+                comb(n_black_remaining + n_red_remaining, n_red_remaining, exact=True),
+            )
         # query the strategy
         bet = bet_strategy(holdings, n_black_remaining, n_red_remaining, satiation_point)
         assert bet is not None
         assert isinstance(bet, int)
         assert np.abs(bet) <= holdings
-        deck_black, v_black, dec_red, v_red = None, None, None, None
+        deck_black, v_black, n_black, dec_red, v_red, n_red = None, None, None, None, None, None
         if n_black_remaining > 0:  # draw black outcomes
-            deck_black, v_black = find_worst_deck_r_(
+            deck_black, v_black, n_black = find_worst_deck_r_(
                 int(holdings - np.abs(bet) + 2 * max(bet, 0)), n_black_remaining - 1, n_red_remaining)
         if n_red_remaining > 0:  # draw red outcomes
-            dec_red, v_red = find_worst_deck_r_(
+            dec_red, v_red, n_red = find_worst_deck_r_(
                 int(holdings - np.abs(bet) + 2 * max(-bet, 0)), n_black_remaining, n_red_remaining - 1)
         if dec_red is None:
             assert deck_black is not None
-            return [False] + deck_black, v_black
+            return [False] + deck_black, v_black, n_black
         if deck_black is None:
-            return [True] + dec_red, v_red
-        if v_black <= v_red:
-            return [False] + deck_black, v_black
-        return [True] + dec_red, v_red
-    deck, _ = find_worst_deck_r_(holdings, n_black_remaining, n_red_remaining)
+            return [True] + dec_red, v_red, n_red
+        if v_black < v_red:
+            return [False] + deck_black, v_black, n_black
+        if v_red < v_black:
+            return [True] + dec_red, v_red, n_red
+        return [True] + dec_red, v_red, n_black + n_red  # Knuth-like estimate of number of nodes
+    deck, example_value, n_examples = find_worst_deck_r_(holdings, n_black_remaining, n_red_remaining)
     assert len(deck) == n_black_remaining + n_red_remaining
     assert np.sum(deck) == n_red_remaining
-    return np.array(deck)
+    return np.array(deck), example_value, n_examples
         
