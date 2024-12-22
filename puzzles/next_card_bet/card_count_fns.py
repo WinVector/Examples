@@ -97,7 +97,7 @@ def run_bets_int(
             stake = stake + 2 * bet_black
             n_black_remaining = n_black_remaining - 1
         trajectory.append(stake)
-    return (stake / initial_stake, trajectory)
+    return (stake / initial_stake, np.array(trajectory, dtype=int))
 
 
 def basic_bet_rules(
@@ -263,3 +263,40 @@ def mk_traj_frame(i,
             "trajectory": i,
         }
     )
+
+
+
+def find_worst_deck(
+    holdings: int, n_black_remaining: int, n_red_remaining: int,
+    *,
+    satiation_point: Optional[int],
+    bet_strategy,
+):
+    @cache
+    def find_worst_deck_r_(holdings: int, n_black_remaining: int, n_red_remaining: int):
+        # get base cases
+        assert holdings >= 0
+        assert n_black_remaining >= 0
+        assert n_red_remaining >= 0
+        if n_black_remaining <= 0:
+            return [True] * n_red_remaining, holdings * 2**n_red_remaining  # assume strategy bets correctly on sure things
+        if n_red_remaining <= 0:
+            return [False] * n_black_remaining, holdings * 2**n_black_remaining  # assume strategy bets correctly on sure things
+        if holdings <= 0:
+            return ([False] * n_black_remaining) + ([True] * n_red_remaining), 0
+        # query the strategy
+        bet = bet_strategy(holdings, n_black_remaining, n_red_remaining, satiation_point)
+        assert bet is not None
+        assert isinstance(bet, int)
+        assert np.abs(bet) <= holdings
+        deck_black, v_black = find_worst_deck_r_(int(holdings - np.abs(bet) + 2 * max(bet, 0)), n_black_remaining - 1, n_red_remaining)
+        dec_red, v_red = find_worst_deck_r_(int(holdings - np.abs(bet) + 2 * max(-bet, 0)), n_black_remaining, n_red_remaining - 1)
+        if v_black <= v_red:
+            return [False] + deck_black, v_black
+        else:
+            return [True] + dec_red, v_red
+    deck, _ = find_worst_deck_r_(holdings, n_black_remaining, n_red_remaining)
+    assert len(deck) == n_black_remaining + n_red_remaining
+    assert np.sum(deck) == n_red_remaining
+    return np.array(deck)
+        
