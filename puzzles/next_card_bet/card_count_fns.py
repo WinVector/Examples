@@ -10,7 +10,7 @@ def k_array_with_t_true(k: int, t: int, *, rng):
     """Create a length-k boolean array with t-True values"""
     is_true = np.array([False] * k, dtype=bool)
     is_true[rng.choice(k, size=t, replace=False)] = True
-    return is_true
+    return tuple(is_true)
 
 
 # implement our betting strategy
