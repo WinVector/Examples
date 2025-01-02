@@ -150,7 +150,7 @@ def _minmax_bet_value(
     holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
     """Compute minmax value of position under optimal betting (internal function use minmax_bet_value() as public API) for non base cases"""
-    assert satiation_point is not None
+    assert satiation_point > 0
     assert holdings > 0
     assert n_black_remaining > 0
     assert n_red_remaining > 0
@@ -177,24 +177,23 @@ def _minmax_bet_value(
 
 
 def minmax_bet_value(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
     """Compute minmax value of satiation_point truncated position."""
     # regularize and eliminate some cases
-    if holdings <= 0:  # no continuation
+    if holdings <= 0:  # no bet possible continuation
         return 0
-    if (n_black_remaining <= 0) or (n_red_remaining <= 0):  # sure thing
-        if satiation_point is None:
-            return holdings * 2**(n_black_remaining + n_red_remaining)  
-        else:
-            return int(min(holdings * 2**(n_black_remaining + n_red_remaining), satiation_point))
+    if holdings >= satiation_point:  # early exit to prevent tracking too many possible holdings
+        return satiation_point  # artificial "don't bet" as not needed to establish minimum
+    if (n_black_remaining <= 0) or (n_red_remaining <= 0):  # sure thing continuation
+        return min(holdings * 2**(n_black_remaining + n_red_remaining), satiation_point)
     if n_black_remaining == n_red_remaining:  # no bet
-        return minmax_bet_value(holdings, n_black_remaining, n_red_remaining - 1, satiation_point)  # can decrement either by symmetry
-    if n_black_remaining < n_red_remaining:  # swap to canonical form
+        draw_1 = minmax_bet_value(holdings, n_black_remaining, n_red_remaining - 1, satiation_point)
+        draw_2 = minmax_bet_value(holdings, n_black_remaining - 1, n_red_remaining, satiation_point)
+        return min(draw_1, draw_2)
+    if n_black_remaining < n_red_remaining:  # swap to canonical form to cache less (and have simpler cached code)
         n_black_remaining, n_red_remaining = n_red_remaining, n_black_remaining
     # now have n_black_remaining > n_red_remaining > 0 and holdings > 0
-    if (satiation_point is not None) and (holdings >= satiation_point):  # early exit to prevent tracking too many possible holdings
-        return satiation_point  # artificial "don't bet" as not needed to establish minimum
     return _minmax_bet_value(  # dynamic program: memonized recursion
         holdings, n_black_remaining, n_red_remaining, satiation_point,
     )
