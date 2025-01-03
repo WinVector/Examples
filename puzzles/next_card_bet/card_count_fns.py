@@ -150,8 +150,8 @@ def _minmax_bet_value(
     holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
     """Compute minmax value of position under optimal betting (internal function use minmax_bet_value() as public API) for non base cases"""
-    assert satiation_point > 0
     assert holdings > 0
+    assert satiation_point > holdings
     assert n_black_remaining > 0
     assert n_red_remaining > 0
     assert n_black_remaining > n_red_remaining
@@ -193,17 +193,16 @@ def minmax_bet_value(
         return min(draw_1, draw_2)
     if n_black_remaining < n_red_remaining:  # swap to canonical form to cache less (and have simpler cached code)
         n_black_remaining, n_red_remaining = n_red_remaining, n_black_remaining
-    # now have n_black_remaining > n_red_remaining > 0 and holdings > 0
+    # now have n_black_remaining > n_red_remaining > 0 and satiation_point > holdings > 0
     return _minmax_bet_value(  # dynamic program: memonized recursion
         holdings, n_black_remaining, n_red_remaining, satiation_point,
     )
 
 
-@cache  # only called with non-enormous holdings
-def _dynprog_bet_strategy_cached(
+@cache
+def _dynprog_bet_strategy_by_search(
     holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
-    assert satiation_point is not None
     # retrieve a best bet from dynprog table with maximal expected 1 step log return
     best_black_bet = None
     best_min_return = None
@@ -236,13 +235,13 @@ def _dynprog_bet_strategy_cached(
 
 
 def dynprog_bet_strategy(
-    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: Optional[int],
+    holdings: int, n_black_remaining: int, n_red_remaining: int, satiation_point: int,
 ) -> int:
     """return signed bet (positive black, negative red)"""
     bet = basic_bet_rules(holdings=holdings, n_black_remaining=n_black_remaining, n_red_remaining=n_red_remaining)
     if bet is not None:
         return bet
-    if (satiation_point is not None) and (holdings >= satiation_point):  # for large values, bet near ideal value, prevents dynamic programming table blow up
+    if holdings >= satiation_point:  # for large values, bet near ideal value, prevents dynamic programming table blow up
         return basic_bet_strategy(holdings, n_black_remaining, n_red_remaining)
     if n_red_remaining > n_black_remaining:
         return -dynprog_bet_strategy(
@@ -251,7 +250,7 @@ def dynprog_bet_strategy(
             n_red_remaining=n_black_remaining, 
             satiation_point=satiation_point,
         )
-    return _dynprog_bet_strategy_cached(holdings, n_black_remaining, n_red_remaining, satiation_point)
+    return _dynprog_bet_strategy_by_search(holdings, n_black_remaining, n_red_remaining, satiation_point)
 
 
 def mk_traj_frame(i, 
