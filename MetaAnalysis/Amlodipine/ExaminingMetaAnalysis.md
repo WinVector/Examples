@@ -752,7 +752,4 @@ The files required to reproduce the result are:
 2.  **[`AmlodipineData.csv`](AmlodipineData.csv)**: the original data.
 3.  **[`define_Stan_model.R`](define_Stan_model.R)**: helper functions.
 4.  **[`references.bib`](references.bib)**: bibliography.
-5.  (optional) **`cache_*.RDS`**: the cached result files.
-    [`cache_Amlodipine_joint_8a08bdb07f5faa8dc737b0215956fef3.RDS`](cache_Amlodipine_joint_8a08bdb07f5faa8dc737b0215956fef3.RDS)
-    [`cache_Amlodipine_shared_mean_d113b1a3383815fb7cd90d704b3f4ad8.RDS`](cache_Amlodipine_shared_mean_d113b1a3383815fb7cd90d704b3f4ad8.RDS)
-    [`cache_Amlodipine_independent_60df94ba558fbccd0d3e10c2171abba0.RDS`](cache_Amlodipine_independent_60df94ba558fbccd0d3e10c2171abba0.RDS)
+5.  (optional) **`cache_*.RDS`**: the cached result files [here](.).
