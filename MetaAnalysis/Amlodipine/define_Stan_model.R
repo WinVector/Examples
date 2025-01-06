@@ -54,6 +54,19 @@ define_Stan_model <- function(
 # the Stan source code for combining multiple studies as a meta-analysis
 src_Stan <- paste0("
 // model_style: {model_style}
+functions {
+  vector shift_scale(vector v, real target_mean, real target_var) {
+     // shift and scale v to match target mean and variances
+     real n = dims(v)[1];
+     real sumv = sum(v);
+     real sumv2 = dot_product(v, v);
+     real diff = n * sumv2 - sumv * sumv;
+     real disc = sqrt(target_var * n * (n - 1) * diff);
+     real scale = disc / diff;
+     real shift = target_mean - sumv * disc / (n * diff);
+     return scale * v + shift;
+  }
+}
 data {
   int<lower=1> n_studies;  // number of studies
   array[n_studies] int<lower=1> nE;  // number treated examples
@@ -72,22 +85,28 @@ parameters {
   vector<lower=0>[n_studies] inferred_in_group_stddev;  // unobserved per-group treatment variance
 ",
 idx_blocks("
-  vector[nE[{IDX}]] treatment_subject_{IDX};  // unobserved per-group and subject treatment effects
-  vector[nC[{IDX}]] control_subject_{IDX};  // unobserved per-group and subject control effects
+  vector[nE[{IDX}]] treatment_subject_unscaled_{IDX};  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[{IDX}]] control_subject_unscaled_{IDX};  // unobserved per-group and subject control effects (unscaled)
 ", n_studies = n_studies),
 "
 }
 transformed parameters {
-  vector[n_studies] sampled_meanE;
-  vector<lower=0>[n_studies] sampled_varE;
-  vector[n_studies] sampled_meanC;
-  vector<lower=0>[n_studies] sampled_varC;
+  vector[n_studies] sampled_meanE_unscaled;
+  vector<lower=0>[n_studies] sampled_varE_unscaled;
+  vector[n_studies] sampled_meanC_unscaled;
+  vector<lower=0>[n_studies] sampled_varC_unscaled;
 ",
 idx_blocks("
-  sampled_meanE[{IDX}] = mean(treatment_subject_{IDX});
-  sampled_varE[{IDX}] = variance(treatment_subject_{IDX});
-  sampled_meanC[{IDX}] = mean(control_subject_{IDX});
-  sampled_varC[{IDX}] = variance(control_subject_{IDX});
+  vector[nE[{IDX}]] treatment_subject_{IDX};  // unobserved per-group and subject treatment effects
+  vector[nC[{IDX}]] control_subject_{IDX};  // unobserved per-group and subject control effects
+", n_studies = n_studies),
+idx_blocks("
+  sampled_meanE_unscaled[{IDX}] = mean(treatment_subject_unscaled_{IDX});
+  sampled_varE_unscaled[{IDX}] = variance(treatment_subject_unscaled_{IDX});
+  sampled_meanC_unscaled[{IDX}] = mean(control_subject_unscaled_{IDX});
+  sampled_varC_unscaled[{IDX}] = variance(control_subject_unscaled_{IDX}); 
+  treatment_subject_{IDX} = shift_scale(treatment_subject_unscaled_{IDX}, meanE[{IDX}], varE[{IDX}]);
+  control_subject_{IDX} = shift_scale(control_subject_unscaled_{IDX}, meanC[{IDX}], varC[{IDX}]);
 ", n_studies = n_studies),
 "
 }
@@ -110,8 +129,8 @@ idx_blocks("
   {/grouped_subject_mean_lines/}treatment_subject_{IDX} ~ normal(inferred_group_treatment_mean[{IDX}], inferred_in_group_stddev[{IDX}]);
   {/pooled_subject_mean_lines/}treatment_subject_{IDX} ~ normal(inferred_grand_treatment_mean, inferred_in_group_stddev[{IDX}]);
   // match observed summaries
-  sampled_meanE[{IDX}] ~ normal(meanE[{IDX}], 0.01);
-  sampled_varE[{IDX}] ~ normal(varE[{IDX}], 0.01);
+  sampled_meanE_unscaled[{IDX}] ~ normal(meanE[{IDX}], 0.1);
+  sampled_varE_unscaled[{IDX}] ~ normal(varE[{IDX}], 0.1);
   // each group generates an unobserved control response
   {/group_means_lines/}inferred_group_control_mean[{IDX}] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
@@ -120,8 +139,8 @@ idx_blocks("
   {/grouped_subject_mean_lines/}control_subject_{IDX} ~ normal(inferred_group_control_mean[{IDX}], inferred_in_group_stddev[{IDX}]);
   {/pooled_subject_mean_lines/}control_subject_{IDX} ~ normal(inferred_grand_control_mean, inferred_in_group_stddev[{IDX}]);
   // match observed summaries
-  sampled_meanC[{IDX}] ~ normal(meanC[{IDX}], 0.01);
-  sampled_varC[{IDX}] ~ normal(varC[{IDX}], 0.01);
+  sampled_meanC_unscaled[{IDX}] ~ normal(meanC[{IDX}], 0.1);
+  sampled_varC_unscaled[{IDX}] ~ normal(varC[{IDX}], 0.1);
 ", n_studies = n_studies),
 "
 }
@@ -143,10 +162,10 @@ idx_blocks("
 \\mu^{control}_{i} &\\sim N(\\mu^{control}, \\sigma^2) &\\# \\; \\text{trying to infer} \\; \\mu^{control} \\\\
 subject^{treatment}_{i,j} &\\sim N(\\mu^{treatment}_{i}, \\sigma_{i}^{2}) &\\# \\; \\text{unobserved} \\\\
 subject^{control}_{i,j} &\\sim N(\\mu^{control}_{i}, \\sigma_{i}^{2}) &\\# \\; \\text{unobserved} \\\\
-mean_j(subject^{treatment}_{i,j}) - observed\\_mean^{treatment}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred to be near observed} \\\\
-mean_j(subject^{control}_{i,j}) - observed\\_mean^{control}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred near to be observed} \\\\
-var_j(subject^{treatment}_{i,j}) - observed\\_var^{treatment}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred to be near observed} \\\\
-var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred near to be observed}
+mean_j(subject^{treatment}_{i,j}) &= observed\\_mean^{treatment}_{i}  &\\# \\; \\text{force inferred to be near observed} \\\\
+mean_j(subject^{control}_{i,j}) &= observed\\_mean^{control}_{i}  &\\# \\; \\text{force inferred near to be observed} \\\\
+var_j(subject^{treatment}_{i,j}) &= observed\\_var^{treatment}_{i}  &\\# \\; \\text{force inferred to be near observed} \\\\
+var_j(subject^{control}_{i,j}) &= observed\\_var^{control}_{i}  &\\# \\; \\text{force inferred near to be observed}
 \\end{align*}
 "
   } else if(model_style == "independent means") {
@@ -163,10 +182,10 @@ var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) 
 \\begin{align*}
 subject^{treatment}_{i,j} &\\sim N(\\mu^{treatment}_{i}, \\sigma_{i}^{2}) &\\# \\; \\text{trying to infer} \\; \\mu^{treatment}_{i} \\\\
 subject^{control}_{i,j} &\\sim N(\\mu^{control}_{i}, \\sigma_{i}^{2}) &\\# \\; \\text{trying to infer} \\; \\mu^{control}_{i} \\\\
-mean_j(subject^{treatment}_{i,j}) - observed\\_mean^{treatment}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred to be near observed} \\\\
-mean_j(subject^{control}_{i,j}) - observed\\_mean^{control}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred near to be observed} \\\\
-var_j(subject^{treatment}_{i,j}) - observed\\_var^{treatment}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred to be near observed} \\\\
-var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred near to be observed}
+mean_j(subject^{treatment}_{i,j}) &= observed\\_mean^{treatment}_{i}  &\\# \\; \\text{force inferred to be near observed} \\\\
+mean_j(subject^{control}_{i,j}) &= observed\\_mean^{control}_{i}  &\\# \\; \\text{force inferred near to be observed} \\\\
+var_j(subject^{treatment}_{i,j}) &= observed\\_var^{treatment}_{i}  &\\# \\; \\text{force inferred to be near observed} \\\\
+var_j(subject^{control}_{i,j}) &= observed\\_var^{control}_{i}  &\\# \\; \\text{force inferred near to be observed}
 \\end{align*}
 "
   } else if(model_style == "shared mean") {
@@ -183,10 +202,10 @@ var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) 
 \\begin{align*}
 subject^{treatment}_{i,j} &\\sim N(\\mu^{treatment}, \\sigma_{i}^{2}) &\\# \\; \\text{trying to infer} \\; \\mu^{treatment} \\\\
 subject^{control}_{i,j} &\\sim N(\\mu^{control}, \\sigma_{i}^{2}) &\\# \\; \\text{trying to infer} \\; \\mu^{control} \\\\
-mean_j(subject^{treatment}_{i,j}) - observed\\_mean^{treatment}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred to be near observed} \\\\
-mean_j(subject^{control}_{i,j}) - observed\\_mean^{control}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred near to be observed} \\\\
-var_j(subject^{treatment}_{i,j}) - observed\\_var^{treatment}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred to be near observed} \\\\
-var_j(subject^{control}_{i,j}) - observed\\_var^{control}_{i} &\\sim N(0, 0.01) &\\# \\; \\text{force inferred near to be observed}
+mean_j(subject^{treatment}_{i,j}) &= observed\\_mean^{treatment}_{i}  &\\# \\; \\text{force inferred to be near observed} \\\\
+mean_j(subject^{control}_{i,j}) &= observed\\_mean^{control}_{i}  &\\# \\; \\text{force inferred near to be observed} \\\\
+var_j(subject^{treatment}_{i,j}) &= observed\\_var^{treatment}_{i}  &\\# \\; \\text{force inferred to be near observed} \\\\
+var_j(subject^{control}_{i,j}) &= observed\\_var^{control}_{i}  &\\# \\; \\text{force inferred near to be observed}
 \\end{align*}
 "
   } else {

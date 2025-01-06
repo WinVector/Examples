@@ -1,6 +1,19 @@
 
 
 // model_style: independent means
+functions {
+  vector shift_scale(vector v, real target_mean, real target_var) {
+     // shift and scale v to match target mean and variances
+     real n = dims(v)[1];
+     real sumv = sum(v);
+     real sumv2 = dot_product(v, v);
+     real diff = n * sumv2 - sumv * sumv;
+     real disc = sqrt(target_var * n * (n - 1) * diff);
+     real scale = disc / diff;
+     real shift = target_mean - sumv * disc / (n * diff);
+     return scale * v + shift;
+  }
+}
 data {
   int<lower=1> n_studies;  // number of studies
   array[n_studies] int<lower=1> nE;  // number treated examples
@@ -14,6 +27,44 @@ parameters {
   vector[n_studies] inferred_group_treatment_mean;  // unobserved per-group ideal treatment effect
   vector[n_studies] inferred_group_control_mean;  // unobserved per-group ideal treatment effect
   vector<lower=0>[n_studies] inferred_in_group_stddev;  // unobserved per-group treatment variance
+
+  vector[nE[1]] treatment_subject_unscaled_1;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[1]] control_subject_unscaled_1;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[2]] treatment_subject_unscaled_2;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[2]] control_subject_unscaled_2;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[3]] treatment_subject_unscaled_3;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[3]] control_subject_unscaled_3;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[4]] treatment_subject_unscaled_4;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[4]] control_subject_unscaled_4;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[5]] treatment_subject_unscaled_5;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[5]] control_subject_unscaled_5;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[6]] treatment_subject_unscaled_6;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[6]] control_subject_unscaled_6;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[7]] treatment_subject_unscaled_7;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[7]] control_subject_unscaled_7;  // unobserved per-group and subject control effects (unscaled)
+
+
+  vector[nE[8]] treatment_subject_unscaled_8;  // unobserved per-group and subject treatment effects (unscaled)
+  vector[nC[8]] control_subject_unscaled_8;  // unobserved per-group and subject control effects (unscaled)
+
+}
+transformed parameters {
+  vector[n_studies] sampled_meanE_unscaled;
+  vector<lower=0>[n_studies] sampled_varE_unscaled;
+  vector[n_studies] sampled_meanC_unscaled;
+  vector<lower=0>[n_studies] sampled_varC_unscaled;
 
   vector[nE[1]] treatment_subject_1;  // unobserved per-group and subject treatment effects
   vector[nC[1]] control_subject_1;  // unobserved per-group and subject control effects
@@ -46,59 +97,68 @@ parameters {
   vector[nE[8]] treatment_subject_8;  // unobserved per-group and subject treatment effects
   vector[nC[8]] control_subject_8;  // unobserved per-group and subject control effects
 
-}
-transformed parameters {
-  vector[n_studies] sampled_meanE;
-  vector<lower=0>[n_studies] sampled_varE;
-  vector[n_studies] sampled_meanC;
-  vector<lower=0>[n_studies] sampled_varC;
-
-  sampled_meanE[1] = mean(treatment_subject_1);
-  sampled_varE[1] = variance(treatment_subject_1);
-  sampled_meanC[1] = mean(control_subject_1);
-  sampled_varC[1] = variance(control_subject_1);
+  sampled_meanE_unscaled[1] = mean(treatment_subject_unscaled_1);
+  sampled_varE_unscaled[1] = variance(treatment_subject_unscaled_1);
+  sampled_meanC_unscaled[1] = mean(control_subject_unscaled_1);
+  sampled_varC_unscaled[1] = variance(control_subject_unscaled_1);
+  treatment_subject_1 = shift_scale(treatment_subject_unscaled_1, meanE[1], varE[1]);
+  control_subject_1 = shift_scale(control_subject_unscaled_1, meanC[1], varC[1]);
 
 
-  sampled_meanE[2] = mean(treatment_subject_2);
-  sampled_varE[2] = variance(treatment_subject_2);
-  sampled_meanC[2] = mean(control_subject_2);
-  sampled_varC[2] = variance(control_subject_2);
+  sampled_meanE_unscaled[2] = mean(treatment_subject_unscaled_2);
+  sampled_varE_unscaled[2] = variance(treatment_subject_unscaled_2);
+  sampled_meanC_unscaled[2] = mean(control_subject_unscaled_2);
+  sampled_varC_unscaled[2] = variance(control_subject_unscaled_2);
+  treatment_subject_2 = shift_scale(treatment_subject_unscaled_2, meanE[2], varE[2]);
+  control_subject_2 = shift_scale(control_subject_unscaled_2, meanC[2], varC[2]);
 
 
-  sampled_meanE[3] = mean(treatment_subject_3);
-  sampled_varE[3] = variance(treatment_subject_3);
-  sampled_meanC[3] = mean(control_subject_3);
-  sampled_varC[3] = variance(control_subject_3);
+  sampled_meanE_unscaled[3] = mean(treatment_subject_unscaled_3);
+  sampled_varE_unscaled[3] = variance(treatment_subject_unscaled_3);
+  sampled_meanC_unscaled[3] = mean(control_subject_unscaled_3);
+  sampled_varC_unscaled[3] = variance(control_subject_unscaled_3);
+  treatment_subject_3 = shift_scale(treatment_subject_unscaled_3, meanE[3], varE[3]);
+  control_subject_3 = shift_scale(control_subject_unscaled_3, meanC[3], varC[3]);
 
 
-  sampled_meanE[4] = mean(treatment_subject_4);
-  sampled_varE[4] = variance(treatment_subject_4);
-  sampled_meanC[4] = mean(control_subject_4);
-  sampled_varC[4] = variance(control_subject_4);
+  sampled_meanE_unscaled[4] = mean(treatment_subject_unscaled_4);
+  sampled_varE_unscaled[4] = variance(treatment_subject_unscaled_4);
+  sampled_meanC_unscaled[4] = mean(control_subject_unscaled_4);
+  sampled_varC_unscaled[4] = variance(control_subject_unscaled_4);
+  treatment_subject_4 = shift_scale(treatment_subject_unscaled_4, meanE[4], varE[4]);
+  control_subject_4 = shift_scale(control_subject_unscaled_4, meanC[4], varC[4]);
 
 
-  sampled_meanE[5] = mean(treatment_subject_5);
-  sampled_varE[5] = variance(treatment_subject_5);
-  sampled_meanC[5] = mean(control_subject_5);
-  sampled_varC[5] = variance(control_subject_5);
+  sampled_meanE_unscaled[5] = mean(treatment_subject_unscaled_5);
+  sampled_varE_unscaled[5] = variance(treatment_subject_unscaled_5);
+  sampled_meanC_unscaled[5] = mean(control_subject_unscaled_5);
+  sampled_varC_unscaled[5] = variance(control_subject_unscaled_5);
+  treatment_subject_5 = shift_scale(treatment_subject_unscaled_5, meanE[5], varE[5]);
+  control_subject_5 = shift_scale(control_subject_unscaled_5, meanC[5], varC[5]);
 
 
-  sampled_meanE[6] = mean(treatment_subject_6);
-  sampled_varE[6] = variance(treatment_subject_6);
-  sampled_meanC[6] = mean(control_subject_6);
-  sampled_varC[6] = variance(control_subject_6);
+  sampled_meanE_unscaled[6] = mean(treatment_subject_unscaled_6);
+  sampled_varE_unscaled[6] = variance(treatment_subject_unscaled_6);
+  sampled_meanC_unscaled[6] = mean(control_subject_unscaled_6);
+  sampled_varC_unscaled[6] = variance(control_subject_unscaled_6);
+  treatment_subject_6 = shift_scale(treatment_subject_unscaled_6, meanE[6], varE[6]);
+  control_subject_6 = shift_scale(control_subject_unscaled_6, meanC[6], varC[6]);
 
 
-  sampled_meanE[7] = mean(treatment_subject_7);
-  sampled_varE[7] = variance(treatment_subject_7);
-  sampled_meanC[7] = mean(control_subject_7);
-  sampled_varC[7] = variance(control_subject_7);
+  sampled_meanE_unscaled[7] = mean(treatment_subject_unscaled_7);
+  sampled_varE_unscaled[7] = variance(treatment_subject_unscaled_7);
+  sampled_meanC_unscaled[7] = mean(control_subject_unscaled_7);
+  sampled_varC_unscaled[7] = variance(control_subject_unscaled_7);
+  treatment_subject_7 = shift_scale(treatment_subject_unscaled_7, meanE[7], varE[7]);
+  control_subject_7 = shift_scale(control_subject_unscaled_7, meanC[7], varC[7]);
 
 
-  sampled_meanE[8] = mean(treatment_subject_8);
-  sampled_varE[8] = variance(treatment_subject_8);
-  sampled_meanC[8] = mean(control_subject_8);
-  sampled_varC[8] = variance(control_subject_8);
+  sampled_meanE_unscaled[8] = mean(treatment_subject_unscaled_8);
+  sampled_varE_unscaled[8] = variance(treatment_subject_unscaled_8);
+  sampled_meanC_unscaled[8] = mean(control_subject_unscaled_8);
+  sampled_varC_unscaled[8] = variance(control_subject_unscaled_8);
+  treatment_subject_8 = shift_scale(treatment_subject_unscaled_8, meanE[8], varE[8]);
+  control_subject_8 = shift_scale(control_subject_unscaled_8, meanC[8], varC[8]);
 
 }
 model {
@@ -114,16 +174,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_1 ~ normal(inferred_group_treatment_mean[1], inferred_in_group_stddev[1]);
   // match observed summaries
-  sampled_meanE[1] ~ normal(meanE[1], 0.01);
-  sampled_varE[1] ~ normal(varE[1], 0.01);
+  sampled_meanE_unscaled[1] ~ normal(meanE[1], 0.1);
+  sampled_varE_unscaled[1] ~ normal(varE[1], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_1 ~ normal(inferred_group_control_mean[1], inferred_in_group_stddev[1]);
   // match observed summaries
-  sampled_meanC[1] ~ normal(meanC[1], 0.01);
-  sampled_varC[1] ~ normal(varC[1], 0.01);
+  sampled_meanC_unscaled[1] ~ normal(meanC[1], 0.1);
+  sampled_varC_unscaled[1] ~ normal(varC[1], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -132,16 +192,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_2 ~ normal(inferred_group_treatment_mean[2], inferred_in_group_stddev[2]);
   // match observed summaries
-  sampled_meanE[2] ~ normal(meanE[2], 0.01);
-  sampled_varE[2] ~ normal(varE[2], 0.01);
+  sampled_meanE_unscaled[2] ~ normal(meanE[2], 0.1);
+  sampled_varE_unscaled[2] ~ normal(varE[2], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_2 ~ normal(inferred_group_control_mean[2], inferred_in_group_stddev[2]);
   // match observed summaries
-  sampled_meanC[2] ~ normal(meanC[2], 0.01);
-  sampled_varC[2] ~ normal(varC[2], 0.01);
+  sampled_meanC_unscaled[2] ~ normal(meanC[2], 0.1);
+  sampled_varC_unscaled[2] ~ normal(varC[2], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -150,16 +210,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_3 ~ normal(inferred_group_treatment_mean[3], inferred_in_group_stddev[3]);
   // match observed summaries
-  sampled_meanE[3] ~ normal(meanE[3], 0.01);
-  sampled_varE[3] ~ normal(varE[3], 0.01);
+  sampled_meanE_unscaled[3] ~ normal(meanE[3], 0.1);
+  sampled_varE_unscaled[3] ~ normal(varE[3], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_3 ~ normal(inferred_group_control_mean[3], inferred_in_group_stddev[3]);
   // match observed summaries
-  sampled_meanC[3] ~ normal(meanC[3], 0.01);
-  sampled_varC[3] ~ normal(varC[3], 0.01);
+  sampled_meanC_unscaled[3] ~ normal(meanC[3], 0.1);
+  sampled_varC_unscaled[3] ~ normal(varC[3], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -168,16 +228,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_4 ~ normal(inferred_group_treatment_mean[4], inferred_in_group_stddev[4]);
   // match observed summaries
-  sampled_meanE[4] ~ normal(meanE[4], 0.01);
-  sampled_varE[4] ~ normal(varE[4], 0.01);
+  sampled_meanE_unscaled[4] ~ normal(meanE[4], 0.1);
+  sampled_varE_unscaled[4] ~ normal(varE[4], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_4 ~ normal(inferred_group_control_mean[4], inferred_in_group_stddev[4]);
   // match observed summaries
-  sampled_meanC[4] ~ normal(meanC[4], 0.01);
-  sampled_varC[4] ~ normal(varC[4], 0.01);
+  sampled_meanC_unscaled[4] ~ normal(meanC[4], 0.1);
+  sampled_varC_unscaled[4] ~ normal(varC[4], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -186,16 +246,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_5 ~ normal(inferred_group_treatment_mean[5], inferred_in_group_stddev[5]);
   // match observed summaries
-  sampled_meanE[5] ~ normal(meanE[5], 0.01);
-  sampled_varE[5] ~ normal(varE[5], 0.01);
+  sampled_meanE_unscaled[5] ~ normal(meanE[5], 0.1);
+  sampled_varE_unscaled[5] ~ normal(varE[5], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_5 ~ normal(inferred_group_control_mean[5], inferred_in_group_stddev[5]);
   // match observed summaries
-  sampled_meanC[5] ~ normal(meanC[5], 0.01);
-  sampled_varC[5] ~ normal(varC[5], 0.01);
+  sampled_meanC_unscaled[5] ~ normal(meanC[5], 0.1);
+  sampled_varC_unscaled[5] ~ normal(varC[5], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -204,16 +264,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_6 ~ normal(inferred_group_treatment_mean[6], inferred_in_group_stddev[6]);
   // match observed summaries
-  sampled_meanE[6] ~ normal(meanE[6], 0.01);
-  sampled_varE[6] ~ normal(varE[6], 0.01);
+  sampled_meanE_unscaled[6] ~ normal(meanE[6], 0.1);
+  sampled_varE_unscaled[6] ~ normal(varE[6], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_6 ~ normal(inferred_group_control_mean[6], inferred_in_group_stddev[6]);
   // match observed summaries
-  sampled_meanC[6] ~ normal(meanC[6], 0.01);
-  sampled_varC[6] ~ normal(varC[6], 0.01);
+  sampled_meanC_unscaled[6] ~ normal(meanC[6], 0.1);
+  sampled_varC_unscaled[6] ~ normal(varC[6], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -222,16 +282,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_7 ~ normal(inferred_group_treatment_mean[7], inferred_in_group_stddev[7]);
   // match observed summaries
-  sampled_meanE[7] ~ normal(meanE[7], 0.01);
-  sampled_varE[7] ~ normal(varE[7], 0.01);
+  sampled_meanE_unscaled[7] ~ normal(meanE[7], 0.1);
+  sampled_varE_unscaled[7] ~ normal(varE[7], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_7 ~ normal(inferred_group_control_mean[7], inferred_in_group_stddev[7]);
   // match observed summaries
-  sampled_meanC[7] ~ normal(meanC[7], 0.01);
-  sampled_varC[7] ~ normal(varC[7], 0.01);
+  sampled_meanC_unscaled[7] ~ normal(meanC[7], 0.1);
+  sampled_varC_unscaled[7] ~ normal(varC[7], 0.1);
 
 
   // each group generates an unobserved treatment response
@@ -240,16 +300,16 @@ model {
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   treatment_subject_8 ~ normal(inferred_group_treatment_mean[8], inferred_in_group_stddev[8]);
   // match observed summaries
-  sampled_meanE[8] ~ normal(meanE[8], 0.01);
-  sampled_varE[8] ~ normal(varE[8], 0.01);
+  sampled_meanE_unscaled[8] ~ normal(meanE[8], 0.1);
+  sampled_varE_unscaled[8] ~ normal(varE[8], 0.1);
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   control_subject_8 ~ normal(inferred_group_control_mean[8], inferred_in_group_stddev[8]);
   // match observed summaries
-  sampled_meanC[8] ~ normal(meanC[8], 0.01);
-  sampled_varC[8] ~ normal(varC[8], 0.01);
+  sampled_meanC_unscaled[8] ~ normal(meanC[8], 0.1);
+  sampled_varC_unscaled[8] ~ normal(varC[8], 0.1);
 
 }
 

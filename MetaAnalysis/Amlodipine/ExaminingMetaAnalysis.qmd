@@ -1,7 +1,7 @@
 ---
 title: "Examining Meta-Analysis"
 author: John Mount, Joseph Rickert
-date: "2024-11-25"
+date: "2025-1-6"
 format: markdown_github
 code-fold: true
 code-summary: "Show the code"
@@ -241,9 +241,7 @@ fit_joint <- run_cached(
          "inferred_grand_treatment_mean", "inferred_grand_control_mean", 
          "inferred_between_group_stddev",
          "inferred_group_treatment_mean", "inferred_group_control_mean",
-         "inferred_in_group_stddev", 
-         "sampled_meanE", "sampled_varE",
-         "sampled_meanC", "sampled_varC")
+         "inferred_in_group_stddev")
   ),
   prefix="Amlodipine_joint"
 )
@@ -323,9 +321,7 @@ fit_independent <- run_cached(
   refresh = 0,                # no progress shown
   pars = c("lp__",  # parameters to bring back
          "inferred_group_treatment_mean", "inferred_group_control_mean",
-         "inferred_in_group_stddev", 
-         "sampled_meanE", "sampled_varE",
-         "sampled_meanC", "sampled_varC")
+         "inferred_in_group_stddev")
   ),
   prefix="Amlodipine_independent"
 )
