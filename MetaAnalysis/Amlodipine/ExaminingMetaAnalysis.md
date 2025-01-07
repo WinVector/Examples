@@ -457,6 +457,15 @@ fit_joint <- run_cached(
 
 </details>
 
+    Warning: There were 75 divergent transitions after warmup. See
+    https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    to find out why this is a problem and how to eliminate them.
+
+    Warning: There were 7925 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    Warning: Examine the pairs() plot to diagnose sampling problems
+
 And then, we extract the results.
 
 <details class="code-fold">
@@ -480,9 +489,9 @@ inference |>
 
 | inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev | delta |
 |---------------------:|--------------------:|---------------------:|-------:|
-| 0.200178 | 0.03829 | 0.0640137 | 0.161888 |
+| 0.1997407 | 0.0387736 | 0.0631799 | 0.1609671 |
 
-And our new estimate is: 0.161888 which is very similar to the previous
+And our new estimate is: 0.1609671 which is very similar to the previous
 results. We can graph the inferred posterior distribution of effect size
 as follows.
 
@@ -565,6 +574,11 @@ fit_independent <- run_cached(
 ```
 
 </details>
+
+    Warning: There were 8000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    Warning: Examine the pairs() plot to diagnose sampling problems
 
 Then we can plot the compared inferences of the hierarchical and
 independent models.
@@ -650,6 +664,11 @@ fit_shared_mean <- run_cached(
 
 </details>
 
+    Warning: There were 8000 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    Warning: Examine the pairs() plot to diagnose sampling problems
+
 The new equations are as follows.
 
 ![](analysis_src_shared_mean_Latex.png)
@@ -677,7 +696,7 @@ knitr::kable(inference_shared_mean)
 
 | inferred_grand_treatment_mean | inferred_grand_control_mean |     delta |
 |------------------------------:|----------------------------:|----------:|
-|                     0.1962144 |                   0.0293868 | 0.1668276 |
+|                     0.1961856 |                   0.0296979 | 0.1664877 |
 
 We can plot the distribution of estimates as follows.
 

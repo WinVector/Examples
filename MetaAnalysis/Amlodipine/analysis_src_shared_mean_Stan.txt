@@ -9,7 +9,7 @@ functions {
      vc = vc / sqrt(dot_product(vc, vc));  // normalize
      real scale = sqrt((n - 1) * target_var);
      real shift = target_mean;
-     vc = scale * vc + shift;  // move to desired man and varaince
+     vc = scale * vc + shift;  // move to desired man and variance
      if ((abs(mean(vc) - target_mean) >= 1e-3) || (abs(variance(vc) - target_var) >= 1e-3)) {
         reject("shift/scale failed");
      }
