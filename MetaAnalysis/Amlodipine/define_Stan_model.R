@@ -58,15 +58,17 @@ functions {
   vector shift_scale(vector v, real target_mean, real target_var) {
      // shift and scale v to match target mean and variances
      int n = dims(v)[1];
-     vector[n] vc = v - mean(v);  // shift to mean zero
-     vc = vc / sqrt(dot_product(vc, vc));  // normalize
-     real scale = sqrt((n - 1) * target_var);
-     real shift = target_mean;
-     vc = scale * vc + shift;  // move to desired man and variance
-     if ((abs(mean(vc) - target_mean) >= 1e-3) || (abs(variance(vc) - target_var) >= 1e-3)) {
+     real sumv = sum(v);
+     real sumv2 = dot_product(v, v);
+     real diff = n * sumv2 - sumv * sumv;
+     real disc = sqrt(target_var * n * (n - 1) * diff);
+     real scale = disc / diff;
+     real shift = target_mean - sumv * disc / (n * diff);
+     vector[n] vr = scale * v + shift;
+     if ((abs(mean(vr) - target_mean) >= 1e-3) || (abs(variance(vr) - target_var) >= 1e-3)) {
         reject(\"shift/scale failed\");
      }
-     return vc;
+     return vr;
   }
 }
 data {
@@ -93,12 +95,20 @@ idx_blocks("
 "
 }
 transformed parameters {
+  vector[n_studies] sampled_meanE_unscaled;
+  vector<lower=0>[n_studies] sampled_varE_unscaled;
+  vector[n_studies] sampled_meanC_unscaled;
+  vector<lower=0>[n_studies] sampled_varC_unscaled;
 ",
 idx_blocks("
   vector[nE[{IDX}]] treatment_subject_{IDX};  // unobserved per-group and subject treatment effects
   vector[nC[{IDX}]] control_subject_{IDX};  // unobserved per-group and subject control effects
 ", n_studies = n_studies),
 idx_blocks("
+  sampled_meanE_unscaled[{IDX}] = mean(treatment_subject_unscaled_{IDX});
+  sampled_varE_unscaled[{IDX}] = variance(treatment_subject_unscaled_{IDX});
+  sampled_meanC_unscaled[{IDX}] = mean(control_subject_unscaled_{IDX});
+  sampled_varC_unscaled[{IDX}] = variance(control_subject_unscaled_{IDX}); 
   treatment_subject_{IDX} = shift_scale(treatment_subject_unscaled_{IDX}, meanE[{IDX}], varE[{IDX}]);
   control_subject_{IDX} = shift_scale(control_subject_unscaled_{IDX}, meanC[{IDX}], varC[{IDX}]);
 ", n_studies = n_studies),
@@ -115,24 +125,26 @@ model {
   // more peaked/informative stuff
 ",
 idx_blocks("
-  // each group generates an unobserved treatment response
-  // inputs to sample generation
-  treatment_subject_{IDX} ~ normal(0, 1);  // pre-image of uniform on 1.x = 0, x.x = 1 shell
+  // each group generates an unobserved treatment response 
   {/group_means_lines/}inferred_group_treatment_mean[{IDX}] ~ normal(inferred_grand_treatment_mean, inferred_between_group_stddev);
   // treatment subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   {/grouped_subject_mean_lines/}treatment_subject_{IDX} ~ normal(inferred_group_treatment_mean[{IDX}], inferred_in_group_stddev[{IDX}]);
   {/pooled_subject_mean_lines/}treatment_subject_{IDX} ~ normal(inferred_grand_treatment_mean, inferred_in_group_stddev[{IDX}]);
+  // match observed summaries
+  sampled_meanE_unscaled[{IDX}] ~ normal(meanE[{IDX}], 1);
+  sampled_varE_unscaled[{IDX}] ~ normal(varE[{IDX}], 1);
   // each group generates an unobserved control response
-  // inputs to sample generation
-  control_subject_{IDX} ~ normal(0, 1);  // pre-image of uniform on 1.x = 0, x.x = 1 shell
   {/group_means_lines/}inferred_group_control_mean[{IDX}] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
   // summary mean should be normally distributed and variance chi-square (with proper parameters and scaling)
   {/grouped_subject_mean_lines/}control_subject_{IDX} ~ normal(inferred_group_control_mean[{IDX}], inferred_in_group_stddev[{IDX}]);
   {/pooled_subject_mean_lines/}control_subject_{IDX} ~ normal(inferred_grand_control_mean, inferred_in_group_stddev[{IDX}]);
+  // match observed summaries
+  sampled_meanC_unscaled[{IDX}] ~ normal(meanC[{IDX}], 1);
+  sampled_varC_unscaled[{IDX}] ~ normal(varC[{IDX}], 1);
 ", n_studies = n_studies),
 "
 }
