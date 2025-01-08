@@ -480,9 +480,9 @@ inference |>
 
 | inferred_grand_treatment_mean | inferred_grand_control_mean | inferred_between_group_stddev | delta |
 |---------------------:|--------------------:|---------------------:|-------:|
-| 0.2003079 | 0.0399803 | 0.0647444 | 0.1603276 |
+| 0.2003752 | 0.0391163 | 0.0639059 | 0.161259 |
 
-And our new estimate is: 0.1603276 which is very similar to the previous
+And our new estimate is: 0.161259 which is very similar to the previous
 results. We can graph the inferred posterior distribution of effect size
 as follows.
 
@@ -677,7 +677,7 @@ knitr::kable(inference_shared_mean)
 
 | inferred_grand_treatment_mean | inferred_grand_control_mean |     delta |
 |------------------------------:|----------------------------:|----------:|
-|                     0.1957983 |                   0.0295453 | 0.1662529 |
+|                     0.1960502 |                   0.0294865 | 0.1665637 |
 
 We can plot the distribution of estimates as follows.
 

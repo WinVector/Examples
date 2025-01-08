@@ -134,7 +134,7 @@ idx_blocks("
   {/pooled_subject_mean_lines/}treatment_subject_{IDX} ~ normal(inferred_grand_treatment_mean, inferred_in_group_stddev[{IDX}]);
   // match observed summaries
   sampled_meanE_unscaled[{IDX}] ~ normal(meanE[{IDX}], 1);
-  sampled_varE_unscaled[{IDX}] ~ normal(varE[{IDX}], 1);
+  sampled_varE_unscaled[{IDX}] ~ gamma(varE[{IDX}] * varE[{IDX}], varE[{IDX}]);  // mean varE[{IDX}], var 1
   // each group generates an unobserved control response
   {/group_means_lines/}inferred_group_control_mean[{IDX}] ~ normal(inferred_grand_control_mean, inferred_between_group_stddev);
   // control subjects experience effects a function of unobserved group response
@@ -144,7 +144,7 @@ idx_blocks("
   {/pooled_subject_mean_lines/}control_subject_{IDX} ~ normal(inferred_grand_control_mean, inferred_in_group_stddev[{IDX}]);
   // match observed summaries
   sampled_meanC_unscaled[{IDX}] ~ normal(meanC[{IDX}], 1);
-  sampled_varC_unscaled[{IDX}] ~ normal(varC[{IDX}], 1);
+  sampled_varC_unscaled[{IDX}] ~ gamma(varC[{IDX}] * varC[{IDX}], varC[{IDX}]);  // mean varC[{IDX}], var 1
 ", n_studies = n_studies),
 "
 }

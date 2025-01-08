@@ -179,7 +179,7 @@ model {
   treatment_subject_1 ~ normal(inferred_group_treatment_mean[1], inferred_in_group_stddev[1]);
   // match observed summaries
   sampled_meanE_unscaled[1] ~ normal(meanE[1], 1);
-  sampled_varE_unscaled[1] ~ normal(varE[1], 1);
+  sampled_varE_unscaled[1] ~ gamma(varE[1] * varE[1], varE[1]);  // mean varE[1], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -187,7 +187,7 @@ model {
   control_subject_1 ~ normal(inferred_group_control_mean[1], inferred_in_group_stddev[1]);
   // match observed summaries
   sampled_meanC_unscaled[1] ~ normal(meanC[1], 1);
-  sampled_varC_unscaled[1] ~ normal(varC[1], 1);
+  sampled_varC_unscaled[1] ~ gamma(varC[1] * varC[1], varC[1]);  // mean varC[1], var 1
 
 
   // each group generates an unobserved treatment response
@@ -197,7 +197,7 @@ model {
   treatment_subject_2 ~ normal(inferred_group_treatment_mean[2], inferred_in_group_stddev[2]);
   // match observed summaries
   sampled_meanE_unscaled[2] ~ normal(meanE[2], 1);
-  sampled_varE_unscaled[2] ~ normal(varE[2], 1);
+  sampled_varE_unscaled[2] ~ gamma(varE[2] * varE[2], varE[2]);  // mean varE[2], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -205,7 +205,7 @@ model {
   control_subject_2 ~ normal(inferred_group_control_mean[2], inferred_in_group_stddev[2]);
   // match observed summaries
   sampled_meanC_unscaled[2] ~ normal(meanC[2], 1);
-  sampled_varC_unscaled[2] ~ normal(varC[2], 1);
+  sampled_varC_unscaled[2] ~ gamma(varC[2] * varC[2], varC[2]);  // mean varC[2], var 1
 
 
   // each group generates an unobserved treatment response
@@ -215,7 +215,7 @@ model {
   treatment_subject_3 ~ normal(inferred_group_treatment_mean[3], inferred_in_group_stddev[3]);
   // match observed summaries
   sampled_meanE_unscaled[3] ~ normal(meanE[3], 1);
-  sampled_varE_unscaled[3] ~ normal(varE[3], 1);
+  sampled_varE_unscaled[3] ~ gamma(varE[3] * varE[3], varE[3]);  // mean varE[3], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -223,7 +223,7 @@ model {
   control_subject_3 ~ normal(inferred_group_control_mean[3], inferred_in_group_stddev[3]);
   // match observed summaries
   sampled_meanC_unscaled[3] ~ normal(meanC[3], 1);
-  sampled_varC_unscaled[3] ~ normal(varC[3], 1);
+  sampled_varC_unscaled[3] ~ gamma(varC[3] * varC[3], varC[3]);  // mean varC[3], var 1
 
 
   // each group generates an unobserved treatment response
@@ -233,7 +233,7 @@ model {
   treatment_subject_4 ~ normal(inferred_group_treatment_mean[4], inferred_in_group_stddev[4]);
   // match observed summaries
   sampled_meanE_unscaled[4] ~ normal(meanE[4], 1);
-  sampled_varE_unscaled[4] ~ normal(varE[4], 1);
+  sampled_varE_unscaled[4] ~ gamma(varE[4] * varE[4], varE[4]);  // mean varE[4], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -241,7 +241,7 @@ model {
   control_subject_4 ~ normal(inferred_group_control_mean[4], inferred_in_group_stddev[4]);
   // match observed summaries
   sampled_meanC_unscaled[4] ~ normal(meanC[4], 1);
-  sampled_varC_unscaled[4] ~ normal(varC[4], 1);
+  sampled_varC_unscaled[4] ~ gamma(varC[4] * varC[4], varC[4]);  // mean varC[4], var 1
 
 
   // each group generates an unobserved treatment response
@@ -251,7 +251,7 @@ model {
   treatment_subject_5 ~ normal(inferred_group_treatment_mean[5], inferred_in_group_stddev[5]);
   // match observed summaries
   sampled_meanE_unscaled[5] ~ normal(meanE[5], 1);
-  sampled_varE_unscaled[5] ~ normal(varE[5], 1);
+  sampled_varE_unscaled[5] ~ gamma(varE[5] * varE[5], varE[5]);  // mean varE[5], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -259,7 +259,7 @@ model {
   control_subject_5 ~ normal(inferred_group_control_mean[5], inferred_in_group_stddev[5]);
   // match observed summaries
   sampled_meanC_unscaled[5] ~ normal(meanC[5], 1);
-  sampled_varC_unscaled[5] ~ normal(varC[5], 1);
+  sampled_varC_unscaled[5] ~ gamma(varC[5] * varC[5], varC[5]);  // mean varC[5], var 1
 
 
   // each group generates an unobserved treatment response
@@ -269,7 +269,7 @@ model {
   treatment_subject_6 ~ normal(inferred_group_treatment_mean[6], inferred_in_group_stddev[6]);
   // match observed summaries
   sampled_meanE_unscaled[6] ~ normal(meanE[6], 1);
-  sampled_varE_unscaled[6] ~ normal(varE[6], 1);
+  sampled_varE_unscaled[6] ~ gamma(varE[6] * varE[6], varE[6]);  // mean varE[6], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -277,7 +277,7 @@ model {
   control_subject_6 ~ normal(inferred_group_control_mean[6], inferred_in_group_stddev[6]);
   // match observed summaries
   sampled_meanC_unscaled[6] ~ normal(meanC[6], 1);
-  sampled_varC_unscaled[6] ~ normal(varC[6], 1);
+  sampled_varC_unscaled[6] ~ gamma(varC[6] * varC[6], varC[6]);  // mean varC[6], var 1
 
 
   // each group generates an unobserved treatment response
@@ -287,7 +287,7 @@ model {
   treatment_subject_7 ~ normal(inferred_group_treatment_mean[7], inferred_in_group_stddev[7]);
   // match observed summaries
   sampled_meanE_unscaled[7] ~ normal(meanE[7], 1);
-  sampled_varE_unscaled[7] ~ normal(varE[7], 1);
+  sampled_varE_unscaled[7] ~ gamma(varE[7] * varE[7], varE[7]);  // mean varE[7], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -295,7 +295,7 @@ model {
   control_subject_7 ~ normal(inferred_group_control_mean[7], inferred_in_group_stddev[7]);
   // match observed summaries
   sampled_meanC_unscaled[7] ~ normal(meanC[7], 1);
-  sampled_varC_unscaled[7] ~ normal(varC[7], 1);
+  sampled_varC_unscaled[7] ~ gamma(varC[7] * varC[7], varC[7]);  // mean varC[7], var 1
 
 
   // each group generates an unobserved treatment response
@@ -305,7 +305,7 @@ model {
   treatment_subject_8 ~ normal(inferred_group_treatment_mean[8], inferred_in_group_stddev[8]);
   // match observed summaries
   sampled_meanE_unscaled[8] ~ normal(meanE[8], 1);
-  sampled_varE_unscaled[8] ~ normal(varE[8], 1);
+  sampled_varE_unscaled[8] ~ gamma(varE[8] * varE[8], varE[8]);  // mean varE[8], var 1
   // each group generates an unobserved control response
   // control subjects experience effects a function of unobserved group response
   // in the normal distribution case could avoid forming individual observations as we know
@@ -313,7 +313,7 @@ model {
   control_subject_8 ~ normal(inferred_group_control_mean[8], inferred_in_group_stddev[8]);
   // match observed summaries
   sampled_meanC_unscaled[8] ~ normal(meanC[8], 1);
-  sampled_varC_unscaled[8] ~ normal(varC[8], 1);
+  sampled_varC_unscaled[8] ~ gamma(varC[8] * varC[8], varC[8]);  // mean varC[8], var 1
 
 }
 
