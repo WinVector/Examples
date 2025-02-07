@@ -27,6 +27,17 @@ Our group is available to give on-site or remote training on these tools and tec
 The slides for of the material is here: https://github.com/WinVector/Examples/blob/main/TimeSeries/TimeSeries.pdf
 
 
+Roughly our thesis is:
+
+  1) In time series work, good descriptions such as https://www.statsmodels.org/stable/statespace.html are largely the exception.
+    This is one of the descriptions that lets us know the package implements "linear regression with auto-correlated residuals."
+     <img src="stats_models.png">
+  2) Even with such descriptions, it can remain unclear if the `(p, d, q)` style parameter specification *actually* implement the claimed equations.
+  3) Basic hints are not shared (such as setting `q = p`, please see https://github.com/WinVector/Examples/blob/main/TS/TS_example.md ).
+  4) There are tricks: such as full AR regression solutions ( https://win-vector.com/2023/05/07/a-time-series-apologia/ , the nasty "if all you measure about inference is prediction performance, regression wins" ) or pure pseudo-MA (linear combination of filters, often used in finance) that are pretty effective.
+  4) In the end, you may want a full Bayesian decomposition.
+
+
 
 
 
