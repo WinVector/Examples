@@ -35,7 +35,7 @@ Roughly our thesis is:
   2) Even with such descriptions, it can remain unclear if the `(p, d, q)` style parameter specification *actually* implement the claimed equations.
   3) Basic hints are not shared (such as setting `q = p`, please see https://github.com/WinVector/Examples/blob/main/TS/TS_example.md ).
   4) There are tricks: such as full AR regression solutions ( https://win-vector.com/2023/05/07/a-time-series-apologia/ , the nasty "if all you measure about inference is prediction performance, regression wins" ) or pure pseudo-MA (linear combination of filters, often used in finance) that are pretty effective.
-  4) In the end, you may want a full Bayesian decomposition.
+  4) In the end, you may want a full Bayesian decomposition. Roughly: inferring state may be at least as important is inferring the transfer function.
 
 
 
