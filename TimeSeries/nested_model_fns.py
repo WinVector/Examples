@@ -134,11 +134,11 @@ data {
         + "\n}"
         + f"""
 parameters {{
-  real b_auto_0;                              // auto-regress intercept
-  real<lower=0> b_imp_0;                      // total/impulse/transient intercept
+  real b_auto_0;                     // auto-regress intercept
+  real b_imp_0;                      // total/impulse/transient intercept
   vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
-  vector<lower=0>[N_y_future] y_future;                // to be inferred future state
-  vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
+  vector[N_y_future] y_future;                // to be inferred future state
+  vector[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
   real<lower=0> b_var_y;                      // presumed y (transient) noise variance
 }}
@@ -163,10 +163,19 @@ model {{
      + {auto_terms}{ext_terms_dur},
     b_var_y_auto);
         // how observations are formed
-  target += normal_lpdf(
-    y_observed |
-    y_imp[1:N_y_observed] + y_auto[1:N_y_observed], 
-    b_var_y);
+  for (i in 1:N_y_observed) {{
+      if (y_observed[i] > 0) {{
+        target += normal_lpdf(
+            y_observed[i] |
+            y_imp[i] + y_auto[i], 
+            b_var_y);    
+      }} else {{
+        target += normal_lcdf(  // Tobit style scoring
+            0 |
+            y_imp[i] + y_auto[i], 
+            b_var_y); 
+      }}
+  }}
         // future
   y_future ~ normal(
     y_imp[(N_y_observed + 1):(N_y_observed + N_y_future)] + y_auto[(N_y_observed + 1):(N_y_observed + N_y_future)], 
