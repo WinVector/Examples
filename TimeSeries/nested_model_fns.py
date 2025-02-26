@@ -305,6 +305,18 @@ def solve_forecast_by_Stan(
     return res
 
 
+# set some plotting controls
+plotting_quantiles = [0.1, 0.25, 0.5, 0.75, 0.9]
+plotting_colors = {
+    "0.1": "#2ca25f",
+    "0.25": "#006d2c",
+    "0.5": "#005824",
+    "0.75": "#006d2c",
+    "0.9": "#2ca25f",
+}
+ribbon_pairs = [("0.1", "0.9"), ("0.25", "0.75")]
+
+
 def plot_forecast(
     forecast_soln: pd.DataFrame,
     d_test: pd.DataFrame,
@@ -321,18 +333,6 @@ def plot_forecast(
             str({k: d_test.loc[i, k] for k in external_regressors})
             for i in range(d_test.shape[0])
         ]
-    # set some plotting controls
-    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
-    plotting_colors = {
-        "0.05": "#66c2a4",
-        "0.1": "#2ca25f",
-        "0.25": "#006d2c",
-        "0.5": "#005824",
-        "0.75": "#006d2c",
-        "0.9": "#2ca25f",
-        "0.95": "#66c2a4",
-    }
-    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
     # arrange forecast solution for plotting
     sf_frame = forecast_soln.loc[
         :, [c for c in forecast_soln.columns if c.startswith("y_future[")]
@@ -406,17 +406,6 @@ def plot_past_and_future(
     d_train: pd.DataFrame,
     d_test: pd.DataFrame,
 ):
-    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
-    plotting_colors = {
-        "0.05": "#66c2a4",
-        "0.1": "#2ca25f",
-        "0.25": "#006d2c",
-        "0.5": "#005824",
-        "0.75": "#006d2c",
-        "0.9": "#2ca25f",
-        "0.95": "#66c2a4",
-    }
-    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
     sf_frame = forecast_soln_i.loc[
         :, [c.startswith("y[") for c in forecast_soln_i.columns]
     ].reset_index(drop=True, inplace=False)
@@ -844,16 +833,6 @@ def plot_decomposition(
     history_frame['time_tick'] = [int(re.sub(r'^.*\[', '', v).replace(']', '')) for v in history_frame['variable']]
     history_frame['variable'] = [re.sub(r'\[.*\]', '', v) for v in history_frame['variable']]
     # get quantiles
-    plotting_quantiles = [0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95]
-    plotting_colors = {
-        "0.05": "#66c2a4",
-        "0.1": "#2ca25f",
-        "0.25": "#006d2c",
-        "0.5": "#005824",
-        "0.75": "#006d2c",
-        "0.9": "#2ca25f",
-        "0.95": "#66c2a4",
-    }
     history_plot = (
         history_frame
             .loc[:, ['variable', 'value', 'time_tick']]
@@ -898,7 +877,6 @@ def plot_decomposition(
         + ggtitle('past and future visits decomposed into sub-populations\n(left side training, right side forecast)')
     )
     # add in annotation regions
-    ribbon_pairs = [("0.05", "0.95"), ("0.1", "0.9"), ("0.25", "0.75")]
     for rp in ribbon_pairs:
         rp_low = (
             history_plot

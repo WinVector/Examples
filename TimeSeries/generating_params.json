@@ -1,1 +1,1 @@
-{"b_auto_0": 1.2804125781056719, "b_imp_0": 10.4, "b_auto": [1.9753766811902755, -1], "b_z": [14.2], "b_x": [16.1], "generating_lags": [1, 2], "modeling_lags": [1, 2], "error_scale": 3.2}
+{"b_auto_0": 1.2804125781056719, "b_imp_0": -10.4, "b_auto": [1.9753766811902755, -1], "b_z": [14.2], "b_x": [16.1], "generating_lags": [1, 2], "modeling_lags": [1, 2], "error_scale": 3.2}
