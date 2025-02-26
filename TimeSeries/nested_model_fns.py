@@ -144,9 +144,11 @@ parameters {{
 }}
 transformed parameters {{
         // y_observed and y_future in one notation (for subscripting)
-  vector[N_y_observed + N_y_future] y;        
+  vector[N_y_observed + N_y_future] y;
+  vector[N_y_observed + N_y_future] y_imp;   
   y[1:N_y_observed] = y_observed;
   y[(N_y_observed + 1):(N_y_observed + N_y_future)] = y_future;
+  y_imp = b_imp_0{ext_terms_imp};
 }}
 model {{
   b_var_y_auto ~ chi_square(1);               // prior for y_auto (durable) noise variance
@@ -161,8 +163,12 @@ model {{
      + {auto_terms}{ext_terms_dur},
     b_var_y_auto);
         // how observations are formed
-  y ~ normal(
-    b_imp_0{ext_terms_imp} + y_auto, 
+  y_observed ~ normal(
+    y_imp[1:N_y_observed] + y_auto[1:N_y_observed], 
+    b_var_y);
+        // future
+  y_future ~ normal(
+    y_imp[(N_y_observed + 1):(N_y_observed + N_y_future)] + y_auto[(N_y_observed + 1):(N_y_observed + N_y_future)], 
     b_var_y);
 }}
 """
