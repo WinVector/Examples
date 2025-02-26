@@ -22,6 +22,7 @@ def build_example(
     b_imp_0: float,
     b_x: Iterable[float],
     n_step: int = 1000,
+    error_scale: float,
 ) -> pd.DataFrame:
     generating_lags = list(generating_lags)
     b_auto = list(b_auto)
@@ -50,7 +51,7 @@ def build_example(
         xi = rng.binomial(n=1, p=0.35, size=n_step)
         d_example[f"x_{i}"] = xi
         y = y + b_x_i * xi
-    d_example["y"] = np.maximum(0, y + b_imp_0)
+    d_example["y"] = np.maximum(0, y + b_imp_0 + rng.normal(size=n_step) * error_scale)
     return pd.DataFrame(d_example)
 
 
