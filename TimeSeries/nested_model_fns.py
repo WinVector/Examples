@@ -51,7 +51,7 @@ def build_example(
         xi = rng.binomial(n=1, p=0.35, size=n_step)
         d_example[f"x_{i}"] = xi
         y = y + b_x_i * xi
-    d_example["y"] = np.maximum(0, y + b_imp_0 + rng.normal(size=n_step) * error_scale)
+    d_example["y"] = np.maximum(0, np.round(y + b_imp_0 + rng.normal(size=n_step) * error_scale))
     return pd.DataFrame(d_example)
 
 
@@ -288,6 +288,9 @@ def solve_forecast_by_Stan(
         },
         inplace=False,
     )
+    for c in res.columns:
+        if c.startswith('y['):
+            res[c] = np.maximum(0, res[c])
     if cache_file_name is not None:
         res.to_csv(cache_file_name, index=False)
     return res
