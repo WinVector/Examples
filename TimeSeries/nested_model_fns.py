@@ -163,7 +163,8 @@ model {{
      + {auto_terms}{ext_terms_dur},
     b_var_y_auto);
         // how observations are formed
-  y_observed ~ normal(
+  target += normal_lpdf(
+    y_observed |
     y_imp[1:N_y_observed] + y_auto[1:N_y_observed], 
     b_var_y);
         // future
