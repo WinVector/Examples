@@ -135,10 +135,10 @@ data {
         + f"""
 parameters {{
   real b_auto_0;                     // auto-regress intercept
-  real b_imp_0;                      // total/impulse/transient intercept
+  real<lower=0> b_imp_0;                      // total/impulse/transient intercept
   vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
-  vector[N_y_future] y_future;                // to be inferred future state
-  vector[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
+  vector<lower=0>[N_y_future] y_future;                // to be inferred future state
+  vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
   real<lower=0> b_var_y;                      // presumed y (transient) noise variance
 }}
