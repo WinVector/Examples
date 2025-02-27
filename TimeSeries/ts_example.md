@@ -33,7 +33,7 @@ model_specification
     ## [1] 1.280413
     ## 
     ## $b_imp_0
-    ## [1] 10.4
+    ## [1] -10.4
     ## 
     ## $b_auto
     ## [1]  1.975377 -1.000000
@@ -49,6 +49,9 @@ model_specification
     ## 
     ## $modeling_lags
     ## [1] 1 2
+    ## 
+    ## $error_scale
+    ## [1] 3.2
 
 What we hope is to find `b_x_dur ~ b_z` and `b_x_imp ~ b_x`.
 
@@ -185,13 +188,13 @@ coef(fable_model)
     ## # A tibble: 7 × 6
     ##   .model                            term  estimate std.error statistic   p.value
     ##   <chr>                             <chr>    <dbl>     <dbl>     <dbl>     <dbl>
-    ## 1 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar1     1.92      0.0112    172.   0        
-    ## 2 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar2    -0.951     0.0111    -86.0  0        
-    ## 3 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma1    -0.366     0.0345    -10.6  6.34e- 25
-    ## 4 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma2     0.0559    0.0327      1.71 8.79e-  2
-    ## 5 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… z_0     1.44      0.401       3.59 3.51e-  4
-    ## 6 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… x_0    16.0       0.104     155.   0        
-    ## 7 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… inte…  63.0       2.15       29.3  2.71e-136
+    ## 1 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar1     1.92      0.0114  168.     0        
+    ## 2 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar2    -0.954     0.0112  -85.2    0        
+    ## 3 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma1    -0.996     0.0321  -31.0    9.55e-148
+    ## 4 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma2     0.319     0.0323    9.88   5.37e- 22
+    ## 5 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… z_0    -0.0135    1.05     -0.0128 9.90e-  1
+    ## 6 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… x_0    14.8       0.275    54.0    8.40e-296
+    ## 7 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… inte…  43.4       2.03     21.4    2.33e- 83
 
 Notice we recovered good estimates of the autoregressive terms `b_auto`
 (`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_0`). We
@@ -211,7 +214,7 @@ model_specification
     ## [1] 1.280413
     ## 
     ## $b_imp_0
-    ## [1] 10.4
+    ## [1] -10.4
     ## 
     ## $b_auto
     ## [1]  1.975377 -1.000000
@@ -227,6 +230,9 @@ model_specification
     ## 
     ## $modeling_lags
     ## [1] 1 2
+    ## 
+    ## $error_scale
+    ## [1] 3.2
 
 ``` r
 preds <-  (
@@ -284,12 +290,12 @@ forecast_model
     ## Regression with ARIMA(2,0,2) errors 
     ## 
     ## Coefficients:
-    ##          ar1      ar2      ma1     ma2  intercept     z_0      x_0
-    ##       1.9209  -0.9507  -0.3655  0.0559    63.0063  1.4387  16.0378
-    ## s.e.  0.0112   0.0111   0.0345  0.0327     2.1477  0.4011   0.1038
+    ##          ar1      ar2      ma1     ma2  intercept      z_0      x_0
+    ##       1.9250  -0.9542  -0.9960  0.3194    43.3823  -0.0135  14.8366
+    ## s.e.  0.0114   0.0112   0.0321  0.0323     2.0318   1.0531   0.2749
     ## 
-    ## sigma^2 = 8.488:  log likelihood = -2438.42
-    ## AIC=4892.84   AICc=4892.99   BIC=4931.94
+    ## sigma^2 = 33.1:  log likelihood = -3104.38
+    ## AIC=6224.76   AICc=6224.91   BIC=6263.86
 
 Notice the recovered durable effect coefficient is way too low.
 
