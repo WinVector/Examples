@@ -155,7 +155,7 @@ model {{
   b_var_y ~ chi_square(1);                    // prior for y (transient) noise variance
         // priors for parameter estimates
   b_auto_0 ~ normal(0, 10);
-  b_imp_0 ~ chi_square(1);
+  b_imp_0 ~ normal(0, 10);
   b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
