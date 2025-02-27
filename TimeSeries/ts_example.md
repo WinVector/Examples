@@ -64,7 +64,7 @@ system.
 We don’t have any way to specify the nature of external regressors, with
 act as transient effects in the “regression with ARIMA residuals”
 formulation favored by the fable and forecast packages. This will lead
-to a degredation in fit quality and an inability to properly estimate
+to a degradation in fit quality and an inability to properly estimate
 `b_z` (as we can’t specify the for of the effect we believe it has in
 the data).
 

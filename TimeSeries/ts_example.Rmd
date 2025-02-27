@@ -34,7 +34,7 @@ What we hope is to find `b_x_dur ~ b_z` and `b_x_imp ~ b_x`.
 
 The generating and modeling lags specify translate into ARIMA terms as `p = 2, i = 0`. We take our own  advice from [A Time Series Apologia](https://github.com/WinVector/Examples/blob/main/TS/TS_example.md) and pick `q = p`. So in ARIMAX terms we try fitting a `pdq(2, 0, 2)` system.
 
-We don't have any way to specify the nature of external regressors, with act as transient effects in the "regression with ARIMA residuals" formulation favored by the fable and forecast packages. This will lead to a degredation in fit quality and an inability to properly estimate `b_z` (as we can't specify the for of the effect we believe it has in the data).
+We don't have any way to specify the nature of external regressors, with act as transient effects in the "regression with ARIMA residuals" formulation favored by the fable and forecast packages. This will lead to a degradation in fit quality and an inability to properly estimate `b_z` (as we can't specify the for of the effect we believe it has in the data).
 
 ## Fitting with external regressors using the fable package
 
