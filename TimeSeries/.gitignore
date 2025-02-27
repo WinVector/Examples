@@ -4,6 +4,4 @@ stan_test_data.json
 stan_test_src
 stan_test_src.hpp
 stan_test_src.stan
-forecast_soln_0.csv.gz
-forecast_soln_i.csv.gz
-        
+
