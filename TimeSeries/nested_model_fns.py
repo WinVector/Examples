@@ -18,40 +18,40 @@ def build_example(
     generating_lags: Iterable[int],
     b_auto: Iterable[float],
     b_auto_0: float,
-    b_z: Iterable[float],
-    b_imp_0: float,
-    b_x: Iterable[float],
+    beta_durable: Iterable[float],
+    beta_transient_0: float,
+    beta_transient: Iterable[float],
     n_step: int = 1000,
     error_scale: float,
 ) -> pd.DataFrame:
     generating_lags = list(generating_lags)
     b_auto = list(b_auto)
-    b_x = list(b_x)
+    beta_transient = list(beta_transient)
     assert len(generating_lags) == len(b_auto)
     assert len(generating_lags) > 0
     assert len(generating_lags) == len(set(generating_lags))
     max_lag = np.max(generating_lags)
     d_example = {"time_tick": range(n_step)}
-    for i, b_z_i in enumerate(b_z):
+    for i, b_z_i in enumerate(beta_durable):
         zi = rng.choice((-1, 0, 1), p=(0.01, 0.98, 0.01), size=n_step)
-        d_example[f"z_{i}"] = zi
+        d_example[f"x_durable_{i}"] = zi
     # start at typical points (most will be overwritten by forward time process)
     y_auto = np.maximum(
         np.zeros(n_step) + b_auto_0 / (1 - np.sum(b_auto)) + rng.normal(size=n_step), 0
     )
     for idx in range(max_lag, n_step):
         y_auto_i = b_auto_0 + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
-        for i, b_z_i in enumerate(b_z):
-            y_auto_i = y_auto_i + b_z_i * d_example[f"z_{i}"][idx]
+        for i, b_z_i in enumerate(beta_durable):
+            y_auto_i = y_auto_i + b_z_i * d_example[f"x_durable_{i}"][idx]
         for i, lag in enumerate(generating_lags):
             y_auto_i = y_auto_i + b_auto[i] * y_auto[idx - lag]
         y_auto[idx] = max(0, y_auto_i)
     y = y_auto + rng.normal(size=n_step)  # transient MA-style noise
-    for i, b_x_i in enumerate(b_x):
+    for i, b_x_i in enumerate(beta_transient):
         xi = rng.binomial(n=1, p=0.35, size=n_step)
-        d_example[f"x_{i}"] = xi
+        d_example[f"x_transient_{i}"] = xi
         y = y + b_x_i * xi
-    d_example["y"] = np.maximum(0, np.round(y + b_imp_0 + rng.normal(size=n_step) * error_scale))
+    d_example["y"] = np.maximum(0, np.round(y + beta_transient_0 + rng.normal(size=n_step) * error_scale))
     return pd.DataFrame(d_example)
 
 
@@ -86,41 +86,41 @@ def generate_Stan_model_def(
         for i, lag in enumerate(application_lags)
     ]
     auto_terms = "\n     + ".join(auto_terms)
-    b_x_imp_decl = ""
-    b_x_imp_dist = ""
-    b_x_dur_decl = ""
-    b_x_dur_dist = ""
+    b_x_transient_decl = ""
+    b_x_transient_dist = ""
+    b_x_durable_decl = ""
+    b_x_durable_dist = ""
     b_x_joint_dist = ""
     ext_terms_imp = ""
     ext_terms_dur = ""
     x_data_decls = ""
     if n_transient_external_regressors > 0:
-        b_x_imp_decl = f"\n  vector[{n_transient_external_regressors}] b_x_imp;                                 // transient external regressor coefficients"
-        b_x_imp_dist = "\n  b_x_imp ~ normal(0, 10);"
+        b_x_transient_decl = f"\n  vector[{n_transient_external_regressors}] beta_transient;                                 // transient external regressor coefficients"
+        b_x_transient_dist = "\n  beta_transient ~ normal(0, 10);"
         ext_terms_imp = [
-            f"b_x_imp[{i+1}] * x_imp_{i+1}"
+            f"beta_transient[{i+1}] * x_transient_{i+1}"
             for i in range(n_transient_external_regressors)
         ]
-        ext_terms_imp = " \n     + " + "\n     + ".join(ext_terms_imp)
+        ext_terms_imp = " + " + "\n     + ".join(ext_terms_imp)
         x_data_decls = x_data_decls + "  ".join(
             [
                 f"""
-  vector[N_y_observed + N_y_future] x_imp_{i+1};  // observed transient external regressor"""
+  vector[N_y_observed + N_y_future] x_transient_{i+1};  // observed transient external regressor"""
                 for i in range(n_transient_external_regressors)
             ]
         )
     if n_durable_external_regressors > 0:
-        b_x_dur_decl = f"\n  vector[{n_durable_external_regressors}] b_x_dur;                          // durable external regressor coefficients"
-        b_x_dur_dist = "\n  b_x_dur ~ normal(0, 10);"
+        b_x_durable_decl = f"\n  vector[{n_durable_external_regressors}] beta_durable;                          // durable external regressor coefficients"
+        b_x_durable_dist = "\n  beta_durable ~ normal(0, 10);"
         ext_terms_dur = [
-            f"b_x_dur[{i+1}] * x_dur_{i+1}[{max_lag+1}:(N_y_observed + N_y_future)]"
+            f"beta_durable[{i+1}] * x_durable_{i+1}[{max_lag+1}:(N_y_observed + N_y_future)]"
             for i in range(n_durable_external_regressors)
         ]
         ext_terms_dur = " \n     + " + "\n     + ".join(ext_terms_dur)
         x_data_decls = x_data_decls + "  ".join(
             [
                 f"""
-  vector[N_y_observed + N_y_future] x_dur_{i+1};  // observed durable external regressor"""
+  vector[N_y_observed + N_y_future] x_durable_{i+1};  // observed durable external regressor"""
                 for i in range(n_durable_external_regressors)
             ]
         )
@@ -135,8 +135,8 @@ data {
         + f"""
 parameters {{
   real b_auto_0;                     // auto-regress intercept
-  real<lower=0> b_imp_0;                      // total/impulse/transient intercept
-  vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_imp_decl}{b_x_dur_decl}
+  real<lower=0> beta_transient_0;                      // total/impulse/transient intercept
+  vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_transient_decl}{b_x_durable_decl}
   vector<lower=0>[N_y_future] y_future;                // to be inferred future state
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
@@ -146,18 +146,17 @@ transformed parameters {{
         // y_observed and y_future in one notation (for subscripting)
   vector[N_y_observed + N_y_future] y;
   vector[N_y_observed + N_y_future] y_imp;
-  real var_term;
   y[1:N_y_observed] = y_observed;
   y[(N_y_observed + 1):(N_y_observed + N_y_future)] = y_future;
-  y_imp = b_imp_0{ext_terms_imp};
+  y_imp = beta_transient_0{ext_terms_imp};
 }}
 model {{
   b_var_y_auto ~ chi_square(1);               // prior for y_auto (durable) noise variance
   b_var_y ~ chi_square(1);                    // prior for y (transient) noise variance
         // priors for parameter estimates
   b_auto_0 ~ normal(0, 10);
-  b_imp_0 ~ normal(0, 10);
-  b_auto ~ normal(0, 10);{b_x_imp_dist}{b_x_dur_dist}{b_x_joint_dist}
+  beta_transient_0 ~ normal(0, 10);
+  b_auto ~ normal(0, 10);{b_x_transient_dist}{b_x_durable_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
     b_auto_0 
@@ -229,7 +228,7 @@ def write_Stan_data(
         nested_model_data_str = nested_model_data_str + "".join(
             [
                 f""",
-"x_imp_{i+1}" : {list(d_train[v]) + list(d_apply[v])}
+"x_transient_{i+1}" : {list(d_train[v]) + list(d_apply[v])}
 """
                 for i, v in enumerate(transient_external_regressors)
             ]
@@ -238,7 +237,7 @@ def write_Stan_data(
         nested_model_data_str = nested_model_data_str + "".join(
             [
                 f""",
-"x_dur_{i+1}" : {list(d_train[v]) + list(d_apply[v])}
+"x_durable_{i+1}" : {list(d_train[v]) + list(d_apply[v])}
 """
                 for i, v in enumerate(durable_external_regressors)
             ]
@@ -601,7 +600,7 @@ def plot_recent_state_distribution(
     est_h_state = pd.DataFrame(
         {
             f"y[{i}] - f(x)": d_train.loc[i, "y"]
-            - (forecast_soln["b_x_imp[0]"] * d_train.loc[i, "x_0"])
+            - (forecast_soln["beta_transient[0]"] * d_train.loc[i, "x_0"])
             for i in range(d_train.shape[0] - np.max(generating_lags), d_train.shape[0])
         }
     )
@@ -923,10 +922,11 @@ def plot_params(
 ):
     answer_frame = pd.DataFrame(
         {
-            "b_x_dur[0]": [generating_params["b_z"][0]],
-            "b_x_imp[0]": [generating_params["b_x"][0]],
+            "beta_durable[0]": [generating_params["beta_durable"][0]],
+            "beta_transient[0]": [generating_params["beta_transient"][0]],
         }
     )
+    x_max = np.ceil(np.max(np.max(answer_frame)) + 0.1)
     parameter_plt_frame = forecast_soln_i.loc[:, [c for c in answer_frame.columns]].melt()
     return (
         ggplot()
@@ -942,8 +942,9 @@ def plot_params(
             linetype="dashed",
             size=1,
         )
-        + facet_wrap("variable", scales="free")
+        + facet_wrap("variable", scales="free_y", ncol=1)
         + scale_color_brewer(type="qualitative", palette="Dark2")
         + scale_fill_brewer(type="qualitative", palette="Dark2")
+        + xlim((0, x_max))
         + ggtitle("Stan inferred parameter distributions\n(generating values dashed lines)")
     )
