@@ -145,7 +145,8 @@ parameters {{
 transformed parameters {{
         // y_observed and y_future in one notation (for subscripting)
   vector[N_y_observed + N_y_future] y;
-  vector[N_y_observed + N_y_future] y_imp;   
+  vector[N_y_observed + N_y_future] y_imp;
+  real var_term;
   y[1:N_y_observed] = y_observed;
   y[(N_y_observed + 1):(N_y_observed + N_y_future)] = y_future;
   y_imp = b_imp_0{ext_terms_imp};
@@ -165,7 +166,10 @@ model {{
         // criticize observations
   for (i in 1:N_y_observed) {{
       if (y_observed[i] > 0) {{
-        target += (y_observed[i] - (y_imp[i] + y_auto[i]))**2 / b_var_y;    
+        target += normal_lpdf(
+            y_observed[i] |
+            y_imp[i] + y_auto[i], 
+            b_var_y); 
       }} else {{
         target += normal_lcdf(  // Tobit style scoring, matching above loss
             0 |
