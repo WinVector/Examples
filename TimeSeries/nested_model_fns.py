@@ -162,15 +162,12 @@ model {{
     b_auto_0 
      + {auto_terms}{ext_terms_dur},
     b_var_y_auto);
-        // how observations are formed
+        // criticize observations
   for (i in 1:N_y_observed) {{
       if (y_observed[i] > 0) {{
-        target += normal_lpdf(
-            y_observed[i] |
-            y_imp[i] + y_auto[i], 
-            b_var_y);    
+        target += (y_observed[i] - (y_imp[i] + y_auto[i]))**2 / b_var_y;    
       }} else {{
-        target += normal_lcdf(  // Tobit style scoring
+        target += normal_lcdf(  // Tobit style scoring, matching above loss
             0 |
             y_imp[i] + y_auto[i], 
             b_var_y); 
