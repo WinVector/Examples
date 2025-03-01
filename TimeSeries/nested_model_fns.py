@@ -145,10 +145,10 @@ parameters {{
 transformed parameters {{
         // y_observed and y_future in one notation (for subscripting)
   vector[N_y_observed + N_y_future] y;
-  vector[N_y_observed + N_y_future] y_imp;
+  vector[N_y_observed + N_y_future] y_transient_effect;
   y[1:N_y_observed] = y_observed;
   y[(N_y_observed + 1):(N_y_observed + N_y_future)] = y_future;
-  y_imp = beta_transient_0{ext_terms_imp};
+  y_transient_effect = beta_transient_0{ext_terms_imp};
 }}
 model {{
   b_var_y_auto ~ chi_square(1);               // prior for y_auto (durable) noise variance
@@ -167,18 +167,18 @@ model {{
       if (y_observed[i] > 0) {{
         target += normal_lpdf(
             y_observed[i] |
-            y_imp[i] + y_auto[i], 
+            y_transient_effect[i] + y_auto[i], 
             b_var_y); 
       }} else {{
         target += normal_lcdf(  // Tobit style scoring, matching above loss
             0 |
-            y_imp[i] + y_auto[i], 
+            y_transient_effect[i] + y_auto[i], 
             b_var_y); 
       }}
   }}
         // future
   y_future ~ normal(
-    y_imp[(N_y_observed + 1):(N_y_observed + N_y_future)] + y_auto[(N_y_observed + 1):(N_y_observed + N_y_future)], 
+    y_transient_effect[(N_y_observed + 1):(N_y_observed + N_y_future)] + y_auto[(N_y_observed + 1):(N_y_observed + N_y_future)], 
     b_var_y);
 }}
 """
@@ -586,7 +586,7 @@ def plot_recent_state_distribution(
     generating_lags,
     result_name: str,
 ):
-    """not generic (specialzed to to lags and one external regressor)"""
+    """not generic (specialized to to lags and one external regressor)"""
     assert len(generating_lags) == 2
     t_l0 = d_train.shape[0] - generating_lags[0]
     t_l1 = d_train.shape[0] - generating_lags[1]
@@ -820,14 +820,9 @@ def plot_decomposition(
     # get distribution of breakdown of predictions
     history_frame = (
         forecast_soln_i
-            .loc[:, [c for c in forecast_soln_i.columns if c.startswith('y[') or c.startswith('y_auto[')]]
+            .loc[:, [c for c in forecast_soln_i.columns if c.startswith('y[') or c.startswith('y_auto[') or c.startswith('y_transient_effect[')]]
             .reset_index(drop=True, inplace=False)
     )
-    idx_max = np.max([int(c.replace('y[', '').replace(']', '')) for c in history_frame.columns if c.startswith('y[')])
-    new_cols = {}
-    for i in range(idx_max + 1):
-        new_cols[f'y_transient[{i}]'] = history_frame[f'y[{i}]'] - history_frame[f'y_auto[{i}]']
-    history_frame = pd.concat([history_frame, pd.DataFrame(new_cols)], axis=1)
     history_frame['trajectory_id'] = range(history_frame.shape[0])
     history_frame = history_frame.melt(id_vars=['trajectory_id'])
     history_frame['time_tick'] = [int(re.sub(r'^.*\[', '', v).replace(']', '')) for v in history_frame['variable']]
