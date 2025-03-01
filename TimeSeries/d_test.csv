@@ -1,21 +1,21 @@
 time_tick,x_durable_0,x_transient_0,y,ext_regressors
-980,0,0,74.0,"x_durable: 0, x_transient: 0"
-981,0,0,80.0,"x_durable: 0, x_transient: 0"
-982,0,1,104.0,"x_durable: 0, x_transient: 1"
-983,0,0,82.0,"x_durable: 0, x_transient: 0"
-984,0,0,83.0,"x_durable: 0, x_transient: 0"
-985,0,0,89.0,"x_durable: 0, x_transient: 0"
-986,0,0,95.0,"x_durable: 0, x_transient: 0"
-987,0,0,81.0,"x_durable: 0, x_transient: 0"
-988,0,0,84.0,"x_durable: 0, x_transient: 0"
-989,0,0,74.0,"x_durable: 0, x_transient: 0"
-990,0,-2,31.0,"x_durable: 0, x_transient: -2"
-991,0,0,62.0,"x_durable: 0, x_transient: 0"
-992,0,0,58.0,"x_durable: 0, x_transient: 0"
-993,0,0,50.0,"x_durable: 0, x_transient: 0"
-994,0,0,48.0,"x_durable: 0, x_transient: 0"
-995,0,0,40.0,"x_durable: 0, x_transient: 0"
-996,0,0,29.0,"x_durable: 0, x_transient: 0"
-997,0,0,20.0,"x_durable: 0, x_transient: 0"
-998,0,0,9.0,"x_durable: 0, x_transient: 0"
-999,0,0,10.0,"x_durable: 0, x_transient: 0"
+980,1,0,141.0,durable impact
+981,0,0,168.0,regular point
+982,0,1,211.0,transient impact
+983,0,0,205.0,regular point
+984,0,0,220.0,regular point
+985,0,0,237.0,regular point
+986,0,0,250.0,regular point
+987,0,0,240.0,regular point
+988,0,0,244.0,regular point
+989,0,0,231.0,regular point
+990,0,-2,181.0,transient impact
+991,0,0,202.0,regular point
+992,0,0,184.0,regular point
+993,0,0,161.0,regular point
+994,0,0,140.0,regular point
+995,0,0,112.0,regular point
+996,0,0,80.0,regular point
+997,0,0,49.0,regular point
+998,0,0,16.0,regular point
+999,0,0,0.0,regular point

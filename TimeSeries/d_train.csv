@@ -1,981 +1,981 @@
 time_tick,x_durable_0,x_transient_0,y,ext_regressors
-0,0,0,43.0,"x_durable: 0, x_transient: 0"
-1,0,0,47.0,"x_durable: 0, x_transient: 0"
-2,0,0,39.0,"x_durable: 0, x_transient: 0"
-3,0,0,46.0,"x_durable: 0, x_transient: 0"
-4,1,0,52.0,"x_durable: 1, x_transient: 0"
-5,0,0,61.0,"x_durable: 0, x_transient: 0"
-6,0,0,69.0,"x_durable: 0, x_transient: 0"
-7,0,0,76.0,"x_durable: 0, x_transient: 0"
-8,0,0,80.0,"x_durable: 0, x_transient: 0"
-9,0,0,76.0,"x_durable: 0, x_transient: 0"
-10,0,0,84.0,"x_durable: 0, x_transient: 0"
-11,0,0,89.0,"x_durable: 0, x_transient: 0"
-12,0,0,88.0,"x_durable: 0, x_transient: 0"
-13,0,0,87.0,"x_durable: 0, x_transient: 0"
-14,-1,0,81.0,"x_durable: -1, x_transient: 0"
-15,0,0,64.0,"x_durable: 0, x_transient: 0"
-16,0,0,58.0,"x_durable: 0, x_transient: 0"
-17,0,0,44.0,"x_durable: 0, x_transient: 0"
-18,0,0,31.0,"x_durable: 0, x_transient: 0"
-19,0,0,15.0,"x_durable: 0, x_transient: 0"
-20,0,0,7.0,"x_durable: 0, x_transient: 0"
-21,0,0,0.0,"x_durable: 0, x_transient: 0"
-22,0,0,0.0,"x_durable: 0, x_transient: 0"
-23,0,0,0.0,"x_durable: 0, x_transient: 0"
-24,0,0,0.0,"x_durable: 0, x_transient: 0"
-25,0,0,0.0,"x_durable: 0, x_transient: 0"
-26,0,0,3.0,"x_durable: 0, x_transient: 0"
-27,0,0,0.0,"x_durable: 0, x_transient: 0"
-28,0,0,8.0,"x_durable: 0, x_transient: 0"
-29,0,0,15.0,"x_durable: 0, x_transient: 0"
-30,0,0,27.0,"x_durable: 0, x_transient: 0"
-31,0,2,67.0,"x_durable: 0, x_transient: 2"
-32,0,0,38.0,"x_durable: 0, x_transient: 0"
-33,0,0,44.0,"x_durable: 0, x_transient: 0"
-34,0,0,55.0,"x_durable: 0, x_transient: 0"
-35,0,0,66.0,"x_durable: 0, x_transient: 0"
-36,0,0,66.0,"x_durable: 0, x_transient: 0"
-37,0,2,111.0,"x_durable: 0, x_transient: 2"
-38,0,-1,60.0,"x_durable: 0, x_transient: -1"
-39,0,0,81.0,"x_durable: 0, x_transient: 0"
-40,0,0,83.0,"x_durable: 0, x_transient: 0"
-41,0,0,85.0,"x_durable: 0, x_transient: 0"
-42,0,0,95.0,"x_durable: 0, x_transient: 0"
-43,0,0,91.0,"x_durable: 0, x_transient: 0"
-44,0,0,89.0,"x_durable: 0, x_transient: 0"
-45,0,0,88.0,"x_durable: 0, x_transient: 0"
-46,0,0,79.0,"x_durable: 0, x_transient: 0"
-47,0,0,74.0,"x_durable: 0, x_transient: 0"
-48,0,0,68.0,"x_durable: 0, x_transient: 0"
-49,0,2,94.0,"x_durable: 0, x_transient: 2"
-50,0,0,54.0,"x_durable: 0, x_transient: 0"
-51,0,0,43.0,"x_durable: 0, x_transient: 0"
-52,0,0,36.0,"x_durable: 0, x_transient: 0"
-53,0,0,32.0,"x_durable: 0, x_transient: 0"
-54,0,0,19.0,"x_durable: 0, x_transient: 0"
-55,0,0,21.0,"x_durable: 0, x_transient: 0"
-56,0,-2,0.0,"x_durable: 0, x_transient: -2"
-57,0,0,2.0,"x_durable: 0, x_transient: 0"
-58,0,0,0.0,"x_durable: 0, x_transient: 0"
-59,0,0,0.0,"x_durable: 0, x_transient: 0"
-60,0,2,26.0,"x_durable: 0, x_transient: 2"
-61,0,0,0.0,"x_durable: 0, x_transient: 0"
-62,0,0,0.0,"x_durable: 0, x_transient: 0"
-63,0,0,0.0,"x_durable: 0, x_transient: 0"
-64,0,0,0.0,"x_durable: 0, x_transient: 0"
-65,0,0,8.0,"x_durable: 0, x_transient: 0"
-66,0,0,14.0,"x_durable: 0, x_transient: 0"
-67,0,0,20.0,"x_durable: 0, x_transient: 0"
-68,0,0,30.0,"x_durable: 0, x_transient: 0"
-69,0,0,39.0,"x_durable: 0, x_transient: 0"
-70,0,0,42.0,"x_durable: 0, x_transient: 0"
-71,-1,0,46.0,"x_durable: -1, x_transient: 0"
-72,0,0,48.0,"x_durable: 0, x_transient: 0"
-73,0,0,52.0,"x_durable: 0, x_transient: 0"
-74,0,0,48.0,"x_durable: 0, x_transient: 0"
-75,-1,0,43.0,"x_durable: -1, x_transient: 0"
-76,0,0,39.0,"x_durable: 0, x_transient: 0"
-77,0,0,23.0,"x_durable: 0, x_transient: 0"
-78,0,0,22.0,"x_durable: 0, x_transient: 0"
-79,0,0,20.0,"x_durable: 0, x_transient: 0"
-80,0,0,3.0,"x_durable: 0, x_transient: 0"
-81,0,0,7.0,"x_durable: 0, x_transient: 0"
-82,0,0,12.0,"x_durable: 0, x_transient: 0"
-83,0,0,10.0,"x_durable: 0, x_transient: 0"
-84,0,0,2.0,"x_durable: 0, x_transient: 0"
-85,0,0,5.0,"x_durable: 0, x_transient: 0"
-86,0,0,2.0,"x_durable: 0, x_transient: 0"
-87,0,0,4.0,"x_durable: 0, x_transient: 0"
-88,0,1,29.0,"x_durable: 0, x_transient: 1"
-89,0,0,14.0,"x_durable: 0, x_transient: 0"
-90,0,-2,0.0,"x_durable: 0, x_transient: -2"
-91,0,0,25.0,"x_durable: 0, x_transient: 0"
-92,0,0,36.0,"x_durable: 0, x_transient: 0"
-93,0,0,38.0,"x_durable: 0, x_transient: 0"
-94,0,0,43.0,"x_durable: 0, x_transient: 0"
-95,0,0,52.0,"x_durable: 0, x_transient: 0"
-96,0,0,60.0,"x_durable: 0, x_transient: 0"
-97,0,0,66.0,"x_durable: 0, x_transient: 0"
-98,0,0,78.0,"x_durable: 0, x_transient: 0"
-99,0,0,71.0,"x_durable: 0, x_transient: 0"
-100,0,0,82.0,"x_durable: 0, x_transient: 0"
-101,0,0,81.0,"x_durable: 0, x_transient: 0"
-102,0,0,78.0,"x_durable: 0, x_transient: 0"
-103,0,0,79.0,"x_durable: 0, x_transient: 0"
-104,0,1,100.0,"x_durable: 0, x_transient: 1"
-105,0,-1,60.0,"x_durable: 0, x_transient: -1"
-106,-1,0,74.0,"x_durable: -1, x_transient: 0"
-107,0,-2,22.0,"x_durable: 0, x_transient: -2"
-108,0,0,40.0,"x_durable: 0, x_transient: 0"
-109,0,0,40.0,"x_durable: 0, x_transient: 0"
-110,0,0,28.0,"x_durable: 0, x_transient: 0"
-111,0,0,22.0,"x_durable: 0, x_transient: 0"
-112,0,0,1.0,"x_durable: 0, x_transient: 0"
-113,0,0,0.0,"x_durable: 0, x_transient: 0"
-114,0,0,0.0,"x_durable: 0, x_transient: 0"
-115,0,0,0.0,"x_durable: 0, x_transient: 0"
-116,0,0,0.0,"x_durable: 0, x_transient: 0"
-117,0,0,0.0,"x_durable: 0, x_transient: 0"
-118,0,0,0.0,"x_durable: 0, x_transient: 0"
-119,0,0,6.0,"x_durable: 0, x_transient: 0"
-120,0,0,7.0,"x_durable: 0, x_transient: 0"
-121,0,-2,0.0,"x_durable: 0, x_transient: -2"
-122,0,0,23.0,"x_durable: 0, x_transient: 0"
-123,0,0,28.0,"x_durable: 0, x_transient: 0"
-124,0,-1,18.0,"x_durable: 0, x_transient: -1"
-125,0,0,46.0,"x_durable: 0, x_transient: 0"
-126,0,0,54.0,"x_durable: 0, x_transient: 0"
-127,0,0,68.0,"x_durable: 0, x_transient: 0"
-128,0,0,73.0,"x_durable: 0, x_transient: 0"
-129,0,0,72.0,"x_durable: 0, x_transient: 0"
-130,0,0,84.0,"x_durable: 0, x_transient: 0"
-131,0,0,84.0,"x_durable: 0, x_transient: 0"
-132,0,0,95.0,"x_durable: 0, x_transient: 0"
-133,0,0,91.0,"x_durable: 0, x_transient: 0"
-134,0,0,94.0,"x_durable: 0, x_transient: 0"
-135,0,-2,55.0,"x_durable: 0, x_transient: -2"
-136,0,-1,74.0,"x_durable: 0, x_transient: -1"
-137,0,0,86.0,"x_durable: 0, x_transient: 0"
-138,0,0,82.0,"x_durable: 0, x_transient: 0"
-139,0,0,72.0,"x_durable: 0, x_transient: 0"
-140,0,0,69.0,"x_durable: 0, x_transient: 0"
-141,0,0,65.0,"x_durable: 0, x_transient: 0"
-142,0,0,60.0,"x_durable: 0, x_transient: 0"
-143,0,0,47.0,"x_durable: 0, x_transient: 0"
-144,0,0,38.0,"x_durable: 0, x_transient: 0"
-145,0,0,26.0,"x_durable: 0, x_transient: 0"
-146,0,0,25.0,"x_durable: 0, x_transient: 0"
-147,0,2,60.0,"x_durable: 0, x_transient: 2"
-148,-1,0,-0.0,"x_durable: -1, x_transient: 0"
-149,0,0,0.0,"x_durable: 0, x_transient: 0"
-150,0,0,0.0,"x_durable: 0, x_transient: 0"
-151,0,0,0.0,"x_durable: 0, x_transient: 0"
-152,0,0,0.0,"x_durable: 0, x_transient: 0"
-153,0,0,0.0,"x_durable: 0, x_transient: 0"
-154,0,0,3.0,"x_durable: 0, x_transient: 0"
-155,0,0,4.0,"x_durable: 0, x_transient: 0"
-156,0,0,9.0,"x_durable: 0, x_transient: 0"
-157,0,0,23.0,"x_durable: 0, x_transient: 0"
-158,0,0,25.0,"x_durable: 0, x_transient: 0"
-159,0,-2,0.0,"x_durable: 0, x_transient: -2"
-160,0,0,41.0,"x_durable: 0, x_transient: 0"
-161,0,0,45.0,"x_durable: 0, x_transient: 0"
-162,0,0,64.0,"x_durable: 0, x_transient: 0"
-163,0,0,62.0,"x_durable: 0, x_transient: 0"
-164,0,0,69.0,"x_durable: 0, x_transient: 0"
-165,0,0,82.0,"x_durable: 0, x_transient: 0"
-166,0,0,80.0,"x_durable: 0, x_transient: 0"
-167,0,0,91.0,"x_durable: 0, x_transient: 0"
-168,0,0,86.0,"x_durable: 0, x_transient: 0"
-169,0,0,97.0,"x_durable: 0, x_transient: 0"
-170,0,-2,52.0,"x_durable: 0, x_transient: -2"
-171,0,0,90.0,"x_durable: 0, x_transient: 0"
-172,0,-1,62.0,"x_durable: 0, x_transient: -1"
-173,0,0,85.0,"x_durable: 0, x_transient: 0"
-174,0,0,83.0,"x_durable: 0, x_transient: 0"
-175,0,0,62.0,"x_durable: 0, x_transient: 0"
-176,0,2,102.0,"x_durable: 0, x_transient: 2"
-177,0,0,60.0,"x_durable: 0, x_transient: 0"
-178,0,0,48.0,"x_durable: 0, x_transient: 0"
-179,0,0,40.0,"x_durable: 0, x_transient: 0"
-180,0,-2,0.0,"x_durable: 0, x_transient: -2"
-181,0,0,28.0,"x_durable: 0, x_transient: 0"
-182,0,0,13.0,"x_durable: 0, x_transient: 0"
-183,0,0,10.0,"x_durable: 0, x_transient: 0"
-184,0,1,24.0,"x_durable: 0, x_transient: 1"
-185,0,2,36.0,"x_durable: 0, x_transient: 2"
-186,0,0,0.0,"x_durable: 0, x_transient: 0"
-187,0,0,0.0,"x_durable: 0, x_transient: 0"
-188,0,0,0.0,"x_durable: 0, x_transient: 0"
-189,0,1,11.0,"x_durable: 0, x_transient: 1"
-190,0,0,0.0,"x_durable: 0, x_transient: 0"
-191,0,0,0.0,"x_durable: 0, x_transient: 0"
-192,0,0,0.0,"x_durable: 0, x_transient: 0"
-193,1,0,18.0,"x_durable: 1, x_transient: 0"
-194,0,0,26.0,"x_durable: 0, x_transient: 0"
-195,1,0,50.0,"x_durable: 1, x_transient: 0"
-196,0,2,108.0,"x_durable: 0, x_transient: 2"
-197,0,0,86.0,"x_durable: 0, x_transient: 0"
-198,0,0,102.0,"x_durable: 0, x_transient: 0"
-199,0,0,126.0,"x_durable: 0, x_transient: 0"
-200,0,0,134.0,"x_durable: 0, x_transient: 0"
-201,0,0,150.0,"x_durable: 0, x_transient: 0"
-202,0,0,155.0,"x_durable: 0, x_transient: 0"
-203,0,0,159.0,"x_durable: 0, x_transient: 0"
-204,0,0,172.0,"x_durable: 0, x_transient: 0"
-205,0,0,163.0,"x_durable: 0, x_transient: 0"
-206,0,0,159.0,"x_durable: 0, x_transient: 0"
-207,0,0,158.0,"x_durable: 0, x_transient: 0"
-208,0,1,160.0,"x_durable: 0, x_transient: 1"
-209,0,0,131.0,"x_durable: 0, x_transient: 0"
-210,0,0,120.0,"x_durable: 0, x_transient: 0"
-211,0,0,95.0,"x_durable: 0, x_transient: 0"
-212,0,0,75.0,"x_durable: 0, x_transient: 0"
-213,0,0,48.0,"x_durable: 0, x_transient: 0"
-214,0,0,31.0,"x_durable: 0, x_transient: 0"
-215,0,0,13.0,"x_durable: 0, x_transient: 0"
-216,0,0,0.0,"x_durable: 0, x_transient: 0"
-217,0,0,0.0,"x_durable: 0, x_transient: 0"
-218,0,0,0.0,"x_durable: 0, x_transient: 0"
-219,0,0,0.0,"x_durable: 0, x_transient: 0"
-220,0,0,0.0,"x_durable: 0, x_transient: 0"
-221,0,2,32.0,"x_durable: 0, x_transient: 2"
-222,0,0,2.0,"x_durable: 0, x_transient: 0"
-223,0,0,14.0,"x_durable: 0, x_transient: 0"
-224,0,0,25.0,"x_durable: 0, x_transient: 0"
-225,0,0,30.0,"x_durable: 0, x_transient: 0"
-226,0,0,35.0,"x_durable: 0, x_transient: 0"
-227,0,0,49.0,"x_durable: 0, x_transient: 0"
-228,0,0,52.0,"x_durable: 0, x_transient: 0"
-229,0,0,54.0,"x_durable: 0, x_transient: 0"
-230,0,0,68.0,"x_durable: 0, x_transient: 0"
-231,0,0,73.0,"x_durable: 0, x_transient: 0"
-232,0,0,82.0,"x_durable: 0, x_transient: 0"
-233,0,0,88.0,"x_durable: 0, x_transient: 0"
-234,0,0,93.0,"x_durable: 0, x_transient: 0"
-235,0,0,95.0,"x_durable: 0, x_transient: 0"
-236,0,2,127.0,"x_durable: 0, x_transient: 2"
-237,0,0,90.0,"x_durable: 0, x_transient: 0"
-238,0,0,100.0,"x_durable: 0, x_transient: 0"
-239,0,-1,66.0,"x_durable: 0, x_transient: -1"
-240,0,0,87.0,"x_durable: 0, x_transient: 0"
-241,0,0,81.0,"x_durable: 0, x_transient: 0"
-242,0,0,74.0,"x_durable: 0, x_transient: 0"
-243,0,0,70.0,"x_durable: 0, x_transient: 0"
-244,0,0,63.0,"x_durable: 0, x_transient: 0"
-245,0,0,53.0,"x_durable: 0, x_transient: 0"
-246,0,0,44.0,"x_durable: 0, x_transient: 0"
-247,0,0,38.0,"x_durable: 0, x_transient: 0"
-248,0,0,30.0,"x_durable: 0, x_transient: 0"
-249,0,0,23.0,"x_durable: 0, x_transient: 0"
-250,0,0,10.0,"x_durable: 0, x_transient: 0"
-251,0,0,7.0,"x_durable: 0, x_transient: 0"
-252,0,0,0.0,"x_durable: 0, x_transient: 0"
-253,0,0,0.0,"x_durable: 0, x_transient: 0"
-254,0,0,0.0,"x_durable: 0, x_transient: 0"
-255,0,0,0.0,"x_durable: 0, x_transient: 0"
-256,0,0,0.0,"x_durable: 0, x_transient: 0"
-257,0,0,0.0,"x_durable: 0, x_transient: 0"
-258,0,0,0.0,"x_durable: 0, x_transient: 0"
-259,0,0,0.0,"x_durable: 0, x_transient: 0"
-260,0,0,5.0,"x_durable: 0, x_transient: 0"
-261,0,0,12.0,"x_durable: 0, x_transient: 0"
-262,1,0,23.0,"x_durable: 1, x_transient: 0"
-263,0,0,38.0,"x_durable: 0, x_transient: 0"
-264,0,0,51.0,"x_durable: 0, x_transient: 0"
-265,0,0,59.0,"x_durable: 0, x_transient: 0"
-266,0,0,78.0,"x_durable: 0, x_transient: 0"
-267,0,0,94.0,"x_durable: 0, x_transient: 0"
-268,0,0,96.0,"x_durable: 0, x_transient: 0"
-269,0,0,113.0,"x_durable: 0, x_transient: 0"
-270,0,0,114.0,"x_durable: 0, x_transient: 0"
-271,0,0,121.0,"x_durable: 0, x_transient: 0"
-272,0,0,125.0,"x_durable: 0, x_transient: 0"
-273,-1,0,118.0,"x_durable: -1, x_transient: 0"
-274,0,0,112.0,"x_durable: 0, x_transient: 0"
-275,0,2,140.0,"x_durable: 0, x_transient: 2"
-276,0,0,91.0,"x_durable: 0, x_transient: 0"
-277,0,0,75.0,"x_durable: 0, x_transient: 0"
-278,0,-2,14.0,"x_durable: 0, x_transient: -2"
-279,0,2,82.0,"x_durable: 0, x_transient: 2"
-280,0,1,50.0,"x_durable: 0, x_transient: 1"
-281,0,0,16.0,"x_durable: 0, x_transient: 0"
-282,0,0,0.0,"x_durable: 0, x_transient: 0"
-283,0,0,0.0,"x_durable: 0, x_transient: 0"
-284,0,0,0.0,"x_durable: 0, x_transient: 0"
-285,0,0,0.0,"x_durable: 0, x_transient: 0"
-286,0,0,0.0,"x_durable: 0, x_transient: 0"
-287,0,0,0.0,"x_durable: 0, x_transient: 0"
-288,0,0,0.0,"x_durable: 0, x_transient: 0"
-289,0,0,9.0,"x_durable: 0, x_transient: 0"
-290,0,2,46.0,"x_durable: 0, x_transient: 2"
-291,0,0,17.0,"x_durable: 0, x_transient: 0"
-292,0,0,28.0,"x_durable: 0, x_transient: 0"
-293,0,0,32.0,"x_durable: 0, x_transient: 0"
-294,0,0,43.0,"x_durable: 0, x_transient: 0"
-295,0,0,48.0,"x_durable: 0, x_transient: 0"
-296,-1,0,57.0,"x_durable: -1, x_transient: 0"
-297,0,0,52.0,"x_durable: 0, x_transient: 0"
-298,0,0,53.0,"x_durable: 0, x_transient: 0"
-299,0,0,52.0,"x_durable: 0, x_transient: 0"
-300,0,0,58.0,"x_durable: 0, x_transient: 0"
-301,0,0,51.0,"x_durable: 0, x_transient: 0"
-302,0,0,59.0,"x_durable: 0, x_transient: 0"
-303,0,-2,12.0,"x_durable: 0, x_transient: -2"
-304,0,0,44.0,"x_durable: 0, x_transient: 0"
-305,1,0,58.0,"x_durable: 1, x_transient: 0"
-306,0,0,54.0,"x_durable: 0, x_transient: 0"
-307,0,0,70.0,"x_durable: 0, x_transient: 0"
-308,0,0,76.0,"x_durable: 0, x_transient: 0"
-309,0,0,71.0,"x_durable: 0, x_transient: 0"
-310,0,0,72.0,"x_durable: 0, x_transient: 0"
-311,0,0,76.0,"x_durable: 0, x_transient: 0"
-312,0,0,76.0,"x_durable: 0, x_transient: 0"
-313,0,0,78.0,"x_durable: 0, x_transient: 0"
-314,0,0,68.0,"x_durable: 0, x_transient: 0"
-315,0,0,67.0,"x_durable: 0, x_transient: 0"
-316,0,0,58.0,"x_durable: 0, x_transient: 0"
-317,0,0,58.0,"x_durable: 0, x_transient: 0"
-318,0,0,55.0,"x_durable: 0, x_transient: 0"
-319,0,0,50.0,"x_durable: 0, x_transient: 0"
-320,0,0,47.0,"x_durable: 0, x_transient: 0"
-321,0,0,41.0,"x_durable: 0, x_transient: 0"
-322,0,0,31.0,"x_durable: 0, x_transient: 0"
-323,-1,0,16.0,"x_durable: -1, x_transient: 0"
-324,0,0,6.0,"x_durable: 0, x_transient: 0"
-325,0,0,0.0,"x_durable: 0, x_transient: 0"
-326,0,0,0.0,"x_durable: 0, x_transient: 0"
-327,0,0,0.0,"x_durable: 0, x_transient: 0"
-328,0,0,0.0,"x_durable: 0, x_transient: 0"
-329,0,0,0.0,"x_durable: 0, x_transient: 0"
-330,0,0,0.0,"x_durable: 0, x_transient: 0"
-331,0,0,-0.0,"x_durable: 0, x_transient: 0"
-332,0,0,11.0,"x_durable: 0, x_transient: 0"
-333,-1,1,27.0,"x_durable: -1, x_transient: 1"
-334,0,0,15.0,"x_durable: 0, x_transient: 0"
-335,0,0,14.0,"x_durable: 0, x_transient: 0"
-336,0,0,18.0,"x_durable: 0, x_transient: 0"
-337,0,0,21.0,"x_durable: 0, x_transient: 0"
-338,0,0,20.0,"x_durable: 0, x_transient: 0"
-339,0,0,26.0,"x_durable: 0, x_transient: 0"
-340,0,0,33.0,"x_durable: 0, x_transient: 0"
-341,0,0,33.0,"x_durable: 0, x_transient: 0"
-342,0,0,40.0,"x_durable: 0, x_transient: 0"
-343,0,0,53.0,"x_durable: 0, x_transient: 0"
-344,0,0,57.0,"x_durable: 0, x_transient: 0"
-345,0,0,53.0,"x_durable: 0, x_transient: 0"
-346,0,0,67.0,"x_durable: 0, x_transient: 0"
-347,0,0,59.0,"x_durable: 0, x_transient: 0"
-348,0,0,75.0,"x_durable: 0, x_transient: 0"
-349,0,0,77.0,"x_durable: 0, x_transient: 0"
-350,0,0,80.0,"x_durable: 0, x_transient: 0"
-351,0,-1,60.0,"x_durable: 0, x_transient: -1"
-352,0,0,77.0,"x_durable: 0, x_transient: 0"
-353,0,0,71.0,"x_durable: 0, x_transient: 0"
-354,0,0,74.0,"x_durable: 0, x_transient: 0"
-355,0,0,68.0,"x_durable: 0, x_transient: 0"
-356,0,0,65.0,"x_durable: 0, x_transient: 0"
-357,0,1,77.0,"x_durable: 0, x_transient: 1"
-358,0,0,62.0,"x_durable: 0, x_transient: 0"
-359,0,0,51.0,"x_durable: 0, x_transient: 0"
-360,0,0,40.0,"x_durable: 0, x_transient: 0"
-361,0,0,38.0,"x_durable: 0, x_transient: 0"
-362,0,0,33.0,"x_durable: 0, x_transient: 0"
-363,0,0,30.0,"x_durable: 0, x_transient: 0"
-364,0,0,26.0,"x_durable: 0, x_transient: 0"
-365,0,0,17.0,"x_durable: 0, x_transient: 0"
-366,0,0,21.0,"x_durable: 0, x_transient: 0"
-367,0,0,13.0,"x_durable: 0, x_transient: 0"
-368,0,0,7.0,"x_durable: 0, x_transient: 0"
-369,0,0,5.0,"x_durable: 0, x_transient: 0"
-370,0,0,7.0,"x_durable: 0, x_transient: 0"
-371,0,0,8.0,"x_durable: 0, x_transient: 0"
-372,0,0,6.0,"x_durable: 0, x_transient: 0"
-373,0,0,9.0,"x_durable: 0, x_transient: 0"
-374,0,0,7.0,"x_durable: 0, x_transient: 0"
-375,0,0,17.0,"x_durable: 0, x_transient: 0"
-376,0,0,15.0,"x_durable: 0, x_transient: 0"
-377,0,0,27.0,"x_durable: 0, x_transient: 0"
-378,0,0,28.0,"x_durable: 0, x_transient: 0"
-379,0,1,53.0,"x_durable: 0, x_transient: 1"
-380,0,0,48.0,"x_durable: 0, x_transient: 0"
-381,0,0,40.0,"x_durable: 0, x_transient: 0"
-382,0,0,52.0,"x_durable: 0, x_transient: 0"
-383,0,0,59.0,"x_durable: 0, x_transient: 0"
-384,0,0,65.0,"x_durable: 0, x_transient: 0"
-385,0,0,71.0,"x_durable: 0, x_transient: 0"
-386,0,0,72.0,"x_durable: 0, x_transient: 0"
-387,0,0,77.0,"x_durable: 0, x_transient: 0"
-388,0,0,73.0,"x_durable: 0, x_transient: 0"
-389,0,0,72.0,"x_durable: 0, x_transient: 0"
-390,0,0,71.0,"x_durable: 0, x_transient: 0"
-391,0,-1,56.0,"x_durable: 0, x_transient: -1"
-392,0,0,73.0,"x_durable: 0, x_transient: 0"
-393,0,0,76.0,"x_durable: 0, x_transient: 0"
-394,0,0,65.0,"x_durable: 0, x_transient: 0"
-395,0,0,59.0,"x_durable: 0, x_transient: 0"
-396,0,0,64.0,"x_durable: 0, x_transient: 0"
-397,-1,0,45.0,"x_durable: -1, x_transient: 0"
-398,0,0,35.0,"x_durable: 0, x_transient: 0"
-399,0,0,21.0,"x_durable: 0, x_transient: 0"
-400,0,0,9.0,"x_durable: 0, x_transient: 0"
-401,0,0,7.0,"x_durable: 0, x_transient: 0"
-402,0,0,0.0,"x_durable: 0, x_transient: 0"
-403,0,0,0.0,"x_durable: 0, x_transient: 0"
-404,0,0,0.0,"x_durable: 0, x_transient: 0"
-405,0,0,0.0,"x_durable: 0, x_transient: 0"
-406,0,0,0.0,"x_durable: 0, x_transient: 0"
-407,0,0,0.0,"x_durable: 0, x_transient: 0"
-408,0,0,0.0,"x_durable: 0, x_transient: 0"
-409,0,0,8.0,"x_durable: 0, x_transient: 0"
-410,0,0,21.0,"x_durable: 0, x_transient: 0"
-411,-1,0,14.0,"x_durable: -1, x_transient: 0"
-412,0,0,19.0,"x_durable: 0, x_transient: 0"
-413,0,0,18.0,"x_durable: 0, x_transient: 0"
-414,0,0,22.0,"x_durable: 0, x_transient: 0"
-415,0,0,24.0,"x_durable: 0, x_transient: 0"
-416,0,0,23.0,"x_durable: 0, x_transient: 0"
-417,0,-1,13.0,"x_durable: 0, x_transient: -1"
-418,0,0,36.0,"x_durable: 0, x_transient: 0"
-419,0,0,34.0,"x_durable: 0, x_transient: 0"
-420,0,0,39.0,"x_durable: 0, x_transient: 0"
-421,0,0,48.0,"x_durable: 0, x_transient: 0"
-422,0,0,51.0,"x_durable: 0, x_transient: 0"
-423,0,0,49.0,"x_durable: 0, x_transient: 0"
-424,0,0,53.0,"x_durable: 0, x_transient: 0"
-425,0,0,62.0,"x_durable: 0, x_transient: 0"
-426,0,0,51.0,"x_durable: 0, x_transient: 0"
-427,0,0,54.0,"x_durable: 0, x_transient: 0"
-428,0,0,63.0,"x_durable: 0, x_transient: 0"
-429,0,0,54.0,"x_durable: 0, x_transient: 0"
-430,0,0,65.0,"x_durable: 0, x_transient: 0"
-431,0,0,63.0,"x_durable: 0, x_transient: 0"
-432,0,0,64.0,"x_durable: 0, x_transient: 0"
-433,0,0,57.0,"x_durable: 0, x_transient: 0"
-434,0,0,65.0,"x_durable: 0, x_transient: 0"
-435,0,0,55.0,"x_durable: 0, x_transient: 0"
-436,0,0,47.0,"x_durable: 0, x_transient: 0"
-437,0,0,53.0,"x_durable: 0, x_transient: 0"
-438,0,0,50.0,"x_durable: 0, x_transient: 0"
-439,0,0,39.0,"x_durable: 0, x_transient: 0"
-440,0,0,43.0,"x_durable: 0, x_transient: 0"
-441,0,-2,3.0,"x_durable: 0, x_transient: -2"
-442,0,0,32.0,"x_durable: 0, x_transient: 0"
-443,0,0,32.0,"x_durable: 0, x_transient: 0"
-444,0,0,25.0,"x_durable: 0, x_transient: 0"
-445,0,0,29.0,"x_durable: 0, x_transient: 0"
-446,0,0,27.0,"x_durable: 0, x_transient: 0"
-447,0,0,27.0,"x_durable: 0, x_transient: 0"
-448,0,0,27.0,"x_durable: 0, x_transient: 0"
-449,0,0,26.0,"x_durable: 0, x_transient: 0"
-450,0,0,24.0,"x_durable: 0, x_transient: 0"
-451,0,0,23.0,"x_durable: 0, x_transient: 0"
-452,0,0,31.0,"x_durable: 0, x_transient: 0"
-453,0,0,30.0,"x_durable: 0, x_transient: 0"
-454,0,0,23.0,"x_durable: 0, x_transient: 0"
-455,0,0,34.0,"x_durable: 0, x_transient: 0"
-456,0,0,35.0,"x_durable: 0, x_transient: 0"
-457,-1,0,27.0,"x_durable: -1, x_transient: 0"
-458,0,0,29.0,"x_durable: 0, x_transient: 0"
-459,0,0,29.0,"x_durable: 0, x_transient: 0"
-460,0,0,16.0,"x_durable: 0, x_transient: 0"
-461,0,0,13.0,"x_durable: 0, x_transient: 0"
-462,0,0,22.0,"x_durable: 0, x_transient: 0"
-463,0,0,16.0,"x_durable: 0, x_transient: 0"
-464,0,-2,0.0,"x_durable: 0, x_transient: -2"
-465,0,0,12.0,"x_durable: 0, x_transient: 0"
-466,0,-1,2.0,"x_durable: 0, x_transient: -1"
-467,0,0,24.0,"x_durable: 0, x_transient: 0"
-468,0,0,21.0,"x_durable: 0, x_transient: 0"
-469,0,0,31.0,"x_durable: 0, x_transient: 0"
-470,0,0,27.0,"x_durable: 0, x_transient: 0"
-471,0,0,31.0,"x_durable: 0, x_transient: 0"
-472,0,1,55.0,"x_durable: 0, x_transient: 1"
-473,0,0,41.0,"x_durable: 0, x_transient: 0"
-474,0,0,49.0,"x_durable: 0, x_transient: 0"
-475,0,0,52.0,"x_durable: 0, x_transient: 0"
-476,0,0,53.0,"x_durable: 0, x_transient: 0"
-477,0,0,58.0,"x_durable: 0, x_transient: 0"
-478,0,0,69.0,"x_durable: 0, x_transient: 0"
-479,0,0,65.0,"x_durable: 0, x_transient: 0"
-480,0,0,67.0,"x_durable: 0, x_transient: 0"
-481,0,0,67.0,"x_durable: 0, x_transient: 0"
-482,0,0,66.0,"x_durable: 0, x_transient: 0"
-483,0,0,75.0,"x_durable: 0, x_transient: 0"
-484,0,0,76.0,"x_durable: 0, x_transient: 0"
-485,0,0,70.0,"x_durable: 0, x_transient: 0"
-486,0,1,90.0,"x_durable: 0, x_transient: 1"
-487,0,0,66.0,"x_durable: 0, x_transient: 0"
-488,0,0,59.0,"x_durable: 0, x_transient: 0"
-489,0,0,57.0,"x_durable: 0, x_transient: 0"
-490,0,0,55.0,"x_durable: 0, x_transient: 0"
-491,0,0,55.0,"x_durable: 0, x_transient: 0"
-492,0,0,44.0,"x_durable: 0, x_transient: 0"
-493,0,0,41.0,"x_durable: 0, x_transient: 0"
-494,0,0,41.0,"x_durable: 0, x_transient: 0"
-495,0,0,31.0,"x_durable: 0, x_transient: 0"
-496,0,0,31.0,"x_durable: 0, x_transient: 0"
-497,0,0,21.0,"x_durable: 0, x_transient: 0"
-498,0,0,23.0,"x_durable: 0, x_transient: 0"
-499,0,0,19.0,"x_durable: 0, x_transient: 0"
-500,0,0,23.0,"x_durable: 0, x_transient: 0"
-501,0,0,11.0,"x_durable: 0, x_transient: 0"
-502,0,2,53.0,"x_durable: 0, x_transient: 2"
-503,0,0,18.0,"x_durable: 0, x_transient: 0"
-504,0,0,25.0,"x_durable: 0, x_transient: 0"
-505,0,0,23.0,"x_durable: 0, x_transient: 0"
-506,0,0,28.0,"x_durable: 0, x_transient: 0"
-507,0,0,22.0,"x_durable: 0, x_transient: 0"
-508,0,0,36.0,"x_durable: 0, x_transient: 0"
-509,0,0,34.0,"x_durable: 0, x_transient: 0"
-510,0,0,41.0,"x_durable: 0, x_transient: 0"
-511,0,0,51.0,"x_durable: 0, x_transient: 0"
-512,0,0,49.0,"x_durable: 0, x_transient: 0"
-513,0,1,75.0,"x_durable: 0, x_transient: 1"
-514,0,0,56.0,"x_durable: 0, x_transient: 0"
-515,0,0,63.0,"x_durable: 0, x_transient: 0"
-516,0,0,61.0,"x_durable: 0, x_transient: 0"
-517,0,0,69.0,"x_durable: 0, x_transient: 0"
-518,0,0,59.0,"x_durable: 0, x_transient: 0"
-519,0,0,63.0,"x_durable: 0, x_transient: 0"
-520,0,0,61.0,"x_durable: 0, x_transient: 0"
-521,0,0,64.0,"x_durable: 0, x_transient: 0"
-522,0,0,62.0,"x_durable: 0, x_transient: 0"
-523,0,0,58.0,"x_durable: 0, x_transient: 0"
-524,0,0,57.0,"x_durable: 0, x_transient: 0"
-525,0,0,58.0,"x_durable: 0, x_transient: 0"
-526,0,0,54.0,"x_durable: 0, x_transient: 0"
-527,0,0,47.0,"x_durable: 0, x_transient: 0"
-528,0,0,45.0,"x_durable: 0, x_transient: 0"
-529,0,0,41.0,"x_durable: 0, x_transient: 0"
-530,0,0,44.0,"x_durable: 0, x_transient: 0"
-531,0,0,41.0,"x_durable: 0, x_transient: 0"
-532,0,0,28.0,"x_durable: 0, x_transient: 0"
-533,0,0,30.0,"x_durable: 0, x_transient: 0"
-534,0,0,28.0,"x_durable: 0, x_transient: 0"
-535,0,-1,8.0,"x_durable: 0, x_transient: -1"
-536,0,0,28.0,"x_durable: 0, x_transient: 0"
-537,0,0,22.0,"x_durable: 0, x_transient: 0"
-538,0,0,25.0,"x_durable: 0, x_transient: 0"
-539,0,0,29.0,"x_durable: 0, x_transient: 0"
-540,0,0,27.0,"x_durable: 0, x_transient: 0"
-541,0,0,24.0,"x_durable: 0, x_transient: 0"
-542,0,-2,0.0,"x_durable: 0, x_transient: -2"
-543,0,0,23.0,"x_durable: 0, x_transient: 0"
-544,0,0,28.0,"x_durable: 0, x_transient: 0"
-545,0,0,33.0,"x_durable: 0, x_transient: 0"
-546,0,0,36.0,"x_durable: 0, x_transient: 0"
-547,0,0,37.0,"x_durable: 0, x_transient: 0"
-548,0,0,44.0,"x_durable: 0, x_transient: 0"
-549,0,0,47.0,"x_durable: 0, x_transient: 0"
-550,0,-2,11.0,"x_durable: 0, x_transient: -2"
-551,0,0,56.0,"x_durable: 0, x_transient: 0"
-552,0,0,57.0,"x_durable: 0, x_transient: 0"
-553,0,0,58.0,"x_durable: 0, x_transient: 0"
-554,0,-1,40.0,"x_durable: 0, x_transient: -1"
-555,0,0,60.0,"x_durable: 0, x_transient: 0"
-556,0,0,57.0,"x_durable: 0, x_transient: 0"
-557,0,0,62.0,"x_durable: 0, x_transient: 0"
-558,0,0,57.0,"x_durable: 0, x_transient: 0"
-559,0,0,58.0,"x_durable: 0, x_transient: 0"
-560,0,0,58.0,"x_durable: 0, x_transient: 0"
-561,0,0,58.0,"x_durable: 0, x_transient: 0"
-562,0,0,55.0,"x_durable: 0, x_transient: 0"
-563,0,0,46.0,"x_durable: 0, x_transient: 0"
-564,0,0,46.0,"x_durable: 0, x_transient: 0"
-565,-1,0,36.0,"x_durable: -1, x_transient: 0"
-566,0,0,27.0,"x_durable: 0, x_transient: 0"
-567,0,0,15.0,"x_durable: 0, x_transient: 0"
-568,0,0,6.0,"x_durable: 0, x_transient: 0"
-569,0,0,1.0,"x_durable: 0, x_transient: 0"
-570,0,0,0.0,"x_durable: 0, x_transient: 0"
-571,0,0,0.0,"x_durable: 0, x_transient: 0"
-572,0,0,0.0,"x_durable: 0, x_transient: 0"
-573,0,1,14.0,"x_durable: 0, x_transient: 1"
-574,0,0,0.0,"x_durable: 0, x_transient: 0"
-575,0,0,0.0,"x_durable: 0, x_transient: 0"
-576,0,2,43.0,"x_durable: 0, x_transient: 2"
-577,0,2,42.0,"x_durable: 0, x_transient: 2"
-578,0,0,10.0,"x_durable: 0, x_transient: 0"
-579,0,2,62.0,"x_durable: 0, x_transient: 2"
-580,0,0,27.0,"x_durable: 0, x_transient: 0"
-581,0,0,38.0,"x_durable: 0, x_transient: 0"
-582,0,0,47.0,"x_durable: 0, x_transient: 0"
-583,0,0,53.0,"x_durable: 0, x_transient: 0"
-584,0,0,60.0,"x_durable: 0, x_transient: 0"
-585,0,0,65.0,"x_durable: 0, x_transient: 0"
-586,0,0,75.0,"x_durable: 0, x_transient: 0"
-587,0,0,86.0,"x_durable: 0, x_transient: 0"
-588,0,0,93.0,"x_durable: 0, x_transient: 0"
-589,0,0,89.0,"x_durable: 0, x_transient: 0"
-590,0,0,90.0,"x_durable: 0, x_transient: 0"
-591,0,0,91.0,"x_durable: 0, x_transient: 0"
-592,0,0,93.0,"x_durable: 0, x_transient: 0"
-593,0,0,87.0,"x_durable: 0, x_transient: 0"
-594,0,0,90.0,"x_durable: 0, x_transient: 0"
-595,0,0,69.0,"x_durable: 0, x_transient: 0"
-596,0,0,69.0,"x_durable: 0, x_transient: 0"
-597,0,0,64.0,"x_durable: 0, x_transient: 0"
-598,0,0,57.0,"x_durable: 0, x_transient: 0"
-599,0,0,56.0,"x_durable: 0, x_transient: 0"
-600,0,0,39.0,"x_durable: 0, x_transient: 0"
-601,0,0,32.0,"x_durable: 0, x_transient: 0"
-602,0,0,19.0,"x_durable: 0, x_transient: 0"
-603,0,0,16.0,"x_durable: 0, x_transient: 0"
-604,0,0,9.0,"x_durable: 0, x_transient: 0"
-605,0,0,5.0,"x_durable: 0, x_transient: 0"
-606,0,-2,0.0,"x_durable: 0, x_transient: -2"
-607,0,0,0.0,"x_durable: 0, x_transient: 0"
-608,0,0,0.0,"x_durable: 0, x_transient: 0"
-609,0,0,0.0,"x_durable: 0, x_transient: 0"
-610,0,0,0.0,"x_durable: 0, x_transient: 0"
-611,0,0,0.0,"x_durable: 0, x_transient: 0"
-612,0,2,32.0,"x_durable: 0, x_transient: 2"
-613,0,-2,0.0,"x_durable: 0, x_transient: -2"
-614,0,0,5.0,"x_durable: 0, x_transient: 0"
-615,0,0,11.0,"x_durable: 0, x_transient: 0"
-616,0,0,18.0,"x_durable: 0, x_transient: 0"
-617,0,0,26.0,"x_durable: 0, x_transient: 0"
-618,0,0,40.0,"x_durable: 0, x_transient: 0"
-619,0,0,43.0,"x_durable: 0, x_transient: 0"
-620,0,0,49.0,"x_durable: 0, x_transient: 0"
-621,0,0,64.0,"x_durable: 0, x_transient: 0"
-622,0,0,64.0,"x_durable: 0, x_transient: 0"
-623,0,1,93.0,"x_durable: 0, x_transient: 1"
-624,0,0,79.0,"x_durable: 0, x_transient: 0"
-625,0,0,82.0,"x_durable: 0, x_transient: 0"
-626,0,0,83.0,"x_durable: 0, x_transient: 0"
-627,0,0,87.0,"x_durable: 0, x_transient: 0"
-628,0,0,93.0,"x_durable: 0, x_transient: 0"
-629,0,0,89.0,"x_durable: 0, x_transient: 0"
-630,0,0,90.0,"x_durable: 0, x_transient: 0"
-631,0,0,85.0,"x_durable: 0, x_transient: 0"
-632,0,0,85.0,"x_durable: 0, x_transient: 0"
-633,0,0,76.0,"x_durable: 0, x_transient: 0"
-634,0,0,76.0,"x_durable: 0, x_transient: 0"
-635,1,0,67.0,"x_durable: 1, x_transient: 0"
-636,0,0,72.0,"x_durable: 0, x_transient: 0"
-637,0,0,71.0,"x_durable: 0, x_transient: 0"
-638,0,0,75.0,"x_durable: 0, x_transient: 0"
-639,0,0,63.0,"x_durable: 0, x_transient: 0"
-640,0,0,65.0,"x_durable: 0, x_transient: 0"
-641,0,0,56.0,"x_durable: 0, x_transient: 0"
-642,0,0,50.0,"x_durable: 0, x_transient: 0"
-643,0,-2,13.0,"x_durable: 0, x_transient: -2"
-644,0,0,41.0,"x_durable: 0, x_transient: 0"
-645,0,0,43.0,"x_durable: 0, x_transient: 0"
-646,0,0,36.0,"x_durable: 0, x_transient: 0"
-647,0,1,45.0,"x_durable: 0, x_transient: 1"
-648,0,0,22.0,"x_durable: 0, x_transient: 0"
-649,0,0,17.0,"x_durable: 0, x_transient: 0"
-650,0,0,13.0,"x_durable: 0, x_transient: 0"
-651,0,0,16.0,"x_durable: 0, x_transient: 0"
-652,0,0,10.0,"x_durable: 0, x_transient: 0"
-653,0,-2,0.0,"x_durable: 0, x_transient: -2"
-654,0,0,10.0,"x_durable: 0, x_transient: 0"
-655,0,0,8.0,"x_durable: 0, x_transient: 0"
-656,0,0,3.0,"x_durable: 0, x_transient: 0"
-657,0,0,18.0,"x_durable: 0, x_transient: 0"
-658,0,0,19.0,"x_durable: 0, x_transient: 0"
-659,-1,0,13.0,"x_durable: -1, x_transient: 0"
-660,0,0,2.0,"x_durable: 0, x_transient: 0"
-661,0,-1,0.0,"x_durable: 0, x_transient: -1"
-662,0,0,6.0,"x_durable: 0, x_transient: 0"
-663,0,0,5.0,"x_durable: 0, x_transient: 0"
-664,0,0,6.0,"x_durable: 0, x_transient: 0"
-665,0,0,11.0,"x_durable: 0, x_transient: 0"
-666,0,0,7.0,"x_durable: 0, x_transient: 0"
-667,0,0,23.0,"x_durable: 0, x_transient: 0"
-668,0,0,26.0,"x_durable: 0, x_transient: 0"
-669,0,0,23.0,"x_durable: 0, x_transient: 0"
-670,0,0,33.0,"x_durable: 0, x_transient: 0"
-671,0,0,38.0,"x_durable: 0, x_transient: 0"
-672,0,0,41.0,"x_durable: 0, x_transient: 0"
-673,0,1,63.0,"x_durable: 0, x_transient: 1"
-674,0,0,46.0,"x_durable: 0, x_transient: 0"
-675,0,0,54.0,"x_durable: 0, x_transient: 0"
-676,0,0,61.0,"x_durable: 0, x_transient: 0"
-677,0,0,66.0,"x_durable: 0, x_transient: 0"
-678,0,0,73.0,"x_durable: 0, x_transient: 0"
-679,0,0,70.0,"x_durable: 0, x_transient: 0"
-680,0,0,75.0,"x_durable: 0, x_transient: 0"
-681,0,0,73.0,"x_durable: 0, x_transient: 0"
-682,0,0,76.0,"x_durable: 0, x_transient: 0"
-683,0,0,77.0,"x_durable: 0, x_transient: 0"
-684,0,0,73.0,"x_durable: 0, x_transient: 0"
-685,0,0,72.0,"x_durable: 0, x_transient: 0"
-686,0,0,67.0,"x_durable: 0, x_transient: 0"
-687,0,0,64.0,"x_durable: 0, x_transient: 0"
-688,0,0,54.0,"x_durable: 0, x_transient: 0"
-689,0,0,56.0,"x_durable: 0, x_transient: 0"
-690,0,0,46.0,"x_durable: 0, x_transient: 0"
-691,0,0,40.0,"x_durable: 0, x_transient: 0"
-692,0,0,29.0,"x_durable: 0, x_transient: 0"
-693,0,0,27.0,"x_durable: 0, x_transient: 0"
-694,0,0,21.0,"x_durable: 0, x_transient: 0"
-695,0,0,19.0,"x_durable: 0, x_transient: 0"
-696,0,0,18.0,"x_durable: 0, x_transient: 0"
-697,0,0,11.0,"x_durable: 0, x_transient: 0"
-698,0,0,13.0,"x_durable: 0, x_transient: 0"
-699,0,0,12.0,"x_durable: 0, x_transient: 0"
-700,0,1,24.0,"x_durable: 0, x_transient: 1"
-701,0,0,10.0,"x_durable: 0, x_transient: 0"
-702,0,0,1.0,"x_durable: 0, x_transient: 0"
-703,0,0,11.0,"x_durable: 0, x_transient: 0"
-704,0,0,17.0,"x_durable: 0, x_transient: 0"
-705,0,-1,0.0,"x_durable: 0, x_transient: -1"
-706,0,0,15.0,"x_durable: 0, x_transient: 0"
-707,0,0,28.0,"x_durable: 0, x_transient: 0"
-708,0,0,29.0,"x_durable: 0, x_transient: 0"
-709,0,0,37.0,"x_durable: 0, x_transient: 0"
-710,0,0,43.0,"x_durable: 0, x_transient: 0"
-711,0,0,44.0,"x_durable: 0, x_transient: 0"
-712,0,0,53.0,"x_durable: 0, x_transient: 0"
-713,0,0,56.0,"x_durable: 0, x_transient: 0"
-714,0,0,62.0,"x_durable: 0, x_transient: 0"
-715,1,0,74.0,"x_durable: 1, x_transient: 0"
-716,0,0,84.0,"x_durable: 0, x_transient: 0"
-717,0,0,93.0,"x_durable: 0, x_transient: 0"
-718,0,0,106.0,"x_durable: 0, x_transient: 0"
-719,0,0,112.0,"x_durable: 0, x_transient: 0"
-720,0,0,116.0,"x_durable: 0, x_transient: 0"
-721,0,0,114.0,"x_durable: 0, x_transient: 0"
-722,0,0,111.0,"x_durable: 0, x_transient: 0"
-723,0,0,117.0,"x_durable: 0, x_transient: 0"
-724,0,0,111.0,"x_durable: 0, x_transient: 0"
-725,0,0,106.0,"x_durable: 0, x_transient: 0"
-726,0,0,98.0,"x_durable: 0, x_transient: 0"
-727,0,0,87.0,"x_durable: 0, x_transient: 0"
-728,1,0,88.0,"x_durable: 1, x_transient: 0"
-729,0,0,77.0,"x_durable: 0, x_transient: 0"
-730,0,0,75.0,"x_durable: 0, x_transient: 0"
-731,0,0,68.0,"x_durable: 0, x_transient: 0"
-732,0,0,57.0,"x_durable: 0, x_transient: 0"
-733,0,0,58.0,"x_durable: 0, x_transient: 0"
-734,0,0,43.0,"x_durable: 0, x_transient: 0"
-735,0,0,32.0,"x_durable: 0, x_transient: 0"
-736,0,0,25.0,"x_durable: 0, x_transient: 0"
-737,0,0,10.0,"x_durable: 0, x_transient: 0"
-738,0,0,13.0,"x_durable: 0, x_transient: 0"
-739,0,0,4.0,"x_durable: 0, x_transient: 0"
-740,0,1,16.0,"x_durable: 0, x_transient: 1"
-741,0,0,0.0,"x_durable: 0, x_transient: 0"
-742,0,0,0.0,"x_durable: 0, x_transient: 0"
-743,0,-2,0.0,"x_durable: 0, x_transient: -2"
-744,0,0,0.0,"x_durable: 0, x_transient: 0"
-745,0,0,0.0,"x_durable: 0, x_transient: 0"
-746,0,0,0.0,"x_durable: 0, x_transient: 0"
-747,0,0,-0.0,"x_durable: 0, x_transient: 0"
-748,0,0,6.0,"x_durable: 0, x_transient: 0"
-749,0,0,11.0,"x_durable: 0, x_transient: 0"
-750,0,-1,0.0,"x_durable: 0, x_transient: -1"
-751,0,0,32.0,"x_durable: 0, x_transient: 0"
-752,0,0,39.0,"x_durable: 0, x_transient: 0"
-753,0,0,41.0,"x_durable: 0, x_transient: 0"
-754,0,0,56.0,"x_durable: 0, x_transient: 0"
-755,0,0,63.0,"x_durable: 0, x_transient: 0"
-756,0,0,70.0,"x_durable: 0, x_transient: 0"
-757,0,0,79.0,"x_durable: 0, x_transient: 0"
-758,0,0,86.0,"x_durable: 0, x_transient: 0"
-759,0,0,90.0,"x_durable: 0, x_transient: 0"
-760,0,0,94.0,"x_durable: 0, x_transient: 0"
-761,0,0,89.0,"x_durable: 0, x_transient: 0"
-762,0,0,94.0,"x_durable: 0, x_transient: 0"
-763,0,0,97.0,"x_durable: 0, x_transient: 0"
-764,1,0,106.0,"x_durable: 1, x_transient: 0"
-765,0,0,105.0,"x_durable: 0, x_transient: 0"
-766,0,0,117.0,"x_durable: 0, x_transient: 0"
-767,0,0,107.0,"x_durable: 0, x_transient: 0"
-768,0,1,132.0,"x_durable: 0, x_transient: 1"
-769,0,-1,92.0,"x_durable: 0, x_transient: -1"
-770,0,0,103.0,"x_durable: 0, x_transient: 0"
-771,0,2,131.0,"x_durable: 0, x_transient: 2"
-772,0,0,90.0,"x_durable: 0, x_transient: 0"
-773,0,0,75.0,"x_durable: 0, x_transient: 0"
-774,0,0,62.0,"x_durable: 0, x_transient: 0"
-775,0,0,59.0,"x_durable: 0, x_transient: 0"
-776,0,0,51.0,"x_durable: 0, x_transient: 0"
-777,0,0,37.0,"x_durable: 0, x_transient: 0"
-778,0,0,25.0,"x_durable: 0, x_transient: 0"
-779,0,0,15.0,"x_durable: 0, x_transient: 0"
-780,0,0,0.0,"x_durable: 0, x_transient: 0"
-781,0,0,0.0,"x_durable: 0, x_transient: 0"
-782,0,0,0.0,"x_durable: 0, x_transient: 0"
-783,0,0,0.0,"x_durable: 0, x_transient: 0"
-784,0,0,0.0,"x_durable: 0, x_transient: 0"
-785,0,0,0.0,"x_durable: 0, x_transient: 0"
-786,0,-1,0.0,"x_durable: 0, x_transient: -1"
-787,0,0,1.0,"x_durable: 0, x_transient: 0"
-788,0,0,7.0,"x_durable: 0, x_transient: 0"
-789,0,0,15.0,"x_durable: 0, x_transient: 0"
-790,0,0,26.0,"x_durable: 0, x_transient: 0"
-791,0,0,37.0,"x_durable: 0, x_transient: 0"
-792,0,0,39.0,"x_durable: 0, x_transient: 0"
-793,0,0,54.0,"x_durable: 0, x_transient: 0"
-794,0,0,64.0,"x_durable: 0, x_transient: 0"
-795,0,0,68.0,"x_durable: 0, x_transient: 0"
-796,0,0,79.0,"x_durable: 0, x_transient: 0"
-797,0,0,82.0,"x_durable: 0, x_transient: 0"
-798,0,-1,76.0,"x_durable: 0, x_transient: -1"
-799,1,0,97.0,"x_durable: 1, x_transient: 0"
-800,0,0,108.0,"x_durable: 0, x_transient: 0"
-801,0,0,115.0,"x_durable: 0, x_transient: 0"
-802,0,0,124.0,"x_durable: 0, x_transient: 0"
-803,0,-2,85.0,"x_durable: 0, x_transient: -2"
-804,0,0,128.0,"x_durable: 0, x_transient: 0"
-805,0,0,132.0,"x_durable: 0, x_transient: 0"
-806,0,0,120.0,"x_durable: 0, x_transient: 0"
-807,0,0,121.0,"x_durable: 0, x_transient: 0"
-808,0,0,112.0,"x_durable: 0, x_transient: 0"
-809,1,0,112.0,"x_durable: 1, x_transient: 0"
-810,0,1,124.0,"x_durable: 0, x_transient: 1"
-811,0,0,99.0,"x_durable: 0, x_transient: 0"
-812,0,0,94.0,"x_durable: 0, x_transient: 0"
-813,0,0,86.0,"x_durable: 0, x_transient: 0"
-814,0,0,72.0,"x_durable: 0, x_transient: 0"
-815,0,-1,44.0,"x_durable: 0, x_transient: -1"
-816,0,0,54.0,"x_durable: 0, x_transient: 0"
-817,0,0,41.0,"x_durable: 0, x_transient: 0"
-818,0,0,27.0,"x_durable: 0, x_transient: 0"
-819,0,0,15.0,"x_durable: 0, x_transient: 0"
-820,0,0,8.0,"x_durable: 0, x_transient: 0"
-821,0,0,0.0,"x_durable: 0, x_transient: 0"
-822,0,0,0.0,"x_durable: 0, x_transient: 0"
-823,0,0,0.0,"x_durable: 0, x_transient: 0"
-824,0,0,0.0,"x_durable: 0, x_transient: 0"
-825,0,0,0.0,"x_durable: 0, x_transient: 0"
-826,0,0,1.0,"x_durable: 0, x_transient: 0"
-827,0,0,3.0,"x_durable: 0, x_transient: 0"
-828,0,0,9.0,"x_durable: 0, x_transient: 0"
-829,0,0,17.0,"x_durable: 0, x_transient: 0"
-830,0,0,35.0,"x_durable: 0, x_transient: 0"
-831,0,0,40.0,"x_durable: 0, x_transient: 0"
-832,0,0,44.0,"x_durable: 0, x_transient: 0"
-833,0,0,58.0,"x_durable: 0, x_transient: 0"
-834,0,0,64.0,"x_durable: 0, x_transient: 0"
-835,-1,0,61.0,"x_durable: -1, x_transient: 0"
-836,0,0,58.0,"x_durable: 0, x_transient: 0"
-837,0,-1,50.0,"x_durable: 0, x_transient: -1"
-838,0,0,67.0,"x_durable: 0, x_transient: 0"
-839,0,0,56.0,"x_durable: 0, x_transient: 0"
-840,0,0,61.0,"x_durable: 0, x_transient: 0"
-841,0,0,49.0,"x_durable: 0, x_transient: 0"
-842,0,0,55.0,"x_durable: 0, x_transient: 0"
-843,0,0,55.0,"x_durable: 0, x_transient: 0"
-844,0,0,43.0,"x_durable: 0, x_transient: 0"
-845,0,0,41.0,"x_durable: 0, x_transient: 0"
-846,0,-1,24.0,"x_durable: 0, x_transient: -1"
-847,0,0,30.0,"x_durable: 0, x_transient: 0"
-848,0,0,37.0,"x_durable: 0, x_transient: 0"
-849,0,0,34.0,"x_durable: 0, x_transient: 0"
-850,0,0,23.0,"x_durable: 0, x_transient: 0"
-851,0,0,24.0,"x_durable: 0, x_transient: 0"
-852,0,-1,1.0,"x_durable: 0, x_transient: -1"
-853,0,0,25.0,"x_durable: 0, x_transient: 0"
-854,0,0,21.0,"x_durable: 0, x_transient: 0"
-855,0,0,22.0,"x_durable: 0, x_transient: 0"
-856,0,0,30.0,"x_durable: 0, x_transient: 0"
-857,0,0,22.0,"x_durable: 0, x_transient: 0"
-858,0,0,28.0,"x_durable: 0, x_transient: 0"
-859,0,0,22.0,"x_durable: 0, x_transient: 0"
-860,0,0,34.0,"x_durable: 0, x_transient: 0"
-861,0,0,30.0,"x_durable: 0, x_transient: 0"
-862,0,0,32.0,"x_durable: 0, x_transient: 0"
-863,0,0,34.0,"x_durable: 0, x_transient: 0"
-864,0,0,39.0,"x_durable: 0, x_transient: 0"
-865,0,0,49.0,"x_durable: 0, x_transient: 0"
-866,0,0,47.0,"x_durable: 0, x_transient: 0"
-867,0,0,45.0,"x_durable: 0, x_transient: 0"
-868,0,0,52.0,"x_durable: 0, x_transient: 0"
-869,0,0,50.0,"x_durable: 0, x_transient: 0"
-870,0,0,59.0,"x_durable: 0, x_transient: 0"
-871,0,0,64.0,"x_durable: 0, x_transient: 0"
-872,0,0,59.0,"x_durable: 0, x_transient: 0"
-873,0,2,99.0,"x_durable: 0, x_transient: 2"
-874,0,-1,46.0,"x_durable: 0, x_transient: -1"
-875,0,-2,21.0,"x_durable: 0, x_transient: -2"
-876,0,0,64.0,"x_durable: 0, x_transient: 0"
-877,0,0,62.0,"x_durable: 0, x_transient: 0"
-878,0,0,56.0,"x_durable: 0, x_transient: 0"
-879,0,0,57.0,"x_durable: 0, x_transient: 0"
-880,0,0,52.0,"x_durable: 0, x_transient: 0"
-881,0,0,46.0,"x_durable: 0, x_transient: 0"
-882,0,0,50.0,"x_durable: 0, x_transient: 0"
-883,0,0,38.0,"x_durable: 0, x_transient: 0"
-884,0,0,38.0,"x_durable: 0, x_transient: 0"
-885,0,0,33.0,"x_durable: 0, x_transient: 0"
-886,0,0,31.0,"x_durable: 0, x_transient: 0"
-887,0,0,31.0,"x_durable: 0, x_transient: 0"
-888,0,0,26.0,"x_durable: 0, x_transient: 0"
-889,0,0,26.0,"x_durable: 0, x_transient: 0"
-890,0,0,28.0,"x_durable: 0, x_transient: 0"
-891,0,0,20.0,"x_durable: 0, x_transient: 0"
-892,0,0,19.0,"x_durable: 0, x_transient: 0"
-893,0,0,25.0,"x_durable: 0, x_transient: 0"
-894,0,0,18.0,"x_durable: 0, x_transient: 0"
-895,0,0,22.0,"x_durable: 0, x_transient: 0"
-896,0,0,22.0,"x_durable: 0, x_transient: 0"
-897,0,1,41.0,"x_durable: 0, x_transient: 1"
-898,0,0,24.0,"x_durable: 0, x_transient: 0"
-899,0,0,30.0,"x_durable: 0, x_transient: 0"
-900,0,-2,0.0,"x_durable: 0, x_transient: -2"
-901,0,0,28.0,"x_durable: 0, x_transient: 0"
-902,0,0,39.0,"x_durable: 0, x_transient: 0"
-903,1,0,47.0,"x_durable: 1, x_transient: 0"
-904,0,0,63.0,"x_durable: 0, x_transient: 0"
-905,0,0,63.0,"x_durable: 0, x_transient: 0"
-906,0,0,79.0,"x_durable: 0, x_transient: 0"
-907,0,0,87.0,"x_durable: 0, x_transient: 0"
-908,0,0,94.0,"x_durable: 0, x_transient: 0"
-909,0,0,95.0,"x_durable: 0, x_transient: 0"
-910,0,0,108.0,"x_durable: 0, x_transient: 0"
-911,0,0,100.0,"x_durable: 0, x_transient: 0"
-912,0,0,108.0,"x_durable: 0, x_transient: 0"
-913,0,1,123.0,"x_durable: 0, x_transient: 1"
-914,1,0,109.0,"x_durable: 1, x_transient: 0"
-915,0,0,113.0,"x_durable: 0, x_transient: 0"
-916,-1,1,121.0,"x_durable: -1, x_transient: 1"
-917,0,0,98.0,"x_durable: 0, x_transient: 0"
-918,0,-1,76.0,"x_durable: 0, x_transient: -1"
-919,0,0,73.0,"x_durable: 0, x_transient: 0"
-920,0,0,68.0,"x_durable: 0, x_transient: 0"
-921,0,0,55.0,"x_durable: 0, x_transient: 0"
-922,0,0,48.0,"x_durable: 0, x_transient: 0"
-923,0,0,32.0,"x_durable: 0, x_transient: 0"
-924,1,0,21.0,"x_durable: 1, x_transient: 0"
-925,0,0,17.0,"x_durable: 0, x_transient: 0"
-926,0,0,12.0,"x_durable: 0, x_transient: 0"
-927,-1,0,5.0,"x_durable: -1, x_transient: 0"
-928,0,-1,0.0,"x_durable: 0, x_transient: -1"
-929,0,0,0.0,"x_durable: 0, x_transient: 0"
-930,0,0,0.0,"x_durable: 0, x_transient: 0"
-931,0,0,0.0,"x_durable: 0, x_transient: 0"
-932,0,0,0.0,"x_durable: 0, x_transient: 0"
-933,0,2,40.0,"x_durable: 0, x_transient: 2"
-934,0,0,4.0,"x_durable: 0, x_transient: 0"
-935,0,0,7.0,"x_durable: 0, x_transient: 0"
-936,0,0,12.0,"x_durable: 0, x_transient: 0"
-937,0,0,24.0,"x_durable: 0, x_transient: 0"
-938,0,1,49.0,"x_durable: 0, x_transient: 1"
-939,0,0,42.0,"x_durable: 0, x_transient: 0"
-940,0,0,54.0,"x_durable: 0, x_transient: 0"
-941,0,0,53.0,"x_durable: 0, x_transient: 0"
-942,0,0,65.0,"x_durable: 0, x_transient: 0"
-943,0,0,72.0,"x_durable: 0, x_transient: 0"
-944,0,-1,60.0,"x_durable: 0, x_transient: -1"
-945,0,0,87.0,"x_durable: 0, x_transient: 0"
-946,0,0,95.0,"x_durable: 0, x_transient: 0"
-947,0,0,96.0,"x_durable: 0, x_transient: 0"
-948,0,0,96.0,"x_durable: 0, x_transient: 0"
-949,0,0,101.0,"x_durable: 0, x_transient: 0"
-950,0,0,90.0,"x_durable: 0, x_transient: 0"
-951,0,0,89.0,"x_durable: 0, x_transient: 0"
-952,0,0,92.0,"x_durable: 0, x_transient: 0"
-953,0,0,88.0,"x_durable: 0, x_transient: 0"
-954,0,1,96.0,"x_durable: 0, x_transient: 1"
-955,0,0,64.0,"x_durable: 0, x_transient: 0"
-956,0,0,55.0,"x_durable: 0, x_transient: 0"
-957,0,0,57.0,"x_durable: 0, x_transient: 0"
-958,0,0,41.0,"x_durable: 0, x_transient: 0"
-959,0,0,30.0,"x_durable: 0, x_transient: 0"
-960,0,0,26.0,"x_durable: 0, x_transient: 0"
-961,0,0,13.0,"x_durable: 0, x_transient: 0"
-962,0,0,13.0,"x_durable: 0, x_transient: 0"
-963,0,0,0.0,"x_durable: 0, x_transient: 0"
-964,0,0,0.0,"x_durable: 0, x_transient: 0"
-965,-1,0,0.0,"x_durable: -1, x_transient: 0"
-966,0,0,0.0,"x_durable: 0, x_transient: 0"
-967,0,-1,0.0,"x_durable: 0, x_transient: -1"
-968,0,0,0.0,"x_durable: 0, x_transient: 0"
-969,0,0,0.0,"x_durable: 0, x_transient: 0"
-970,0,0,0.0,"x_durable: 0, x_transient: 0"
-971,0,0,1.0,"x_durable: 0, x_transient: 0"
-972,0,0,12.0,"x_durable: 0, x_transient: 0"
-973,0,2,59.0,"x_durable: 0, x_transient: 2"
-974,0,0,26.0,"x_durable: 0, x_transient: 0"
-975,0,0,34.0,"x_durable: 0, x_transient: 0"
-976,0,0,40.0,"x_durable: 0, x_transient: 0"
-977,0,0,56.0,"x_durable: 0, x_transient: 0"
-978,0,0,61.0,"x_durable: 0, x_transient: 0"
-979,0,0,68.0,"x_durable: 0, x_transient: 0"
+0,0,0,69.0,regular point
+1,0,0,73.0,regular point
+2,0,0,65.0,regular point
+3,0,0,72.0,regular point
+4,1,0,80.0,durable impact
+5,0,0,91.0,regular point
+6,0,0,101.0,regular point
+7,0,0,109.0,regular point
+8,0,0,115.0,regular point
+9,0,0,112.0,regular point
+10,0,0,121.0,regular point
+11,0,0,127.0,regular point
+12,0,0,126.0,regular point
+13,0,0,125.0,regular point
+14,-1,0,117.0,durable impact
+15,0,0,98.0,regular point
+16,1,0,97.0,durable impact
+17,0,0,89.0,regular point
+18,0,0,82.0,regular point
+19,0,0,71.0,regular point
+20,0,0,67.0,regular point
+21,0,0,60.0,regular point
+22,0,0,57.0,regular point
+23,0,0,48.0,regular point
+24,0,0,38.0,regular point
+25,0,0,33.0,regular point
+26,0,0,32.0,regular point
+27,0,0,16.0,regular point
+28,0,0,19.0,regular point
+29,0,0,17.0,regular point
+30,0,0,22.0,regular point
+31,0,2,54.0,transient impact
+32,0,0,19.0,regular point
+33,0,0,20.0,regular point
+34,0,0,27.0,regular point
+35,0,0,36.0,regular point
+36,0,0,36.0,regular point
+37,0,2,81.0,transient impact
+38,0,-1,34.0,transient impact
+39,0,0,58.0,regular point
+40,0,0,66.0,regular point
+41,0,0,74.0,regular point
+42,0,0,92.0,regular point
+43,0,0,96.0,regular point
+44,0,0,103.0,regular point
+45,0,0,111.0,regular point
+46,0,0,111.0,regular point
+47,0,0,115.0,regular point
+48,0,0,117.0,regular point
+49,-1,2,143.0,durable and transient impacts
+50,0,0,101.0,regular point
+51,0,0,87.0,regular point
+52,0,0,77.0,regular point
+53,0,0,70.0,regular point
+54,0,0,54.0,regular point
+55,0,0,52.0,regular point
+56,0,-2,0.0,transient impact
+57,0,0,25.0,regular point
+58,0,0,17.0,regular point
+59,0,0,4.0,regular point
+60,0,2,37.0,transient impact
+61,0,0,0.0,regular point
+62,0,0,0.0,regular point
+63,0,0,0.0,regular point
+64,0,0,0.0,regular point
+65,0,0,4.0,regular point
+66,0,0,10.0,regular point
+67,0,0,15.0,regular point
+68,0,0,26.0,regular point
+69,0,0,37.0,regular point
+70,0,0,43.0,regular point
+71,-1,0,48.0,durable impact
+72,0,0,52.0,regular point
+73,0,0,58.0,regular point
+74,0,0,57.0,regular point
+75,-1,0,53.0,durable impact
+76,0,0,51.0,regular point
+77,0,0,38.0,regular point
+78,0,0,39.0,regular point
+79,0,0,40.0,regular point
+80,0,0,26.0,regular point
+81,0,0,33.0,regular point
+82,0,0,41.0,regular point
+83,0,0,42.0,regular point
+84,0,0,36.0,regular point
+85,0,0,42.0,regular point
+86,0,0,42.0,regular point
+87,0,0,46.0,regular point
+88,0,1,72.0,transient impact
+89,0,0,58.0,regular point
+90,0,-2,29.0,transient impact
+91,0,0,70.0,regular point
+92,0,0,80.0,regular point
+93,0,0,81.0,regular point
+94,0,0,84.0,regular point
+95,0,0,92.0,regular point
+96,0,0,98.0,regular point
+97,0,0,101.0,regular point
+98,0,0,110.0,regular point
+99,0,0,100.0,regular point
+100,0,0,108.0,regular point
+101,0,0,104.0,regular point
+102,0,0,98.0,regular point
+103,0,0,96.0,regular point
+104,0,1,115.0,transient impact
+105,0,-1,73.0,transient impact
+106,-1,0,83.0,durable impact
+107,0,-2,27.0,transient impact
+108,0,0,43.0,regular point
+109,0,0,40.0,regular point
+110,0,0,26.0,regular point
+111,0,0,20.0,regular point
+112,0,0,0.0,regular point
+113,0,0,0.0,regular point
+114,0,0,0.0,regular point
+115,0,0,0.0,regular point
+116,0,0,0.0,regular point
+117,0,0,0.0,regular point
+118,0,0,1.0,regular point
+119,0,0,12.0,regular point
+120,0,0,17.0,regular point
+121,0,-2,0.0,transient impact
+122,0,0,41.0,regular point
+123,0,0,50.0,regular point
+124,0,-1,44.0,transient impact
+125,0,0,77.0,regular point
+126,0,0,89.0,regular point
+127,0,0,106.0,regular point
+128,0,0,115.0,regular point
+129,0,0,118.0,regular point
+130,0,0,132.0,regular point
+131,0,0,134.0,regular point
+132,0,0,146.0,regular point
+133,0,0,143.0,regular point
+134,0,0,146.0,regular point
+135,0,-2,106.0,transient impact
+136,0,-1,124.0,transient impact
+137,0,0,134.0,regular point
+138,0,0,127.0,regular point
+139,0,0,114.0,regular point
+140,0,0,108.0,regular point
+141,0,0,99.0,regular point
+142,0,0,91.0,regular point
+143,0,0,73.0,regular point
+144,0,0,60.0,regular point
+145,0,0,44.0,regular point
+146,0,0,39.0,regular point
+147,0,2,70.0,transient impact
+148,-1,0,4.0,durable impact
+149,0,0,0.0,regular point
+150,0,0,0.0,regular point
+151,0,0,0.0,regular point
+152,0,0,0.0,regular point
+153,0,0,-0.0,regular point
+154,0,0,7.0,regular point
+155,0,0,11.0,regular point
+156,0,0,19.0,regular point
+157,0,0,37.0,regular point
+158,0,0,43.0,regular point
+159,0,-2,16.0,transient impact
+160,0,0,67.0,regular point
+161,0,0,75.0,regular point
+162,0,0,98.0,regular point
+163,0,0,100.0,regular point
+164,0,0,111.0,regular point
+165,0,0,128.0,regular point
+166,0,0,128.0,regular point
+167,0,0,141.0,regular point
+168,0,0,137.0,regular point
+169,0,0,149.0,regular point
+170,0,-2,104.0,transient impact
+171,0,0,142.0,regular point
+172,0,-1,112.0,transient impact
+173,-1,0,124.0,durable impact
+174,0,0,110.0,regular point
+175,0,0,78.0,regular point
+176,0,2,106.0,transient impact
+177,0,0,53.0,regular point
+178,0,0,32.0,regular point
+179,0,0,15.0,regular point
+180,0,-2,0.0,transient impact
+181,0,0,0.0,regular point
+182,0,0,0.0,regular point
+183,0,0,0.0,regular point
+184,0,1,16.0,transient impact
+185,0,2,38.0,transient impact
+186,0,0,9.0,regular point
+187,0,0,22.0,regular point
+188,0,0,37.0,regular point
+189,0,1,61.0,transient impact
+190,0,0,47.0,regular point
+191,0,0,69.0,regular point
+192,0,0,80.0,regular point
+193,1,0,107.0,durable impact
+194,0,0,123.0,regular point
+195,1,0,155.0,durable impact
+196,0,2,219.0,transient impact
+197,0,0,199.0,regular point
+198,0,0,216.0,regular point
+199,0,0,239.0,regular point
+200,0,0,243.0,regular point
+201,0,0,253.0,regular point
+202,0,0,250.0,regular point
+203,0,0,243.0,regular point
+204,0,0,245.0,regular point
+205,0,0,223.0,regular point
+206,0,0,204.0,regular point
+207,0,0,189.0,regular point
+208,0,1,176.0,transient impact
+209,0,0,134.0,regular point
+210,0,0,108.0,regular point
+211,0,0,71.0,regular point
+212,0,0,40.0,regular point
+213,0,0,3.0,regular point
+214,0,0,0.0,regular point
+215,0,0,0.0,regular point
+216,0,0,0.0,regular point
+217,0,0,0.0,regular point
+218,0,0,2.0,regular point
+219,0,0,12.0,regular point
+220,0,0,22.0,regular point
+221,0,2,65.0,transient impact
+222,0,0,41.0,regular point
+223,0,0,59.0,regular point
+224,0,0,76.0,regular point
+225,0,0,86.0,regular point
+226,0,0,95.0,regular point
+227,0,0,112.0,regular point
+228,0,0,117.0,regular point
+229,0,0,121.0,regular point
+230,0,0,135.0,regular point
+231,0,0,139.0,regular point
+232,0,0,146.0,regular point
+233,0,0,149.0,regular point
+234,0,0,149.0,regular point
+235,0,0,147.0,regular point
+236,0,2,173.0,transient impact
+237,0,0,130.0,regular point
+238,0,0,133.0,regular point
+239,0,-1,92.0,transient impact
+240,0,0,107.0,regular point
+241,0,0,94.0,regular point
+242,0,0,80.0,regular point
+243,0,0,71.0,regular point
+244,0,0,59.0,regular point
+245,0,0,45.0,regular point
+246,0,0,32.0,regular point
+247,0,0,24.0,regular point
+248,0,0,15.0,regular point
+249,0,0,8.0,regular point
+250,0,0,0.0,regular point
+251,0,0,0.0,regular point
+252,0,0,0.0,regular point
+253,0,0,0.0,regular point
+254,0,0,0.0,regular point
+255,0,0,0.0,regular point
+256,0,0,9.0,regular point
+257,0,0,13.0,regular point
+258,0,0,22.0,regular point
+259,0,0,29.0,regular point
+260,0,0,44.0,regular point
+261,0,0,57.0,regular point
+262,1,0,76.0,durable impact
+263,0,0,98.0,regular point
+264,0,0,117.0,regular point
+265,0,0,130.0,regular point
+266,0,0,152.0,regular point
+267,0,0,171.0,regular point
+268,0,0,174.0,regular point
+269,0,0,190.0,regular point
+270,0,0,190.0,regular point
+271,0,0,193.0,regular point
+272,0,0,193.0,regular point
+273,-1,0,178.0,durable impact
+274,0,0,164.0,regular point
+275,0,2,183.0,transient impact
+276,0,0,124.0,regular point
+277,0,0,98.0,regular point
+278,0,-2,27.0,transient impact
+279,0,2,86.0,transient impact
+280,0,1,45.0,transient impact
+281,0,0,3.0,regular point
+282,0,0,0.0,regular point
+283,0,0,0.0,regular point
+284,0,0,0.0,regular point
+285,0,0,0.0,regular point
+286,0,0,3.0,regular point
+287,0,0,14.0,regular point
+288,0,0,18.0,regular point
+289,0,0,36.0,regular point
+290,0,2,78.0,transient impact
+291,0,0,55.0,regular point
+292,0,0,70.0,regular point
+293,0,0,79.0,regular point
+294,0,0,94.0,regular point
+295,0,0,102.0,regular point
+296,-1,0,112.0,durable impact
+297,0,0,106.0,regular point
+298,0,0,107.0,regular point
+299,0,0,103.0,regular point
+300,0,0,107.0,regular point
+301,0,0,97.0,regular point
+302,0,0,101.0,regular point
+303,0,-2,50.0,transient impact
+304,0,0,77.0,regular point
+305,1,0,89.0,durable impact
+306,0,0,82.0,regular point
+307,0,0,95.0,regular point
+308,0,0,98.0,regular point
+309,0,0,90.0,regular point
+310,0,0,89.0,regular point
+311,0,0,91.0,regular point
+312,0,0,89.0,regular point
+313,0,0,89.0,regular point
+314,0,0,78.0,regular point
+315,0,0,76.0,regular point
+316,0,0,67.0,regular point
+317,0,0,67.0,regular point
+318,-1,0,55.0,durable impact
+319,0,0,42.0,regular point
+320,0,0,32.0,regular point
+321,0,0,20.0,regular point
+322,0,0,6.0,regular point
+323,-1,0,0.0,durable impact
+324,0,0,0.0,regular point
+325,0,0,0.0,regular point
+326,0,0,0.0,regular point
+327,0,0,3.0,regular point
+328,0,0,13.0,regular point
+329,0,0,22.0,regular point
+330,0,0,25.0,regular point
+331,0,0,37.0,regular point
+332,0,0,54.0,regular point
+333,-1,1,74.0,durable and transient impacts
+334,0,0,65.0,regular point
+335,0,0,66.0,regular point
+336,0,0,72.0,regular point
+337,0,0,76.0,regular point
+338,0,0,75.0,regular point
+339,0,0,80.0,regular point
+340,0,0,86.0,regular point
+341,0,0,84.0,regular point
+342,0,0,88.0,regular point
+343,0,0,97.0,regular point
+344,0,0,98.0,regular point
+345,0,0,89.0,regular point
+346,0,0,98.0,regular point
+347,0,0,86.0,regular point
+348,0,0,97.0,regular point
+349,0,0,95.0,regular point
+350,0,0,93.0,regular point
+351,0,-1,69.0,transient impact
+352,0,0,82.0,regular point
+353,0,0,73.0,regular point
+354,0,0,74.0,regular point
+355,0,0,66.0,regular point
+356,0,0,62.0,regular point
+357,0,1,74.0,transient impact
+358,0,0,59.0,regular point
+359,0,0,50.0,regular point
+360,0,0,41.0,regular point
+361,0,0,42.0,regular point
+362,0,0,41.0,regular point
+363,0,0,42.0,regular point
+364,0,0,42.0,regular point
+365,0,0,37.0,regular point
+366,0,0,47.0,regular point
+367,0,0,44.0,regular point
+368,0,0,42.0,regular point
+369,0,0,44.0,regular point
+370,0,0,51.0,regular point
+371,0,0,55.0,regular point
+372,0,0,56.0,regular point
+373,0,0,61.0,regular point
+374,0,0,61.0,regular point
+375,0,0,72.0,regular point
+376,0,0,70.0,regular point
+377,0,0,81.0,regular point
+378,0,0,81.0,regular point
+379,0,1,104.0,transient impact
+380,0,0,96.0,regular point
+381,0,0,84.0,regular point
+382,0,0,92.0,regular point
+383,0,0,95.0,regular point
+384,0,0,96.0,regular point
+385,0,0,97.0,regular point
+386,0,0,94.0,regular point
+387,0,0,94.0,regular point
+388,0,0,86.0,regular point
+389,0,0,81.0,regular point
+390,0,0,76.0,regular point
+391,0,-1,58.0,transient impact
+392,0,0,73.0,regular point
+393,0,0,74.0,regular point
+394,0,0,62.0,regular point
+395,0,0,56.0,regular point
+396,0,0,62.0,regular point
+397,-1,0,42.0,durable impact
+398,0,0,32.0,regular point
+399,0,0,19.0,regular point
+400,0,0,9.0,regular point
+401,0,0,10.0,regular point
+402,0,0,0.0,regular point
+403,0,0,0.0,regular point
+404,0,0,0.0,regular point
+405,0,0,0.0,regular point
+406,0,0,0.0,regular point
+407,0,0,0.0,regular point
+408,0,0,0.0,regular point
+409,0,0,9.0,regular point
+410,0,0,24.0,regular point
+411,-1,0,18.0,durable impact
+412,0,0,24.0,regular point
+413,0,0,25.0,regular point
+414,0,0,31.0,regular point
+415,0,0,36.0,regular point
+416,0,0,38.0,regular point
+417,0,-1,32.0,transient impact
+418,0,0,59.0,regular point
+419,0,0,61.0,regular point
+420,0,0,70.0,regular point
+421,0,0,81.0,regular point
+422,0,0,88.0,regular point
+423,0,0,89.0,regular point
+424,0,0,97.0,regular point
+425,0,0,107.0,regular point
+426,0,0,99.0,regular point
+427,0,0,103.0,regular point
+428,0,0,112.0,regular point
+429,0,0,103.0,regular point
+430,0,0,113.0,regular point
+431,0,0,110.0,regular point
+432,0,0,109.0,regular point
+433,0,0,100.0,regular point
+434,0,0,105.0,regular point
+435,0,0,92.0,regular point
+436,0,0,80.0,regular point
+437,0,0,82.0,regular point
+438,0,0,76.0,regular point
+439,0,0,61.0,regular point
+440,0,0,61.0,regular point
+441,0,-2,18.0,transient impact
+442,0,0,44.0,regular point
+443,0,0,41.0,regular point
+444,0,0,32.0,regular point
+445,0,0,34.0,regular point
+446,0,0,31.0,regular point
+447,0,0,30.0,regular point
+448,0,0,30.0,regular point
+449,0,0,30.0,regular point
+450,0,0,29.0,regular point
+451,0,0,30.0,regular point
+452,0,0,40.0,regular point
+453,0,0,42.0,regular point
+454,0,0,39.0,regular point
+455,0,0,53.0,regular point
+456,0,0,58.0,regular point
+457,-1,0,51.0,durable impact
+458,0,0,56.0,regular point
+459,0,0,57.0,regular point
+460,0,0,46.0,regular point
+461,0,0,44.0,regular point
+462,0,0,55.0,regular point
+463,0,0,50.0,regular point
+464,0,-2,16.0,transient impact
+465,0,0,48.0,regular point
+466,0,-1,39.0,transient impact
+467,0,0,61.0,regular point
+468,0,0,58.0,regular point
+469,0,0,68.0,regular point
+470,0,0,63.0,regular point
+471,0,0,66.0,regular point
+472,0,1,90.0,transient impact
+473,0,0,74.0,regular point
+474,0,0,80.0,regular point
+475,0,0,81.0,regular point
+476,0,0,81.0,regular point
+477,0,0,83.0,regular point
+478,0,0,93.0,regular point
+479,0,0,88.0,regular point
+480,0,0,88.0,regular point
+481,0,0,86.0,regular point
+482,0,0,84.0,regular point
+483,0,0,92.0,regular point
+484,0,0,91.0,regular point
+485,0,0,85.0,regular point
+486,0,1,105.0,transient impact
+487,0,0,81.0,regular point
+488,0,0,74.0,regular point
+489,0,0,73.0,regular point
+490,0,0,72.0,regular point
+491,0,0,72.0,regular point
+492,0,0,63.0,regular point
+493,0,0,62.0,regular point
+494,0,0,64.0,regular point
+495,0,0,56.0,regular point
+496,0,0,57.0,regular point
+497,0,0,49.0,regular point
+498,0,0,52.0,regular point
+499,0,0,50.0,regular point
+500,0,0,56.0,regular point
+501,0,0,45.0,regular point
+502,0,2,88.0,transient impact
+503,0,0,55.0,regular point
+504,0,0,62.0,regular point
+505,0,0,60.0,regular point
+506,0,0,65.0,regular point
+507,0,0,59.0,regular point
+508,0,0,73.0,regular point
+509,0,0,69.0,regular point
+510,0,0,75.0,regular point
+511,0,0,83.0,regular point
+512,0,0,80.0,regular point
+513,0,1,104.0,transient impact
+514,0,0,84.0,regular point
+515,0,0,88.0,regular point
+516,0,0,85.0,regular point
+517,0,0,91.0,regular point
+518,0,0,79.0,regular point
+519,0,0,82.0,regular point
+520,0,0,79.0,regular point
+521,0,0,81.0,regular point
+522,0,0,77.0,regular point
+523,0,0,73.0,regular point
+524,0,0,72.0,regular point
+525,0,0,73.0,regular point
+526,0,0,69.0,regular point
+527,0,0,63.0,regular point
+528,0,0,62.0,regular point
+529,0,0,58.0,regular point
+530,0,0,63.0,regular point
+531,0,0,62.0,regular point
+532,0,0,50.0,regular point
+533,0,0,55.0,regular point
+534,0,0,54.0,regular point
+535,0,-1,36.0,transient impact
+536,0,0,58.0,regular point
+537,0,0,53.0,regular point
+538,0,0,58.0,regular point
+539,0,0,63.0,regular point
+540,0,0,62.0,regular point
+541,0,0,60.0,regular point
+542,0,-2,24.0,transient impact
+543,0,0,60.0,regular point
+544,0,0,65.0,regular point
+545,0,0,69.0,regular point
+546,0,0,73.0,regular point
+547,0,0,73.0,regular point
+548,0,0,78.0,regular point
+549,0,0,80.0,regular point
+550,0,-2,42.0,transient impact
+551,0,0,85.0,regular point
+552,0,0,84.0,regular point
+553,0,0,84.0,regular point
+554,1,-1,73.0,durable and transient impacts
+555,0,0,100.0,regular point
+556,0,0,104.0,regular point
+557,0,0,115.0,regular point
+558,0,0,116.0,regular point
+559,0,0,121.0,regular point
+560,0,0,125.0,regular point
+561,0,0,127.0,regular point
+562,0,0,126.0,regular point
+563,0,0,116.0,regular point
+564,0,0,116.0,regular point
+565,-1,0,101.0,durable impact
+566,0,0,87.0,regular point
+567,0,0,68.0,regular point
+568,0,0,52.0,regular point
+569,0,0,39.0,regular point
+570,0,0,23.0,regular point
+571,0,0,12.0,regular point
+572,0,0,0.0,regular point
+573,0,1,12.0,transient impact
+574,0,0,0.0,regular point
+575,0,0,0.0,regular point
+576,0,2,37.0,transient impact
+577,0,2,36.0,transient impact
+578,0,0,5.0,regular point
+579,0,2,59.0,transient impact
+580,0,0,26.0,regular point
+581,0,0,41.0,regular point
+582,0,0,54.0,regular point
+583,0,0,64.0,regular point
+584,0,0,76.0,regular point
+585,0,0,87.0,regular point
+586,0,0,102.0,regular point
+587,0,0,118.0,regular point
+588,0,0,130.0,regular point
+589,0,0,131.0,regular point
+590,0,0,136.0,regular point
+591,0,0,140.0,regular point
+592,0,0,146.0,regular point
+593,0,0,142.0,regular point
+594,0,0,147.0,regular point
+595,0,0,127.0,regular point
+596,0,0,126.0,regular point
+597,0,0,121.0,regular point
+598,0,0,112.0,regular point
+599,0,0,109.0,regular point
+600,0,0,88.0,regular point
+601,0,0,77.0,regular point
+602,0,0,60.0,regular point
+603,0,0,52.0,regular point
+604,0,0,40.0,regular point
+605,0,0,30.0,regular point
+606,0,-2,0.0,transient impact
+607,0,0,7.0,regular point
+608,0,0,6.0,regular point
+609,0,0,0.0,regular point
+610,0,0,0.0,regular point
+611,0,0,0.0,regular point
+612,0,2,28.0,transient impact
+613,0,-2,0.0,transient impact
+614,0,0,0.0,regular point
+615,0,0,5.0,regular point
+616,0,0,14.0,regular point
+617,0,0,22.0,regular point
+618,0,0,39.0,regular point
+619,0,0,46.0,regular point
+620,0,0,56.0,regular point
+621,0,0,76.0,regular point
+622,0,0,81.0,regular point
+623,0,1,114.0,transient impact
+624,0,0,105.0,regular point
+625,0,0,114.0,regular point
+626,0,0,120.0,regular point
+627,0,0,129.0,regular point
+628,0,0,139.0,regular point
+629,0,0,138.0,regular point
+630,0,0,143.0,regular point
+631,0,0,140.0,regular point
+632,0,0,142.0,regular point
+633,0,0,134.0,regular point
+634,0,0,133.0,regular point
+635,1,0,126.0,durable impact
+636,0,0,130.0,regular point
+637,0,0,129.0,regular point
+638,0,0,132.0,regular point
+639,0,0,117.0,regular point
+640,0,0,116.0,regular point
+641,0,0,103.0,regular point
+642,0,0,93.0,regular point
+643,0,-2,50.0,transient impact
+644,-1,0,64.0,durable impact
+645,0,0,51.0,regular point
+646,0,0,31.0,regular point
+647,0,1,27.0,transient impact
+648,0,0,0.0,regular point
+649,0,0,0.0,regular point
+650,0,0,0.0,regular point
+651,0,0,0.0,regular point
+652,0,0,0.0,regular point
+653,0,-2,0.0,transient impact
+654,0,0,12.0,regular point
+655,0,0,20.0,regular point
+656,0,0,24.0,regular point
+657,0,0,48.0,regular point
+658,0,0,59.0,regular point
+659,-1,0,59.0,durable impact
+660,0,0,55.0,regular point
+661,0,-1,45.0,transient impact
+662,0,0,70.0,regular point
+663,0,0,72.0,regular point
+664,0,0,75.0,regular point
+665,0,0,82.0,regular point
+666,0,0,78.0,regular point
+667,0,0,93.0,regular point
+668,0,0,95.0,regular point
+669,0,0,88.0,regular point
+670,0,0,93.0,regular point
+671,0,0,93.0,regular point
+672,0,0,90.0,regular point
+673,0,1,105.0,transient impact
+674,0,0,81.0,regular point
+675,0,0,82.0,regular point
+676,0,0,81.0,regular point
+677,0,0,79.0,regular point
+678,0,0,78.0,regular point
+679,0,0,69.0,regular point
+680,0,0,68.0,regular point
+681,0,0,62.0,regular point
+682,0,0,61.0,regular point
+683,0,0,59.0,regular point
+684,0,0,54.0,regular point
+685,0,0,52.0,regular point
+686,0,0,48.0,regular point
+687,0,0,48.0,regular point
+688,0,0,41.0,regular point
+689,0,0,47.0,regular point
+690,0,0,43.0,regular point
+691,0,0,44.0,regular point
+692,0,0,39.0,regular point
+693,0,0,44.0,regular point
+694,0,0,45.0,regular point
+695,1,0,60.0,durable impact
+696,0,0,76.0,regular point
+697,0,0,84.0,regular point
+698,0,0,100.0,regular point
+699,0,0,112.0,regular point
+700,0,1,134.0,transient impact
+701,0,0,129.0,regular point
+702,0,0,125.0,regular point
+703,0,0,138.0,regular point
+704,0,0,144.0,regular point
+705,0,-1,122.0,transient impact
+706,0,0,134.0,regular point
+707,0,0,140.0,regular point
+708,0,0,130.0,regular point
+709,0,0,127.0,regular point
+710,0,0,119.0,regular point
+711,0,0,105.0,regular point
+712,0,0,97.0,regular point
+713,0,0,84.0,regular point
+714,0,0,73.0,regular point
+715,1,0,71.0,durable impact
+716,0,0,67.0,regular point
+717,0,0,63.0,regular point
+718,0,0,66.0,regular point
+719,0,0,63.0,regular point
+720,0,0,60.0,regular point
+721,0,0,53.0,regular point
+722,0,0,48.0,regular point
+723,0,0,54.0,regular point
+724,0,0,51.0,regular point
+725,0,0,50.0,regular point
+726,0,0,49.0,regular point
+727,0,0,48.0,regular point
+728,1,0,62.0,durable impact
+729,0,0,65.0,regular point
+730,0,0,78.0,regular point
+731,0,0,88.0,regular point
+732,0,0,92.0,regular point
+733,0,0,110.0,regular point
+734,0,0,110.0,regular point
+735,0,0,112.0,regular point
+736,0,0,119.0,regular point
+737,0,0,114.0,regular point
+738,0,0,126.0,regular point
+739,0,0,123.0,regular point
+740,0,1,139.0,transient impact
+741,0,0,116.0,regular point
+742,0,0,116.0,regular point
+743,0,-2,67.0,transient impact
+744,0,0,96.0,regular point
+745,0,0,97.0,regular point
+746,0,0,83.0,regular point
+747,0,0,73.0,regular point
+748,0,0,65.0,regular point
+749,0,0,53.0,regular point
+750,0,-1,21.0,transient impact
+751,0,0,42.0,regular point
+752,0,0,33.0,regular point
+753,0,0,20.0,regular point
+754,0,0,21.0,regular point
+755,0,0,16.0,regular point
+756,0,0,13.0,regular point
+757,0,0,14.0,regular point
+758,0,0,16.0,regular point
+759,0,0,17.0,regular point
+760,0,0,20.0,regular point
+761,0,0,19.0,regular point
+762,0,0,29.0,regular point
+763,0,0,39.0,regular point
+764,1,0,61.0,durable impact
+765,0,0,74.0,regular point
+766,0,0,101.0,regular point
+767,0,0,108.0,regular point
+768,0,1,151.0,transient impact
+769,0,-1,128.0,transient impact
+770,0,0,156.0,regular point
+771,0,2,200.0,transient impact
+772,0,0,175.0,regular point
+773,0,0,174.0,regular point
+774,0,0,173.0,regular point
+775,0,0,179.0,regular point
+776,0,0,178.0,regular point
+777,0,0,168.0,regular point
+778,0,0,158.0,regular point
+779,0,0,146.0,regular point
+780,0,0,127.0,regular point
+781,0,0,111.0,regular point
+782,0,0,97.0,regular point
+783,0,0,83.0,regular point
+784,0,0,64.0,regular point
+785,0,0,50.0,regular point
+786,0,-1,9.0,transient impact
+787,0,0,10.0,regular point
+788,0,0,0.0,regular point
+789,0,0,0.0,regular point
+790,0,0,0.0,regular point
+791,0,0,0.0,regular point
+792,0,0,0.0,regular point
+793,0,0,1.0,regular point
+794,0,0,10.0,regular point
+795,0,0,15.0,regular point
+796,0,0,30.0,regular point
+797,0,0,39.0,regular point
+798,0,-1,41.0,transient impact
+799,1,0,72.0,durable impact
+800,0,0,96.0,regular point
+801,0,0,117.0,regular point
+802,0,0,140.0,regular point
+803,0,-2,115.0,transient impact
+804,0,0,173.0,regular point
+805,0,0,191.0,regular point
+806,0,0,191.0,regular point
+807,0,0,204.0,regular point
+808,0,0,206.0,regular point
+809,1,0,216.0,durable impact
+810,0,1,236.0,transient impact
+811,0,0,217.0,regular point
+812,0,0,215.0,regular point
+813,0,0,209.0,regular point
+814,0,0,192.0,regular point
+815,0,-1,160.0,transient impact
+816,0,0,163.0,regular point
+817,0,0,141.0,regular point
+818,0,0,116.0,regular point
+819,0,0,91.0,regular point
+820,0,0,70.0,regular point
+821,0,0,45.0,regular point
+822,0,0,17.0,regular point
+823,0,0,0.0,regular point
+824,0,0,0.0,regular point
+825,0,0,0.0,regular point
+826,0,0,0.0,regular point
+827,0,0,0.0,regular point
+828,0,0,0.0,regular point
+829,0,0,8.0,regular point
+830,0,0,28.0,regular point
+831,0,0,35.0,regular point
+832,0,0,42.0,regular point
+833,0,0,61.0,regular point
+834,0,0,70.0,regular point
+835,-1,0,71.0,durable impact
+836,0,0,71.0,regular point
+837,0,-1,68.0,transient impact
+838,0,0,88.0,regular point
+839,0,0,81.0,regular point
+840,0,0,90.0,regular point
+841,0,0,83.0,regular point
+842,0,0,93.0,regular point
+843,0,0,96.0,regular point
+844,0,0,87.0,regular point
+845,0,0,88.0,regular point
+846,0,-1,74.0,transient impact
+847,0,0,81.0,regular point
+848,0,0,89.0,regular point
+849,0,0,85.0,regular point
+850,0,0,74.0,regular point
+851,0,0,74.0,regular point
+852,0,-1,49.0,transient impact
+853,0,0,71.0,regular point
+854,0,0,63.0,regular point
+855,0,0,61.0,regular point
+856,0,0,64.0,regular point
+857,0,0,52.0,regular point
+858,-1,0,45.0,durable impact
+859,0,0,26.0,regular point
+860,0,0,26.0,regular point
+861,0,0,10.0,regular point
+862,0,0,2.0,regular point
+863,0,0,0.0,regular point
+864,0,0,0.0,regular point
+865,0,0,0.0,regular point
+866,0,0,0.0,regular point
+867,0,0,0.0,regular point
+868,0,0,0.0,regular point
+869,0,0,-0.0,regular point
+870,0,0,15.0,regular point
+871,0,0,27.0,regular point
+872,0,0,31.0,regular point
+873,0,2,82.0,transient impact
+874,0,-1,41.0,transient impact
+875,0,-2,29.0,transient impact
+876,0,0,85.0,regular point
+877,1,0,106.0,durable impact
+878,0,0,122.0,regular point
+879,0,0,144.0,regular point
+880,0,0,158.0,regular point
+881,0,0,170.0,regular point
+882,0,0,188.0,regular point
+883,0,0,187.0,regular point
+884,0,0,196.0,regular point
+885,0,0,195.0,regular point
+886,0,0,194.0,regular point
+887,0,0,191.0,regular point
+888,0,0,179.0,regular point
+889,0,0,169.0,regular point
+890,0,0,158.0,regular point
+891,0,0,134.0,regular point
+892,0,0,114.0,regular point
+893,0,0,100.0,regular point
+894,0,0,71.0,regular point
+895,0,0,53.0,regular point
+896,0,0,30.0,regular point
+897,0,1,27.0,transient impact
+898,0,0,0.0,regular point
+899,0,0,0.0,regular point
+900,0,-2,0.0,transient impact
+901,0,0,0.0,regular point
+902,0,0,4.0,regular point
+903,1,0,19.0,durable impact
+904,0,0,42.0,regular point
+905,0,0,51.0,regular point
+906,0,0,76.0,regular point
+907,0,0,95.0,regular point
+908,0,0,113.0,regular point
+909,0,0,125.0,regular point
+910,0,0,149.0,regular point
+911,0,0,152.0,regular point
+912,0,0,170.0,regular point
+913,0,1,195.0,transient impact
+914,1,0,190.0,durable impact
+915,0,0,203.0,regular point
+916,-1,1,215.0,durable and transient impacts
+917,0,0,194.0,regular point
+918,0,-1,173.0,transient impact
+919,0,0,170.0,regular point
+920,0,0,162.0,regular point
+921,0,0,143.0,regular point
+922,0,0,129.0,regular point
+923,0,0,105.0,regular point
+924,1,0,87.0,durable impact
+925,0,0,75.0,regular point
+926,0,0,60.0,regular point
+927,-1,0,41.0,durable impact
+928,0,-1,3.0,transient impact
+929,0,0,0.0,regular point
+930,0,0,0.0,regular point
+931,0,0,0.0,regular point
+932,0,0,0.0,regular point
+933,0,2,38.0,transient impact
+934,1,0,12.0,durable impact
+935,0,0,27.0,regular point
+936,0,0,42.0,regular point
+937,0,0,65.0,regular point
+938,0,1,100.0,transient impact
+939,0,0,102.0,regular point
+940,0,0,124.0,regular point
+941,0,0,130.0,regular point
+942,0,0,148.0,regular point
+943,0,0,160.0,regular point
+944,0,-1,150.0,transient impact
+945,0,0,178.0,regular point
+946,0,0,186.0,regular point
+947,0,0,184.0,regular point
+948,0,0,180.0,regular point
+949,0,0,179.0,regular point
+950,0,0,161.0,regular point
+951,0,0,152.0,regular point
+952,0,0,145.0,regular point
+953,0,0,132.0,regular point
+954,0,1,129.0,transient impact
+955,0,0,86.0,regular point
+956,0,0,66.0,regular point
+957,0,0,58.0,regular point
+958,0,0,33.0,regular point
+959,0,0,13.0,regular point
+960,0,0,1.0,regular point
+961,0,0,0.0,regular point
+962,0,0,0.0,regular point
+963,0,0,0.0,regular point
+964,0,0,0.0,regular point
+965,-1,0,0.0,durable impact
+966,0,0,0.0,regular point
+967,0,-1,0.0,transient impact
+968,0,0,0.0,regular point
+969,0,0,0.0,regular point
+970,0,0,5.0,regular point
+971,0,0,9.0,regular point
+972,0,0,22.0,regular point
+973,0,2,73.0,transient impact
+974,0,0,44.0,regular point
+975,0,0,55.0,regular point
+976,0,0,65.0,regular point
+977,0,0,84.0,regular point
+978,0,0,94.0,regular point
+979,1,0,113.0,durable impact

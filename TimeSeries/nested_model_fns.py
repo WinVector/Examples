@@ -14,42 +14,42 @@ def build_example(
     *,
     rng,
     generating_lags: Iterable[int],
-    b_auto: Iterable[float],
-    b_auto_0: float,
+    beta_auto: Iterable[float],
+    beta_auto_intercept: float,
     beta_durable: Iterable[float],
-    beta_transient_0: float,
+    effect_shift: float,
     beta_transient: Iterable[float],
     n_step: int = 1000,
     error_scale: float,
 ) -> pd.DataFrame:
     generating_lags = list(generating_lags)
-    b_auto = list(b_auto)
+    beta_auto = list(beta_auto)
     beta_transient = list(beta_transient)
-    assert len(generating_lags) == len(b_auto)
+    assert len(generating_lags) == len(beta_auto)
     assert len(generating_lags) > 0
     assert len(generating_lags) == len(set(generating_lags))
     max_lag = np.max(generating_lags)
     d_example = {"time_tick": range(n_step)}
     for i, b_z_i in enumerate(beta_durable):
-        zi = rng.choice((-1, 0, 1), p=(0.02, 0.96, 0.02), size=n_step)
+        zi = rng.choice((-1, 0, 1), p=(0.025, 0.95, 0.025), size=n_step)
         d_example[f"x_durable_{i}"] = zi
     # start at typical points (most will be overwritten by forward time process)
     y_auto = np.maximum(
-        np.zeros(n_step) + b_auto_0 / (1 - np.sum(b_auto)) + rng.normal(size=n_step), 0
+        np.zeros(n_step) + beta_auto_intercept / (1 - np.sum(beta_auto)) + rng.normal(size=n_step), 0
     )
     for idx in range(max_lag, n_step):
-        y_auto_i = b_auto_0 + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
+        y_auto_i = beta_auto_intercept + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
         for i, b_z_i in enumerate(beta_durable):
             y_auto_i = y_auto_i + b_z_i * d_example[f"x_durable_{i}"][idx]
         for i, lag in enumerate(generating_lags):
-            y_auto_i = y_auto_i + b_auto[i] * y_auto[idx - lag]
+            y_auto_i = y_auto_i + beta_auto[i] * y_auto[idx - lag]
         y_auto[idx] = max(0, y_auto_i)
     y = y_auto + rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(beta_transient):
         xi = rng.choice((-2, -1, 0, 1, 2), p=(0.025, 0.025, 0.9, 0.025, 0.025), size=n_step)
         d_example[f"x_transient_{i}"] = xi
         y = y + b_x_i * xi
-    d_example["y"] = np.maximum(0, np.round(y + beta_transient_0 + rng.normal(size=n_step) * error_scale))
+    d_example["y"] = np.maximum(0, np.round(y + effect_shift + rng.normal(size=n_step) * error_scale))
     return pd.DataFrame(d_example)
 
 
@@ -163,16 +163,8 @@ def plot_model_quality(
     d_test: pd.DataFrame,
     *,
     result_name: str,
-    external_regressors: Optional[Iterable[str]] = None,
 ):
     d_test = d_test.reset_index(drop=True, inplace=False)
-    d_test["external_regressors"] = ""
-    if external_regressors is not None:
-        external_regressors = list(external_regressors)
-        d_test["external_regressors"] = [
-            str({k: d_test.loc[i, k] for k in external_regressors})
-            for i in range(d_test.shape[0])
-        ]
     rmse = root_mean_squared_error(
         y_true=d_test["y"],
         y_pred=d_test[result_name],
@@ -187,7 +179,7 @@ def plot_model_quality(
     )
     return (
         ggplot(
-            data=d_test, mapping=aes(x=result_name, y="y", shape="external_regressors")
+            data=d_test, mapping=aes(x=result_name, y="y")
         )
         + geom_abline(intercept=0, slope=1, color="blue", alpha=0.5)
         + geom_point(mapping=aes(color="time_tick"), size=2)
@@ -195,7 +187,6 @@ def plot_model_quality(
         + ylim(plt_bounds)
         + xlim(plt_bounds)
         + coord_fixed()
-        + guides(shape=guide_legend(reverse=True))
         + ggtitle(f"y ~ {result_name}\nRMSE = {rmse:.2g}, Rsquared = {r2:.2g}")
     )
 
@@ -256,7 +247,7 @@ def plot_recent_state_distribution(
     est_h_state = pd.DataFrame(
         {
             f"y[{i}] - f(x)": d_train.loc[i, "y"]
-            - (forecast_soln["beta_transient[0]"] * d_train.loc[i, "x_0"])
+            - (forecast_soln["beta_transient[0]"] * d_train.loc[i, "x_intercept"])
             for i in range(d_train.shape[0] - np.max(generating_lags), d_train.shape[0])
         }
     )
