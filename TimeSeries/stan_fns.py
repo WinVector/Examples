@@ -78,7 +78,7 @@ data {
         + f"""
 parameters {{
   real b_auto_0;                     // auto-regress intercept
-  real beta_transient_0;                      // total/impulse/transient intercept
+  real effect_shift;                      // shift in effect moving from hidden to observed state
   vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_transient_decl}{b_x_durable_decl}
   vector<lower=0>[N_y_future] y_future;                // to be inferred future state
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
@@ -86,19 +86,19 @@ parameters {{
   real<lower=0> b_var_y;                      // presumed y (transient) noise variance
 }}
 transformed parameters {{
-        // y_observed and y_future in one notation (for subscripting)
+        // y_observed and y_future in one notation (for export)
   vector[N_y_observed + N_y_future] y;
   vector[N_y_observed + N_y_future] y_transient_effect;
   y[1:N_y_observed] = y_observed;
   y[(N_y_observed + 1):(N_y_observed + N_y_future)] = y_future;
-  y_transient_effect = beta_transient_0{ext_terms_imp};
+  y_transient_effect = 0{ext_terms_imp};  // modeled transient effect
 }}
 model {{
   b_var_y_auto ~ chi_square(1);               // prior for y_auto (durable) noise variance
   b_var_y ~ chi_square(1);                    // prior for y (transient) noise variance
         // priors for parameter estimates
   b_auto_0 ~ normal(0, 10);
-  beta_transient_0 ~ normal(0, 10);
+  effect_shift ~ normal(0, 10);
   b_auto ~ normal(0, 10);{b_x_transient_dist}{b_x_durable_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
@@ -110,18 +110,18 @@ model {{
       if (y_observed[i] > 0) {{
         target += normal_lpdf(
             y_observed[i] |
-            y_transient_effect[i] + y_auto[i], 
+            effect_shift + y_transient_effect[i] + y_auto[i], 
             b_var_y); 
       }} else {{
         target += normal_lcdf(  // Tobit style scoring, matching above loss
             0 |
-            y_transient_effect[i] + y_auto[i], 
+            effect_shift + y_transient_effect[i] + y_auto[i], 
             b_var_y); 
       }}
   }}
         // future
   y_future ~ normal(
-    y_transient_effect[(N_y_observed + 1):(N_y_observed + N_y_future)] + y_auto[(N_y_observed + 1):(N_y_observed + N_y_future)], 
+    effect_shift + y_transient_effect[(N_y_observed + 1):(N_y_observed + N_y_future)] + y_auto[(N_y_observed + 1):(N_y_observed + N_y_future)], 
     b_var_y);
 }}
 """
@@ -232,8 +232,8 @@ def solve_forecast_by_Stan(
     model = CmdStanModel(stan_file=stan_file_name)
     fit = model.sample(
         data=data_file_name,
-        # iter_warmup=8000,
-        # iter_sampling=8000,
+        iter_warmup=1000,
+        iter_sampling=1000,
         show_progress=False,
         show_console=False,
     )
@@ -274,7 +274,9 @@ def plot_past_and_future(
     forecast_soln_i: pd.DataFrame,
     d_train: pd.DataFrame,
     d_test: pd.DataFrame,
+    first_tick: int = 900,
 ):
+    d_train = d_train.loc[d_train['time_tick'] >= first_tick, :].reset_index(drop=True, inplace=False)
     sf_frame = forecast_soln_i.loc[
         :, [c.startswith("y[") for c in forecast_soln_i.columns]
     ].reset_index(drop=True, inplace=False)
@@ -293,6 +295,7 @@ def plot_past_and_future(
     )
     sf_frame.rename(columns={"level_1": "quantile"}, inplace=True)
     sf_frame["quantile"] = [str(v) for v in sf_frame["quantile"]]
+    sf_frame = sf_frame.loc[sf_frame['time_tick'] >= first_tick, :]
     sf_p = sf_frame.pivot(index="time_tick", columns="quantile")
     sf_p.columns = [c[1] for c in sf_p.columns]
     sf_p = sf_p.reset_index(drop=False, inplace=False)
@@ -325,7 +328,7 @@ def plot_past_and_future(
             alpha=0.4,
             linetype="",
         )
-    plt_train_only = plt + xlim(900, 1000) + ggtitle("data leading to a projection into the future")
+    plt_train_only = plt + ggtitle("data leading to a projection into the future")
     plt = ggplot()
     plt = (
         plt
@@ -356,7 +359,6 @@ def plot_past_and_future(
         )
     plt_train_test = (
         plt
-        + xlim(900, 1000)
         + ggtitle(
             "data leading to a projection into the future, matched to held out future"
         )

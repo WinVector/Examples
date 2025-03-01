@@ -46,7 +46,7 @@ def build_example(
         y_auto[idx] = max(0, y_auto_i)
     y = y_auto + rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(beta_transient):
-        xi = rng.choice((-1, 0, 1), p=(0.1, 0.8, 0.1), size=n_step)
+        xi = rng.choice((-2, -1, 0, 1, 2), p=(0.025, 0.025, 0.9, 0.025, 0.025), size=n_step)
         d_example[f"x_transient_{i}"] = xi
         y = y + b_x_i * xi
     d_example["y"] = np.maximum(0, np.round(y + beta_transient_0 + rng.normal(size=n_step) * error_scale))
@@ -146,12 +146,11 @@ def plot_forecast(
             mapping=aes(
                 x="time_tick",
                 y="y",
-                shape="external_regressors",
                 color="external_regressors",
             ),
             size=2,
         )
-        + guides(shape=guide_legend(reverse=True))
+        + guides(color=guide_legend(reverse=True))
         + ggtitle(
             f"{model_name} out of sample forecast\ndots are actuals, lines are predictions"
         )

@@ -1,1 +1,1 @@
-{"b_auto_0": 1.2804125781056719, "beta_transient_0": -10.4, "b_auto": [1.9753766811902755, -1], "beta_durable": [14.2], "beta_transient": [16.1], "generating_lags": [1, 2], "modeling_lags": [1, 2], "error_scale": 3.2}
+{"b_auto_0": 1.4184244461168785, "beta_transient_0": -10.4, "b_auto": [1.9727226068054446, -1], "beta_durable": [7.2], "beta_transient": [19.1], "generating_lags": [1, 2], "modeling_lags": [1, 2], "error_scale": 3.2}
