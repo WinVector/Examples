@@ -1,1 +1,1 @@
-{"beta_auto_intercept": 2.1276366691753177, "effect_shift": -10.4, "beta_auto": [1.9727226068054446, -1], "beta_durable": [9.2], "beta_transient": [19.1], "generating_lags": [1, 2], "modeling_lags": [1, 2], "error_scale": 3.2}
+{"beta_auto_intercept": 2.1276366691753177, "effect_shift": -10.4, "beta_auto": [1.9727226068054446, -1], "beta_durable": [9.2], "beta_transient": [19.1], "generating_lags": [1, 2], "error_scale": 3.2, "n_step": 1000}

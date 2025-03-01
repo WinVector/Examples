@@ -19,38 +19,49 @@ def build_example(
     beta_durable: Iterable[float],
     effect_shift: float,
     beta_transient: Iterable[float],
-    n_step: int = 1000,
+    n_step: int,
     error_scale: float,
 ) -> pd.DataFrame:
+    n_step = int(n_step)
     generating_lags = list(generating_lags)
     beta_auto = list(beta_auto)
     beta_transient = list(beta_transient)
     assert len(generating_lags) == len(beta_auto)
     assert len(generating_lags) > 0
     assert len(generating_lags) == len(set(generating_lags))
+    assert np.min(generating_lags) > 0
     max_lag = np.max(generating_lags)
-    d_example = {"time_tick": range(n_step)}
+    assert n_step > max_lag
+    n_warmup = 200
+    n_step = n_step + n_warmup
+    d_example = {"time_tick": range(-n_warmup, n_step - n_warmup)}
     for i, b_z_i in enumerate(beta_durable):
         zi = rng.choice((-1, 0, 1), p=(0.025, 0.95, 0.025), size=n_step)
         d_example[f"x_durable_{i}"] = zi
     # start at typical points (most will be overwritten by forward time process)
-    y_auto = np.maximum(
-        np.zeros(n_step) + beta_auto_intercept / (1 - np.sum(beta_auto)) + rng.normal(size=n_step), 0
-    )
+    y_auto = np.zeros(n_step, dtype=float)
+    y_auto[0] = rng.uniform(size=1)[0] * 100
+    for idx in range(1, max_lag):
+        y_auto[idx] = y_auto[idx - 1] + rng.normal(size=1)[0] * 10
     for idx in range(max_lag, n_step):
         y_auto_i = beta_auto_intercept + 0.2 * rng.normal(size=1)[0]  # durable AR-style noise
         for i, b_z_i in enumerate(beta_durable):
-            y_auto_i = y_auto_i + b_z_i * d_example[f"x_durable_{i}"][idx]
+            if d_example[f"x_durable_{i}"][idx] != 0:
+                y_auto_i = y_auto_i + rng.poisson(b_z_i) * d_example[f"x_durable_{i}"][idx]
         for i, lag in enumerate(generating_lags):
             y_auto_i = y_auto_i + beta_auto[i] * y_auto[idx - lag]
         y_auto[idx] = max(0, y_auto_i)
     y = y_auto + rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(beta_transient):
-        xi = rng.choice((-2, -1, 0, 1, 2), p=(0.025, 0.025, 0.9, 0.025, 0.025), size=n_step)
+        xi = rng.choice((-2, -1, 0, 1, 2), p=(0.025, 0.05, 0.85, 0.05, 0.025), size=n_step)
         d_example[f"x_transient_{i}"] = xi
-        y = y + b_x_i * xi
+        for idx in range(n_step):
+            if xi[idx] != 0:
+                y[idx] = y[idx] + rng.poisson(b_x_i) * xi[idx]
     d_example["y"] = np.maximum(0, np.round(y + effect_shift + rng.normal(size=n_step) * error_scale))
-    return pd.DataFrame(d_example)
+    d_example = pd.DataFrame(d_example)
+    d_example = d_example.loc[range(n_warmup, n_step), :].reset_index(drop=True, inplace=False)
+    return d_example
 
 
 def train_test_split(
