@@ -31,7 +31,7 @@ def build_example(
     max_lag = np.max(generating_lags)
     d_example = {"time_tick": range(n_step)}
     for i, b_z_i in enumerate(beta_durable):
-        zi = rng.choice((-1, 0, 1), p=(0.01, 0.98, 0.01), size=n_step)
+        zi = rng.choice((-1, 0, 1), p=(0.02, 0.96, 0.02), size=n_step)
         d_example[f"x_durable_{i}"] = zi
     # start at typical points (most will be overwritten by forward time process)
     y_auto = np.maximum(
@@ -46,7 +46,7 @@ def build_example(
         y_auto[idx] = max(0, y_auto_i)
     y = y_auto + rng.normal(size=n_step)  # transient MA-style noise
     for i, b_x_i in enumerate(beta_transient):
-        xi = rng.binomial(n=1, p=0.35, size=n_step)
+        xi = rng.choice((-1, 0, 1), p=(0.1, 0.8, 0.1), size=n_step)
         d_example[f"x_transient_{i}"] = xi
         y = y + b_x_i * xi
     d_example["y"] = np.maximum(0, np.round(y + beta_transient_0 + rng.normal(size=n_step) * error_scale))

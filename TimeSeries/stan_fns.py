@@ -78,7 +78,7 @@ data {
         + f"""
 parameters {{
   real b_auto_0;                     // auto-regress intercept
-  real<lower=0> beta_transient_0;                      // total/impulse/transient intercept
+  real beta_transient_0;                      // total/impulse/transient intercept
   vector[{n_lags}] b_auto;                    // auto-regress coefficients{b_x_transient_decl}{b_x_durable_decl}
   vector<lower=0>[N_y_future] y_future;                // to be inferred future state
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
