@@ -34,7 +34,7 @@ def generate_Stan_model_def(
     b_x_durable_decl = ""
     b_x_durable_dist = ""
     b_x_joint_dist = ""
-    ext_terms_imp = ""
+    ext_terms_imp = "0"
     ext_terms_dur = ""
     x_data_decls = ""
     if n_transient_external_regressors > 0:
@@ -44,7 +44,7 @@ def generate_Stan_model_def(
             f"beta_transient[{i+1}] * x_transient_{i+1}"
             for i in range(n_transient_external_regressors)
         ]
-        ext_terms_imp = " + " + "\n     + ".join(ext_terms_imp)
+        ext_terms_imp =  " + ".join(ext_terms_imp)
         x_data_decls = x_data_decls + "  ".join(
             [
                 f"""
@@ -84,14 +84,15 @@ parameters {{
   vector<lower=0>[N_y_observed + N_y_future] y_auto;   // unobserved auto-regressive state
   real<lower=0> b_var_y_auto;                 // presumed y_auto (durable) noise variance
   real<lower=0> b_var_y;                      // presumed y (transient) noise variance
+  vector[N_y_observed + N_y_future] y_transient_effect;
 }}
 transformed parameters {{
         // y_observed and y_future in one notation (for export)
   vector[N_y_observed + N_y_future] y;
-  vector[N_y_observed + N_y_future] y_transient_effect;
+  vector[N_y_observed + N_y_future] t_intensity;
   y[1:N_y_observed] = y_observed;
   y[(N_y_observed + 1):(N_y_observed + N_y_future)] = y_future;
-  y_transient_effect = 0{ext_terms_imp};  // modeled transient effect
+  t_intensity = {ext_terms_imp};
 }}
 model {{
   b_var_y_auto ~ chi_square(1);               // prior for y_auto (durable) noise variance
@@ -99,6 +100,15 @@ model {{
         // priors for parameter estimates
   b_auto_0 ~ normal(0, 10);
   effect_shift ~ normal(0, 10);
+  for (i in 1:(N_y_observed + N_y_future)) {{   // modeled transient effect
+     if (t_intensity[i] > 0) {{
+        y_transient_effect[i] ~ normal(t_intensity[i], t_intensity[i] / 2);
+     }} else if (t_intensity[i] < 0) {{
+        y_transient_effect[i] ~ normal(t_intensity[i], -t_intensity[i] / 2);
+     }} else {{
+        y_transient_effect[i] ~ normal(0, 0.01);
+     }}
+  }}
   b_auto ~ normal(0, 10);{b_x_transient_dist}{b_x_durable_dist}{b_x_joint_dist}
         // autoregressive system evolution
   y_auto[{max_lag+1}:(N_y_observed + N_y_future)] ~ normal(
