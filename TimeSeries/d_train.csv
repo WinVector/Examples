@@ -120,7 +120,7 @@ time_tick,x_durable_0,x_transient_0,y,ext_regressors
 118,-1,0,64.0,durable impact
 119,0,0,42.0,regular point
 120,0,0,21.0,regular point
-121,0,0,-0.0,regular point
+121,0,0,0.0,regular point
 122,0,0,0.0,regular point
 123,-1,0,0.0,durable impact
 124,0,0,0.0,regular point
@@ -894,7 +894,7 @@ time_tick,x_durable_0,x_transient_0,y,ext_regressors
 892,0,0,9.0,regular point
 893,0,0,5.0,regular point
 894,0,0,0.0,regular point
-895,0,0,-0.0,regular point
+895,0,0,0.0,regular point
 896,0,0,5.0,regular point
 897,0,1,35.0,transient impact
 898,0,0,19.0,regular point
