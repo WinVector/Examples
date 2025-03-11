@@ -89,15 +89,17 @@ An odd point in this direction is: ARIMA prediction of tides. In fact tides are 
 # https://otexts.com/fpp3/regarima.html
 d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
 d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
+```
 
+```{r}
 fable_model <- (
   d_train %>%
     tsibble(index=time_tick) %>%
     model(
       ARIMA(y ~ 
               1  # turn off must specify constant warning
-            + z_0   # external regressor (can also use xreg(z_0))
-            + x_0   # external regressor (can also use xreg(x_0))
+            + x_durable_0   # external regressor (can also use xreg(x_durable_0))
+            + x_transient_0   # external regressor (can also use xreg(x_transient_0))
             + pdq(2, 0, 2)   # AR=MA=2, I=0
             + PDQ(0, 0, 0)   # turn off seasonality (help(ARIMA))
             )
@@ -107,9 +109,9 @@ coef(fable_model)
 
 ```
 
-Notice we recovered good estimates of the autoregressive terms `b_auto` (`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_0`). We did not get a good estimate of the durable external effect coefficient `z_0` (`b_z`), so we did not infer how changes in this variable affect results. 
+Notice we recovered good estimates of the autoregressive terms `b_auto` (`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_transient_0`). We did not get a good estimate of the durable external effect coefficient `x_durable_0` (`b_z`), so we did not infer how changes in this variable affect results. 
 
-We would be able to forecast, as the auto-regressive terms dominate. We would not be able to plan, as we don't have a good estimate of `z_0` (`b_z`).
+We would be able to forecast, as the auto-regressive terms dominate. We would not be able to plan, as we don't have a good estimate of `x_durable_0` (`b_z`).
 
 ```{r}
 model_specification
@@ -163,7 +165,7 @@ d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
 forecast_model <- Arima(
   ts(d_train[['y']], start=d_train[['time_tick']][1]), 
   order=c(2, 0, 2), 
-  xreg=ts(d_train[, c('z_0', 'x_0')], start=d_train[['time_tick']][1])
+  xreg=ts(d_train[, c('x_durable_0', 'x_transient_0')], start=d_train[['time_tick']][1])
   )
 
 forecast_model
@@ -175,7 +177,7 @@ Notice the recovered durable effect coefficient is way too low.
 ```{r}
 preds <- forecast(
   forecast_model, 
-  xreg=ts(d_test[, c('z_0', 'x_0')], 
+  xreg=ts(d_test[, c('x_durable_0', 'x_transient_0')], 
   start=d_test[['time_tick']][1]))
 d_test['forecast ARIMAX'] <- as.numeric(preds$mean)
 

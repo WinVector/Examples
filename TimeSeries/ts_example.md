@@ -29,29 +29,29 @@ model_specification <- fromJSON("generating_params.json")
 model_specification
 ```
 
-    ## $b_auto_0
-    ## [1] 1.280413
+    ## $beta_auto_intercept
+    ## [1] 2.127637
     ## 
-    ## $b_imp_0
+    ## $effect_shift
     ## [1] -10.4
     ## 
-    ## $b_auto
-    ## [1]  1.975377 -1.000000
+    ## $beta_auto
+    ## [1]  1.972723 -1.000000
     ## 
-    ## $b_z
-    ## [1] 14.2
+    ## $beta_durable
+    ## [1] 9.2
     ## 
-    ## $b_x
-    ## [1] 16.1
+    ## $beta_transient
+    ## [1] 19.1
     ## 
     ## $generating_lags
     ## [1] 1 2
     ## 
-    ## $modeling_lags
-    ## [1] 1 2
-    ## 
     ## $error_scale
     ## [1] 3.2
+    ## 
+    ## $n_step
+    ## [1] 1000
 
 What we hope is to find `b_x_dur ~ b_z` and `b_x_imp ~ b_x`.
 
@@ -168,15 +168,17 @@ of these regressors is enough for it to model the entire system
 # https://otexts.com/fpp3/regarima.html
 d_train <- read.csv('d_train.csv', stringsAsFactors = FALSE)
 d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
+```
 
+``` r
 fable_model <- (
   d_train %>%
     tsibble(index=time_tick) %>%
     model(
       ARIMA(y ~ 
               1  # turn off must specify constant warning
-            + z_0   # external regressor (can also use xreg(z_0))
-            + x_0   # external regressor (can also use xreg(x_0))
+            + x_durable_0   # external regressor (can also use xreg(x_durable_0))
+            + x_transient_0   # external regressor (can also use xreg(x_transient_0))
             + pdq(2, 0, 2)   # AR=MA=2, I=0
             + PDQ(0, 0, 0)   # turn off seasonality (help(ARIMA))
             )
@@ -188,51 +190,51 @@ coef(fable_model)
     ## # A tibble: 7 × 6
     ##   .model                            term  estimate std.error statistic   p.value
     ##   <chr>                             <chr>    <dbl>     <dbl>     <dbl>     <dbl>
-    ## 1 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar1     1.92      0.0114  168.     0        
-    ## 2 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ar2    -0.954     0.0112  -85.2    0        
-    ## 3 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma1    -0.996     0.0321  -31.0    9.55e-148
-    ## 4 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… ma2     0.319     0.0323    9.88   5.37e- 22
-    ## 5 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… z_0    -0.0135    1.05     -0.0128 9.90e-  1
-    ## 6 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… x_0    14.8       0.275    54.0    8.40e-296
-    ## 7 ARIMA(y ~ 1 + z_0 + x_0 + pdq(2,… inte…  43.4       2.03     21.4    2.33e- 83
+    ## 1 "ARIMA(y ~ 1 + x_durable_0 + x_t… ar1      1.93    0.00985   196.    0        
+    ## 2 "ARIMA(y ~ 1 + x_durable_0 + x_t… ar2     -0.965   0.00972   -99.2   0        
+    ## 3 "ARIMA(y ~ 1 + x_durable_0 + x_t… ma1     -0.928   0.0323    -28.7   3.09e-132
+    ## 4 "ARIMA(y ~ 1 + x_durable_0 + x_t… ma2      0.271   0.0310      8.72  1.15e- 17
+    ## 5 "ARIMA(y ~ 1 + x_durable_0 + x_t… x_du…   -0.487   0.842      -0.579 5.63e-  1
+    ## 6 "ARIMA(y ~ 1 + x_durable_0 + x_t… x_tr…   17.0     0.346      49.2   3.70e-267
+    ## 7 "ARIMA(y ~ 1 + x_durable_0 + x_t… inte…   78.3     2.72       28.8   7.12e-133
 
 Notice we recovered good estimates of the autoregressive terms `b_auto`
-(`ar1`, `ar2`), transient external effect coefficient `b_x` (`x_0`). We
-did not get a good estimate of the durable external effect coefficient
-`z_0` (`b_z`), so we did not infer how changes in this variable affect
-results.
+(`ar1`, `ar2`), transient external effect coefficient `b_x`
+(`x_transient_0`). We did not get a good estimate of the durable
+external effect coefficient `x_durable_0` (`b_z`), so we did not infer
+how changes in this variable affect results.
 
 We would be able to forecast, as the auto-regressive terms dominate. We
-would not be able to plan, as we don’t have a good estimate of `z_0`
-(`b_z`).
+would not be able to plan, as we don’t have a good estimate of
+`x_durable_0` (`b_z`).
 
 ``` r
 model_specification
 ```
 
-    ## $b_auto_0
-    ## [1] 1.280413
+    ## $beta_auto_intercept
+    ## [1] 2.127637
     ## 
-    ## $b_imp_0
+    ## $effect_shift
     ## [1] -10.4
     ## 
-    ## $b_auto
-    ## [1]  1.975377 -1.000000
+    ## $beta_auto
+    ## [1]  1.972723 -1.000000
     ## 
-    ## $b_z
-    ## [1] 14.2
+    ## $beta_durable
+    ## [1] 9.2
     ## 
-    ## $b_x
-    ## [1] 16.1
+    ## $beta_transient
+    ## [1] 19.1
     ## 
     ## $generating_lags
     ## [1] 1 2
     ## 
-    ## $modeling_lags
-    ## [1] 1 2
-    ## 
     ## $error_scale
     ## [1] 3.2
+    ## 
+    ## $n_step
+    ## [1] 1000
 
 ``` r
 preds <-  (
@@ -260,7 +262,7 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['fable ARIMAX prediction']])**2))
 ) 
 ```
 
-![](ts_example_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](ts_example_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ## Fitting with an external regressor using the forecast package
 
@@ -280,7 +282,7 @@ d_test <- read.csv('d_test.csv', stringsAsFactors = FALSE)
 forecast_model <- Arima(
   ts(d_train[['y']], start=d_train[['time_tick']][1]), 
   order=c(2, 0, 2), 
-  xreg=ts(d_train[, c('z_0', 'x_0')], start=d_train[['time_tick']][1])
+  xreg=ts(d_train[, c('x_durable_0', 'x_transient_0')], start=d_train[['time_tick']][1])
   )
 
 forecast_model
@@ -290,19 +292,19 @@ forecast_model
     ## Regression with ARIMA(2,0,2) errors 
     ## 
     ## Coefficients:
-    ##          ar1      ar2      ma1     ma2  intercept      z_0      x_0
-    ##       1.9250  -0.9542  -0.9960  0.3194    43.3823  -0.0135  14.8366
-    ## s.e.  0.0114   0.0112   0.0321  0.0323     2.0318   1.0531   0.2749
+    ##          ar1      ar2      ma1     ma2  intercept  x_durable_0  x_transient_0
+    ##       1.9335  -0.9648  -0.9282  0.2705    78.3360      -0.4873        17.0466
+    ## s.e.  0.0099   0.0097   0.0323  0.0310     2.7168       0.8420         0.3463
     ## 
-    ## sigma^2 = 33.1:  log likelihood = -3104.38
-    ## AIC=6224.76   AICc=6224.91   BIC=6263.86
+    ## sigma^2 = 60.54:  log likelihood = -3400.48
+    ## AIC=6816.97   AICc=6817.11   BIC=6856.07
 
 Notice the recovered durable effect coefficient is way too low.
 
 ``` r
 preds <- forecast(
   forecast_model, 
-  xreg=ts(d_test[, c('z_0', 'x_0')], 
+  xreg=ts(d_test[, c('x_durable_0', 'x_transient_0')], 
   start=d_test[['time_tick']][1]))
 d_test['forecast ARIMAX'] <- as.numeric(preds$mean)
 
@@ -327,4 +329,4 @@ rmse <- sqrt(mean((d_test[['y']] - d_test[['forecast ARIMAX']])**2))
 ) 
 ```
 
-![](ts_example_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](ts_example_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
