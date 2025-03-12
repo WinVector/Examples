@@ -78,3 +78,6 @@ Roughly our thesis is:
   4) There are tricks: such as full AR regression solutions ( https://win-vector.com/2023/05/07/a-time-series-apologia/ , the nasty "if all you measure about inference is prediction performance, regression wins" ) or pure pseudo-MA (linear combination of filters, often used in finance) that are pretty effective.
   4) In the end, you may want a full Bayesian decomposition. Roughly: inferring state may be at least as important is inferring the transfer function.
 
+
+Note: we are not sharing out the Bass model fitting code at this time, as we haven't characterized its fitting biases yet. Good ideas on fitting Bass models can be found here: https://srdas.github.io/MLBook/productForecastingBassModel.html .
+
