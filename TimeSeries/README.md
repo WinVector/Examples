@@ -80,4 +80,4 @@ Roughly our thesis is:
 
 
 Note: we are not sharing out the Bass model fitting code at this time, as we haven't characterized its fitting biases yet. Good ideas on fitting Bass models can be found here: https://srdas.github.io/MLBook/productForecastingBassModel.html .
-
+Some of the tides fitting notes: https://win-vector.com/tag/tides/ .
