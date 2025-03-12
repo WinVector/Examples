@@ -9,19 +9,25 @@ Materials for some of my teaching on using time series methods to solve business
 
 Our organizing thesis is:  In business forecasting: ability to specify actionable structure beats technique in forecasting.
 
+Our group is available to give on-site or remote training on these tools and techniques.
+
+<h2>
+
+We are presenting a version of this material at "AI Plus":
+
+  * <img src="ai_plus_announce.png"/>
+  * [slides](TimeSeriesProblems.pdf)
+  * [rehearsal video](https://www.youtube.com/watch?v=8ALN8N2Bj7s)
 
 
-We are presenting an overview of the methodology and results here.
+<h2>PyData Global 2024</h2>
+
+We presented an overview of the methodology and results here.
 
   * [video](https://www.youtube.com/watch?v=jbJqlTWgN9A)
   * [slides](TS.pdf)
   * PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 12-05, 17:00–17:30 (UTC), General Track <img src="PyData2024.png">
 
-
-
-
-
-Our group is available to give on-site or remote training on these tools and techniques.
 
 
 The slides for of the material is here: https://github.com/WinVector/Examples/blob/main/TimeSeries/TimeSeries.pdf
@@ -38,23 +44,7 @@ Roughly our thesis is:
   4) In the end, you may want a full Bayesian decomposition. Roughly: inferring state may be at least as important is inferring the transfer function.
 
 
-
-
-
-Support materials:
-
-  * https://github.com/WinVector/Examples/blob/main/TimeSeries/nested_model_example.ipynb 
-  * https://win-vector.com/2023/05/07/a-time-series-apologia/ 
-  * https://win-vector.com/2024/07/15/armax-offerings-remain-a-muddle/ 
-  * https://github.com/WinVector/Examples/blob/main/TimeSeries/ts_example.md 
-  * https://github.com/WinVector/Examples/blob/main/TimeSeries/sm_example.ipynb
-  * https://github.com/WinVector/Examples/blob/main/TimeSeries/Prophet_example.ipynb 
-  * https://win-vector.com/2024/09/09/please-version-data/ 
-  * https://win-vector.com/2023/05/25/some-of-the-perils-of-time-series-forecasting/  
-  * https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/tobit.ipynb
-  * https://github.com/WinVector/Examples/blob/main/rank/LearningToRank.pdf
-
-
+<h2>ODSC West 2024</h2>
 
 
 This work was presented here.
@@ -67,9 +57,20 @@ Find at https://odsc.com/california/odsc-west-schedule-2024/ , Tutorials | Works
 
 
 
-A variation of this will be presented here.
 
-  * [video](https://www.youtube.com/watch?v=jbJqlTWgN9A)
-  * [slides](TS.pdf)
-  * PyData Global 2024 https://global2024.pydata.org/cfp/talk/3NYJVA/ 12-05, 17:00–17:30 (UTC), General Track <img src="PyData2024.png">
+
+
+<h2>Support materials</h2>
+
+  * https://github.com/WinVector/Examples/blob/main/TimeSeries/nested_model_example.ipynb 
+  * https://win-vector.com/2023/05/07/a-time-series-apologia/ 
+  * https://win-vector.com/2024/07/15/armax-offerings-remain-a-muddle/ 
+  * https://github.com/WinVector/Examples/blob/main/TimeSeries/ts_example.md 
+  * https://github.com/WinVector/Examples/blob/main/TimeSeries/sm_example.ipynb
+  * https://github.com/WinVector/Examples/blob/main/TimeSeries/Prophet_example.ipynb 
+  * https://win-vector.com/2024/09/09/please-version-data/ 
+  * https://win-vector.com/2023/05/25/some-of-the-perils-of-time-series-forecasting/  
+  * https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/tobit.ipynb
+  * https://github.com/WinVector/Examples/blob/main/rank/LearningToRank.pdf
+
 
