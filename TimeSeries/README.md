@@ -15,7 +15,7 @@ Our group is available to give on-site or remote training on these tools and tec
 
 We are presenting a version of this material at "AI Plus":
 
-  * <img src="ai_plus_announce.png"/>
+  * [<img src="ai_plus_announce.png"/>](https://app.aiplus.training/courses/Time-Series-Mastery)
   * [slides](TimeSeriesProblems.pdf)
   * [rehearsal video](https://www.youtube.com/watch?v=8ALN8N2Bj7s)
 
