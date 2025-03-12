@@ -1,0 +1,35 @@
+
+For this time series workshop no preparation is required. All results are from Python and R worksheets that we are sharing and I encourage you to run them yourself. With prior familiarity with Python or R the participant should be able to reproduce the example solutions, and then re-adapt the solutions to their own data.
+
+This is a workshop, but given the 1 hour time structure I expect participants to run things after the workshop- not during or before. So no preparation is required, other than an interest in hearing about time series forecasting.
+
+All of the slides, worksheets, and a rehearsal video are shared here: https://github.com/WinVector/Examples/blob/main/TimeSeries/README.md
+
+Python packages used include:
+
+  * cmdstanpy: control Stan from Python
+  * numpy: numeric utilities
+  * pandas: basic tables
+  * plotine: ggplot2 style graphing
+  * sklearn: machine learning utilities
+  * statsmodels: statistical time series code
+
+R packages used include:
+  * dplyr: relational data manipulation
+  * fable: time series package
+  * forecast: time series package
+  * ggplot2: graphing
+
+
+The worksheets we are emphasizing in this workshop are (all in https://github.com/WinVector/Examples/blob/main/TimeSeries/ ):
+
+Python:
+
+  * Prophet_example.ipynb : (failed) Prophet solution attempt
+  * Stan_soln.ipynb : the Stan solution (start of the workshop)
+  * linear_model_bundle.ipynb : brute force machine learning solution
+  * nested_model_example.ipynb : 
+  * sm_example.ipynb : ARIMA solution
+
+R:
+  * ts_example.Rmd: ARIMA solution
