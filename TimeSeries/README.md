@@ -11,7 +11,7 @@ Our organizing thesis is:  In business forecasting: ability to specify actionabl
 
 Our group is available to give on-site or remote training on these tools and techniques.
 
-<h2>
+<h2>AI Plus</h2>
 
 We are presenting a version of this material at "AI Plus":
 
@@ -33,15 +33,7 @@ We presented an overview of the methodology and results here.
 The slides for of the material is here: https://github.com/WinVector/Examples/blob/main/TimeSeries/TimeSeries.pdf
 
 
-Roughly our thesis is:
 
-  1) In time series work, good descriptions such as https://www.statsmodels.org/stable/statespace.html are largely the exception.
-    This is one of the descriptions that lets us know the package implements "linear regression with auto-correlated residuals."
-     <img src="stats_models.png">
-  2) Even with such descriptions, it can remain unclear if the `(p, d, q)` style parameter specification *actually* implement the claimed equations.
-  3) Basic hints are not shared (such as setting `q = p`, please see https://github.com/WinVector/Examples/blob/main/TS/TS_example.md ).
-  4) There are tricks: such as full AR regression solutions ( https://win-vector.com/2023/05/07/a-time-series-apologia/ , the nasty "if all you measure about inference is prediction performance, regression wins" ) or pure pseudo-MA (linear combination of filters, often used in finance) that are pretty effective.
-  4) In the end, you may want a full Bayesian decomposition. Roughly: inferring state may be at least as important is inferring the transfer function.
 
 
 <h2>ODSC West 2024</h2>
@@ -73,4 +65,16 @@ Find at https://odsc.com/california/odsc-west-schedule-2024/ , Tutorials | Works
   * https://github.com/WinVector/Examples/blob/main/linear_regression_w_zeros/tobit.ipynb
   * https://github.com/WinVector/Examples/blob/main/rank/LearningToRank.pdf
 
+
+<h2>Details</h2>
+
+Roughly our thesis is:
+
+  1) In time series work, good descriptions such as https://www.statsmodels.org/stable/statespace.html are largely the exception.
+    This is one of the descriptions that lets us know the package implements "linear regression with auto-correlated residuals."
+     <img src="stats_models.png">
+  2) Even with such descriptions, it can remain unclear if the `(p, d, q)` style parameter specification *actually* implement the claimed equations.
+  3) Basic hints are not shared (such as setting `q = p`, please see https://github.com/WinVector/Examples/blob/main/TS/TS_example.md ).
+  4) There are tricks: such as full AR regression solutions ( https://win-vector.com/2023/05/07/a-time-series-apologia/ , the nasty "if all you measure about inference is prediction performance, regression wins" ) or pure pseudo-MA (linear combination of filters, often used in finance) that are pretty effective.
+  4) In the end, you may want a full Bayesian decomposition. Roughly: inferring state may be at least as important is inferring the transfer function.
 
