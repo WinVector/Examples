@@ -10,7 +10,7 @@ Python packages used include:
   * cmdstanpy: control Stan from Python
   * numpy: numeric utilities
   * pandas: basic tables
-  * plotine: ggplot2 style graphing
+  * plotnine: ggplot2 style graphing
   * sklearn: machine learning utilities
   * statsmodels: statistical time series code
 
