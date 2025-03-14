@@ -30,7 +30,6 @@ ggplot(mapping = aes(x = date, y = percent)) +
       ),
       mapping = aes(xintercept = date, label = label),
     ) + 
-  theme(legend.position="bottom") +
   ggtitle("projection as a function of training date")
 ```
 
