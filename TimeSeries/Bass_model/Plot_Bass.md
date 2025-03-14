@@ -2,7 +2,12 @@ PlotBass
 ================
 2025-03-14
 
-Replot the contents of Bass_Stan.Rmd.
+Re-plot the contents of [Bass_Stan.Rmd](Bass_Stan.Rmd).
+
+Data from:
+
+<https://stackoverflow.blog/2017/09/06/incredible-growth-python/>
+<https://trends.stackoverflow.co/?tags=python>
 
 ``` r
 library(wrapr)
@@ -18,6 +23,10 @@ unpack[
 ```
 
 ``` r
+d_predict[["what"]] <- paste0("model using data before ", gsub("Stan_pred_", "", d_predict$what, fixed = TRUE))
+```
+
+``` r
 ggplot(mapping = aes(x = date, y = percent)) +
   geom_point(data = na.omit(d_plot)) +
   geom_line(
@@ -30,7 +39,8 @@ ggplot(mapping = aes(x = date, y = percent)) +
       ),
       mapping = aes(xintercept = date, label = label),
     ) + 
-  ggtitle("projection as a function of training date")
+  ylab("% of Stack Overflow questions that month") + 
+  ggtitle("projection of Pandas questions on Stack Overflow as a function of training date")
 ```
 
-![](Plot_Bass_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](Plot_Bass_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
