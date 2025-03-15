@@ -19,10 +19,11 @@ knitr::opts_chunk$set(fig.height = 6, fig.width = 9)
 ``` r
 unpack[
   d_plot = d_plot, 
-  d_predict = d_predict] := readRDS("Pandas_predictions_Bass.RDS")
+  d_predict = d_predict] := readRDS("Python_predictions_Bass.RDS")
 ```
 
 ``` r
+tag = d_plot$tag[[1]]
 d_predict[["what"]] <- paste0("model using data before ", gsub("Stan_pred_", "", d_predict$what, fixed = TRUE))
 ```
 
@@ -40,7 +41,7 @@ ggplot(mapping = aes(x = date, y = percent)) +
       mapping = aes(xintercept = date, label = label),
     ) + 
   ylab("% of Stack Overflow questions that month") + 
-  ggtitle("projection of Pandas questions on Stack Overflow as a function of training date")
+  ggtitle(paste0("projection of ", tag, " questions on Stack Overflow as a function of training date"))
 ```
 
 ![](Plot_Bass_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->

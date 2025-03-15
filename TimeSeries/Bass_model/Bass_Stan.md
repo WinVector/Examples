@@ -41,16 +41,12 @@ converted with
 
 ``` r
 # read data
-d_all <- read.csv('tag_trends_2024.csv', stringsAsFactors = FALSE, strip.white = TRUE)
+d_all <- read.csv('tag_trends_Pyton.csv', stringsAsFactors = FALSE, strip.white = TRUE)
 d_all['date'] = as.Date(d_all[['date']])
-# get label order
-d_all['tag'] = factor(
-  d_all[['tag']], 
-  levels = c('r', 'pandas', 'matlab', 'tensorflow'))
 ```
 
 ``` r
-tag <- 'pandas'
+tag <- 'Python'
 d_match <- d_all[d_all$tag == tag, c('date', 'percent', 'tag')]
 n_pad <- 36
 new_dates <- seq(d_match$date[nrow(d_match)], by='1 month', length.out = n_pad + 1)[2:(n_pad + 1)]
@@ -127,37 +123,37 @@ d_predict <- lapply(
   fit_pred_given_train_date)
 ```
 
-    ## Warning: There were 3446 divergent transitions after warmup. See
+    ## Warning: There were 3979 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 3179 divergent transitions after warmup. See
+    ## Warning: There were 4375 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 2975 divergent transitions after warmup. See
+    ## Warning: There were 4485 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 2004 divergent transitions after warmup. See
+    ## Warning: There were 4553 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 521 divergent transitions after warmup. See
+    ## Warning: There were 3652 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 11 divergent transitions after warmup. See
+    ## Warning: There were 2 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
@@ -168,7 +164,9 @@ d_predict <- do.call(rbind, d_predict)
 ```
 
 ``` r
-saveRDS(list(d_plot = d_plot, d_predict = d_predict), "Pandas_predictions_Bass.RDS")
+saveRDS(
+  list(d_plot = d_plot, d_predict = d_predict), 
+  paste0(tag, "_predictions_Bass.RDS"))
 ```
 
 ``` r
@@ -184,7 +182,7 @@ ggplot(mapping = aes(x = date, y = percent)) +
       ),
       mapping = aes(xintercept = date, label = label),
     ) + 
-  ggtitle("projection as a function of training date")
+  ggtitle(paste0(tag, " projection as a function of training date"))
 ```
 
 ![](Bass_Stan_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
