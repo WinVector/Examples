@@ -76,7 +76,11 @@ fit_pred_given_train_date <- function(train_cut_date) {
     cores = 4,                  # number of cores (could use one per chain)
     refresh = 0                # no progress shown
   ))
+  # limit to more likely samples
+  res <- res[res$lp__ >= quantile(res$lp__), , drop = FALSE]
+  # extract a point estimate
   cm <- colMeans(res)
+  # get the curve implied by the parameters
   plot_Bass_curve <- function(values, n_pad, p, q, m) {
     #PLOT THE FITTED MODEL, shifted to match values
     nqtrs = length(values)
@@ -101,6 +105,7 @@ fit_pred_given_train_date <- function(train_cut_date) {
     p = cm[['p']],
     q = cm[['q']], 
     m = cm[['m']])
+  # return the result
   preds <- c(preds, rep(NA, nrow(d_plot) - length(preds)))
   d_predict <- d_plot
   d_predict['percent'] <- preds

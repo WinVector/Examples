@@ -83,7 +83,11 @@ fit_pred_given_train_date <- function(train_cut_date) {
     cores = 4,                  # number of cores (could use one per chain)
     refresh = 0                # no progress shown
   ))
+  # limit to more likely samples
+  res <- res[res$lp__ >= quantile(res$lp__), , drop = FALSE]
+  # extract a point estimate
   cm <- colMeans(res)
+  # get the curve implied by the parameters
   plot_Bass_curve <- function(values, n_pad, p, q, m) {
     #PLOT THE FITTED MODEL, shifted to match values
     nqtrs = length(values)
@@ -108,6 +112,7 @@ fit_pred_given_train_date <- function(train_cut_date) {
     p = cm[['p']],
     q = cm[['q']], 
     m = cm[['m']])
+  # return the result
   preds <- c(preds, rep(NA, nrow(d_plot) - length(preds)))
   d_predict <- d_plot
   d_predict['percent'] <- preds
@@ -123,37 +128,31 @@ d_predict <- lapply(
   fit_pred_given_train_date)
 ```
 
-    ## Warning: There were 3979 divergent transitions after warmup. See
+    ## Warning: There were 4177 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 4375 divergent transitions after warmup. See
+    ## Warning: There were 4452 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 4485 divergent transitions after warmup. See
+    ## Warning: There were 4389 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 4553 divergent transitions after warmup. See
+    ## Warning: There were 4719 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 3652 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 2 divergent transitions after warmup. See
+    ## Warning: There were 3567 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
