@@ -6,6 +6,7 @@ See also:
 <https://srdas.github.io/MLBook/productForecastingBassModel.html>
 
 ``` r
+library(wrapr)
 library(rstan)
 ```
 
@@ -63,6 +64,42 @@ d_plot['what'] = 'actuals'
 ```
 
 ``` r
+stan_model <- stan_model(
+    file = "Bass_Stan.stan"
+  )
+```
+
+``` r
+# get the curve implied by the parameters
+plot_Bass_curve <- function(values, n_pad, p, q, m) {
+  #PLOT THE FITTED MODEL, shifted to match values
+  nqtrs = length(values)
+  t = seq(-10 * nqtrs, 10 * nqtrs + n_pad)
+  FF = expression(p*(exp((p+q)*t)-1)/(p*exp((p+q)*t)+q))
+  ff = D(FF, "t")
+  fn_f = as.numeric(eval(ff) * m)
+  pred <- fn_f
+  i_max <- which.max(pred)
+  v_max <- NA
+  if((i_max >= 1) && (i_max <= length(pred))) {
+    v_max <- pred[i_max]
+  }
+  errs <- vapply(
+    seq(0, length(pred) - length(values) - 1), 
+    function(i) {
+      sum((pred[seq(1 + i, length(values) + i)] - values)**2)
+    }, 
+    FUN.VALUE = numeric(1))
+  best_shift = which.min(errs) - 1
+  pred <- pred[seq(1 + best_shift, length(values) + best_shift + n_pad)]
+  return( list(
+    predictions = as.numeric(pred), 
+    i_max = i_max - best_shift,
+    v_max = v_max) )
+}
+```
+
+``` r
 fit_pred_given_train_date <- function(train_cut_date) {
   d_train <- d_match[d_match$date <= train_cut_date, , drop = FALSE]
   # run Stan model
@@ -74,8 +111,8 @@ fit_pred_given_train_date <- function(train_cut_date) {
     cumsum_s = array(cumsum(d_train$percent), dim = nrow(d_train)),
     total_s = sum(d_train$percent)
   )
-  res <- as.data.frame(stan(
-    file = "Bass_Stan.stan",
+  res <- as.data.frame(sampling(
+    stan_model,
     data = stan_data,
     chains = 4,                 # number of Markov chains
     warmup = 2000,              # number of warmup iterations per chain
@@ -84,75 +121,228 @@ fit_pred_given_train_date <- function(train_cut_date) {
     refresh = 0                # no progress shown
   ))
   # limit to more likely samples
-  res <- res[res$lp__ >= quantile(res$lp__), , drop = FALSE]
+  res <- res[res$lp__ >= quantile(res$lp__, probs = 0.9), , drop = FALSE]
   # extract a point estimate
   cm <- colMeans(res)
-  # get the curve implied by the parameters
-  plot_Bass_curve <- function(values, n_pad, p, q, m) {
-    #PLOT THE FITTED MODEL, shifted to match values
-    nqtrs = length(values)
-    t=seq(-4 * nqtrs, 4 * nqtrs + n_pad)
-    FF = expression(p*(exp((p+q)*t)-1)/(p*exp((p+q)*t)+q))
-    ff = D(FF,"t")
-    fn_f = as.numeric(eval(ff)*m)
-    pred <- fn_f
-    errs <- vapply(
-      seq(0, length(pred) - length(values) - 1), 
-      function(i) {
-        sum((pred[seq(1 + i, length(values) + i)] - values)**2)
-      }, 
-      FUN.VALUE = numeric(1))
-    best_i = which.min(errs) - 1
-    pred <- pred[seq(1 + best_i, length(values) + best_i + n_pad)]
-    return(pred)
+  unpack[
+    preds = predictions, 
+    i_max = i_max,
+    v_max = v_max] := plot_Bass_curve(
+      d_train$percent, 
+      n_pad = n_pad, 
+      p = cm[['p']],
+      q = cm[['q']], 
+      m = cm[['m']])
+  t_max <- NA
+  if((i_max >= 1) && (i_max <= nrow(d_plot))) {
+     t_max <- d_plot$date[i_max]
   }
-  preds <- plot_Bass_curve(
-    d_train$percent, 
-    n_pad = n_pad, 
-    p = cm[['p']],
-    q = cm[['q']], 
-    m = cm[['m']])
   # return the result
-  preds <- c(preds, rep(NA, nrow(d_plot) - length(preds)))
+  if(nrow(d_plot) > length(preds)) {
+    preds <- c(preds, rep(NA, nrow(d_plot) - length(preds)))
+  }
   d_predict <- d_plot
   d_predict['percent'] <- preds
   d_predict['what'] <- paste0("Stan_pred_", train_cut_date)
   d_predict['is_forecast'] <- d_predict$date > train_cut_date
+  d_predict['i_max'] <- as.integer(i_max)
+  d_predict['v_max'] <- as.numeric(v_max)
+  d_predict['t_max'] <- as.Date(t_max)
   return(d_predict)
 }
 ```
 
 ``` r
 d_predict <- lapply(
-  seq(as.Date('2018-01-01'), as.Date('2025-01-01'), by = '1 year'),
+  seq(
+    as.Date('2018-01-01'), 
+    as.Date('2025-01-01'), 
+    by = '3 months'
+    ),
   fit_pred_given_train_date)
 ```
 
-    ## Warning: There were 4177 divergent transitions after warmup. See
+    ## Warning: There were 5468 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 4452 divergent transitions after warmup. See
+    ## Warning: There were 5677 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 4389 divergent transitions after warmup. See
+    ## Warning: There were 5643 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 4719 divergent transitions after warmup. See
+    ## Warning: There were 5688 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 3567 divergent transitions after warmup. See
+    ## Warning: There were 5678 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 5719 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 5614 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 5581 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 5780 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 5582 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 5445 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 5976 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 5727 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: There were 5909 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 5595 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 5220 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 5203 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 4651 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 3554 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 1236 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 19 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 1 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: There were 2 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
@@ -170,9 +360,9 @@ saveRDS(
 
 ``` r
 ggplot(mapping = aes(x = date, y = percent)) +
-  geom_point(data = na.omit(d_plot)) +
+  geom_point(data = d_plot) +
   geom_line(
-    data = na.omit(d_predict),
+    data = d_predict,
     mapping = aes(color = what, linetype = is_forecast)) +
   geom_textvline(
     data = data.frame(
@@ -184,4 +374,10 @@ ggplot(mapping = aes(x = date, y = percent)) +
   ggtitle(paste0(tag, " projection as a function of training date"))
 ```
 
-![](Bass_Stan_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+    ## Warning: Removed 36 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+    ## Warning: Removed 1190 rows containing missing values or values outside the scale range
+    ## (`geom_line()`).
+
+![](Bass_Stan_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->

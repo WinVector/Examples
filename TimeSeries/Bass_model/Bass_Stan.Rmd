@@ -70,6 +70,10 @@ plot_Bass_curve <- function(values, n_pad, p, q, m) {
   fn_f = as.numeric(eval(ff) * m)
   pred <- fn_f
   i_max <- which.max(pred)
+  v_max <- NA
+  if((i_max >= 1) && (i_max <= length(pred))) {
+    v_max <- pred[i_max]
+  }
   errs <- vapply(
     seq(0, length(pred) - length(values) - 1), 
     function(i) {
@@ -78,7 +82,10 @@ plot_Bass_curve <- function(values, n_pad, p, q, m) {
     FUN.VALUE = numeric(1))
   best_shift = which.min(errs) - 1
   pred <- pred[seq(1 + best_shift, length(values) + best_shift + n_pad)]
-  return( list(predictions = as.numeric(pred), i_max = i_max - best_shift) )
+  return( list(
+    predictions = as.numeric(pred), 
+    i_max = i_max - best_shift,
+    v_max = v_max) )
 }
 ```
 
@@ -110,12 +117,17 @@ fit_pred_given_train_date <- function(train_cut_date) {
   cm <- colMeans(res)
   unpack[
     preds = predictions, 
-    i_max = i_max] := plot_Bass_curve(
+    i_max = i_max,
+    v_max = v_max] := plot_Bass_curve(
       d_train$percent, 
       n_pad = n_pad, 
       p = cm[['p']],
       q = cm[['q']], 
       m = cm[['m']])
+  t_max <- NA
+  if((i_max >= 1) && (i_max <= nrow(d_plot))) {
+     t_max <- d_plot$date[i_max]
+  }
   # return the result
   if(nrow(d_plot) > length(preds)) {
     preds <- c(preds, rep(NA, nrow(d_plot) - length(preds)))
@@ -124,18 +136,21 @@ fit_pred_given_train_date <- function(train_cut_date) {
   d_predict['percent'] <- preds
   d_predict['what'] <- paste0("Stan_pred_", train_cut_date)
   d_predict['is_forecast'] <- d_predict$date > train_cut_date
-  d_predict['i_max'] <- i_max
+  d_predict['i_max'] <- as.integer(i_max)
+  d_predict['v_max'] <- as.numeric(v_max)
+  d_predict['t_max'] <- as.Date(t_max)
   return(d_predict)
 }
 ```
 
 ```{r}
 d_predict <- lapply(
-  seq(as.Date('2018-01-01'), as.Date('2025-01-01'), by = '1 year'),
+  seq(
+    as.Date('2018-01-01'), 
+    as.Date('2025-01-01'), 
+    by = '3 months'
+    ),
   fit_pred_given_train_date)
-# d_predict <- lapply(
-#   seq(as.Date('2018-01-01'), as.Date('2025-01-01'), by = '3 months'),
-#   fit_pred_given_train_date)
 ```
 
 ```{r}
@@ -150,9 +165,9 @@ saveRDS(
 
 ```{r}
 ggplot(mapping = aes(x = date, y = percent)) +
-  geom_point(data = na.omit(d_plot)) +
+  geom_point(data = d_plot) +
   geom_line(
-    data = na.omit(d_predict),
+    data = d_predict,
     mapping = aes(color = what, linetype = is_forecast)) +
   geom_textvline(
     data = data.frame(

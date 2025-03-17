@@ -21,8 +21,8 @@ transformed parameters {
   }
 }
 model {
-  z ~ uniform(0, total_s);
-  m ~ uniform(0, 100 * total_s);
+  z ~ uniform(0, 2 * total_s);
+  m ~ uniform(0, 10 * total_s);
   p ~ uniform(0, 1);
   q ~ uniform(0, 1);
   err_s ~ normal(0, 1.0);  // square error
