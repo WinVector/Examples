@@ -1,17 +1,13 @@
----
-title: "PlotBass"
-output: github_document
-date: "2025-03-14"
----
+PlotBass
+================
+2025-03-14
 
 Re-plot the contents of [Bass_Stan.Rmd](Bass_Stan.Rmd).
 
 Data from:
 
-https://stackoverflow.blog/2017/09/06/incredible-growth-python/
-https://trends.stackoverflow.co/?tags=python
-
-
+<https://stackoverflow.blog/2017/09/06/incredible-growth-python/>
+<https://trends.stackoverflow.co/?tags=python>
 
 ```{r}
 library(wrapr)
@@ -24,6 +20,7 @@ knitr::opts_chunk$set(fig.height = 6, fig.width = 9)
 unpack[
   d_plot = d_plot, 
   d_predict = d_predict] := readRDS("Python_predictions_Bass.RDS")
+chat_gpt_release_date <- as.Date('2022-11-30')
 ```
 
 ```{r}
@@ -31,9 +28,107 @@ tag = d_plot$tag[[1]]
 d_predict[["what"]] <- paste0("model using data before ", gsub("Stan_pred_", "", d_predict$what, fixed = TRUE))
 ```
 
+```{r}
+whats <- sort(unique(d_predict$what))
+max_y <- max(c(d_plot$percent, d_predict$percent), na.rm = TRUE)
+min_x <- min(c(d_plot$date, d_plot$date))
+max_x <- max(c(d_plot$date, d_plot$date))
+
+for(what in whats) {
+  what_date <- as.Date(gsub("model using data before ", "", what))
+  d_predict_i <- na.omit(d_predict[d_predict$what == what, , drop = FALSE])
+  d_plot_i <- na.omit(d_plot)
+  d_plot_i$is_future <- d_plot_i$date >= what_date
+  min_date <- min(d_plot_i$date)
+  train_bound <- max(d_predict_i$date[d_predict_i$is_forecast == FALSE])
+  i_max <- d_predict_i[['i_max']][[1]]
+  
+  plt_i <- ggplot() +
+    geom_rect(aes(xmin = min_date, xmax = train_bound, ymin = -Inf, ymax = Inf),
+            fill = "lightgrey", alpha = 0.5) +  # Shaded left half
+    geom_point(
+      data = na.omit(d_plot_i[d_plot_i$is_future == FALSE, , drop = FALSE]),
+      mapping = aes(x = date, y = percent)) +
+    geom_line(
+      data = na.omit(d_predict_i),
+      mapping = aes(x = date, y = percent, linetype = is_forecast),
+      color = 'darkblue') +
+    ylab("% of Stack Overflow questions that month") + 
+    scale_shape_manual(values=c(16, 1)) +
+    theme_bw() +
+    theme(legend.position = "bottom") +
+    xlim(min_x, max_x) +
+    ylim(0, max_y) +
+    ggtitle(
+      paste0("projection of ", tag, " questions on Stack Overflow as a function of training date"),
+      subtitle = what)
+  if(what_date >= chat_gpt_release_date) {
+    plt_i <- plt_i +
+      geom_textvline(
+        data = data.frame(
+          date = chat_gpt_release_date,
+          label = paste0('ChatGPT release ', chat_gpt_release_date)
+          ),
+          mapping = aes(xintercept = date, label = label),
+        )
+  }
+  if((i_max >= 1) && (i_max <= nrow(d_predict_i)) && (! is.na(d_predict_i[i_max, 'percent']))) {
+      plt_i <- plt_i +
+          geom_point(
+              mapping = aes(x = date, y = percent),
+              data = d_predict_i[i_max, , drop = FALSE],
+              size = 2,
+              color = 'red',
+              shape = 2)
+  }
+  print(plt_i)
+  
+  plt_i <- ggplot() +
+    geom_rect(aes(xmin = min_date, xmax = train_bound, ymin = -Inf, ymax = Inf),
+            fill = "lightgrey", alpha = 0.5) +  # Shaded left half
+    geom_point(
+      data = na.omit(na.omit(d_plot_i[d_plot_i$date <= max(d_predict_i$date), , drop = FALSE])),
+      mapping = aes(x = date, y = percent, shape = is_future, alpha = is_future)) +
+    geom_line(
+      data = na.omit(d_predict_i),
+      mapping = aes(x = date, y = percent, linetype = is_forecast),
+      color = 'darkblue') +
+    ylab("% of Stack Overflow questions that month") + 
+    scale_alpha_manual(values=c(1, 0.3)) +
+    scale_shape_manual(values=c(16, 1)) +
+    theme_bw() +
+    theme(legend.position = "bottom") +
+    xlim(min_x, max_x) +
+    ylim(0, max_y) +
+    ggtitle(
+      paste0("projection of ", tag, " questions on Stack Overflow as a function of training date"),
+      subtitle = what)
+  if(what_date >= chat_gpt_release_date) {
+    plt_i <- plt_i +
+      geom_textvline(
+        data = data.frame(
+          date = chat_gpt_release_date,
+          label = paste0('ChatGPT release ', chat_gpt_release_date)
+          ),
+          mapping = aes(xintercept = date, label = label),
+        )
+  }
+  if((i_max >= 1) && (i_max <= nrow(d_predict_i)) && (! is.na(d_predict_i[i_max, 'percent']))) {
+      plt_i <- plt_i +
+          geom_point(
+              mapping = aes(x = date, y = percent),
+              data = d_predict_i[i_max, , drop = FALSE],
+              size = 2,
+              color = 'red',
+              shape = 2)
+  }
+  print(plt_i)
+}
+```
+
+
 
 ```{r}
-
 ggplot(mapping = aes(x = date, y = percent)) +
   geom_point(data = na.omit(d_plot)) +
   geom_line(
@@ -41,11 +136,14 @@ ggplot(mapping = aes(x = date, y = percent)) +
     mapping = aes(color = what, linetype = is_forecast)) +
   geom_textvline(
     data = data.frame(
-      date = as.Date('2022-11-30'),
-      label = 'ChatGPT release'
+      date = chat_gpt_release_date,
+      label = paste0('ChatGPT release ', chat_gpt_release_date)
       ),
       mapping = aes(xintercept = date, label = label),
     ) + 
-  ylab("% of Stack Overflow questions that month") + 
+  ylab("% of Stack Overflow questions that month") +
+  theme_bw() +
   ggtitle(paste0("projection of ", tag, " questions on Stack Overflow as a function of training date"))
 ```
+
+
