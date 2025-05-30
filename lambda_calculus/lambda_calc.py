@@ -24,7 +24,7 @@ def _mk_abstraction(*, variable, term):
     assert isinstance(variable, Variable)
     assert isinstance(term, Term)
     return _Abstraction(
-        variable=variable, 
+        variable=variable,
         term=term,
         _hash_val=_combine_hash(variable, term),
     )
@@ -34,16 +34,16 @@ def _mk_composition(*, left, right):
     assert isinstance(left, Term)
     assert isinstance(right, Term)
     return _Composition(
-        left=left, 
+        left=left,
         right=right,
         _hash_val=_combine_hash(left, right),
     )
 
 
-
 @dataclass(frozen=True)
 class Term(ABC):
     """Represent a term in a lambda calculus expression"""
+
     @abstractmethod
     def has_name(self, name: str):
         """Check if name occurs in sub-tree"""
@@ -81,16 +81,16 @@ class Term(ABC):
         new_name_source = NewNameSource(root_node=self)
         e = self
         while True:
-            e, acted = e._normal_order_beta_reduction(
-                new_name_source=new_name_source
-            )
+            e, acted = e._normal_order_beta_reduction(new_name_source=new_name_source)
             if not acted:
                 return e, steps
             else:
                 steps = steps + 1
 
     @abstractmethod
-    def to_latex(self, *, not_expanded: Set | None = None, top_level: bool = False) -> str:
+    def to_latex(
+        self, *, not_expanded: Set | None = None, top_level: bool = False
+    ) -> str:
         """convert to to_latex, no substitutions for not_expanded set"""
         pass
 
@@ -155,11 +155,11 @@ def _lt_helper(a, b) -> bool:
     return None
 
 
-
 @total_ordering
 @dataclass(frozen=True)
 class _Empty(Term):
     """represent empty expression"""
+
     def has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         assert isinstance(name, str)
@@ -205,7 +205,9 @@ class _Empty(Term):
     def __repr__(self, *, need_v: bool = True) -> str:
         return "v(None)"
 
-    def to_latex(self, *, not_expanded: Set | None = None, top_level: bool = False) -> str:
+    def to_latex(
+        self, *, not_expanded: Set | None = None, top_level: bool = False
+    ) -> str:
         return "\\mathbb{\\epsilon}"
 
 
@@ -275,6 +277,7 @@ def vr(*args) -> Term:
 @dataclass(frozen=True)
 class Variable(Term):
     """represent a variable"""
+
     name: str
 
     def __post_init__(self):
@@ -325,7 +328,9 @@ class Variable(Term):
         return self.name < other.name
 
     def __hash__(self):
-        return hash("Variable" + self.name)  # hash NULLed on derived classes that re-define __eq__()
+        return hash(
+            "Variable" + self.name
+        )  # hash NULLed on derived classes that re-define __eq__()
 
     def __str__(self) -> str:
         return self.name
@@ -335,12 +340,15 @@ class Variable(Term):
             return f"v('{self.name}')"
         return f"'{self.name}'"
 
-    def to_latex(self, *, not_expanded: Set | None = None, top_level: bool = False) -> str:
+    def to_latex(
+        self, *, not_expanded: Set | None = None, top_level: bool = False
+    ) -> str:
         return self.name
 
 
 class NewNameSource:
     """build a new name, disjoint from vars"""
+
     root_node: Term
     addnl_terms: Set[str]
     next_index: int
@@ -379,14 +387,14 @@ class NewNameSource:
 @dataclass(frozen=True)
 class _Abstraction(Term):
     """represent (λ(variable).term)"""
-    _hash_val : int
+
+    _hash_val: int
     variable: Variable
     term: Term
 
     def __post_init__(self):
         assert isinstance(self.variable, Variable)
         assert isinstance(self.term, Term)
-
 
     def has_name(self, name: str):
         """Check if name occurs in sub-tree"""
@@ -478,7 +486,9 @@ class _Abstraction(Term):
     def __repr__(self, *, need_v: bool = True) -> str:
         return f"λ[{self.variable.__repr__(need_v=False)}]({self.term.__repr__(need_v=False)})"
 
-    def to_latex(self, *, not_expanded: Set | None = None, top_level: bool = False) -> str:
+    def to_latex(
+        self, *, not_expanded: Set | None = None, top_level: bool = False
+    ) -> str:
         if (not_expanded is None) or (self not in not_expanded):
             try:
                 return latex_repr_map[self]
@@ -494,6 +504,7 @@ class _Abstraction(Term):
 @dataclass(frozen=True)
 class _AbstractionFactory:
     """internal class, build abstractions factories with λ['v']"""
+
     vars: Tuple[Variable, ...]
 
     def __post_init__(self):
@@ -521,6 +532,7 @@ class _AbstractionFactory:
 @dataclass(frozen=True)
 class _AbstractionFactoryFactory:
     """build abstractions with λ['v']('t')"""
+
     def __getitem__(self, index):
         """Support λ['x']('x') notation for lambda calculus abstraction"""
         if isinstance(index, str) or isinstance(index, Variable):
@@ -550,7 +562,8 @@ class _AbstractionFactoryFactory:
 @dataclass(frozen=True)
 class _Composition(Term):
     """define concatenate expression: left right"""
-    _hash_val : int
+
+    _hash_val: int
     left: Term
     right: Term
 
@@ -660,7 +673,9 @@ class _Composition(Term):
             return f"v({l_str}, {r_str})"
         return f"{l_str}, {r_str}"
 
-    def to_latex(self, *, not_expanded: Set | None = None, top_level: bool = False) -> str:
+    def to_latex(
+        self, *, not_expanded: Set | None = None, top_level: bool = False
+    ) -> str:
         if (not_expanded is None) or (self not in not_expanded):
             try:
                 return latex_repr_map[self]
@@ -728,45 +743,49 @@ second = λ["p"]("p", λ["x"](λ["y"]("y")))
 TRUE = λ["x", "y"]("x")
 # FALSE = λxy. y ≡ 0 ≡ λx. I ≡ K I ≡ S K ≡ X (X X)
 FALSE = λ["x", "y"]("y")
-AND = λ['p', 'q']('p', 'q', 'p')
-OR = λ['p', 'q']('p', 'p', 'q')
-NOT = λ['p', 'a', 'b']('p', 'b', 'a')
-XOR = λ['p', 'q']('p', (NOT, 'q'), 'q')
+AND = λ["p", "q"]("p", "q", "p")
+OR = λ["p", "q"]("p", "p", "q")
+NOT = λ["p", "a", "b"]("p", "b", "a")
+XOR = λ["p", "q"]("p", (NOT, "q"), "q")
 # ISZERO = λn. n (λx. FALSE) TRUE
 ISZERO = λ["n"]("n", λ["x"](FALSE), TRUE)
 # Less than or equal to:
-LEQ = λ['m', 'n'](ISZERO, (SUB, 'm', 'n'))
+LEQ = λ["m", "n"](ISZERO, (SUB, "m", "n"))
 # Less than:
-LT = λ['a', 'b'](NOT, (LEQ, 'b', 'a'))
+LT = λ["a", "b"](NOT, (LEQ, "b", "a"))
 # Equal to:
-EQ = λ['m', 'n'](AND, (LEQ, 'm', 'n'), (LEQ, 'n', 'm'))
+EQ = λ["m", "n"](AND, (LEQ, "m", "n"), (LEQ, "n", "m"))
 # Not equal to:
-NEQ = λ['a', 'b'](OR, (NOT, (LEQ, 'a', 'b')), (NOT, (LEQ, 'b', 'a')))
+NEQ = λ["a", "b"](OR, (NOT, (LEQ, "a", "b")), (NOT, (LEQ, "b", "a")))
 # Greater than or equal to:
-GEQ = λ['a', 'b'](LEQ, 'b', 'a')
+GEQ = λ["a", "b"](LEQ, "b", "a")
 # Greater than:
-GT = λ['a', 'b'](NOT, (LEQ, 'a', 'b'))
+GT = λ["a", "b"](NOT, (LEQ, "a", "b"))
 # PAIR x y — create a pair with a car of x and a cdr of y; also called CONS:
-PAIR = λ['x', 'y', 'f']('f', 'x', 'y')
+PAIR = λ["x", "y", "f"]("f", "x", "y")
 # CAR p — get the car of pair p; also called FIRST or HEAD:
-CAR = λ['p']('p', TRUE)
+CAR = λ["p"]("p", TRUE)
 # CDR p — get the cdr of pair p; also called SECOND, TAIL, or REST:
-CDR = λ['p']('p', FALSE)
+CDR = λ["p"]("p", FALSE)
 # The empty list:
-NIL = λ['x'](TRUE)
+NIL = λ["x"](TRUE)
 # NULL p — evaluates to TRUE if p is NIL or to FALSE if p is a normal pair (all other types are undefined):
-isNULL = λ['p']('p', (λ['x', 'y'](FALSE)))
+isNULL = λ["p"]("p", (λ["x", "y"](FALSE)))
 # Division — DIV a b evaluates to a pair of two numbers, a idiv b and a mod b:
-DIV = Y (λ['g', 'q', 'a', 'b'](LT, 'a', 'b', (PAIR, 'q', 'a'), ('g', (SUCC, 'q'), (SUB, 'a', 'b'), 'b'))) | N(0)
-MOD = λ['a', 'b'](CDR, (DIV, 'a', 'b'))
-GCD = λ['g', 'm', 'n'](
-    LEQ, 'm', 'n', ('g', 'n', 'm'), ('g', 'm', 'n')) | (Y, λ['g', 'x', 'y'](ISZERO, 'y', 'x', ('g', 'y', (MOD, 'x', 'y'))))
+DIV = Y(
+    λ["g", "q", "a", "b"](
+        LT, "a", "b", (PAIR, "q", "a"), ("g", (SUCC, "q"), (SUB, "a", "b"), "b")
+    )
+) | N(0)
+MOD = λ["a", "b"](CDR, (DIV, "a", "b"))
+GCD = λ["g", "m", "n"](LEQ, "m", "n", ("g", "n", "m"), ("g", "m", "n")) | (
+    Y,
+    λ["g", "x", "y"](ISZERO, "y", "x", ("g", "y", (MOD, "x", "y"))),
+)
 
 
 # FACTORIAL	=	Y (λgx. ISZERO x 1 (MULT x (g (PRED x))))
-FACTORIALstep = λ["g", "x"](
-    ISZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x")))
-)
+FACTORIALstep = λ["g", "x"](ISZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x"))))
 
 
 # define a number of presentation aliases
@@ -861,11 +880,12 @@ def r_convert_deBuijn_codes(e: Term, *, variables: List[Variable]) -> Term:
     if isinstance(e, _Abstraction):
         variables.append(e.variable)
         result = _mk_abstraction(
-            variable=e.variable, 
-            term=r_convert_deBuijn_codes(e.term, variables=variables))
+            variable=e.variable,
+            term=r_convert_deBuijn_codes(e.term, variables=variables),
+        )
         variables.pop()
     elif isinstance(e, Variable):
-        dbcode = int(re.sub(r'\D', '', e.name))
+        dbcode = int(re.sub(r"\D", "", e.name))
         idx = len(variables) - dbcode
         assert (idx >= 0) and (idx < len(variables))
         result = variables[idx]
@@ -874,7 +894,8 @@ def r_convert_deBuijn_codes(e: Term, *, variables: List[Variable]) -> Term:
     elif isinstance(e, _Composition):
         result = _mk_composition(
             left=r_convert_deBuijn_codes(e.left, variables=variables),
-            right=r_convert_deBuijn_codes(e.right, variables=variables))
+            right=r_convert_deBuijn_codes(e.right, variables=variables),
+        )
     else:
         raise ValueError("unexpected type")
     if result is None:
@@ -891,22 +912,22 @@ def read_zero_one_code(code: str) -> Term:
         blc(M N) = 01 blc(M) blc(N)
         blc(i) = [1]*i0   ( De Bruijn indices )
     """
-    code = re.sub(r'[^01]', '', code)
+    code = re.sub(r"[^01]", "", code)
     overall_result = None
     next_index = 0
     next_name_index = 0
     assert len(code) >= 2
-    assert [c in ('0', '1') for c in code]  # double check
+    assert [c in ("0", "1") for c in code]  # double check
 
     def consume_term() -> Term:
         nonlocal next_index
         nonlocal next_name_index
         nonlocal code
         assert next_index <= len(code) - 2
-        if code[next_index] == '0':
+        if code[next_index] == "0":
             c = code[next_index + 1]
             next_index = next_index + 2
-            if c == '0':
+            if c == "0":
                 var = Variable(name=f"x{next_name_index}")
                 next_name_index = next_name_index + 1
                 term = consume_term()
@@ -917,13 +938,13 @@ def read_zero_one_code(code: str) -> Term:
                 result = _mk_composition(left=left, right=right)
         else:
             depth_count = 0
-            while code[next_index] == '1':
+            while code[next_index] == "1":
                 depth_count = depth_count + 1
                 next_index = next_index + 1
             next_index = next_index + 1
-            result = Variable(name=f'b{depth_count}')
+            result = Variable(name=f"b{depth_count}")
         return result
-    
+
     while next_index < len(code):
         term = consume_term()
         if overall_result is None:

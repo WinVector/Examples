@@ -6,7 +6,7 @@ def check_expr(expr: Term, *, expect: str | Term | None = None):
     assert isinstance(expr, Term)
     assert expr == expr
     assert not expr < expr
-    assert expr != expr | v('a')
+    assert expr != expr | v("a")
     source = repr(expr)
     parsed = parse_l(source)
     assert isinstance(parsed, Term)
@@ -23,26 +23,11 @@ def check_expr(expr: Term, *, expect: str | Term | None = None):
 
 
 def test_bar_parens():
-    check_expr(
-        v(('a')),
-        expect=v('a')
-    )
-    check_expr(
-        v(('a', 'b')),
-        expect=v('a', 'b')
-    )
-    check_expr(
-        v('a') | 'b',
-        expect=v('a', 'b')
-    )
-    check_expr(
-        v(('a', 'b', 'c')),
-        expect=v('a', 'b', 'c')
-    )
-    check_expr(
-        v('a') | 'b' | 'c',
-        expect=v('a', 'b', 'c')
-    )
+    check_expr(v(("a")), expect=v("a"))
+    check_expr(v(("a", "b")), expect=v("a", "b"))
+    check_expr(v("a") | "b", expect=v("a", "b"))
+    check_expr(v(("a", "b", "c")), expect=v("a", "b", "c"))
+    check_expr(v("a") | "b" | "c", expect=v("a", "b", "c"))
 
 
 def test_lc():
@@ -54,10 +39,9 @@ def test_lc():
 
 def test_call():
     check_expr(
-        λ["x"]("x")('a', 'b', 'c'),
-        expect=λ["x"]("x") | (v('a') | v('b') | v('c'))
+        λ["x"]("x")("a", "b", "c"), expect=λ["x"]("x") | (v("a") | v("b") | v("c"))
     )
-    assert  λ["x"]("x")('a', 'b', 'c') != λ["x"]("x") | v('a') | v('b') | v('c')
+    assert λ["x"]("x")("a", "b", "c") != λ["x"]("x") | v("a") | v("b") | v("c")
 
 
 def test_rc():
@@ -159,35 +143,35 @@ def test_nf():
     for expr in [TRUE, FALSE, ISZERO]:
         check_expr(expr.nf()[0], expect=expr)
 
+
 def test_db_decoding():
     # https://en.wikipedia.org/wiki/De_Bruijn_index
-    example = λ['x1'](λ['x2']('v1', λ['x3']('v1')), λ['x4']('v2', 'v1'))
+    example = λ["x1"](λ["x2"]("v1", λ["x3"]("v1")), λ["x4"]("v2", "v1"))
     check_expr(
         r_convert_deBuijn_codes(example, variables=[]),
-        expect=λ['x1'](λ['x2']('x2', λ['x3']('x3')), λ['x4']('x1', 'x4'))
+        expect=λ["x1"](λ["x2"]("x2", λ["x3"]("x3")), λ["x4"]("x1", "x4")),
     )
+
 
 def test_binary_parse():
     # https://tromp.github.io/cl/Binary_lambda_calculus.html#binary_io
     example = "00 00 00 01 01 10 1110 110"
     parsed = read_zero_one_code(example)
-    check_expr(
-        parsed,
-        expect=λ['x0'](λ['x1'](λ['x2'](('x2', 'x0'), 'x1')))
-    )
+    check_expr(parsed, expect=λ["x0"](λ["x1"](λ["x2"](("x2", "x0"), "x1"))))
+
 
 def test_nf_identity():
     # u has a beta reduction, but it takes u to u
-    u = λ['x']('x', 'x') | λ['x']('x', 'x')
+    u = λ["x"]("x", "x") | λ["x"]("x", "x")
     nf, steps = u.nf()
     check_expr(u, expect=nf)
 
 
 def test_skip_identity_transform():
     # skip past trivial beta reduction to on later term
-    u = λ['z'](λ['x']('x', 'x') | λ['x']('x', 'x') | (λ['x']('x') | 'q'))
+    u = λ["z"](λ["x"]("x", "x") | λ["x"]("x", "x") | (λ["x"]("x") | "q"))
     nf, steps = u.nf()
-    check_expr(nf, expect=λ['z']((λ['x']('x', 'x'), λ['x']('x', 'x')), 'q'))
+    check_expr(nf, expect=λ["z"]((λ["x"]("x", "x"), λ["x"]("x", "x")), "q"))
 
 
 def test_binary_parse_u():
@@ -201,9 +185,10 @@ def test_binary_parse_u():
     p = read_zero_one_code(machine_U)
     check_expr(p)
 
+
 def test_binary_parse_lambda():
-# https://esolangs.org/wiki/Binary_lambda_calculus#self-interpreter
-# self-iterpreter
+    # https://esolangs.org/wiki/Binary_lambda_calculus#self-interpreter
+    # self-iterpreter
     self_interpreter = """
   01010001
    10100000
@@ -231,7 +216,7 @@ def test_binary_parse_lambda():
 
 
 def test_binary_parse_prime():
-# https://esolangs.org/wiki/Binary_lambda_calculus#self-interpreter
+    # https://esolangs.org/wiki/Binary_lambda_calculus#self-interpreter
     prime_sieve = """
 000100011001100101000110100
  000000101100000100100010101
@@ -246,11 +231,9 @@ def test_binary_parse_prime():
     p = read_zero_one_code(prime_sieve)
     check_expr(p)
 
+
 def test_blinker():
-    a = λ['x', 'y']('y', 'x', 'y')
+    a = λ["x", "y"]("y", "x", "y")
     blinker = a | a | a
     assert blinker != blinker.r()
-    check_expr(
-        blinker.r().r(),
-        expect=blinker
-    )
+    check_expr(blinker.r().r(), expect=blinker)
