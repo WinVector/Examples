@@ -915,8 +915,8 @@ def load_common_aliases():
     def_text_symbol(PRED, "PRED")
     def_text_symbol(Y, "Y")
     def_text_symbol(pair, "pair")
-    def_text_symbol(first, "1st")
-    def_text_symbol(second, "2nd")
+    def_text_symbol(first, "first")
+    def_text_symbol(second, "second")
     def_text_symbol(TRUE, "TRUE")
     def_text_symbol(FALSE, "FALSE")
     def_text_symbol(AND, "AND")
@@ -935,7 +935,7 @@ def load_common_aliases():
     def_text_symbol(CDR, "CDR")
     def_text_symbol(NIL, "NIL")
     def_text_symbol(isNULL, "isNULL")
-    def_text_symbol(FACTORIALstep, "!step")
+    def_text_symbol(FACTORIALstep, "FACTORIALstep")
     def_text_symbol(DIV, "DIV")
     def_text_symbol(MOD, "MOD")
     def_text_symbol(GCD, "GCD")
@@ -953,6 +953,7 @@ def parse_l(src: str) -> Term:
             "λ": λ,
             "v": v,
             "vr": vr,
+            "_z": _z,
         },
     }  # Disable built-in functions and supply some definitions
     for key, val in text_aliases.items():
