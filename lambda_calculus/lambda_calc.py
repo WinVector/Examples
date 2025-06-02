@@ -526,6 +526,7 @@ class _Abstraction(Term):
         )
 
     def _beta_reduce(self, right, *, new_name_source: "NewNameSource") -> Term:
+        assert self.variable.name != ""
         right = v(right)
         assert isinstance(right, Term)
         return self.term._capture_avoiding_substitution(
