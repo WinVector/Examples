@@ -1,4 +1,5 @@
 from lambda_calc import *
+from lambda_calc import _r_convert_deBuijn_codes
 
 
 def check_expr(expr: Term, *, expect: str | Term | None = None):
@@ -146,9 +147,9 @@ def test_nf():
 
 def test_db_decoding():
     # https://en.wikipedia.org/wiki/De_Bruijn_index
-    example = λ["x1"](λ["x2"]("v1", λ["x3"]("v1")), λ["x4"]("v2", "v1"))
+    example = λ(λ(1, λ(1)), λ(2, 1))
     check_expr(
-        r_convert_deBuijn_codes(example, variables=[]),
+        _r_convert_deBuijn_codes(example, variables=[], next_variable_index=[1]),
         expect=λ["x1"](λ["x2"]("x2", λ["x3"]("x3")), λ["x4"]("x1", "x4")),
     )
 
@@ -157,7 +158,7 @@ def test_binary_parse():
     # https://tromp.github.io/cl/Binary_lambda_calculus.html#binary_io
     example = "00 00 00 01 01 10 1110 110"
     parsed = read_zero_one_code(example)
-    check_expr(parsed, expect=λ["x0"](λ["x1"](λ["x2"](("x2", "x0"), "x1"))))
+    check_expr(parsed, expect=λ["x1"](λ["x2"](λ["x3"](("x3", "x1"), "x2"))))
 
 
 def test_nf_identity():

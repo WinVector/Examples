@@ -219,7 +219,12 @@ def _v(x) -> Term:
     """Collect structure to value (left associative)"""
     if x is None:
         return ε
+    if isinstance(x, int):
+        return DeBruijnIndex(x)
     if isinstance(x, str):
+        x = x.strip()
+        if x.isdecimal():
+            return DeBruijnIndex(index=x)
         return Variable(name=x)
     if isinstance(x, Term):
         return x
@@ -248,7 +253,12 @@ def _vr(x) -> Term:
     """Collect structure to value (right associative)"""
     if x is None:
         return ε
+    if isinstance(x, int):
+        return DeBruijnIndex(x)
     if isinstance(x, str):
+        x = x.strip()
+        if x.isdecimal():
+            return DeBruijnIndex(index=x)
         return Variable(name=x)
     if isinstance(x, Term):
         return x
@@ -282,8 +292,7 @@ class Variable(Term):
 
     def __post_init__(self):
         assert isinstance(self.name, str)
-        # not as string as isidentifier()
-        assert len(self.name) > 0
+        # not as strict as isidentifier()
         assert not any(char in string.whitespace for char in self.name)
         assert not any(char in "'\"().[];|+-*/%\\λΛε \n" for char in self.name)
 
@@ -344,6 +353,73 @@ class Variable(Term):
         self, *, not_expanded: Set | None = None, top_level: bool = False
     ) -> str:
         return self.name
+
+
+_z = Variable("")
+
+
+@total_ordering
+@dataclass(frozen=True)
+class DeBruijnIndex(Term):
+    """represent a variable reference"""
+
+    index: int
+
+    def __post_init__(self):
+        assert isinstance(self.index, int)
+        assert self.index >= 1
+
+    def has_name(self, name: str):
+        """Check if name occurs in sub-tree"""
+        assert isinstance(name, str)
+        return False
+
+    def has_free_name(self, name: str):
+        """Check if name occurs free in sub-tree"""
+        assert isinstance(name, str)
+        return False
+
+    def _normal_order_beta_reduction(
+        self, *, new_name_source: "NewNameSource"
+    ) -> Tuple["Term", bool]:
+        return self, False
+
+    def _capture_avoiding_substitution(
+        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
+    ) -> "Term":
+        assert isinstance(var, Variable)
+        assert isinstance(t, Term)
+        return self
+
+    def __eq__(self, other) -> bool:
+        e_v = _eq_helper(self, other)
+        if e_v is not None:
+            return e_v
+        # now know same type
+        return self.index == other.index
+
+    def __lt__(self, other) -> bool:
+        l_v = _lt_helper(self, other)
+        if l_v is not None:
+            return l_v
+        # now know same type
+        return self.index < other.index
+
+    def __hash__(self):
+        return self.index  # hash NULLed on derived classes that re-define __eq__()
+
+    def __str__(self) -> str:
+        return str(self.index)
+
+    def __repr__(self, *, need_v: bool = True) -> str:
+        if need_v:
+            return f"v({self.index})"
+        return f"{self.index}"
+
+    def to_latex(
+        self, *, not_expanded: Set | None = None, top_level: bool = False
+    ) -> str:
+        return self.index
 
 
 class NewNameSource:
@@ -481,9 +557,13 @@ class _Abstraction(Term):
             return string_repr_map[self]
         except KeyError:
             pass
+        if self.variable.name == "":
+            return "(λ" + " " + str(self.term) + ")"
         return "(λ" + str(self.variable) + " . " + str(self.term) + ")"
 
     def __repr__(self, *, need_v: bool = True) -> str:
+        if self.variable.name == "":
+            return f"λ({self.term.__repr__(need_v=False)})"
         return f"λ[{self.variable.__repr__(need_v=False)}]({self.term.__repr__(need_v=False)})"
 
     def to_latex(
@@ -496,9 +576,13 @@ class _Abstraction(Term):
                 pass
         s1 = self.variable.to_latex(not_expanded=not_expanded, top_level=False)
         s2 = self.term.to_latex(not_expanded=not_expanded, top_level=False)
-        if top_level:
-            return f"\\lambda \\; {s1} \\;.\\; {s2}"
-        return f"( \\lambda \\; {s1} \\;.\\; {s2} )"
+        if self.variable.name == "":
+            res = f"\\lambda \\; {s2}"
+        else:
+            res = f"\\lambda \\; {s1} \\;.\\; {s2}"
+        if not top_level:
+            res = "( " + res + " )"
+        return res
 
 
 @dataclass(frozen=True)
@@ -546,6 +630,11 @@ class _AbstractionFactoryFactory:
             names.add(val.name)
         assert len(vars) == len(names)
         return _AbstractionFactory(vars)
+
+    def __call__(self, *args) -> "_Abstraction":
+        """Support λ(1) De Bruijn index notation"""
+        t = v(args)
+        return _mk_abstraction(variable=_z, term=t)
 
     def __str__(self) -> str:
         return "λ"
@@ -874,27 +963,29 @@ def parse_l(src: str) -> Term:
     return res
 
 
-def r_convert_deBuijn_codes(e: Term, *, variables: List[Variable]) -> Term:
+def _r_convert_deBuijn_codes(e: Term, *, variables: List[Variable], next_variable_index: List[int]) -> Term:
     assert isinstance(e, Term)
     result = None
     if isinstance(e, _Abstraction):
-        variables.append(e.variable)
+        assert e.variable.name == ""
+        new_var = Variable(name=f"x{next_variable_index[0]}")
+        variables.append(new_var)
+        next_variable_index[0] = next_variable_index[0] + 1
         result = _mk_abstraction(
-            variable=e.variable,
-            term=r_convert_deBuijn_codes(e.term, variables=variables),
+            variable=new_var,
+            term=_r_convert_deBuijn_codes(e.term, variables=variables, next_variable_index=next_variable_index),
         )
         variables.pop()
-    elif isinstance(e, Variable):
-        dbcode = int(re.sub(r"\D", "", e.name))
-        idx = len(variables) - dbcode
+    elif isinstance(e, DeBruijnIndex):
+        idx = len(variables) - e.index
         assert (idx >= 0) and (idx < len(variables))
         result = variables[idx]
     elif isinstance(e, _Empty):
         result = e
     elif isinstance(e, _Composition):
         result = _mk_composition(
-            left=r_convert_deBuijn_codes(e.left, variables=variables),
-            right=r_convert_deBuijn_codes(e.right, variables=variables),
+            left=_r_convert_deBuijn_codes(e.left, variables=variables, next_variable_index=next_variable_index),
+            right=_r_convert_deBuijn_codes(e.right, variables=variables, next_variable_index=next_variable_index),
         )
     else:
         raise ValueError("unexpected type")
@@ -915,34 +1006,33 @@ def read_zero_one_code(code: str) -> Term:
     code = re.sub(r"[^01]", "", code)
     overall_result = None
     next_index = 0
-    next_name_index = 0
     assert len(code) >= 2
     assert [c in ("0", "1") for c in code]  # double check
 
     def consume_term() -> Term:
         nonlocal next_index
-        nonlocal next_name_index
         nonlocal code
         assert next_index <= len(code) - 2
         if code[next_index] == "0":
             c = code[next_index + 1]
             next_index = next_index + 2
             if c == "0":
-                var = Variable(name=f"x{next_name_index}")
-                next_name_index = next_name_index + 1
+                # abstraction
                 term = consume_term()
-                result = _mk_abstraction(variable=var, term=term)
+                result = _mk_abstraction(variable=_z, term=term)
             else:
+                # composition
                 left = consume_term()
                 right = consume_term()
                 result = _mk_composition(left=left, right=right)
         else:
+            # starts with 1, De Bruijn Index
             depth_count = 0
             while code[next_index] == "1":
                 depth_count = depth_count + 1
                 next_index = next_index + 1
             next_index = next_index + 1
-            result = Variable(name=f"b{depth_count}")
+            result = DeBruijnIndex(index=depth_count)
         return result
 
     while next_index < len(code):
@@ -953,5 +1043,5 @@ def read_zero_one_code(code: str) -> Term:
             overall_result = _mk_composition(left=overall_result, right=term)
     assert next_index == len(code)
     assert isinstance(overall_result, Term)
-    converted = r_convert_deBuijn_codes(overall_result, variables=[])
+    converted = _r_convert_deBuijn_codes(overall_result, variables=[], next_variable_index=[1])
     return converted
