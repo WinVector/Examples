@@ -45,12 +45,12 @@ class Term(ABC):
     """Represent a term in a lambda calculus expression"""
 
     @abstractmethod
-    def has_name(self, name: str):
+    def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         pass
 
     @abstractmethod
-    def has_free_name(self, name: str):
+    def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
         pass
 
@@ -160,12 +160,12 @@ def _lt_helper(a, b) -> bool:
 class _Empty(Term):
     """represent empty expression"""
 
-    def has_name(self, name: str):
+    def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         assert isinstance(name, str)
         return False
 
-    def has_free_name(self, name: str):
+    def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
         assert isinstance(name, str)
         return False
@@ -296,12 +296,12 @@ class Variable(Term):
         assert not any(char in string.whitespace for char in self.name)
         assert not any(char in "'\"().[];|+-*/%\\λΛε \n" for char in self.name)
 
-    def has_name(self, name: str):
+    def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         assert isinstance(name, str)
         return name == self.name
 
-    def has_free_name(self, name: str):
+    def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
         assert isinstance(name, str)
         return name == self.name
@@ -369,12 +369,12 @@ class DeBruijnIndex(Term):
         assert isinstance(self.index, int)
         assert self.index >= 1
 
-    def has_name(self, name: str):
+    def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         assert isinstance(name, str)
         return False
 
-    def has_free_name(self, name: str):
+    def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
         assert isinstance(name, str)
         return False
@@ -452,7 +452,7 @@ class NewNameSource:
         while True:
             new_name = f"{self.prefix}{self.next_index}"
             if (new_name not in self.addnl_terms) and (
-                (self.root_node is None) or (not self.root_node.has_name(new_name))
+                (self.root_node is None) or (not self.root_node._has_name(new_name))
             ):
                 self.addnl_terms.add(new_name)
                 return new_name
@@ -472,19 +472,19 @@ class _Abstraction(Term):
         assert isinstance(self.variable, Variable)
         assert isinstance(self.term, Term)
 
-    def has_name(self, name: str):
+    def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         assert isinstance(name, str)
-        if self.variable.has_name(name):
+        if self.variable._has_name(name):
             return True
-        return self.term.has_name(name)
+        return self.term._has_name(name)
 
-    def has_free_name(self, name: str):
+    def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
         assert isinstance(name, str)
-        if self.variable.has_free_name(name):
+        if self.variable._has_free_name(name):
             return False  # shields name
-        return self.term.has_free_name(name)
+        return self.term._has_free_name(name)
 
     def _normal_order_beta_reduction(
         self, *, new_name_source: "NewNameSource"
@@ -506,9 +506,9 @@ class _Abstraction(Term):
             return self  # no op
         if var.name == self.variable.name:
             return self  # variable isn't free
-        if not self.term.has_name(var.name):
+        if not self.term._has_name(var.name):
             return self  # symbol not present, no substitution needed; some speedup and
-        if t.has_free_name(self.variable.name):  # freshness condition violation
+        if t._has_free_name(self.variable.name):  # freshness condition violation
             new_var = Variable(name=new_name_source.new_name())  # establish freshness
             nt = _mk_abstraction(
                 variable=new_var,
@@ -663,19 +663,19 @@ class _Composition(Term):
         assert not isinstance(self.left, _Empty)
         assert not isinstance(self.right, _Empty)
 
-    def has_name(self, name: str):
+    def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
         assert isinstance(name, str)
-        if self.left.has_name(name):
+        if self.left._has_name(name):
             return True
-        return self.right.has_name(name)
+        return self.right._has_name(name)
 
-    def has_free_name(self, name: str):
+    def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
         assert isinstance(name, str)
-        if self.left.has_free_name(name):
+        if self.left._has_free_name(name):
             return True
-        return self.right.has_free_name(name)
+        return self.right._has_free_name(name)
 
     def _normal_order_beta_reduction(
         self, *, new_name_source: "NewNameSource"
