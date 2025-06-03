@@ -423,7 +423,10 @@ class _Abstraction(Term):
         )
         if not acted:
             return self, False
-        return _mk_abstraction(variable=self.variable, term=sub), True
+        result = _mk_abstraction(variable=self.variable, term=sub)
+        if result == self:
+            return self, False
+        return result, True
 
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
@@ -613,6 +616,7 @@ class _Composition(Term):
                 new_name_source=new_name_source
             )
             if left_triggered:
+                # don't apply to right, already have a transform on left
                 right, right_triggered = self.right, False
             else:
                 right, right_triggered = self.right._normal_order_beta_reduction(
@@ -621,7 +625,10 @@ class _Composition(Term):
             if not (left_triggered or right_triggered):
                 return self, False
             res = _mk_composition(left=left, right=right)
-            return res, True  # can't be equal by nesting
+            if res == self:
+                # "just in case", is this actually a possible outcome?
+                return self, False
+            return res, True
 
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
