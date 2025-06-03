@@ -11,6 +11,9 @@ from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
 from IPython.display import display, HTML
 
+from TransitiveCache import TransitiveCache
+
+
 
 string_repr_map = dict()
 latex_repr_map = dict()
@@ -60,28 +63,38 @@ class Term(ABC):
 
     @abstractmethod
     def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
+        self, *, new_name_source: "NewNameSource", tc: TransitiveCache | None
     ) -> Tuple["Term", bool]:
         """internal method for reduction step, needs list of all names to avoid"""
 
-    def r(self) -> "Term":
+    def r(self, *, use_cache: bool = False) -> "Term":
         """run one beta reduction step in normal order (top left FIRST)"""
+        tc = None
+        if use_cache:
+            tc = TransitiveCache()
         red, _ = self._normal_order_beta_reduction(
-            new_name_source=NewNameSource(root_node=self)
+            new_name_source=NewNameSource(root_node=self),
+            tc=tc,
         )
         return red
 
-    def nf(self) -> Tuple["Term", int]:
+    def nf(self, *, use_cache: bool = False) -> Tuple["Term", int]:
         """reduce to normal form"""
+        tc = None
+        if use_cache:
+            tc = TransitiveCache()
         steps = 0
         new_name_source = NewNameSource(root_node=self)
+        seen = set()
         e = self
         while True:
-            e, acted = e._normal_order_beta_reduction(new_name_source=new_name_source)
+            if e in seen:
+                raise ValueError("cycle")
+            seen.add(e)
+            e, acted = e._normal_order_beta_reduction(new_name_source=new_name_source, tc=tc)
             if not acted:
                 return e, steps
-            else:
-                steps = steps + 1
+            steps = steps + 1
 
     @abstractmethod
     def to_latex(
@@ -252,7 +265,7 @@ class _Variable(Term):
         return self
 
     def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
+        self, *, new_name_source: "NewNameSource", tc: TransitiveCache | None
     ) -> Tuple["Term", bool]:
         return self, False
 
@@ -317,7 +330,7 @@ class _DeBruijnIndex(Term):
         raise ValueError("invalid _DeBruijnIndex call")
 
     def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
+        self, *, new_name_source: "NewNameSource", tc: TransitiveCache | None
     ) -> Tuple["Term", bool]:
         raise ValueError("invalid _DeBruijnIndex call")
 
@@ -445,16 +458,26 @@ class _Abstraction(Term):
         )
     
     def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
+        self, *, new_name_source: "NewNameSource", tc: TransitiveCache | None
     ) -> Tuple["Term", bool]:
+        # try cached
+        if (tc is not None) and (self in tc):
+            res = tc.lookup_result(self)
+            assert res is not None
+            return res, res!=self
         # needed for SUCC | N(0) == N(1)
         sub, acted = self.term._normal_order_beta_reduction(
-            new_name_source=new_name_source
+            new_name_source=new_name_source,
+            tc=tc
         )
         if not acted:
+            if tc is not None:
+                tc.store_transition(self, self)
             return self, False
         result = _mk_abstraction(variable=self.variable, term=sub)
         assert result != self
+        if tc is not None:
+            tc.store_transition(self, result)
         return result, True
 
     def __eq__(self, other) -> bool:
@@ -616,8 +639,13 @@ class _Composition(Term):
         return _mk_composition(left=left, right=right)
 
     def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
+        self, *, new_name_source: "NewNameSource", tc: TransitiveCache | None
     ) -> Tuple["Term", bool]:
+        # try cached
+        if (tc is not None) and (self in tc):
+            res = tc.lookup_result(self)
+            assert res is not None
+            return res, res!=self
         # first try top most application
         if isinstance(self.left, _Abstraction):
             assert self.left.variable.name != ""
@@ -625,22 +653,30 @@ class _Composition(Term):
                 var=self.left.variable, t=self.right, new_name_source=new_name_source
             )
             if res != self:
+                if tc is not None:
+                    tc.store_transition(self, res)
                 return res, True
         # now try left to right application
         left, left_triggered = self.left._normal_order_beta_reduction(
-            new_name_source=new_name_source
+            new_name_source=new_name_source,
+            tc=tc
         )
         if left_triggered:
             # don't apply to right, already have a transform on left
             right, right_triggered = self.right, False
         else:
             right, right_triggered = self.right._normal_order_beta_reduction(
-                new_name_source=new_name_source
+                new_name_source=new_name_source,
+                tc=tc
             )
         if not (left_triggered or right_triggered):
+            if tc is not None:
+                tc.store_transition(self, self)
             return self, False
         res = _mk_composition(left=left, right=right)
         assert res != self
+        if tc is not None:
+            tc.store_transition(self, res)
         return res, True
 
     def __eq__(self, other) -> bool:
