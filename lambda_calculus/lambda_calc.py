@@ -21,7 +21,7 @@ def _combine_hash(a, b) -> int:
 
 
 def _mk_abstraction(*, variable, term):
-    assert isinstance(variable, Variable)
+    assert isinstance(variable, _Variable)
     assert isinstance(term, Term)
     return _Abstraction(
         variable=variable,
@@ -54,7 +54,7 @@ class Term(ABC):
 
     @abstractmethod
     def _capture_avoiding_substitution(
-        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
+        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
         """Apply capture avoiding substitution var replaced with t (renaming as needed, needs list of all names to avoid)"""
 
@@ -96,19 +96,11 @@ class Term(ABC):
     def __or__(self, other) -> "Term":
         """concatenate/compose"""
         other = v(other)
-        if (self is None) or isinstance(self, _Empty):
-            return other
-        if isinstance(other, _Empty):
-            return self
         return _mk_composition(left=self, right=other)
 
     def __ror__(self, other) -> "Term":
         """concatenate/compose"""
         other = v(other)
-        if (self is None) or isinstance(self, _Empty):
-            return other
-        if isinstance(other, _Empty):
-            return self
         return _mk_composition(left=other, right=self)
 
     def __call__(self, *args) -> "_Composition":
@@ -150,77 +142,17 @@ def _lt_helper(a, b) -> bool:
     return None
 
 
-@total_ordering
-@dataclass(frozen=True)
-class _Empty(Term):
-    """represent empty expression"""
-
-    def _has_name(self, name: str):
-        """Check if name occurs in sub-tree"""
-        assert isinstance(name, str)
-        return False
-
-    def _has_free_name(self, name: str):
-        """Check if name occurs free in sub-tree"""
-        assert isinstance(name, str)
-        return False
-
-    def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
-    ) -> Tuple["Term", bool]:
-        return self, False
-
-    def _capture_avoiding_substitution(
-        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
-    ) -> "Term":
-        assert isinstance(var, Variable)
-        assert isinstance(t, Term)
-        return self
-
-    def __eq__(self, other) -> bool:
-        e_v = _eq_helper(self, other)
-        if e_v is not None:
-            return e_v
-        # now know same type
-        return True
-
-    def __lt__(self, other) -> bool:
-        l_v = _lt_helper(self, other)
-        if l_v is not None:
-            return l_v
-        # now know same type
-        return False
-
-    def __hash__(self):
-        return 9859541  # hash NULLed on derived classes that re-define __eq__()
-
-    def __str__(self) -> str:
-        return "ε"
-
-    def __repr__(self, *, need_v: bool = True) -> str:
-        return "v(None)"
-
-    def to_latex(
-        self, *, not_expanded: Set | None = None, top_level: bool = False
-    ) -> str:
-        return "\\mathbb{\\epsilon}"
-
-
-# canonical empty term, may not need at user level
-ε = _Empty()
-
-
 def _v(x) -> Term:
     """Collect structure to value (left associative)"""
     if x is None:
-        return ε
+        raise ValueError("value should not be None")
     if isinstance(x, int):
-        return DeBruijnIndex(x)
+        return _DeBruijnIndex(x)
     if isinstance(x, str):
         x = x.strip()
         if x.isdecimal():
-            return DeBruijnIndex(index=x)
-        return Variable(name=x)
+            return _DeBruijnIndex(index=x)
+        return _Variable(name=x)
     if isinstance(x, Term):
         return x
     # iterable cases
@@ -228,14 +160,12 @@ def _v(x) -> Term:
     for xi in x:
         if xi is not None:
             xi = _v(xi)
-            if not isinstance(xi, _Empty):
-                if res is None:
-                    res = xi
-                else:
-                    res = _mk_composition(left=res, right=xi)
-    if res is None:
-        return ε
-    assert isinstance(res, Term)
+            if res is None:
+                res = xi
+            else:
+                res = _mk_composition(left=res, right=xi)
+    if not isinstance(res, Term):
+        raise ValueError("empty value list")
     return res
 
 
@@ -245,25 +175,25 @@ def v(*args) -> Term:
 
 
 def idx(x) -> Term:
-    """Convert to DeBruijnIndex"""
+    """Convert to _DeBruijnIndex"""
     if isinstance(x, int):
-        return DeBruijnIndex(x)
+        return _DeBruijnIndex(x)
     if isinstance(x, str):
-        return DeBruijnIndex(int(x))
+        return _DeBruijnIndex(int(x))
     raise(ValueError("unexpected type"))
 
 
 def _vr(x) -> Term:
     """Collect structure to value (right associative)"""
     if x is None:
-        return ε
+        raise ValueError("value should not be None")
     if isinstance(x, int):
-        return DeBruijnIndex(x)
+        return _DeBruijnIndex(x)
     if isinstance(x, str):
         x = x.strip()
         if x.isdecimal():
-            return DeBruijnIndex(index=x)
-        return Variable(name=x)
+            return _DeBruijnIndex(index=x)
+        return _Variable(name=x)
     if isinstance(x, Term):
         return x
     # iterable cases
@@ -271,14 +201,12 @@ def _vr(x) -> Term:
     for xi in reversed(x):
         if xi is not None:
             xi = _vr(xi)
-            if not isinstance(xi, _Empty):
-                if res is None:
-                    res = xi
-                else:
-                    res = _mk_composition(left=xi, right=res)
-    if res is None:
-        return ε
-    assert isinstance(res, Term)
+            if res is None:
+                res = xi
+            else:
+                res = _mk_composition(left=xi, right=res)
+    if not isinstance(res, Term):
+        raise ValueError("empty value list")
     return res
 
 
@@ -289,7 +217,7 @@ def vr(*args) -> Term:
 
 @total_ordering
 @dataclass(frozen=True)
-class Variable(Term):
+class _Variable(Term):
     """represent a variable"""
 
     name: str
@@ -316,9 +244,9 @@ class Variable(Term):
         return self, False
 
     def _capture_avoiding_substitution(
-        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
+        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
-        assert isinstance(var, Variable)
+        assert isinstance(var, _Variable)
         assert isinstance(t, Term)
         if var == t:
             return self  # no op
@@ -342,7 +270,7 @@ class Variable(Term):
 
     def __hash__(self):
         return hash(
-            "Variable" + self.name
+            "_Variable" + self.name
         )  # hash NULLed on derived classes that re-define __eq__()
 
     def __str__(self) -> str:
@@ -359,13 +287,13 @@ class Variable(Term):
         return self.name
 
 
-_z = Variable("")
+_z = _Variable("")
 
 
 @total_ordering
 @dataclass(frozen=True)
-class DeBruijnIndex(Term):
-    """represent an index reference"""
+class _DeBruijnIndex(Term):
+    """represent an index reference (not a first class Term)"""
 
     index: int
 
@@ -375,25 +303,21 @@ class DeBruijnIndex(Term):
 
     def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
-        assert isinstance(name, str)
-        return False
+        raise ValueError("invalid _DeBruijnIndex call")
 
     def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
-        assert isinstance(name, str)
-        return False
+        raise ValueError("invalid _DeBruijnIndex call")
 
     def _normal_order_beta_reduction(
         self, *, new_name_source: "NewNameSource"
     ) -> Tuple["Term", bool]:
-        return self, False
+        raise ValueError("invalid _DeBruijnIndex call")
 
     def _capture_avoiding_substitution(
-        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
+        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
-        assert isinstance(var, Variable)
-        assert isinstance(t, Term)
-        return self
+        raise ValueError("invalid _DeBruijnIndex call")
 
     def __eq__(self, other) -> bool:
         e_v = _eq_helper(self, other)
@@ -469,11 +393,11 @@ class _Abstraction(Term):
     """represent (λ(variable).term)"""
 
     _hash_val: int
-    variable: Variable
+    variable: _Variable
     term: Term
 
     def __post_init__(self):
-        assert isinstance(self.variable, Variable)
+        assert isinstance(self.variable, _Variable)
         assert isinstance(self.term, Term)
 
     def _has_name(self, name: str):
@@ -502,9 +426,9 @@ class _Abstraction(Term):
         return _mk_abstraction(variable=self.variable, term=sub), True
 
     def _capture_avoiding_substitution(
-        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
+        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
-        assert isinstance(var, Variable)
+        assert isinstance(var, _Variable)
         assert isinstance(t, Term)
         if var == t:
             return self  # no op
@@ -513,7 +437,7 @@ class _Abstraction(Term):
         if not self.term._has_name(var.name):
             return self  # symbol not present, no substitution needed; some speedup and
         if t._has_free_name(self.variable.name):  # freshness condition violation
-            new_var = Variable(name=new_name_source.new_name())  # establish freshness
+            new_var = _Variable(name=new_name_source.new_name())  # establish freshness
             nt = _mk_abstraction(
                 variable=new_var,
                 term=self.term._capture_avoiding_substitution(
@@ -593,7 +517,7 @@ class _Abstraction(Term):
 class _AbstractionFactory:
     """internal class, build abstractions factories with λ['v']"""
 
-    vars_seen: Tuple[Variable, ...]
+    vars_seen: Tuple[_Variable, ...]
 
     def __post_init__(self):
         assert isinstance(self.vars_seen, Tuple)
@@ -623,14 +547,14 @@ class _AbstractionFactoryFactory:
 
     def __getitem__(self, index):
         """Support λ['x']('x') notation for lambda calculus abstraction"""
-        if isinstance(index, str) or isinstance(index, Variable):
+        if isinstance(index, str) or isinstance(index, _Variable):
             vars_seen = [v(index)]
         else:
             vars_seen = [v(val) for val in index]
         vars_seen = tuple(vars_seen)
         names = set()
         for val in vars_seen:
-            assert isinstance(val, Variable)
+            assert isinstance(val, _Variable)
             names.add(val.name)
         assert len(vars_seen) == len(names)
         return _AbstractionFactory(vars_seen)
@@ -663,9 +587,6 @@ class _Composition(Term):
     def __post_init__(self):
         assert isinstance(self.left, Term)
         assert isinstance(self.right, Term)
-        # insure we are not collecting invisible cruft
-        assert not isinstance(self.left, _Empty)
-        assert not isinstance(self.right, _Empty)
 
     def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
@@ -699,17 +620,13 @@ class _Composition(Term):
                 )
             if not (left_triggered or right_triggered):
                 return self, False
-            if isinstance(left, _Empty):
-                return right, True
-            if isinstance(right, _Empty):
-                return left, True
             res = _mk_composition(left=left, right=right)
-            return res, res != self
+            return res, True  # can't be equal by nesting
 
     def _capture_avoiding_substitution(
-        self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
+        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
-        assert isinstance(var, Variable)
+        assert isinstance(var, _Variable)
         assert isinstance(t, Term)
         if var == t:
             return self  # no op
@@ -719,10 +636,6 @@ class _Composition(Term):
         right = self.right._capture_avoiding_substitution(
             var=var, t=t, new_name_source=new_name_source
         )
-        if isinstance(left, _Empty):
-            return right
-        if isinstance(right, _Empty):
-            return left
         return _mk_composition(left=left, right=right)
 
     def __eq__(self, other) -> bool:
@@ -917,7 +830,6 @@ def load_common_aliases(add_reps: bool = True):
     def_math_symbol(SUB, "SUB", "-", add_reps=add_reps)
     def_math_symbol(MULT, "MULT", "\\times", add_reps=add_reps)
     def_math_symbol(Θ, "Θ", "\\theta", add_reps=add_reps)
-    def_math_symbol(ε, "ε", "\\epsilon", add_reps=add_reps)
     def_text_symbol(SUCC, "SUCC", add_reps=add_reps)
     def_text_symbol(PRED, "PRED", add_reps=add_reps)
     def_text_symbol(Y, "Y", add_reps=add_reps)
@@ -959,7 +871,6 @@ def parse_l(src: str) -> Term:
     assert isinstance(src, str)
     restricted_globals = {
         "__builtins__": {
-            "ε": ε,
             "λ": λ,
             "v": v,
             "vr": vr,
@@ -976,13 +887,13 @@ def parse_l(src: str) -> Term:
     return res
 
 
-def _r_convert_deBruijn_codes(e: Term, *, variables: List[Variable], next_variable_index: List[int]) -> Term:
+def _r_convert_deBruijn_codes(e: Term, *, variables: List[_Variable], next_variable_index: List[int]) -> Term:
     """Convert de Bruijn index coded expression to standard lambda calculus notation"""
     assert isinstance(e, Term)
     result = None
     if isinstance(e, _Abstraction):
         assert e.variable.name == ""
-        new_var = Variable(name=f"x{next_variable_index[0]}")
+        new_var = _Variable(name=f"x{next_variable_index[0]}")
         variables.append(new_var)
         next_variable_index[0] = next_variable_index[0] + 1
         result = _mk_abstraction(
@@ -990,12 +901,10 @@ def _r_convert_deBruijn_codes(e: Term, *, variables: List[Variable], next_variab
             term=_r_convert_deBruijn_codes(e.term, variables=variables, next_variable_index=next_variable_index),
         )
         variables.pop()
-    elif isinstance(e, DeBruijnIndex):
+    elif isinstance(e, _DeBruijnIndex):
         v_idx = len(variables) - e.index
         assert (v_idx >= 0) and (v_idx < len(variables))
         result = variables[v_idx]
-    elif isinstance(e, _Empty):
-        result = e
     elif isinstance(e, _Composition):
         result = _mk_composition(
             left=_r_convert_deBruijn_codes(e.left, variables=variables, next_variable_index=next_variable_index),
@@ -1003,9 +912,8 @@ def _r_convert_deBruijn_codes(e: Term, *, variables: List[Variable], next_variab
         )
     else:
         raise ValueError("unexpected type")
-    if result is None:
-        result = ε
-    assert isinstance(result, Term)
+    if not isinstance(result, Term):
+        raise ValueError("empty value list")
     return result
 
 
@@ -1047,7 +955,7 @@ def read_zero_one_code(code: str) -> Term:
                 depth_count = depth_count + 1
                 next_index = next_index + 1
             next_index = next_index + 1
-            result = DeBruijnIndex(index=depth_count)
+            result = _DeBruijnIndex(index=depth_count)
         return result
 
     while next_index < len(code):

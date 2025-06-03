@@ -1,5 +1,7 @@
+
+import pytest
 from lambda_calc import *
-from lambda_calc import _r_convert_deBruijn_codes
+from lambda_calc import _r_convert_deBruijn_codes, _DeBruijnIndex, _Variable
 
 
 def check_expr(expr: Term, *, expect: str | Term | None = None):
@@ -21,6 +23,15 @@ def check_expr(expr: Term, *, expect: str | Term | None = None):
         check_expr(expect)
         assert expr == expect
         assert repr(expr) == repr(expect)
+
+
+def test_atoms():
+    with pytest.raises(ValueError):
+        v(None)
+    with pytest.raises(ValueError):
+        v(())
+    assert isinstance(v('x'), _Variable)
+    assert isinstance(v(1), _DeBruijnIndex)
 
 
 def test_bar_parens():
