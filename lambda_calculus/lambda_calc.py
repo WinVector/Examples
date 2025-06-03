@@ -244,6 +244,15 @@ def v(*args) -> Term:
     return _v(args)
 
 
+def idx(x) -> Term:
+    """Convert to DeBruijnIndex"""
+    if isinstance(x, int):
+        return DeBruijnIndex(x)
+    if isinstance(x, str):
+        return DeBruijnIndex(int(x))
+    raise(ValueError("unexpected type"))
+
+
 def _vr(x) -> Term:
     """Collect structure to value (right associative)"""
     if x is None:
@@ -356,7 +365,7 @@ _z = Variable("")
 @total_ordering
 @dataclass(frozen=True)
 class DeBruijnIndex(Term):
-    """represent a variable reference"""
+    """represent an index reference"""
 
     index: int
 
@@ -408,7 +417,7 @@ class DeBruijnIndex(Term):
 
     def __repr__(self, *, need_v: bool = True) -> str:
         if need_v:
-            return f"v({self.index})"
+            return f"idx({self.index})"
         return f"{self.index}"
 
     def to_latex(
@@ -954,6 +963,7 @@ def parse_l(src: str) -> Term:
             "λ": λ,
             "v": v,
             "vr": vr,
+            "idx": idx,
             "_z": _z,
             "N": N,
         },
@@ -981,9 +991,9 @@ def _r_convert_deBruijn_codes(e: Term, *, variables: List[Variable], next_variab
         )
         variables.pop()
     elif isinstance(e, DeBruijnIndex):
-        idx = len(variables) - e.index
-        assert (idx >= 0) and (idx < len(variables))
-        result = variables[idx]
+        v_idx = len(variables) - e.index
+        assert (v_idx >= 0) and (v_idx < len(variables))
+        result = variables[v_idx]
     elif isinstance(e, _Empty):
         result = e
     elif isinstance(e, _Composition):
