@@ -1,4 +1,3 @@
-
 import pytest
 from lambda_calc import *
 from lambda_calc import _r_convert_deBruijn_codes, _DeBruijnIndex, _Variable
@@ -30,7 +29,7 @@ def test_atoms():
         v(None)
     with pytest.raises(ValueError):
         v(())
-    assert isinstance(v('x'), _Variable)
+    assert isinstance(v("x"), _Variable)
     assert isinstance(v(1), _DeBruijnIndex)
 
 

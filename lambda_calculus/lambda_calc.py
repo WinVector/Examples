@@ -180,7 +180,7 @@ def idx(x) -> Term:
         return _DeBruijnIndex(x)
     if isinstance(x, str):
         return _DeBruijnIndex(int(x))
-    raise(ValueError("unexpected type"))
+    raise (ValueError("unexpected type"))
 
 
 def _vr(x) -> Term:
@@ -604,11 +604,8 @@ class _Composition(Term):
         if isinstance(self.left, _Abstraction):
             assert self.left.variable.name != ""
             res = self.left.term._capture_avoiding_substitution(
-                var=self.left.variable,
-                t=self.right,
-                new_name_source=new_name_source
+                var=self.left.variable, t=self.right, new_name_source=new_name_source
             )
-            return res, res != self
         else:
             left, left_triggered = self.left._normal_order_beta_reduction(
                 new_name_source=new_name_source
@@ -623,10 +620,10 @@ class _Composition(Term):
             if not (left_triggered or right_triggered):
                 return self, False
             res = _mk_composition(left=left, right=right)
-            if res == self:
-                # "just in case", is this actually a possible outcome?
-                return self, False
-            return res, True
+        if res == self:
+            # "just in case", don't need to worry if we really trigger this
+            return self, False
+        return res, True
 
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
@@ -892,7 +889,9 @@ def parse_l(src: str) -> Term:
     return res
 
 
-def _r_convert_deBruijn_codes(e: Term, *, variables: List[_Variable], next_variable_index: List[int]) -> Term:
+def _r_convert_deBruijn_codes(
+    e: Term, *, variables: List[_Variable], next_variable_index: List[int]
+) -> Term:
     """Convert de Bruijn index coded expression to standard lambda calculus notation"""
     assert isinstance(e, Term)
     result = None
@@ -903,7 +902,9 @@ def _r_convert_deBruijn_codes(e: Term, *, variables: List[_Variable], next_varia
         next_variable_index[0] = next_variable_index[0] + 1
         result = _mk_abstraction(
             variable=new_var,
-            term=_r_convert_deBruijn_codes(e.term, variables=variables, next_variable_index=next_variable_index),
+            term=_r_convert_deBruijn_codes(
+                e.term, variables=variables, next_variable_index=next_variable_index
+            ),
         )
         variables.pop()
     elif isinstance(e, _DeBruijnIndex):
@@ -912,8 +913,12 @@ def _r_convert_deBruijn_codes(e: Term, *, variables: List[_Variable], next_varia
         result = variables[v_idx]
     elif isinstance(e, _Composition):
         result = _mk_composition(
-            left=_r_convert_deBruijn_codes(e.left, variables=variables, next_variable_index=next_variable_index),
-            right=_r_convert_deBruijn_codes(e.right, variables=variables, next_variable_index=next_variable_index),
+            left=_r_convert_deBruijn_codes(
+                e.left, variables=variables, next_variable_index=next_variable_index
+            ),
+            right=_r_convert_deBruijn_codes(
+                e.right, variables=variables, next_variable_index=next_variable_index
+            ),
         )
     else:
         raise ValueError("unexpected type")
@@ -971,5 +976,7 @@ def read_zero_one_code(code: str) -> Term:
             overall_result = _mk_composition(left=overall_result, right=term)
     assert next_index == len(code)
     assert isinstance(overall_result, Term)
-    converted = _r_convert_deBruijn_codes(overall_result, variables=[], next_variable_index=[1])
+    converted = _r_convert_deBruijn_codes(
+        overall_result, variables=[], next_variable_index=[1]
+    )
     return converted
