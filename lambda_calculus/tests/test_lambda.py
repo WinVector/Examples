@@ -1,5 +1,5 @@
 from lambda_calc import *
-from lambda_calc import _r_convert_deBuijn_codes
+from lambda_calc import _r_convert_deBruijn_codes
 
 
 def check_expr(expr: Term, *, expect: str | Term | None = None):
@@ -127,8 +127,8 @@ def test_subtraction():
 
 
 def test_pairs():
-    check_expr(v((first, v((pair, "aaa", "bbb")))).nf()[0], expect=v("aaa"))
-    check_expr(v((second, v((pair, "aaa", "bbb")))).nf()[0], expect=v("bbb"))
+    check_expr(v((FIRST, v((PAIR, "aaa", "bbb")))).nf()[0], expect=v("aaa"))
+    check_expr(v((SECOND, v((PAIR, "aaa", "bbb")))).nf()[0], expect=v("bbb"))
 
 
 def test_avoid_name_collision():
@@ -141,7 +141,7 @@ def test_avoid_name_collision():
 
 def test_nf():
     # value style items should be in normal form, same for conditionals
-    for expr in [TRUE, FALSE, ISZERO]:
+    for expr in [TRUE, FALSE, isZERO]:
         check_expr(expr.nf()[0], expect=expr)
 
 
@@ -149,7 +149,7 @@ def test_db_decoding():
     # https://en.wikipedia.org/wiki/De_Bruijn_index
     example = λ(λ(1, λ(1)), λ(2, 1))
     check_expr(
-        _r_convert_deBuijn_codes(example, variables=[], next_variable_index=[1]),
+        _r_convert_deBruijn_codes(example, variables=[], next_variable_index=[1]),
         expect=λ["x1"](λ["x2"]("x2", λ["x3"]("x3")), λ["x4"]("x1", "x4")),
     )
 

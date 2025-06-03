@@ -9,7 +9,7 @@ import inspect
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import HtmlFormatter
-from IPython.display import display, HTML, Math, Markdown
+from IPython.display import display, HTML
 
 
 string_repr_map = dict()
@@ -47,29 +47,25 @@ class Term(ABC):
     @abstractmethod
     def _has_name(self, name: str):
         """Check if name occurs in sub-tree"""
-        pass
 
     @abstractmethod
     def _has_free_name(self, name: str):
         """Check if name occurs free in sub-tree"""
-        pass
 
     @abstractmethod
     def _capture_avoiding_substitution(
         self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
         """Apply capture avoiding substitution var replaced with t (renaming as needed, needs list of all names to avoid)"""
-        pass
 
     @abstractmethod
     def _normal_order_beta_reduction(
         self, *, new_name_source: "NewNameSource"
     ) -> Tuple["Term", bool]:
         """internal method for reduction step, needs list of all names to avoid"""
-        pass
 
     def r(self) -> "Term":
-        """run one beta reduction step in normal order (top left first)"""
+        """run one beta reduction step in normal order (top left FIRST)"""
         red, _ = self._normal_order_beta_reduction(
             new_name_source=NewNameSource(root_node=self)
         )
@@ -92,7 +88,6 @@ class Term(ABC):
         self, *, not_expanded: Set | None = None, top_level: bool = False
     ) -> str:
         """convert to to_latex, no substitutions for not_expanded set"""
-        pass
 
     def _repr_latex_(self):
         """trigger pretty printing path in Jupyter"""
@@ -423,7 +418,7 @@ class DeBruijnIndex(Term):
 
 
 class NewNameSource:
-    """build a new name, disjoint from vars"""
+    """build a new name, disjoint from vars_seen"""
 
     root_node: Term
     addnl_terms: Set[str]
@@ -448,7 +443,7 @@ class NewNameSource:
         self.prefix = prefix
 
     def new_name(self):
-        """buld a new name, disjoint from vars"""
+        """buld a new name, disjoint from vars_seen"""
         while True:
             new_name = f"{self.prefix}{self.next_index}"
             if (new_name not in self.addnl_terms) and (
@@ -590,22 +585,22 @@ class _Abstraction(Term):
 class _AbstractionFactory:
     """internal class, build abstractions factories with λ['v']"""
 
-    vars: Tuple[Variable, ...]
+    vars_seen: Tuple[Variable, ...]
 
     def __post_init__(self):
-        assert isinstance(self.vars, Tuple)
-        assert len(self.vars) > 0
+        assert isinstance(self.vars_seen, Tuple)
+        assert len(self.vars_seen) > 0
         names = set()
-        for v in self.vars:
-            assert isinstance(v, Term)
-            names.add(v.name)
-        assert len(names) == len(self.vars)
+        for val in self.vars_seen:
+            assert isinstance(val, Term)
+            names.add(val.name)
+        assert len(names) == len(self.vars_seen)
 
     def __call__(self, *args) -> "_Abstraction":
         t = v(args)
         assert isinstance(t, Term)
         res = None
-        for var in reversed(self.vars):
+        for var in reversed(self.vars_seen):
             if res is None:
                 res = _mk_abstraction(variable=var, term=t)
             else:
@@ -621,16 +616,16 @@ class _AbstractionFactoryFactory:
     def __getitem__(self, index):
         """Support λ['x']('x') notation for lambda calculus abstraction"""
         if isinstance(index, str) or isinstance(index, Variable):
-            vars = [v(index)]
+            vars_seen = [v(index)]
         else:
-            vars = [v(val) for val in index]
-        vars = tuple(vars)
+            vars_seen = [v(val) for val in index]
+        vars_seen = tuple(vars_seen)
         names = set()
-        for val in vars:
+        for val in vars_seen:
             assert isinstance(val, Variable)
             names.add(val.name)
-        assert len(vars) == len(names)
-        return _AbstractionFactory(vars)
+        assert len(vars_seen) == len(names)
+        return _AbstractionFactory(vars_seen)
 
     def __call__(self, *args) -> "_Abstraction":
         """Support λ(1) De Bruijn index notation"""
@@ -823,9 +818,9 @@ Y = λ["f"](
 Θ = λ["x"](λ["y"]("y", ("x", "x", "y"))) | λ["x"](λ["y"]("y", ("x", "x", "y")))
 
 # https://en.wikipedia.org/wiki/Church_encoding#Church_pairs
-pair = λ["x"](λ["y"](λ["z"]("z", "x", "y")))
-first = λ["p"]("p", λ["x"](λ["y"]("x")))
-second = λ["p"]("p", λ["x"](λ["y"]("y")))
+PAIR = λ["x"](λ["y"](λ["z"]("z", "x", "y")))
+FIRST = λ["p"]("p", λ["x"](λ["y"]("x")))
+SECOND = λ["p"]("p", λ["x"](λ["y"]("y")))
 
 # https://jwodder.freeshell.org/lambda.html
 # great ref!
@@ -837,10 +832,10 @@ AND = λ["p", "q"]("p", "q", "p")
 OR = λ["p", "q"]("p", "p", "q")
 NOT = λ["p", "a", "b"]("p", "b", "a")
 XOR = λ["p", "q"]("p", (NOT, "q"), "q")
-# ISZERO = λn. n (λx. FALSE) TRUE
-ISZERO = λ["n"]("n", λ["x"](FALSE), TRUE)
+# isZERO = λn. n (λx. FALSE) TRUE
+isZERO = λ["n"]("n", λ["x"](FALSE), TRUE)
 # Less than or equal to:
-LEQ = λ["m", "n"](ISZERO, (SUB, "m", "n"))
+LEQ = λ["m", "n"](isZERO, (SUB, "m", "n"))
 # Less than:
 LT = λ["a", "b"](NOT, (LEQ, "b", "a"))
 # Equal to:
@@ -851,17 +846,17 @@ NEQ = λ["a", "b"](OR, (NOT, (LEQ, "a", "b")), (NOT, (LEQ, "b", "a")))
 GEQ = λ["a", "b"](LEQ, "b", "a")
 # Greater than:
 GT = λ["a", "b"](NOT, (LEQ, "a", "b"))
-# PAIR x y — create a pair with a car of x and a cdr of y; also called CONS:
+# PAIR x y — create a PAIR with a car of x and a cdr of y; also called CONS:
 PAIR = λ["x", "y", "f"]("f", "x", "y")
-# CAR p — get the car of pair p; also called FIRST or HEAD:
+# CAR p — get the car of PAIR p; also called FIRST or HEAD:
 CAR = λ["p"]("p", TRUE)
-# CDR p — get the cdr of pair p; also called SECOND, TAIL, or REST:
+# CDR p — get the cdr of PAIR p; also called SECOND, TAIL, or REST:
 CDR = λ["p"]("p", FALSE)
 # The empty list:
 NIL = λ["x"](TRUE)
-# NULL p — evaluates to TRUE if p is NIL or to FALSE if p is a normal pair (all other types are undefined):
+# NULL p — evaluates to TRUE if p is NIL or to FALSE if p is a normal PAIR (all other types are undefined):
 isNULL = λ["p"]("p", (λ["x", "y"](FALSE)))
-# Division — DIV a b evaluates to a pair of two numbers, a idiv b and a mod b:
+# Division — DIV a b evaluates to a PAIR of two numbers, a idiv b and a mod b:
 DIV = Y(
     λ["g", "q", "a", "b"](
         LT, "a", "b", (PAIR, "q", "a"), ("g", (SUCC, "q"), (SUB, "a", "b"), "b")
@@ -870,12 +865,12 @@ DIV = Y(
 MOD = λ["a", "b"](CDR, (DIV, "a", "b"))
 GCD = λ["g", "m", "n"](LEQ, "m", "n", ("g", "n", "m"), ("g", "m", "n")) | (
     Y,
-    λ["g", "x", "y"](ISZERO, "y", "x", ("g", "y", (MOD, "x", "y"))),
+    λ["g", "x", "y"](isZERO, "y", "x", ("g", "y", (MOD, "x", "y"))),
 )
 
 
-# FACTORIAL	=	Y (λgx. ISZERO x 1 (MULT x (g (PRED x))))
-FACTORIALstep = λ["g", "x"](ISZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x"))))
+# FACTORIAL	=	Y (λgx. isZERO x 1 (MULT x (g (PRED x))))
+FACTORIALstep = λ["g", "x"](isZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x"))))
 
 
 # define a number of presentation aliases
@@ -883,70 +878,75 @@ FACTORIALstep = λ["g", "x"](ISZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x"))))
 text_aliases = dict()
 
 
-def def_text_symbol(t: Term, s: str):
-    global string_repr_map
-    global latex_repr_map
-    global text_aliases
+def def_text_symbol(t: Term, s: str, *, add_reps: bool):
     assert isinstance(t, Term)
     assert isinstance(s, str)
-    latex_repr_map[t] = "\\textbf{" + s + "}"
-    string_repr_map[t] = s
-    # make available to parser
-    if s.isidentifier():
-        text_aliases[s] = t
+    if add_reps:
+        latex_repr_map[t] = "\\textbf{" + s + "}"
+        string_repr_map[t] = s
+    else:
+        # make available to parser
+        if s.isidentifier():
+            text_aliases[s] = t
 
 
-def def_math_symbol(t: Term, s: str, m: str):
-    global string_repr_map
-    global latex_repr_map
+def def_math_symbol(t: Term, s: str, m: str, *, add_reps: bool):
     assert isinstance(t, Term)
     assert isinstance(s, str)
     assert isinstance(m, str)
-    latex_repr_map[t] = "\\mathbf{" + m + "}"
-    string_repr_map[t] = s
+    if add_reps:
+        latex_repr_map[t] = "\\mathbf{" + m + "}"
+        string_repr_map[t] = s
+    else:
+        # make available to parser
+        if s.isidentifier():
+            text_aliases[s] = t
 
 
-def load_common_aliases():
-    def_math_symbol(PLUS, "+", "+")
-    def_math_symbol(SUB, "-", "-")
-    def_math_symbol(MULT, "*", "\\times")
-    def_math_symbol(Θ, "Θ", "\\theta")
-    def_math_symbol(ε, "ε", "\\epsilon")
-    def_text_symbol(SUCC, "SUCC")
-    def_text_symbol(PRED, "PRED")
-    def_text_symbol(Y, "Y")
-    def_text_symbol(pair, "pair")
-    def_text_symbol(first, "first")
-    def_text_symbol(second, "second")
-    def_text_symbol(TRUE, "TRUE")
-    def_text_symbol(FALSE, "FALSE")
-    def_text_symbol(AND, "AND")
-    def_text_symbol(OR, "OR")
-    def_text_symbol(NOT, "NOT")
-    def_text_symbol(XOR, "XOR")
-    def_text_symbol(ISZERO, "ISZERO")
-    def_text_symbol(LEQ, "LEQ")
-    def_text_symbol(LT, "LT")
-    def_text_symbol(EQ, "EQ")
-    def_text_symbol(NEQ, "NEQ")
-    def_text_symbol(GEQ, "GEQ")
-    def_text_symbol(GT, "GT")
-    def_text_symbol(PAIR, "PAIR")
-    def_text_symbol(CAR, "CAR")
-    def_text_symbol(CDR, "CDR")
-    def_text_symbol(NIL, "NIL")
-    def_text_symbol(isNULL, "isNULL")
-    def_text_symbol(FACTORIALstep, "FACTORIALstep")
-    def_text_symbol(DIV, "DIV")
-    def_text_symbol(MOD, "MOD")
-    def_text_symbol(GCD, "GCD")
-    for ii in range(1000):
-        def_math_symbol(N(ii), f"N({ii})", f"{ii}")
+def load_common_aliases(add_reps: bool = True):
+    def_math_symbol(PLUS, "PLUS", "+", add_reps=add_reps)
+    def_math_symbol(SUB, "SUB", "-", add_reps=add_reps)
+    def_math_symbol(MULT, "MULT", "\\times", add_reps=add_reps)
+    def_math_symbol(Θ, "Θ", "\\theta", add_reps=add_reps)
+    def_math_symbol(ε, "ε", "\\epsilon", add_reps=add_reps)
+    def_text_symbol(SUCC, "SUCC", add_reps=add_reps)
+    def_text_symbol(PRED, "PRED", add_reps=add_reps)
+    def_text_symbol(Y, "Y", add_reps=add_reps)
+    def_text_symbol(PAIR, "PAIR", add_reps=add_reps)
+    def_text_symbol(FIRST, "FIRST", add_reps=add_reps)
+    def_text_symbol(SECOND, "SECOND", add_reps=add_reps)
+    def_text_symbol(TRUE, "TRUE", add_reps=add_reps)
+    def_text_symbol(FALSE, "FALSE", add_reps=add_reps)
+    def_text_symbol(AND, "AND", add_reps=add_reps)
+    def_text_symbol(OR, "OR", add_reps=add_reps)
+    def_text_symbol(NOT, "NOT", add_reps=add_reps)
+    def_text_symbol(XOR, "XOR", add_reps=add_reps)
+    def_text_symbol(isZERO, "isZERO", add_reps=add_reps)
+    def_text_symbol(LEQ, "LEQ", add_reps=add_reps)
+    def_text_symbol(LT, "LT", add_reps=add_reps)
+    def_text_symbol(EQ, "EQ", add_reps=add_reps)
+    def_text_symbol(NEQ, "NEQ", add_reps=add_reps)
+    def_text_symbol(GEQ, "GEQ", add_reps=add_reps)
+    def_text_symbol(GT, "GT", add_reps=add_reps)
+    def_text_symbol(PAIR, "PAIR", add_reps=add_reps)
+    def_text_symbol(CAR, "CAR", add_reps=add_reps)
+    def_text_symbol(CDR, "CDR", add_reps=add_reps)
+    def_text_symbol(NIL, "NIL", add_reps=add_reps)
+    def_text_symbol(isNULL, "isNULL", add_reps=add_reps)
+    def_text_symbol(FACTORIALstep, "FACTORIALstep", add_reps=add_reps)
+    def_text_symbol(DIV, "DIV", add_reps=add_reps)
+    def_text_symbol(MOD, "MOD", add_reps=add_reps)
+    def_text_symbol(GCD, "GCD", add_reps=add_reps)
+    if add_reps:
+        for ii in range(1000):
+            def_math_symbol(N(ii), f"N({ii})", f"{ii}", add_reps=True)
+
+
+load_common_aliases(add_reps=False)
 
 
 def parse_l(src: str) -> Term:
     """Parse a lambda calculus expression from string (warning: uses Python eval)"""
-    global text_aliases
     assert isinstance(src, str)
     restricted_globals = {
         "__builtins__": {
@@ -955,6 +955,7 @@ def parse_l(src: str) -> Term:
             "v": v,
             "vr": vr,
             "_z": _z,
+            "N": N,
         },
     }  # Disable built-in functions and supply some definitions
     for key, val in text_aliases.items():
@@ -965,7 +966,8 @@ def parse_l(src: str) -> Term:
     return res
 
 
-def _r_convert_deBuijn_codes(e: Term, *, variables: List[Variable], next_variable_index: List[int]) -> Term:
+def _r_convert_deBruijn_codes(e: Term, *, variables: List[Variable], next_variable_index: List[int]) -> Term:
+    """Convert de Bruijn index coded expression to standard lambda calculus notation"""
     assert isinstance(e, Term)
     result = None
     if isinstance(e, _Abstraction):
@@ -975,7 +977,7 @@ def _r_convert_deBuijn_codes(e: Term, *, variables: List[Variable], next_variabl
         next_variable_index[0] = next_variable_index[0] + 1
         result = _mk_abstraction(
             variable=new_var,
-            term=_r_convert_deBuijn_codes(e.term, variables=variables, next_variable_index=next_variable_index),
+            term=_r_convert_deBruijn_codes(e.term, variables=variables, next_variable_index=next_variable_index),
         )
         variables.pop()
     elif isinstance(e, DeBruijnIndex):
@@ -986,8 +988,8 @@ def _r_convert_deBuijn_codes(e: Term, *, variables: List[Variable], next_variabl
         result = e
     elif isinstance(e, _Composition):
         result = _mk_composition(
-            left=_r_convert_deBuijn_codes(e.left, variables=variables, next_variable_index=next_variable_index),
-            right=_r_convert_deBuijn_codes(e.right, variables=variables, next_variable_index=next_variable_index),
+            left=_r_convert_deBruijn_codes(e.left, variables=variables, next_variable_index=next_variable_index),
+            right=_r_convert_deBruijn_codes(e.right, variables=variables, next_variable_index=next_variable_index),
         )
     else:
         raise ValueError("unexpected type")
@@ -1005,6 +1007,7 @@ def read_zero_one_code(code: str) -> Term:
         blc(M N) = 01 blc(M) blc(N)
         blc(i) = [1]*i0   ( De Bruijn indices )
     """
+    assert isinstance(code, str)
     code = re.sub(r"[^01]", "", code)
     overall_result = None
     next_index = 0
@@ -1045,5 +1048,5 @@ def read_zero_one_code(code: str) -> Term:
             overall_result = _mk_composition(left=overall_result, right=term)
     assert next_index == len(code)
     assert isinstance(overall_result, Term)
-    converted = _r_convert_deBuijn_codes(overall_result, variables=[], next_variable_index=[1])
+    converted = _r_convert_deBruijn_codes(overall_result, variables=[], next_variable_index=[1])
     return converted
