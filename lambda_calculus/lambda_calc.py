@@ -240,11 +240,6 @@ class _Variable(Term):
         assert isinstance(name, str)
         return name == self.name
 
-    def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
-    ) -> Tuple["Term", bool]:
-        return self, False
-
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
@@ -255,6 +250,11 @@ class _Variable(Term):
         if var.name == self.name:
             return t
         return self
+
+    def _normal_order_beta_reduction(
+        self, *, new_name_source: "NewNameSource"
+    ) -> Tuple["Term", bool]:
+        return self, False
 
     def __eq__(self, other) -> bool:
         e_v = _eq_helper(self, other)
@@ -311,14 +311,14 @@ class _DeBruijnIndex(Term):
         """Check if name occurs free in sub-tree"""
         raise ValueError("invalid _DeBruijnIndex call")
 
-    def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
-    ) -> Tuple["Term", bool]:
-        raise ValueError("invalid _DeBruijnIndex call")
-
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
+        raise ValueError("invalid _DeBruijnIndex call")
+
+    def _normal_order_beta_reduction(
+        self, *, new_name_source: "NewNameSource"
+    ) -> Tuple["Term", bool]:
         raise ValueError("invalid _DeBruijnIndex call")
 
     def __eq__(self, other) -> bool:
@@ -416,20 +416,6 @@ class _Abstraction(Term):
             return False  # shields name
         return self.term._has_free_name(name)
 
-    def _normal_order_beta_reduction(
-        self, *, new_name_source: "NewNameSource"
-    ) -> Tuple["Term", bool]:
-        # needed for SUCC | N(0) == N(1)
-        sub, acted = self.term._normal_order_beta_reduction(
-            new_name_source=new_name_source
-        )
-        if not acted:
-            return self, False
-        result = _mk_abstraction(variable=self.variable, term=sub)
-        if result == self:
-            return self, False
-        return result, True
-
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
@@ -457,6 +443,20 @@ class _Abstraction(Term):
                 var=var, t=t, new_name_source=new_name_source
             ),
         )
+    
+    def _normal_order_beta_reduction(
+        self, *, new_name_source: "NewNameSource"
+    ) -> Tuple["Term", bool]:
+        # needed for SUCC | N(0) == N(1)
+        sub, acted = self.term._normal_order_beta_reduction(
+            new_name_source=new_name_source
+        )
+        if not acted:
+            return self, False
+        result = _mk_abstraction(variable=self.variable, term=sub)
+        if result == self:
+            return self, False
+        return result, True
 
     def __eq__(self, other) -> bool:
         e_v = _eq_helper(self, other)
@@ -600,6 +600,21 @@ class _Composition(Term):
         if self.left._has_free_name(name):
             return True
         return self.right._has_free_name(name)
+    
+    def _capture_avoiding_substitution(
+        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
+    ) -> "Term":
+        assert isinstance(var, _Variable)
+        assert isinstance(t, Term)
+        if var == t:
+            return self  # no op
+        left = self.left._capture_avoiding_substitution(
+            var=var, t=t, new_name_source=new_name_source
+        )
+        right = self.right._capture_avoiding_substitution(
+            var=var, t=t, new_name_source=new_name_source
+        )
+        return _mk_composition(left=left, right=right)
 
     def _normal_order_beta_reduction(
         self, *, new_name_source: "NewNameSource"
@@ -628,21 +643,6 @@ class _Composition(Term):
         res = _mk_composition(left=left, right=right)
         assert res != self
         return res, True
-
-    def _capture_avoiding_substitution(
-        self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
-    ) -> "Term":
-        assert isinstance(var, _Variable)
-        assert isinstance(t, Term)
-        if var == t:
-            return self  # no op
-        left = self.left._capture_avoiding_substitution(
-            var=var, t=t, new_name_source=new_name_source
-        )
-        right = self.right._capture_avoiding_substitution(
-            var=var, t=t, new_name_source=new_name_source
-        )
-        return _mk_composition(left=left, right=right)
 
     def __eq__(self, other) -> bool:
         e_v = _eq_helper(self, other)
