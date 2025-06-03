@@ -456,13 +456,6 @@ class _Abstraction(Term):
             ),
         )
 
-    def _beta_reduce(self, right, *, new_name_source: "NewNameSource") -> Term:
-        assert self.variable.name != ""
-        assert isinstance(right, Term)
-        return self.term._capture_avoiding_substitution(
-            var=self.variable, t=right, new_name_source=new_name_source
-        )
-
     def __eq__(self, other) -> bool:
         e_v = _eq_helper(self, other)
         if e_v is not None:
@@ -609,7 +602,12 @@ class _Composition(Term):
         self, *, new_name_source: "NewNameSource"
     ) -> Tuple["Term", bool]:
         if isinstance(self.left, _Abstraction):
-            res = self.left._beta_reduce(self.right, new_name_source=new_name_source)
+            assert self.left.variable.name != ""
+            res = self.left.term._capture_avoiding_substitution(
+                var=self.left.variable,
+                t=self.right,
+                new_name_source=new_name_source
+            )
             return res, res != self
         else:
             left, left_triggered = self.left._normal_order_beta_reduction(

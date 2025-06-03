@@ -249,3 +249,25 @@ def test_blinker():
     blinker = a | a | a
     assert blinker != blinker.r()
     check_expr(blinker.r().r(), expect=blinker)
+
+
+def test_div():
+    dividend = N(14)
+    divisor = N(3)
+    expr = DIV | dividend | divisor
+    res = expr.nf()[0]
+    quotient = (CAR | res).nf()[0]
+    assert quotient == N(4)
+    remainder = (CDR | res).nf()[0]
+    assert remainder == N(2)
+    check = (PLUS | (MULT | quotient | divisor) | remainder).nf()[0]
+    assert check == dividend
+
+
+def test_gcd():
+    expr = GCD | N(6) | N(9)
+    result, _ = expr.nf()
+    assert result == N(3)
+    expr = GCD | N(9) | N(6)
+    result, _ = expr.nf()
+    assert result == N(3)
