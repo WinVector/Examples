@@ -454,8 +454,7 @@ class _Abstraction(Term):
         if not acted:
             return self, False
         result = _mk_abstraction(variable=self.variable, term=sub)
-        if result == self:
-            return self, False
+        assert result != self
         return result, True
 
     def __eq__(self, other) -> bool:
