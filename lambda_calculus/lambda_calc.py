@@ -104,7 +104,7 @@ class Term(ABC):
         return _mk_composition(left=other, right=self)
 
     def __call__(self, *args) -> "_Composition":
-        """concatenate/compose"""
+        """concatenate/compose allows A(B) as an input for A B"""
         t = v(args)
         assert isinstance(t, Term)
         return _mk_composition(left=self, right=t)
@@ -119,6 +119,7 @@ class Term(ABC):
 
 
 def _eq_helper(a, b) -> bool:
+    """See if equality can be resolved by type or hash, return None if same type and hash"""
     t_a = str(type(a))
     t_b = str(type(b))
     if t_a != t_b:
@@ -131,6 +132,7 @@ def _eq_helper(a, b) -> bool:
 
 
 def _lt_helper(a, b) -> bool:
+    """See if order can be resolved by type or hash, return None if same type and hash"""
     t_a = str(type(a))
     t_b = str(type(b))
     if t_a != t_b:
@@ -525,6 +527,7 @@ class _AbstractionFactory:
         assert len(names) == len(self.vars_seen)
 
     def __call__(self, *args) -> "_Abstraction":
+        """support λ['v'](B) notation"""
         t = v(args)
         assert isinstance(t, Term)
         res = None
