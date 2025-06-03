@@ -531,7 +531,6 @@ class _Abstraction(Term):
 
     def _beta_reduce(self, right, *, new_name_source: "NewNameSource") -> Term:
         assert self.variable.name != ""
-        right = v(right)
         assert isinstance(right, Term)
         return self.term._capture_avoiding_substitution(
             var=self.variable, t=right, new_name_source=new_name_source
@@ -704,7 +703,8 @@ class _Composition(Term):
                 return right, True
             if isinstance(right, _Empty):
                 return left, True
-            return _mk_composition(left=left, right=right), True
+            res = _mk_composition(left=left, right=right)
+            return res, res != self
 
     def _capture_avoiding_substitution(
         self, *, var: "Variable", t: "Term", new_name_source: "NewNameSource"
