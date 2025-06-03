@@ -438,7 +438,7 @@ class _Abstraction(Term):
         if var.name == self.variable.name:
             return self  # variable isn't free
         if not self.term._has_name(var.name):
-            return self  # symbol not present, no substitution needed; some speedup and
+            return self  # symbol not present, no substitution needed; some speedup and safety
         if t._has_free_name(self.variable.name):  # freshness condition violation
             new_var = _Variable(name=new_name_source.new_name())  # establish freshness
             nt = _mk_abstraction(
