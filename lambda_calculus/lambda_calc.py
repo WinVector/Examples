@@ -604,28 +604,29 @@ class _Composition(Term):
     def _normal_order_beta_reduction(
         self, *, new_name_source: "NewNameSource"
     ) -> Tuple["Term", bool]:
+        # first try top most application
         if isinstance(self.left, _Abstraction):
             assert self.left.variable.name != ""
             res = self.left.term._capture_avoiding_substitution(
                 var=self.left.variable, t=self.right, new_name_source=new_name_source
             )
+            if res != self:
+                return res, True
+        # now try left to right application
+        left, left_triggered = self.left._normal_order_beta_reduction(
+            new_name_source=new_name_source
+        )
+        if left_triggered:
+            # don't apply to right, already have a transform on left
+            right, right_triggered = self.right, False
         else:
-            left, left_triggered = self.left._normal_order_beta_reduction(
+            right, right_triggered = self.right._normal_order_beta_reduction(
                 new_name_source=new_name_source
             )
-            if left_triggered:
-                # don't apply to right, already have a transform on left
-                right, right_triggered = self.right, False
-            else:
-                right, right_triggered = self.right._normal_order_beta_reduction(
-                    new_name_source=new_name_source
-                )
-            if not (left_triggered or right_triggered):
-                return self, False
-            res = _mk_composition(left=left, right=right)
-        if res == self:
-            # "just in case", don't need to worry if we really trigger this
+        if not (left_triggered or right_triggered):
             return self, False
+        res = _mk_composition(left=left, right=right)
+        assert res != self
         return res, True
 
     def _capture_avoiding_substitution(
