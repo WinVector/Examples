@@ -250,6 +250,13 @@ def test_blinker():
     check_expr(blinker.r().r(), expect=blinker)
 
 
+def test_eself():
+    a = λ["x"]("x", "x")
+    eself = a | a
+    assert eself == eself.r()
+    assert eself.nf()[0] == eself  # show application does not prevent finding normal form
+
+
 def test_div():
     dividend = N(14)
     divisor = N(3)
