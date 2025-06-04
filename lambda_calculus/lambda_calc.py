@@ -67,19 +67,24 @@ class Term(ABC):
     ) -> Tuple["Term", bool]:
         """internal method for reduction step, needs list of all names to avoid"""
 
-    def r(self, *, use_cache: bool = False) -> "Term":
-        """run one beta reduction step in normal order (top left FIRST)"""
+    def r(self, *, n : int = 1, use_cache: bool = False) -> "Term":
+        """run n beta reduction step(s) in normal order (top left FIRST)"""
+        assert isinstance(n, int)
+        assert isinstance(use_cache, bool)
         tc = None
         if use_cache:
             tc = TransitiveCache()
-        red, _ = self._normal_order_beta_reduction(
-            new_name_source=NewNameSource(root_node=self),
-            tc=tc,
-        )
+        for i in range(n):
+            red, _ = self._normal_order_beta_reduction(
+                new_name_source=NewNameSource(root_node=self),
+                tc=tc,
+            )
         return red
 
-    def nf(self, *, use_cache: bool = False) -> Tuple["Term", int]:
+    def nf(self, *, max_steps : int = 1000000000, use_cache: bool = False) -> Tuple["Term", int]:
         """reduce to normal form"""
+        assert isinstance(max_steps, int)
+        assert isinstance(use_cache, bool)
         tc = None
         if use_cache:
             tc = TransitiveCache()
@@ -95,6 +100,8 @@ class Term(ABC):
             if not acted:
                 return e, steps
             steps = steps + 1
+            if steps > max_steps:
+                raise ValueError("max steps exceeded")
 
     @abstractmethod
     def to_latex(
