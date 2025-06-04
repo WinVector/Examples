@@ -81,9 +81,9 @@ class Term(ABC):
             )
         return red
 
-    def nf(self, *, max_steps : int = 1000000000, use_cache: bool = False) -> Tuple["Term", int]:
+    def nf(self, *, max_steps : int | None = None, use_cache: bool = False) -> Tuple["Term", int]:
         """reduce to normal form"""
-        assert isinstance(max_steps, int)
+        assert isinstance(max_steps, int | None)
         assert isinstance(use_cache, bool)
         tc = None
         if use_cache:
@@ -100,8 +100,8 @@ class Term(ABC):
             if not acted:
                 return e, steps
             steps = steps + 1
-            if steps > max_steps:
-                raise ValueError("max steps exceeded")
+            if (max_steps is not None) and (steps > max_steps):
+                raise ValueError("max_steps exceeded")
 
     @abstractmethod
     def to_latex(
