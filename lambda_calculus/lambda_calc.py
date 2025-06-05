@@ -801,6 +801,7 @@ FALSE = λ["x", "y"]("y")
 AND = λ["p", "q"]("p", "q", "p")
 OR = λ["p", "q"]("p", "p", "q")
 NOT = λ["p", "a", "b"]("p", "b", "a")
+IFTHENELSE = λ["p", "a", "b"]("p", "a", "b")
 XOR = λ["p", "q"]("p", (NOT, "q"), "q")
 # isZERO = λn. n (λx. FALSE) TRUE
 isZERO = λ["n"]("n", λ["x"](FALSE), TRUE)
@@ -889,6 +890,7 @@ def load_common_aliases(add_reps: bool = True):
     def_text_symbol(AND, "AND", add_reps=add_reps)
     def_text_symbol(OR, "OR", add_reps=add_reps)
     def_text_symbol(NOT, "NOT", add_reps=add_reps)
+    def_text_symbol(IFTHENELSE, "IFTHENELSE", add_reps=add_reps)
     def_text_symbol(XOR, "XOR", add_reps=add_reps)
     def_text_symbol(isZERO, "isZERO", add_reps=add_reps)
     def_text_symbol(LEQ, "LEQ", add_reps=add_reps)
@@ -1026,3 +1028,11 @@ def read_zero_one_code(code: str) -> Term:
         overall_result, variables=[], next_variable_index=[1]
     )
     return converted
+
+
+def ifthenelse(condition, then, otherwise):
+    return IFTHENELSE | condition | then | otherwise
+
+
+def let(terms, *, be, within):
+    return λ[terms](within) | be

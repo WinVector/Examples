@@ -285,3 +285,23 @@ def test_applicative_example():
     assert a.nf()[0] == v('y')
     b = λ["x"](λ["y"]("y"), "x")
     assert b.nf()[0] == λ["x"]("x")
+
+
+def test_notation_let():
+    assert let('f', be='N', within='M') == λ['f']('M') | 'N'
+
+
+def test_notation():
+    # factorial
+    F0 = λ['f', 'n'] ( IFTHENELSE, (isZERO, 'n'), N(1), (MULT, 'n', ('f', (PRED, 'n'))))
+    F = λ['f', 'n'](
+        ifthenelse(
+            isZERO | 'n',
+            N(1),
+            MULT | 'n' | ('f', (PRED, 'n'))))
+    assert F0 == F
+    assert (Y | F | N(0)).nf()[0] == N(1)
+    assert (Y | F | N(1)).nf()[0] == N(1)
+    assert (Y | F | N(2)).nf()[0] == N(2)
+    assert (Y | F | N(3)).nf()[0] == N(6)
+    
