@@ -637,6 +637,8 @@ class _Composition(Term):
         assert isinstance(t, Term)
         if var == t:
             return self  # no op
+        if not self._has_name(var.name):
+            return self  # symbol not present, no substitution needed; some speedup and safety
         left = self.left._capture_avoiding_substitution(
             var=var, t=t, new_name_source=new_name_source
         )
