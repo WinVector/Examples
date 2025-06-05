@@ -1031,8 +1031,10 @@ def read_zero_one_code(code: str) -> Term:
 
 
 def ifthenelse(condition, then, otherwise):
+    """alias for IFTHENELSE | (condition) | (then) | (otherwise)"""
     return IFTHENELSE | condition | then | otherwise
 
 
 def let(terms, *, be, within):
+    """alias for λ[terms](within) | be"""
     return λ[terms](within) | be
