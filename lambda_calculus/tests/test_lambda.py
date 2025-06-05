@@ -277,3 +277,11 @@ def test_gcd():
     expr = GCD | N(9) | N(6)
     result, _ = expr.nf()
     assert result == N(3)
+
+
+def test_applicative_example():
+    # https://en.wikipedia.org/wiki/Lambda_calculus#Reduction_strategies 
+    a = λ["x"]("y") | ( λ["z"]("z", "z") , λ["z"]("z", "z"))
+    assert a.nf()[0] == v('y')
+    b = λ["x"](λ["y"]("y"), "x")
+    assert b.nf()[0] == λ["x"]("x")
