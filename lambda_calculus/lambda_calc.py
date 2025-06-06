@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from functools import total_ordering
 import re
-from typing import Iterable, List, Set, Tuple
+from typing import FrozenSet, Iterable, List, Set, Tuple
 import string
 from abc import ABC, abstractmethod
 
@@ -26,9 +26,12 @@ def _combine_hash(a, b) -> int:
 def _mk_abstraction(*, variable, term):
     assert isinstance(variable, _Variable)
     assert isinstance(term, Term)
+
     return _Abstraction(
         variable=variable,
         term=term,
+        names=frozenset(variable.names.union(term.names)),
+        free_names=frozenset(term.free_names - variable.names),
         _hash_val=_combine_hash(variable, term),
     )
 
@@ -39,21 +42,18 @@ def _mk_composition(*, left, right):
     return _Composition(
         left=left,
         right=right,
+        names=frozenset(left.names.union(right.names)),
+        free_names=frozenset(left.free_names.union(right.free_names)),
         _hash_val=_combine_hash(left, right),
     )
 
 
+@total_ordering
 @dataclass(frozen=True, kw_only=True)
 class Term(ABC):
     """Represent a term in a lambda calculus expression"""
-
-    @abstractmethod
-    def _has_name(self, name: str):
-        """Check if name occurs in sub-tree"""
-
-    @abstractmethod
-    def _has_free_name(self, name: str):
-        """Check if name occurs free in sub-tree"""
+    names: FrozenSet[str]
+    free_names: FrozenSet[str]
 
     @abstractmethod
     def _capture_avoiding_substitution(
@@ -169,12 +169,12 @@ def _v(x) -> Term:
     if x is None:
         raise ValueError("value should not be None")
     if isinstance(x, int):
-        return _DeBruijnIndex(index=x)
+        return _DeBruijnIndex(index=x, names=frozenset(), free_names=frozenset())
     if isinstance(x, str):
         x = x.strip()
         if x.isdecimal():
-            return _DeBruijnIndex(index=x)
-        return _Variable(name=x)
+            return _DeBruijnIndex(index=x, names=frozenset(), free_names=frozenset())
+        return _mk_var(name=x)
     if isinstance(x, Term):
         return x
     # iterable cases
@@ -199,9 +199,9 @@ def v(*args) -> Term:
 def idx(x) -> Term:
     """Convert to _DeBruijnIndex"""
     if isinstance(x, int):
-        return _DeBruijnIndex(index=x)
+        return _DeBruijnIndex(index=x, names=frozenset(), free_names=frozenset())
     if isinstance(x, str):
-        return _DeBruijnIndex(index=int(x))
+        return _DeBruijnIndex(index=int(x), names=frozenset(), free_names=frozenset())
     raise (ValueError("unexpected type"))
 
 
@@ -210,12 +210,12 @@ def _vr(x) -> Term:
     if x is None:
         raise ValueError("value should not be None")
     if isinstance(x, int):
-        return _DeBruijnIndex(index=x)
+        return _DeBruijnIndex(index=x, names=frozenset(), free_names=frozenset())
     if isinstance(x, str):
         x = x.strip()
         if x.isdecimal():
-            return _DeBruijnIndex(index=x)
-        return _Variable(name=x)
+            return _DeBruijnIndex(index=x, names=frozenset(), free_names=frozenset())
+        return _mk_var(name=x)
     if isinstance(x, Term):
         return x
     # iterable cases
@@ -243,22 +243,6 @@ class _Variable(Term):
     """represent a variable"""
 
     name: str
-
-    def __post_init__(self):
-        assert isinstance(self.name, str)
-        # not as strict as isidentifier()
-        assert not any(char in string.whitespace for char in self.name)
-        assert not any(char in "'\"().[];|+-*/%\\λΛε \n" for char in self.name)
-
-    def _has_name(self, name: str):
-        """Check if name occurs in sub-tree"""
-        assert isinstance(name, str)
-        return name == self.name
-
-    def _has_free_name(self, name: str):
-        """Check if name occurs free in sub-tree"""
-        assert isinstance(name, str)
-        return name == self.name
 
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
@@ -309,7 +293,15 @@ class _Variable(Term):
         return self.name
 
 
-_z = _Variable(name="")
+def _mk_var(name: str) -> _Variable:
+    assert isinstance(name, str)
+    # not as strict as isidentifier()
+    assert not any(char in string.whitespace for char in name)
+    assert not any(char in "'\"().[];|+-*/%\\λΛε \n" for char in name)
+    return _Variable(name=name, names=frozenset([name]), free_names=frozenset([name]))
+
+
+_z = _Variable(name="", names=frozenset(), free_names=frozenset())
 
 
 @total_ordering
@@ -322,14 +314,6 @@ class _DeBruijnIndex(Term):
     def __post_init__(self):
         assert isinstance(self.index, int)
         assert self.index >= 1
-
-    def _has_name(self, name: str):
-        """Check if name occurs in sub-tree"""
-        raise ValueError("invalid _DeBruijnIndex call")
-
-    def _has_free_name(self, name: str):
-        """Check if name occurs free in sub-tree"""
-        raise ValueError("invalid _DeBruijnIndex call")
 
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
@@ -402,7 +386,7 @@ class NewNameSource:
         while True:
             new_name = f"{self.prefix}{self.next_index}"
             if (new_name not in self.addnl_terms) and (
-                (self.root_node is None) or (not self.root_node._has_name(new_name))
+                (self.root_node is None) or (new_name not in self.root_node.names)
             ):
                 self.addnl_terms.add(new_name)
                 return new_name
@@ -422,20 +406,6 @@ class _Abstraction(Term):
         assert isinstance(self.variable, _Variable)
         assert isinstance(self.term, Term)
 
-    def _has_name(self, name: str):
-        """Check if name occurs in sub-tree"""
-        assert isinstance(name, str)
-        if self.variable._has_name(name):
-            return True
-        return self.term._has_name(name)
-
-    def _has_free_name(self, name: str):
-        """Check if name occurs free in sub-tree"""
-        assert isinstance(name, str)
-        if self.variable._has_free_name(name):
-            return False  # shields name
-        return self.term._has_free_name(name)
-
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
     ) -> "Term":
@@ -445,10 +415,10 @@ class _Abstraction(Term):
             return self  # no op
         if var.name == self.variable.name:
             return self  # variable isn't free
-        if not self.term._has_name(var.name):
+        if var.name not in self.term.names:
             return self  # symbol not present, no substitution needed; some speedup and safety
-        if t._has_free_name(self.variable.name):  # freshness condition violation
-            new_var = _Variable(name=new_name_source.new_name())  # establish freshness
+        if self.variable.name in t.free_names:  # freshness condition violation
+            new_var = _mk_var(name=new_name_source.new_name())  # establish freshness
             nt = _mk_abstraction(
                 variable=new_var,
                 term=self.term._capture_avoiding_substitution(
@@ -615,20 +585,6 @@ class _Composition(Term):
     def __post_init__(self):
         assert isinstance(self.left, Term)
         assert isinstance(self.right, Term)
-
-    def _has_name(self, name: str):
-        """Check if name occurs in sub-tree"""
-        assert isinstance(name, str)
-        if self.left._has_name(name):
-            return True
-        return self.right._has_name(name)
-
-    def _has_free_name(self, name: str):
-        """Check if name occurs free in sub-tree"""
-        assert isinstance(name, str)
-        if self.left._has_free_name(name):
-            return True
-        return self.right._has_free_name(name)
     
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
@@ -637,7 +593,7 @@ class _Composition(Term):
         assert isinstance(t, Term)
         if var == t:
             return self  # no op
-        if not self._has_name(var.name):
+        if var.name not in self.names:
             return self  # symbol not present, no substitution needed; some speedup and safety
         left = self.left._capture_avoiding_substitution(
             var=var, t=t, new_name_source=new_name_source
@@ -947,7 +903,7 @@ def _r_convert_deBruijn_codes(
     result = None
     if isinstance(e, _Abstraction):
         assert e.variable.name == ""
-        new_var = _Variable(name=f"x{next_variable_index[0]}")
+        new_var = _mk_var(name=f"x{next_variable_index[0]}")
         variables.append(new_var)
         next_variable_index[0] = next_variable_index[0] + 1
         result = _mk_abstraction(
@@ -1021,7 +977,7 @@ def read_zero_one_code(code: str) -> Term:
                 depth_count = depth_count + 1
                 next_index = next_index + 1
             next_index = next_index + 1
-            result = _DeBruijnIndex(index=depth_count)
+            result = _DeBruijnIndex(index=depth_count, names=frozenset(), free_names=frozenset())
         return result
 
     while next_index < len(code):
