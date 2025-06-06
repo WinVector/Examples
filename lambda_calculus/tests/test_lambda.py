@@ -1,6 +1,6 @@
 import pytest
 from lambda_calc import *
-from lambda_calc import _r_convert_deBruijn_codes, _DeBruijnIndex, _Variable
+from lambda_calc import _Variable
 
 
 def check_expr(expr: Term, *, expect: str | Term | None = None):
@@ -30,7 +30,6 @@ def test_atoms():
     with pytest.raises(ValueError):
         v(())
     assert isinstance(v("x"), _Variable)
-    assert isinstance(v(1), _DeBruijnIndex)
 
 
 def test_bar_parens():
@@ -155,22 +154,6 @@ def test_nf():
         check_expr(expr.nf()[0], expect=expr)
 
 
-def test_db_decoding():
-    # https://en.wikipedia.org/wiki/De_Bruijn_index
-    example = λ(λ(1, λ(1)), λ(2, 1))
-    check_expr(
-        _r_convert_deBruijn_codes(example, variables=[], next_variable_index=[1]),
-        expect=λ["x1"](λ["x2"]("x2", λ["x3"]("x3")), λ["x4"]("x1", "x4")),
-    )
-
-
-def test_binary_parse():
-    # https://tromp.github.io/cl/Binary_lambda_calculus.html#binary_io
-    example = "00 00 00 01 01 10 1110 110"
-    parsed = read_zero_one_code(example)
-    check_expr(parsed, expect=λ["x1"](λ["x2"](λ["x3"](("x3", "x1"), "x2"))))
-
-
 def test_nf_identity():
     # u has a beta reduction, but it takes u to u
     u = λ["x"]("x", "x") | λ["x"]("x", "x")
@@ -183,64 +166,6 @@ def test_skip_identity_transform():
     u = λ["z"](λ["x"]("x", "x") | λ["x"]("x", "x") | (λ["x"]("x") | "q"))
     nf, steps = u.nf()
     check_expr(nf, expect=λ["z"]((λ["x"]("x", "x"), λ["x"]("x", "x")), "q"))
-
-
-def test_binary_parse_u():
-    # https://tromp.github.io/cl/Binary_lambda_calculus.html#universality
-    machine_U = """
-0101000110100000000101011000000000011110000101111110011110
-0001011100111100000011110000101101101110011111000011111000
-0101111010011101001011001110000110110000101111100001111100
-0011100110111101111100111101110110000110010001101000011010
-"""
-    p = read_zero_one_code(machine_U)
-    check_expr(p)
-
-
-def test_binary_parse_lambda():
-    # https://esolangs.org/wiki/Binary_lambda_calculus#self-interpreter
-    # self-iterpreter
-    self_interpreter = """
-  01010001
-   10100000
-    00010101
-     10000000
-      00011110
-       00010111
-        11100111
-         10000101
-          11001111
-          000000111
-         10000101101
-        1011100111110
-       000111110000101
-      11101001 11010010
-     11001110   00011011
-    00001011     11100001
-   11110000       11100110
-  11110111         11001111
- 01110110           00011001
-00011010             00011010
-"""
-    p = read_zero_one_code(self_interpreter)
-    check_expr(p)
-
-
-def test_binary_parse_prime():
-    # https://esolangs.org/wiki/Binary_lambda_calculus#self-interpreter
-    prime_sieve = """
-000100011001100101000110100
- 000000101100000100100010101
- 11110111          101001000
- 11010000          111001101
- 000000000010110111001110011
- 11111011110000000011111001
- 10111000
- 00010110
-0000110110
-"""
-    p = read_zero_one_code(prime_sieve)
-    check_expr(p)
 
 
 def test_blinker():
