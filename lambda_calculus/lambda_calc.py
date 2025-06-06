@@ -369,7 +369,7 @@ class _DeBruijnIndex(Term):
     def to_latex(
         self, *, not_expanded: Set | None = None, top_level: bool = False
     ) -> str:
-        return self.index
+        return str(self.index)
 
 
 class NewNameSource:
@@ -975,6 +975,12 @@ def _r_convert_deBruijn_codes(
     if not isinstance(result, Term):
         raise ValueError("empty value list")
     return result
+
+
+def convert_deBruijn_codes(e: Term) -> Term:
+    return _r_convert_deBruijn_codes(
+        e, variables=[], next_variable_index=[1]
+    )
 
 
 def read_zero_one_code(code: str) -> Term:
