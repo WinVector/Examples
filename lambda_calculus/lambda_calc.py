@@ -19,32 +19,31 @@ string_repr_map = dict()
 latex_repr_map = dict()
 
 
-def _combine_hash(a, b) -> int:
-    return hash(str(hash(a)) + "," + str(hash(b)))
-
-
 def _mk_abstraction(*, variable, term):
     assert isinstance(variable, _Variable)
     assert isinstance(term, Term)
-
+    names = frozenset(variable.names.union(term.names))
+    free_names = frozenset(term.free_names - variable.names)
     return _Abstraction(
         variable=variable,
         term=term,
-        names=frozenset(variable.names.union(term.names)),
-        free_names=frozenset(term.free_names - variable.names),
-        _hash_val=_combine_hash(variable, term),
+        names=names,
+        free_names=free_names,
+        _hash_val=hash(variable) + 3 * hash(term) + 5 * hash(tuple(sorted(names))) + 7 * hash(tuple(sorted(free_names))),
     )
 
 
 def _mk_composition(*, left, right):
     assert isinstance(left, Term)
     assert isinstance(right, Term)
+    names = frozenset(left.names.union(right.names))
+    free_names = frozenset(left.free_names.union(right.free_names))
     return _Composition(
         left=left,
         right=right,
-        names=frozenset(left.names.union(right.names)),
-        free_names=frozenset(left.free_names.union(right.free_names)),
-        _hash_val=_combine_hash(left, right),
+        names=names,
+        free_names=free_names,
+        _hash_val=hash(left) + 3 * hash(right) + 5 * hash(tuple(sorted(names))) + 7 * hash(tuple(sorted(free_names))),
     )
 
 
@@ -76,7 +75,7 @@ class Term(ABC):
             tc = TransitiveCache()
         for i in range(n):
             red, _ = self._normal_order_beta_reduction(
-                new_name_source=NewNameSource(root_node=self),
+                new_name_source=NewNameSource(self.names),
                 tc=tc,
             )
         return red
@@ -89,7 +88,7 @@ class Term(ABC):
         if use_cache:
             tc = TransitiveCache()
         steps = 0
-        new_name_source = NewNameSource(root_node=self)
+        new_name_source = NewNameSource(self.names)
         seen = set()
         e = self
         while True:
@@ -359,25 +358,20 @@ class _DeBruijnIndex(Term):
 class NewNameSource:
     """build a new name, disjoint from vars_seen"""
 
-    root_node: Term
-    addnl_terms: Set[str]
+    names_to_avoid: Set[str]
     next_index: int
     prefix: str
 
     def __init__(
         self,
-        *,
-        root_node: Term | None = None,
         nms: Iterable[str] | None = None,
+        *,
         prefix: str = "v",
     ):
-        if root_node is not None:
-            assert isinstance(root_node, Term)
         assert isinstance(prefix, str)
-        self.root_node = root_node
-        self.addnl_terms = set()
+        self.names_to_avoid = set()
         if nms is not None:
-            self.addnl_terms.update(nms)
+            self.names_to_avoid.update(nms)
         self.next_index = 0
         self.prefix = prefix
 
@@ -385,10 +379,8 @@ class NewNameSource:
         """buld a new name, disjoint from vars_seen"""
         while True:
             new_name = f"{self.prefix}{self.next_index}"
-            if (new_name not in self.addnl_terms) and (
-                (self.root_node is None) or (new_name not in self.root_node.names)
-            ):
-                self.addnl_terms.add(new_name)
+            if new_name not in self.names_to_avoid:
+                self.names_to_avoid.add(new_name)
                 return new_name
             self.next_index = self.next_index + 1
 
