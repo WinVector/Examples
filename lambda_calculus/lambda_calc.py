@@ -810,12 +810,6 @@ def parse_l(src: str) -> Term:
     return res
 
 
-def convert_deBruijn_codes(e: Term) -> Term:
-    return _r_convert_deBruijn_codes(
-        e, variables=[], next_variable_index=[1]
-    )
-
-
 def ifthenelse(condition, then, otherwise):
     """alias for IFTHENELSE | (condition) | (then) | (otherwise)"""
     return IFTHENELSE | condition | then | otherwise
