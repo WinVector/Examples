@@ -43,7 +43,7 @@ def _mk_composition(*, left, right):
     )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Term(ABC):
     """Represent a term in a lambda calculus expression"""
 
@@ -169,7 +169,7 @@ def _v(x) -> Term:
     if x is None:
         raise ValueError("value should not be None")
     if isinstance(x, int):
-        return _DeBruijnIndex(x)
+        return _DeBruijnIndex(index=x)
     if isinstance(x, str):
         x = x.strip()
         if x.isdecimal():
@@ -199,9 +199,9 @@ def v(*args) -> Term:
 def idx(x) -> Term:
     """Convert to _DeBruijnIndex"""
     if isinstance(x, int):
-        return _DeBruijnIndex(x)
+        return _DeBruijnIndex(index=x)
     if isinstance(x, str):
-        return _DeBruijnIndex(int(x))
+        return _DeBruijnIndex(index=int(x))
     raise (ValueError("unexpected type"))
 
 
@@ -210,7 +210,7 @@ def _vr(x) -> Term:
     if x is None:
         raise ValueError("value should not be None")
     if isinstance(x, int):
-        return _DeBruijnIndex(x)
+        return _DeBruijnIndex(index=x)
     if isinstance(x, str):
         x = x.strip()
         if x.isdecimal():
@@ -238,7 +238,7 @@ def vr(*args) -> Term:
 
 
 @total_ordering
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _Variable(Term):
     """represent a variable"""
 
@@ -309,11 +309,11 @@ class _Variable(Term):
         return self.name
 
 
-_z = _Variable("")
+_z = _Variable(name="")
 
 
 @total_ordering
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _DeBruijnIndex(Term):
     """represent an index reference (not a first class Term)"""
 
@@ -410,7 +410,7 @@ class NewNameSource:
 
 
 @total_ordering
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _Abstraction(Term):
     """represent (λ(variable).term)"""
 
@@ -569,7 +569,7 @@ class _AbstractionFactory:
         return res
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _AbstractionFactoryFactory:
     """build abstractions with λ['v']('t')"""
 
@@ -604,7 +604,7 @@ class _AbstractionFactoryFactory:
 
 
 @total_ordering
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class _Composition(Term):
     """define concatenate expression: left right"""
 
