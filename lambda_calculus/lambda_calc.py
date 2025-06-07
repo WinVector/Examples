@@ -657,6 +657,12 @@ Y = λ["f"](
     λ["x"]("f", ("x", "x")),
 )
 
+# https://en.wikipedia.org/wiki/Fixed-point_combinator
+Z = λ["f"](
+    λ["x"]("f", λ["v"]("x", "x", "v")),
+    λ["x"]("f", λ["v"]("x", "x", "v")),
+)
+
 # Theta combinator
 # https://www.pls-lab.org/en/Theta_combinator
 # Θ≜(λxy.y(xxy))(λxy.y(xxy))
@@ -757,6 +763,7 @@ def load_common_aliases(add_reps: bool = True):
     def_text_symbol(SUCC, "SUCC", add_reps=add_reps)
     def_text_symbol(PRED, "PRED", add_reps=add_reps)
     def_text_symbol(Y, "Y", add_reps=add_reps)
+    def_text_symbol(Z, "Z", add_reps=add_reps)
     def_text_symbol(PAIR, "PAIR", add_reps=add_reps)
     def_text_symbol(FIRST, "FIRST", add_reps=add_reps)
     def_text_symbol(SECOND, "SECOND", add_reps=add_reps)
