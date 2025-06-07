@@ -139,6 +139,8 @@ class Term(ABC):
 
 def _eq_helper(a, b) -> bool:
     """See if equality can be resolved by type or hash, return None if same type and hash"""
+    if id(a) == id(b):
+        return True
     t_a = str(type(a))
     t_b = str(type(b))
     if t_a != t_b:
@@ -152,6 +154,8 @@ def _eq_helper(a, b) -> bool:
 
 def _lt_helper(a, b) -> bool:
     """See if order can be resolved by type or hash, return None if same type and hash"""
+    if id(a) == id(b):
+        return False
     t_a = str(type(a))
     t_b = str(type(b))
     if t_a != t_b:
