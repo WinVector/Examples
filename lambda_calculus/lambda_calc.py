@@ -67,13 +67,9 @@ class Term(ABC):
     ) -> Tuple["Term", bool]:
         """internal method for reduction step, needs list of all names to avoid"""
 
-    def r(self, *, n : int = 1, use_cache: bool = False) -> "Term":
+    def r(self, *, n : int = 1, tc : TransitiveCache | None = None) -> "Term":
         """run n beta reduction step(s) in normal order (top left FIRST)"""
         assert isinstance(n, int)
-        assert isinstance(use_cache, bool)
-        tc = None
-        if use_cache:
-            tc = TransitiveCache()
         for i in range(n):
             red, _ = self._normal_order_beta_reduction(
                 new_name_source=NewNameSource(self.names),
@@ -81,13 +77,9 @@ class Term(ABC):
             )
         return red
 
-    def nf(self, *, max_steps : int | None = None, use_cache: bool = False) -> Tuple["Term", int]:
+    def nf(self, *, max_steps : int | None = None, tc : TransitiveCache | None = None) -> Tuple["Term", int]:
         """reduce to normal form"""
         assert isinstance(max_steps, int | None)
-        assert isinstance(use_cache, bool)
-        tc = None
-        if use_cache:
-            tc = TransitiveCache()
         steps = 0
         new_name_source = NewNameSource(self.names)
         seen = set()
@@ -556,7 +548,7 @@ class _Composition(Term):
             assert self.left.variable.name != ""
             right = self.right
             if self.left.eager:
-                right = right.nf()[0]
+                right = right.nf(tc=tc)[0]
             res = self.left.term._capture_avoiding_substitution(
                 var=self.left.variable, t=right, new_name_source=new_name_source
             )
