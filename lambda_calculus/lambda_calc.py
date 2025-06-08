@@ -19,7 +19,7 @@ string_repr_map = dict()
 latex_repr_map = dict()
 
 
-def _mk_abstraction(*, variable, term):
+def _mk_abstraction(*, variable, term, eager: bool):
     assert isinstance(variable, _Variable)
     assert isinstance(term, Term)
     names = frozenset(variable.names.union(term.names))
@@ -30,6 +30,7 @@ def _mk_abstraction(*, variable, term):
         names=names,
         free_names=free_names,
         _hash_val=hash(variable) + 3 * hash(term) + 5 * hash(tuple(sorted(names))) + 7 * hash(tuple(sorted(free_names))),
+        eager=eager,
     )
 
 
@@ -327,10 +328,12 @@ class _Abstraction(Term):
     _hash_val: int
     variable: _Variable
     term: Term
+    eager: bool
 
     def __post_init__(self):
         assert isinstance(self.variable, _Variable)
         assert isinstance(self.term, Term)
+        assert isinstance(self.eager, bool)
 
     def _capture_avoiding_substitution(
         self, *, var: "_Variable", t: "Term", new_name_source: "NewNameSource"
@@ -350,6 +353,7 @@ class _Abstraction(Term):
                 term=self.term._capture_avoiding_substitution(
                     var=self.variable, t=new_var, new_name_source=new_name_source
                 ),
+                eager=self.eager,
             )
         else:
             nt = self
@@ -358,6 +362,7 @@ class _Abstraction(Term):
             term=nt.term._capture_avoiding_substitution(
                 var=var, t=t, new_name_source=new_name_source
             ),
+            eager=self.eager,
         )
     
     def _normal_order_beta_reduction(
@@ -377,7 +382,7 @@ class _Abstraction(Term):
             if tc is not None:
                 tc.store_transition(self, self)
             return self, False
-        result = _mk_abstraction(variable=self.variable, term=sub)
+        result = _mk_abstraction(variable=self.variable, term=sub, eager=self.eager)
         assert result != self
         if tc is not None:
             tc.store_transition(self, result)
@@ -408,14 +413,20 @@ class _Abstraction(Term):
             return string_repr_map[self]
         except KeyError:
             pass
+        symbol = "λ"
+        if self.eager:
+            symbol = "Λ"
         if self.variable.name == "":
-            return "(λ" + " " + str(self.term) + ")"
-        return "(λ" + str(self.variable) + " . " + str(self.term) + ")"
+            return "(" + symbol + " " + str(self.term) + ")"
+        return "(" + symbol + str(self.variable) + " . " + str(self.term) + ")"
 
     def __repr__(self, *, need_v: bool = True) -> str:
+        symbol = "λ"
+        if self.eager:
+            symbol = "Λ"
         if self.variable.name == "":
-            return f"λ({self.term.__repr__(need_v=False)})"
-        return f"λ[{self.variable.__repr__(need_v=False)}]({self.term.__repr__(need_v=False)})"
+            return f"{symbol}({self.term.__repr__(need_v=False)})"
+        return f"{symbol}[{self.variable.__repr__(need_v=False)}]({self.term.__repr__(need_v=False)})"
 
     def to_latex(
         self, *, not_expanded: Set | None = None, top_level: bool = False
@@ -427,10 +438,13 @@ class _Abstraction(Term):
                 pass
         s1 = self.variable.to_latex(not_expanded=not_expanded, top_level=False)
         s2 = self.term.to_latex(not_expanded=not_expanded, top_level=False)
+        symbol = "\\lambda"
+        if self.eager:
+            symbol = "\\Lambda"
         if self.variable.name == "":
-            res = f"\\lambda \\; {s2}"
+            res = f"{symbol} \\; {s2}"
         else:
-            res = f"\\lambda \\; {s1} \\;.\\; {s2}"
+            res = f"{symbol} \\; {s1} \\;.\\; {s2}"
         if not top_level:
             res = "( " + res + " )"
         return res
@@ -441,10 +455,12 @@ class _AbstractionFactory:
     """internal class, build abstractions factories with λ['v']"""
 
     vars_seen: Tuple[_Variable, ...]
+    eager: bool
 
     def __post_init__(self):
         assert isinstance(self.vars_seen, Tuple)
         assert len(self.vars_seen) > 0
+        assert isinstance(self.eager, bool)
         names = set()
         for val in self.vars_seen:
             assert isinstance(val, Term)
@@ -458,9 +474,9 @@ class _AbstractionFactory:
         res = None
         for var in reversed(self.vars_seen):
             if res is None:
-                res = _mk_abstraction(variable=var, term=t)
+                res = _mk_abstraction(variable=var, term=t, eager=self.eager)
             else:
-                res = _mk_abstraction(variable=var, term=res)
+                res = _mk_abstraction(variable=var, term=res, eager=self.eager)
         assert isinstance(res, Term)
         return res
 
@@ -468,6 +484,8 @@ class _AbstractionFactory:
 @dataclass(frozen=True, kw_only=True)
 class _AbstractionFactoryFactory:
     """build abstractions with λ['v']('t')"""
+
+    eager: bool
 
     def __getitem__(self, index):
         """Support λ['x']('x') notation for lambda calculus abstraction"""
@@ -481,7 +499,7 @@ class _AbstractionFactoryFactory:
             assert isinstance(val, _Variable)
             names.add(val.name)
         assert len(vars_seen) == len(names)
-        return _AbstractionFactory(vars_seen)
+        return _AbstractionFactory(vars_seen, eager=self.eager)
 
     def __str__(self) -> str:
         return "λ"
@@ -491,7 +509,8 @@ class _AbstractionFactoryFactory:
 
 
 # expose factory factories
-λ = _AbstractionFactoryFactory()
+λ = _AbstractionFactoryFactory(eager=False)
+Λ = _AbstractionFactoryFactory(eager=True)
 
 
 @total_ordering
@@ -535,8 +554,11 @@ class _Composition(Term):
         # first try top most application
         if isinstance(self.left, _Abstraction):
             assert self.left.variable.name != ""
+            right = self.right
+            if self.left.eager:
+                right = right.nf()[0]
             res = self.left.term._capture_avoiding_substitution(
-                var=self.left.variable, t=self.right, new_name_source=new_name_source
+                var=self.left.variable, t=right, new_name_source=new_name_source
             )
             if res != self:
                 if tc is not None:
@@ -686,7 +708,7 @@ FALSE = λ["x", "y"]("y")
 AND = λ["p", "q"]("p", "q", "p")
 OR = λ["p", "q"]("p", "p", "q")
 NOT = λ["p", "a", "b"]("p", "b", "a")
-IFTHENELSE = λ["p", "a", "b"]("p", "a", "b")
+IFTHENELSE = Λ["p"](λ["a", "b"]("p", "a", "b"))
 XOR = λ["p", "q"]("p", (NOT, "q"), "q")
 # isZERO = λn. n (λx. FALSE) TRUE
 isZERO = λ["n"]("n", λ["x"](FALSE), TRUE)
@@ -808,6 +830,7 @@ def parse_l(src: str) -> Term:
     restricted_globals = {
         "__builtins__": {
             "λ": λ,
+            "Λ": Λ,
             "v": v,
             "vr": vr,
             "N": N,
