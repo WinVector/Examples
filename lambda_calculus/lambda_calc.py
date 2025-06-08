@@ -665,17 +665,17 @@ def pretty_print_function(func):
 
 # https://en.wikipedia.org/wiki/Church_encoding#Table_of_functions_on_Church_numerals
 # successor = λn.λf.λx. f (n f x)
-SUCC = λ["n"](λ["f"](λ["x"]("f", ("n", "f", "x"))))
+SUCC = Λ["n"](λ["f"](λ["x"]("f", ("n", "f", "x"))))
 # PLUS
-PLUS = λ["m"](λ["n"]("n", SUCC, "m"))
+PLUS = Λ["m"](Λ["n"]("n", SUCC, "m"))
 # predecessor
-PRED = λ["n"](
+PRED = Λ["n"](
     λ["f"](λ["x"](("n", λ["g"](λ["h"]("h", ("g", "f")))), λ["u"]("x"), λ["u"]("u")))
 )
 # SUB
-SUB = λ["m"](λ["n"]("n", PRED, "m"))
+SUB = Λ["m"](Λ["n"]("n", PRED, "m"))
 # MULT
-MULT = λ["m"](λ["n"](λ["f"](λ["x"]("m", ("n", "f"), "x"))))
+MULT = Λ["m"](Λ["n"](λ["f"](λ["x"]("m", ("n", "f"), "x"))))
 
 # https://en.wikipedia.org/wiki/Fixed-point_combinator
 Y = λ["f"](
@@ -709,21 +709,21 @@ AND = λ["p", "q"]("p", "q", "p")
 OR = λ["p", "q"]("p", "p", "q")
 NOT = λ["p", "a", "b"]("p", "b", "a")
 IFTHENELSE = Λ["p"](λ["a", "b"]("p", "a", "b"))
-XOR = λ["p", "q"]("p", (NOT, "q"), "q")
+XOR = Λ["p", "q"]("p", (NOT, "q"), "q")
 # isZERO = λn. n (λx. FALSE) TRUE
-isZERO = λ["n"]("n", λ["x"](FALSE), TRUE)
+isZERO = Λ["n"]("n", λ["x"](FALSE), TRUE)
 # Less than or equal to:
-LEQ = λ["m", "n"](isZERO, (SUB, "m", "n"))
+LEQ = Λ["m", "n"](isZERO, (SUB, "m", "n"))
 # Less than:
-LT = λ["a", "b"](NOT, (LEQ, "b", "a"))
+LT = Λ["a", "b"](NOT, (LEQ, "b", "a"))
 # Equal to:
-EQ = λ["m", "n"](AND, (LEQ, "m", "n"), (LEQ, "n", "m"))
+EQ = Λ["m", "n"](AND, (LEQ, "m", "n"), (LEQ, "n", "m"))
 # Not equal to:
-NEQ = λ["a", "b"](OR, (NOT, (LEQ, "a", "b")), (NOT, (LEQ, "b", "a")))
+NEQ = Λ["a", "b"](OR, (NOT, (LEQ, "a", "b")), (NOT, (LEQ, "b", "a")))
 # Greater than or equal to:
-GEQ = λ["a", "b"](LEQ, "b", "a")
+GEQ = Λ["a", "b"](LEQ, "b", "a")
 # Greater than:
-GT = λ["a", "b"](NOT, (LEQ, "a", "b"))
+GT = Λ["a", "b"](NOT, (LEQ, "a", "b"))
 # PAIR x y — create a PAIR with a car of x and a cdr of y; also called CONS:
 PAIR = λ["x", "y", "f"]("f", "x", "y")
 # CAR p — get the car of PAIR p; also called FIRST or HEAD:
@@ -740,7 +740,7 @@ DIV = Y(
         LT, "a", "b", (PAIR, "q", "a"), ("g", (SUCC, "q"), (SUB, "a", "b"), "b")
     )
 ) | N(0)
-MOD = λ["a", "b"](CDR, (DIV, "a", "b"))
+MOD = Λ["a", "b"](CDR, (DIV, "a", "b"))
 GCD = λ["g", "m", "n"](LEQ, "m", "n", ("g", "n", "m"), ("g", "m", "n")) | (
     Y,
     λ["g", "x", "y"](isZERO, "y", "x", ("g", "y", (MOD, "x", "y"))),
@@ -748,7 +748,7 @@ GCD = λ["g", "m", "n"](LEQ, "m", "n", ("g", "n", "m"), ("g", "m", "n")) | (
 
 
 # FACTORIAL	=	Y (λgx. isZERO x 1 (MULT x (g (PRED x))))
-FACTORIALstep = λ["g", "x"](isZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x"))))
+FACTORIALstep = λ["g"](Λ["x"](isZERO, "x", N(1), (MULT, "x", ("g", (PRED, "x")))))
 
 
 # define a number of presentation aliases
