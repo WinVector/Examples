@@ -372,7 +372,7 @@ class _Abstraction(Term):
         )
         if not acted:
             if tc is not None:
-                tc.store_transition(self, self)
+                tc.store_absorbing(self)
             return self, False
         result = _mk_abstraction(variable=self.variable, term=sub, eager=self.eager)
         assert result != self
@@ -571,7 +571,7 @@ class _Composition(Term):
             )
         if not (left_triggered or right_triggered):
             if tc is not None:
-                tc.store_transition(self, self)
+                tc.store_absorbing(self)
             return self, False
         res = _mk_composition(left=left, right=right)
         assert res != self
