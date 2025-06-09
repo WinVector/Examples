@@ -387,6 +387,8 @@ class _Abstraction(Term):
         # now know same type
         if self.variable != other.variable:
             return False
+        if self.eager != other.eager:
+            return False
         return self.term == other.term
 
     def __lt__(self, other) -> bool:
@@ -395,6 +397,8 @@ class _Abstraction(Term):
             return l_v
         if self.variable != other.variable:
             return self.variable < other.variable
+        if self.eager != other.eager:
+            return self.eager < other.eager
         return self.term < other.term
 
     def __hash__(self):
