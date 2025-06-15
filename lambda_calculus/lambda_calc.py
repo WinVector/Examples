@@ -269,7 +269,7 @@ class _Variable(Term):
     def to_latex(
         self, *, not_expanded: Set | None = None, top_level: bool = False
     ) -> str:
-        return self.name
+        return self.name.replace('_', '\\_')
 
 
 def _mk_var(name: str) -> _Variable:
