@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from functools import total_ordering
 import re
-from typing import FrozenSet, Iterable, List, Set, Tuple
+from typing import FrozenSet, Iterable, List, Optional, Set, Tuple
 import string
 from abc import ABC, abstractmethod
 
@@ -404,18 +404,34 @@ class _Abstraction(Term):
     def __hash__(self):
         return self._hash_val  # hash NULLed on derived classes that re-define __eq__()
 
+    def _get_value_seq(self) -> Optional[List[Term]]:
+        """Forms like (PAIR | 'x' | 'y') -> λ['f']('f', 'x', 'y')"""
+        val = self.term
+        values = []
+        while True:
+            if isinstance(val, _Variable) and (val == self.variable):
+                return list(reversed(values))
+            if isinstance(val, _Composition):
+                values.append(val.right)
+                val = val.left
+            else:
+                return None
+            
     def __str__(self) -> str:
         try:
             return string_repr_map[self]
         except KeyError:
             pass
+        values = self._get_value_seq()
+        if values is not None:
+            return "[" + ", ".join([str(vi) for vi in values]) + "]"
         symbol = "λ"
         if self.eager:
             symbol = "Λ"
         if self.variable.name == "":
             return "(" + symbol + " " + str(self.term) + ")"
         return "(" + symbol + str(self.variable) + " . " + str(self.term) + ")"
-
+    
     def __repr__(self, *, need_v: bool = True) -> str:
         symbol = "λ"
         if self.eager:
@@ -432,6 +448,9 @@ class _Abstraction(Term):
                 return latex_repr_map[self]
             except KeyError:
                 pass
+            values = self._get_value_seq()
+            if values is not None:
+                return "[" + ", ".join([vi.to_latex(not_expanded=not_expanded, top_level=False) for vi in values]) + "]"
         s1 = self.variable.to_latex(not_expanded=not_expanded, top_level=False)
         s2 = self.term.to_latex(not_expanded=not_expanded, top_level=False)
         symbol = "\\lambda"
@@ -786,7 +805,6 @@ def load_common_aliases(add_reps: bool = True):
     def_text_symbol(PRED, "PRED", add_reps=add_reps)
     def_text_symbol(Y, "Y", add_reps=add_reps)
     def_text_symbol(Z, "Z", add_reps=add_reps)
-    def_text_symbol(PAIR, "PAIR", add_reps=add_reps)
     def_text_symbol(FIRST, "FIRST", add_reps=add_reps)
     def_text_symbol(SECOND, "SECOND", add_reps=add_reps)
     def_text_symbol(TRUE, "TRUE", add_reps=add_reps)
