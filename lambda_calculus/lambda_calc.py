@@ -450,7 +450,7 @@ class _Abstraction(Term):
                 pass
             values = self._get_value_seq()
             if values is not None:
-                return "[" + ", ".join([vi.to_latex(not_expanded=not_expanded, top_level=False) for vi in values]) + "]"
+                return "[_{" + self.variable.to_latex() + "}" + ", ".join([vi.to_latex(not_expanded=not_expanded, top_level=False) for vi in values]) + "]"
         s1 = self.variable.to_latex(not_expanded=not_expanded, top_level=False)
         s2 = self.term.to_latex(not_expanded=not_expanded, top_level=False)
         symbol = "\\lambda"
