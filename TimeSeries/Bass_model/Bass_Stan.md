@@ -41,13 +41,23 @@ converted with
 <https://web.eecs.utk.edu/~dcostine/personal/PowerDeviceLib/DigiTest/index.html>
 
 ``` r
-# read data
-d_all <- read.csv('tag_trends_Pyton.csv', stringsAsFactors = FALSE, strip.white = TRUE)
-d_all['date'] = as.Date(d_all[['date']])
-```
-
-``` r
-tag <- 'Python'
+use_tag_trends = FALSE
+if (use_tag_trends) {
+  # read data
+  d_all <- read.csv('tag_trends_Pyton.csv', stringsAsFactors = FALSE, strip.white = TRUE)
+  d_all['date'] = as.Date(d_all[['date']])
+  tag <- 'Python'
+} else {
+  # new data, shoehorn into previous format and names
+  d_all <- read.csv(
+    'stackoverflow-new-questions-over-time.2009-2024.csv',
+    stringsAsFactors = FALSE, 
+    strip.white = TRUE)
+  tag <- 'new_question_count'
+  d_all$tag <- tag
+  d_all$percent <- d_all$NumQuestions
+  d_all$date <- as.Date(paste0(d_all$Year, '-', d_all$Month, '-01'))   # TODO: move to last day of the month
+}
 d_match <- d_all[d_all$tag == tag, c('date', 'percent', 'tag')]
 n_pad <- 36
 new_dates <- seq(d_match$date[nrow(d_match)], by='1 month', length.out = n_pad + 1)[2:(n_pad + 1)]
@@ -162,35 +172,18 @@ d_predict <- lapply(
   fit_pred_given_train_date)
 ```
 
-    ## Warning: There were 5468 divergent transitions after warmup. See
+    ## Warning: There were 259 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 5677 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 5643 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 5688 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 5678 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
+    ## Warning: The largest R-hat is 3.49, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
 
     ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
     ## Running the chains for more iterations may help. See
@@ -200,23 +193,18 @@ d_predict <- lapply(
     ## Running the chains for more iterations may help. See
     ## https://mc-stan.org/misc/warnings.html#tail-ess
 
-    ## Warning: There were 5719 divergent transitions after warmup. See
+    ## Warning: There were 119 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 5614 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 5581 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
+    ## Warning: The largest R-hat is 4.13, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
 
     ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
     ## Running the chains for more iterations may help. See
@@ -226,57 +214,18 @@ d_predict <- lapply(
     ## Running the chains for more iterations may help. See
     ## https://mc-stan.org/misc/warnings.html#tail-ess
 
-    ## Warning: There were 5780 divergent transitions after warmup. See
+    ## Warning: There were 179 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 5582 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Warning: The largest R-hat is 3.64, indicating chains have not mixed.
     ## Running the chains for more iterations may help. See
-    ## https://mc-stan.org/misc/warnings.html#tail-ess
-
-    ## Warning: There were 5445 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
-    ## Running the chains for more iterations may help. See
-    ## https://mc-stan.org/misc/warnings.html#tail-ess
-
-    ## Warning: There were 5976 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
-    ## Running the chains for more iterations may help. See
-    ## https://mc-stan.org/misc/warnings.html#tail-ess
-
-    ## Warning: There were 5727 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
-    ## Running the chains for more iterations may help. See
-    ## https://mc-stan.org/misc/warnings.html#bulk-ess
-
-    ## Warning: There were 5909 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
+    ## https://mc-stan.org/misc/warnings.html#r-hat
 
     ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
     ## Running the chains for more iterations may help. See
@@ -286,23 +235,18 @@ d_predict <- lapply(
     ## Running the chains for more iterations may help. See
     ## https://mc-stan.org/misc/warnings.html#tail-ess
 
-    ## Warning: There were 5595 divergent transitions after warmup. See
+    ## Warning: There were 215 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
-
-    ## Warning: There were 5220 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
 
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 5203 divergent transitions after warmup. See
-    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
-    ## to find out why this is a problem and how to eliminate them.
-
-    ## Warning: Examine the pairs() plot to diagnose sampling problems
+    ## Warning: The largest R-hat is 3.76, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
 
     ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
     ## Running the chains for more iterations may help. See
@@ -312,41 +256,545 @@ d_predict <- lapply(
     ## Running the chains for more iterations may help. See
     ## https://mc-stan.org/misc/warnings.html#tail-ess
 
-    ## Warning: There were 4651 divergent transitions after warmup. See
+    ## Warning: There were 268 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 3554 divergent transitions after warmup. See
+    ## Warning: The largest R-hat is 3.55, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 158 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 1236 divergent transitions after warmup. See
+    ## Warning: The largest R-hat is 4.14, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 117 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
+    ## Warning: There were 8 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    ## https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 19 divergent transitions after warmup. See
+    ## Warning: The largest R-hat is 3.4, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 176 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 1 divergent transitions after warmup. See
+    ## Warning: The largest R-hat is 3.02, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 164 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
     ## Warning: Examine the pairs() plot to diagnose sampling problems
 
-    ## Warning: There were 2 divergent transitions after warmup. See
+    ## Warning: The largest R-hat is 4.01, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 309 divergent transitions after warmup. See
     ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
     ## to find out why this is a problem and how to eliminate them.
 
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
     ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.14, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 163 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.03, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 263 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 260 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.15, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 185 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.4, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 121 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 493 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    ## https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.35, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 194 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 21 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    ## https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.21, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 190 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.62, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 159 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 372 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    ## https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.81, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 240 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.59, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 202 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.06, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 185 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.87, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 228 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.53, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 155 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.25, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 257 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.26, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 201 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 transitions after warmup that exceeded the maximum treedepth. Increase max_treedepth above 10. See
+    ## https://mc-stan.org/misc/warnings.html#maximum-treedepth-exceeded
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.53, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 191 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.16, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 201 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.76, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 220 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 4.21, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
+
+    ## Warning: There were 150 divergent transitions after warmup. See
+    ## https://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup
+    ## to find out why this is a problem and how to eliminate them.
+
+    ## Warning: There were 4 chains where the estimated Bayesian Fraction of Missing Information was low. See
+    ## https://mc-stan.org/misc/warnings.html#bfmi-low
+
+    ## Warning: Examine the pairs() plot to diagnose sampling problems
+
+    ## Warning: The largest R-hat is 3.5, indicating chains have not mixed.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#r-hat
+
+    ## Warning: Bulk Effective Samples Size (ESS) is too low, indicating posterior means and medians may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#bulk-ess
+
+    ## Warning: Tail Effective Samples Size (ESS) is too low, indicating posterior variances and tail quantiles may be unreliable.
+    ## Running the chains for more iterations may help. See
+    ## https://mc-stan.org/misc/warnings.html#tail-ess
 
 ``` r
 d_predict <- do.call(rbind, d_predict)
@@ -377,7 +825,7 @@ ggplot(mapping = aes(x = date, y = percent)) +
     ## Warning: Removed 36 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-    ## Warning: Removed 1190 rows containing missing values or values outside the scale range
+    ## Warning: Removed 774 rows containing missing values or values outside the scale range
     ## (`geom_line()`).
 
-![](Bass_Stan_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](Bass_Stan_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->

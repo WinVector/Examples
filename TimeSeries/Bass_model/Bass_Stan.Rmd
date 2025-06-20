@@ -29,17 +29,26 @@ converted with
   
 
 ```{r}
-# read data
-d_all <- read.csv('tag_trends_Pyton.csv', stringsAsFactors = FALSE, strip.white = TRUE)
-d_all['date'] = as.Date(d_all[['date']])
-```
-
-```{r}
-tag <- 'Python'
+use_tag_trends = FALSE
+if (use_tag_trends) {
+  # read data
+  d_all <- read.csv('tag_trends_Pyton.csv', stringsAsFactors = FALSE, strip.white = TRUE)
+  d_all['date'] = as.Date(d_all[['date']])
+  tag <- 'Python'
+} else {
+  # new data, shoehorn into previous format and names
+  d_all <- read.csv(
+    'stackoverflow-new-questions-over-time.2009-2024.csv',
+    stringsAsFactors = FALSE, 
+    strip.white = TRUE)
+  tag <- 'new_question_count'
+  d_all$tag <- tag
+  d_all$percent <- d_all$NumQuestions
+  d_all$date <- as.Date(paste0(d_all$Year, '-', d_all$Month, '-01'))   # TODO: move to last day of the month
+}
 d_match <- d_all[d_all$tag == tag, c('date', 'percent', 'tag')]
 n_pad <- 36
 new_dates <- seq(d_match$date[nrow(d_match)], by='1 month', length.out = n_pad + 1)[2:(n_pad + 1)]
-
 ```
 
 
