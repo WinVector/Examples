@@ -2,7 +2,8 @@ stan_ex
 ================
 2025-08-23
 
-[J. Rickert, “Multistate Models for Medical
+Working the problem shared in: [J. Rickert, “Multistate Models for
+Medical
 Applications”](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/)
 
 ``` r
@@ -62,7 +63,8 @@ nrow(cav) - length(unique(cav$PTNUM))
 
     ## [1] 2224
 
-We encode the transitions as an ad-hoc continuous time Markov chain.
+We encode the transitions as an ad-hoc continuous time Markov chain
+(time being given by “years”).
 
 ``` r
 unique(cav$state)
@@ -72,51 +74,69 @@ unique(cav$state)
 
 For this analysis we are going to assume the observation times are
 independent of the states and that there are no unobserved transitions.
-We can perform the analysis with different assumptions.
+We will also model state 4 as absorbing. We can perform the analysis
+with different assumptions.
 
-One can characterize a [continuous time Markov
+A number of lemmas allow us to represent a [continuous time Markov
 chain](https://en.wikipedia.org/wiki/Continuous-time_Markov_chain) by
 estimating exponential holding times at each state and the discrete jump
-probabilities given a transition takes place. We will use the
-memorylessness of the exponential distribution to allow us to analyze
-the recorded data row by row,
+probabilities given a transition takes place.
+
+The [exponential
+distribution](https://en.wikipedia.org/wiki/Exponential_distribution) is
+a probability distribution on the non-negative reals such that:
+
+- The distribution has a single shape parameters $\lambda$.
+- The density at $x$ is $\lambda e^{-\lambda x}$.
+- The mean is $1 / \lambda$.
+- The CDF or $\text{P}[X <= x]$ is $1 - e^{-\lambda x}$.
+- $\text{P}[X >= x] =  e^{-\lambda x}$.
+- The distribution is “memoryless” that is
+  $\text{P}[X >= a + b \;|\; X >= b] = \text{P}[X >= a]$. Or: no matter
+  how long you have waited, your remaining expected wait time remans the
+  same. This property allows us to analyze the recorded data row by row.
 
 In this formulation:the time spent at state $i$ is distributed
 exponential with parameter $\lambda_{i} > 0$.
 
-- Observing a state $i$ to $i$ transition while waiting $t$ time units
-  is given by how much mass of the exponential distribution is at least
-  $t$. For the [exponential
-  distribution](https://en.wikipedia.org/wiki/Exponential_distribution)
-  this is $exp(-\lambda_{i} t)$.
-- Observing a state $i$ to $j$ ($j$ different than $i$) transition at an
-  unknown intermediate time $z$ such that $0 <= z <= t$ happens with
-  probability given by waiting until time $z$ in state $i$, jumping from
-  $i$ to $j$ (itself with probability $P[i, j]$) and then waiting in
-  state $j$ for time $t - z$. For a given $z$ this probability is
-  $(\lambda_{i} exp(-\lambda_{i} z)) P[i, j] (\lambda_{j} exp(-\lambda_{j} (t - z)))$.
+- The probability of observing a state $i$ to $i$ transition while
+  waiting $t$ time units is given by how much mass of the exponential
+  distribution is at least $t$. For the exponential distribution this is
+  $\text{exp}(-\lambda_{i} t)$.
+- The probability of observing a state $i$ to $j$ ($j$ different than
+  $i$) transition at an unknown intermediate time $z$ such that
+  $0 <= z <= t$ happens with probability given by waiting until time $z$
+  in state $i$, jumping from $i$ to $j$ (itself with probability
+  $\text{P}[i, j]$) and then waiting in state $j$ for time $t - z$. For
+  a given $z$ this probability is
+  $(\lambda_{i} \text{exp}(-\lambda_{i} z)) \text{P}[i, j] (\lambda_{j} \text{exp}(-\lambda_{j} (t - z)))$.
   As we don’t know $t$ we integrate it out. The solution in this case is
   (with the correct convention when $\lambda_i = \lambda_j$) then our
-  solution is $P[i, j] I$ where:
+  solution is $\text{P}[i, j] I$ where:
 
 $$
-I(t)=\int_{0}^{t}\bigl(\lambda_i e^{-\lambda_i z}\bigr)\bigl(\lambda_j e^{-\lambda_j (t-z)}\bigr)\,dz
+I = \int_{0}^{t}\bigl(\lambda_i e^{-\lambda_i z}\bigr)\bigl(\lambda_j e^{-\lambda_j (t-z)}\bigr)\,dz
 $$
 
-For $\lambda_i \neq \lambda_j$,
+For $\lambda_i \neq \lambda_j$:
 
 $$
-I(t) = \frac{\lambda_i \lambda_j}{\lambda_i - \lambda_j}\,\Bigl(e^{-\lambda_j t} - e^{-\lambda_i t}\Bigr).
+I = \frac{\lambda_i \lambda_j}{\lambda_i - \lambda_j}\;\Bigl(e^{-\lambda_j t} - e^{-\lambda_i t}\Bigr).
 $$
 
-For the equal–rate case $\lambda_i = \lambda_j = \lambda$,
+For the equal–rate case $\lambda_i = \lambda_j = \lambda$:
 
 $$
-I(t) = \lambda^{2} t e^{-\lambda t}.
+I = \lambda^{2} t e^{-\lambda t}.
 $$
 
-It is a bit delicate to argue why integrating out is a correct step. But
-assuming that let’s proceed.
+The argument that integrating out $z$ is a correct step is as follows:
+we could put it in a model as an unobserved parameter of the model. Then
+sampling the model would be picking viable values of $z$ uniformly,
+which is numerically equivalent to integrating $z$ out. So either having
+$z$ as an explicit unobserved parameter or integrating it out is a
+correct inference method. When the math allows it we integrate out $z$,
+when it does not we just add many $z$ as model parameters.
 
 Given that we can copy these into Stan as distributional statements.
 
@@ -132,7 +152,7 @@ data {
 }
 parameters {
    vector<lower=0>[n_states - 1] lambda;
-   array[n_states - 1] simplex[n_states - 1] P;
+   array[n_states - 1] simplex[n_states - 1] Pd;
 }
 model {
   for (i in 2:m_examples) {
@@ -143,7 +163,7 @@ model {
        if (state[i-1] == state[i]) {
           v = exp(-lambda[state[i]] * t);
        } else {
-          if (abs(lambda[state[i]] - lambda[state[i-1]]) > 1e-5 ) {
+          if (abs(lambda[state[i]] - lambda[state[i-1]]) > 1e-5 ) { // depends on paramter inferences (ick)
             v = (
                lambda[state[i]] * lambda[state[i-1]] 
                  * (
@@ -160,9 +180,9 @@ model {
             );
           }
           if (state[i-1] < state[i]) {
-             v = (v + 1e-6) * (P[state[i-1], state[i] - 1] + 1e-6);
+             v = (v + 1e-6) * (Pd[state[i-1], state[i] - 1] + 1e-6);
           } else {
-             v = (v + 1e-6) * (P[state[i-1], state[i]] + 1e-6);
+             v = (v + 1e-6) * (Pd[state[i-1], state[i]] + 1e-6);
           }
        }
        target += log(v);
@@ -170,6 +190,27 @@ model {
   }
 }
 "
+```
+
+The `Pd`s in this model do not encode self-transitions are in encoded as
+follows:
+
+- For $i > j$ $Pd[i, j]$ is the probability of moving from state $i$ to
+  state $j$.
+- For $i < j$ $Pd[i, j - 1]$ is the probability of moving from state $i$
+  to state $j$.
+
+Notice there is no representation for a $i$ to $i$ transition. When we
+unpack these results we will pad them out to get a more regular
+$\text{P}[i, j]$ represents the $i$ to $j$ transition notation.
+
+One can extend the model to parametric inference by writing `Pd` and
+`lambda` as parametric functions of instance features.
+
+``` r
+model = stan_model(
+  model_code=stan_src
+)
 ```
 
 ``` r
@@ -180,12 +221,6 @@ stan_data <- list(
   pt_idx = array(cav$pt_idx, dim=nrow(cav)),
   years = array(cav$years, dim=nrow(cav)),
   state = array(cav$state, dim=nrow(cav))
-)
-```
-
-``` r
-model = stan_model(
-  model_code=stan_src
 )
 ```
 
@@ -210,20 +245,23 @@ res_row = colMeans(res)
 head(res)
 ```
 
-    ##    lambda[1] lambda[2] lambda[3]    P[1,1]    P[2,1]    P[3,1]    P[1,2]
-    ## 7  0.1123928 0.8107043 0.5702379 0.8213162 0.4920084 0.2146823 0.1775270
-    ## 28 0.1092454 0.8688491 0.5751543 0.8374736 0.4708126 0.2244265 0.1576518
-    ## 55 0.1119164 0.8015940 0.6516123 0.8096482 0.4021262 0.2441190 0.1825884
-    ## 58 0.1159888 0.8752488 0.6418255 0.8422126 0.4230694 0.2340259 0.1540897
-    ## 65 0.1140669 0.8004209 0.5787513 0.8122135 0.4540259 0.2804119 0.1846411
-    ## 66 0.1124174 0.8693859 0.6179292 0.8284956 0.5318478 0.2312035 0.1693184
-    ##       P[2,2]    P[3,2]      P[1,3]      P[2,3]     P[3,3]      lp__
-    ## 7  0.4987629 0.7288027 0.001156786 0.009228682 0.05651496 -1588.638
-    ## 28 0.5157689 0.6609712 0.004874563 0.013418447 0.11460227 -1588.443
-    ## 55 0.5829153 0.6702733 0.007763368 0.014958524 0.08560772 -1588.992
-    ## 58 0.5699624 0.7284082 0.003697739 0.006968245 0.03756588 -1587.817
-    ## 65 0.5430947 0.6886308 0.003145411 0.002879395 0.03095730 -1588.540
-    ## 66 0.4564130 0.7519988 0.002186013 0.011739175 0.01679769 -1588.782
+    ##     lambda[1] lambda[2] lambda[3]   Pd[1,1]   Pd[2,1]   Pd[3,1]   Pd[1,2]
+    ## 3   0.1223674 0.8838565 0.6129668 0.8043390 0.4006824 0.3291733 0.1871298
+    ## 13  0.1114156 0.9137987 0.6447728 0.8320322 0.4314964 0.2948990 0.1639359
+    ## 66  0.1054589 0.8909868 0.6392754 0.8018206 0.4723852 0.2314866 0.1947322
+    ## 68  0.1191955 0.8469413 0.6911536 0.8209667 0.4677357 0.1506810 0.1769831
+    ## 97  0.1134738 0.7842399 0.6551597 0.8167071 0.4677353 0.2407239 0.1750486
+    ## 108 0.1067612 0.8947860 0.6405105 0.8023108 0.4575656 0.2793243 0.1909671
+    ##       Pd[2,2]   Pd[3,2]     Pd[1,3]     Pd[2,3]    Pd[3,3]      lp__
+    ## 3   0.5915534 0.6058033 0.008531218 0.007764186 0.06502336 -1588.957
+    ## 13  0.5384008 0.6455861 0.004031864 0.030102777 0.05951493 -1588.749
+    ## 66  0.5209407 0.7184908 0.003447249 0.006674112 0.05002266 -1588.285
+    ## 68  0.5179972 0.8155314 0.002050232 0.014267098 0.03378759 -1588.836
+    ## 97  0.5229720 0.6953230 0.008244253 0.009292637 0.06395303 -1588.696
+    ## 108 0.5363080 0.6707344 0.006722120 0.006126411 0.04994129 -1588.145
+
+From our sample can extract the discrete step matrix, which encodes:
+given one changed states what state did one change to?
 
 ``` r
 n_states = max(cav$state)
@@ -235,7 +273,7 @@ for (i in 1:(n_states - 1)) {
        if (j > i) {
          js = j - 1
        }
-       step_matrix[i, j] = as.numeric(res_row[paste0('P[', i, ',', js, ']')])
+       step_matrix[i, j] = as.numeric(res_row[paste0('Pd[', i, ',', js, ']')])
      }
   }
 }
@@ -244,27 +282,34 @@ step_matrix
 ```
 
     ##           [,1]      [,2]      [,3]        [,4]
-    ## [1,] 0.0000000 0.8169563 0.1790582 0.003985539
-    ## [2,] 0.4561042 0.0000000 0.5340262 0.009869612
-    ## [3,] 0.2485218 0.7013695 0.0000000 0.050108793
+    ## [1,] 0.0000000 0.8165590 0.1793439 0.004097103
+    ## [2,] 0.4564665 0.0000000 0.5338751 0.009658366
+    ## [3,] 0.2508746 0.7002663 0.0000000 0.048859159
     ## [4,] 0.0000000 0.0000000 0.0000000 0.000000000
 
+And it is then standard to combine this and the expected hold-times to
+get the Q matrix.
+
 ``` r
-q_matrix = step_matrix
+Q = step_matrix
 for (j in 1:(n_states - 1)) {
   # divide by expected hold time (1/lambda)
-  q_matrix[, j] = q_matrix[, j] * res_row[paste0('lambda[', j, ']')]
+  Q[, j] = Q[, j] * res_row[paste0('lambda[', j, ']')]
 }
-diag = -rowSums(q_matrix)
+diag = -rowSums(Q)
 for (j in 1:(n_states - 1)) {
-  q_matrix[j, j] = diag[j]
+  Q[j, j] = diag[j]
 }
 
-q_matrix
+Q
 ```
 
     ##             [,1]       [,2]       [,3]        [,4]
-    ## [1,] -0.82266104  0.7080739  0.1106016 0.003985539
-    ## [2,]  0.05234468 -0.3920744  0.3298601 0.009869612
-    ## [3,]  0.02852153  0.6078923 -0.6865226 0.050108793
+    ## [1,] -0.82177483  0.7070131  0.1106646 0.004097103
+    ## [2,]  0.05238165 -0.3914692  0.3294291 0.009658366
+    ## [3,]  0.02878902  0.6063216 -0.6839698 0.048859159
     ## [4,]  0.00000000  0.0000000  0.0000000 0.000000000
+
+It is a standard argument that the probability of observing a patient
+starting in state $i$ being in state $j$ at time $t$ is then
+$\text{exp}(t Q)[i, j]$.
