@@ -53,11 +53,13 @@ I(t)=\int_{0}^{t}\bigl(\lambda_i e^{-\lambda_i z}\bigr)\bigl(\lambda_j e^{-\lamb
 \]
 
 For $\lambda_i \neq \lambda_j$,
+
 \[
 I(t) = \frac{\lambda_i \lambda_j}{\lambda_i - \lambda_j}\,\Bigl(e^{-\lambda_j t} - e^{-\lambda_i t}\Bigr).
 \]
 
 For the equal--rate case $\lambda_i = \lambda_j = \lambda$,
+
 \[
 I(t) = \lambda^{2} t e^{-\lambda t}.
 \]
