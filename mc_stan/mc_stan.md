@@ -63,8 +63,10 @@ unique(cav$state)
 
 For this analysis we are going to assume the observation times are
 independent of the states and that there are no unobserved transitions.
-We will also model state 4 as absorbing. We can perform the analysis
-with different assumptions.
+This is a strong assumption that the reporting intervals are triggers
+are sufficiently sensitive. If this is not the case we need different
+methods. We will also model state 4 as absorbing. We can perform the
+analysis with different assumptions.
 
 A number of lemmas allow us to represent a [continuous time Markov
 chain](https://en.wikipedia.org/wiki/Continuous-time_Markov_chain) by
@@ -82,8 +84,9 @@ a probability distribution on the non-negative reals such that:
 - $\text{P}[X >= x] =  e^{-\lambda x}$.
 - The distribution is “memoryless” that is
   $\text{P}[X >= a + b \;|\; X >= b] = \text{P}[X >= a]$. Or: no matter
-  how long you have waited, your remaining expected wait time remans the
-  same. This property allows us to analyze the recorded data row by row.
+  how long you have waited, your remaining expected wait time remains
+  the same. This property allows us to analyze the recorded data row by
+  row.
 
 In this formulation:the time spent at state $i$ is distributed
 exponential with parameter $\lambda_{i} > 0$.
@@ -242,19 +245,19 @@ head(res)
 ```
 
     ##    lambda[1] lambda[2] lambda[3]   Pd[1,1]   Pd[2,1]   Pd[3,1]   Pd[1,2]
-    ## 19 0.1117116 0.8672675 0.5891406 0.8371314 0.4269707 0.2421480 0.1613028
-    ## 26 0.1092027 0.8689813 0.5433011 0.8318111 0.4988148 0.2261622 0.1666959
-    ## 56 0.1216461 0.8730400 0.5615971 0.7991770 0.4552582 0.2249190 0.1985382
-    ## 57 0.1046196 0.8789665 0.6251324 0.8015848 0.4659379 0.2837044 0.1942818
-    ## 76 0.1213487 0.8531039 0.6481224 0.8203592 0.4852439 0.3890683 0.1755155
-    ## 84 0.1136673 0.9673022 0.6029154 0.8244254 0.4747332 0.2368654 0.1730495
+    ## 16 0.1117771 0.9107910 0.5563224 0.8072418 0.4877638 0.2070548 0.1906809
+    ## 29 0.1182994 0.8390753 0.6383566 0.8218126 0.4308002 0.3448029 0.1769441
+    ## 34 0.1175728 0.8122443 0.6120411 0.8254118 0.4283582 0.2521401 0.1724068
+    ## 35 0.1135881 0.9452308 0.5998294 0.8046824 0.4883482 0.2357641 0.1892020
+    ## 46 0.1062699 0.8623818 0.6326565 0.8310621 0.5165730 0.2510608 0.1661709
+    ## 79 0.1203141 0.8602104 0.6567315 0.8159983 0.4484316 0.3092398 0.1754100
     ##      Pd[2,2]   Pd[3,2]     Pd[1,3]     Pd[2,3]    Pd[3,3]      lp__
-    ## 19 0.5708452 0.6840276 0.001565828 0.002184068 0.07382439 -1588.643
-    ## 26 0.4922962 0.7251128 0.001492962 0.008889056 0.04872499 -1588.865
-    ## 56 0.5343881 0.7510072 0.002284841 0.010353682 0.02407380 -1588.408
-    ## 57 0.5303302 0.6747311 0.004133398 0.003731880 0.04156450 -1588.634
-    ## 76 0.5114736 0.5738843 0.004125234 0.003282470 0.03704733 -1588.825
-    ## 84 0.5089408 0.7290891 0.002525115 0.016326061 0.03404544 -1588.888
+    ## 16 0.5056185 0.7549363 0.002077362 0.006617621 0.03800892 -1588.393
+    ## 29 0.5507399 0.5656126 0.001243263 0.018459903 0.08958451 -1588.724
+    ## 34 0.5576029 0.6759211 0.002181409 0.014038981 0.07193871 -1587.897
+    ## 35 0.5050987 0.7288428 0.006115601 0.006553083 0.03539309 -1588.339
+    ## 46 0.4782064 0.7082499 0.002767005 0.005220656 0.04068934 -1588.756
+    ## 79 0.5444161 0.6673174 0.008591729 0.007152224 0.02344288 -1588.126
 
 From our sample can extract the discrete step matrix, which encodes:
 given one changed states what state did one change to?
@@ -278,9 +281,9 @@ step_matrix
 ```
 
     ##           [,1]      [,2]      [,3]        [,4]
-    ## [1,] 0.0000000 0.8164378 0.1796499 0.003912301
-    ## [2,] 0.4569746 0.0000000 0.5334275 0.009597949
-    ## [3,] 0.2484394 0.7016147 0.0000000 0.049945932
+    ## [1,] 0.0000000 0.8167639 0.1792965 0.003939604
+    ## [2,] 0.4563015 0.0000000 0.5340446 0.009653838
+    ## [3,] 0.2492236 0.7022662 0.0000000 0.048510225
     ## [4,] 0.0000000 0.0000000 0.0000000 0.000000000
 
 And it is then standard to combine this and the expected hold-times to
@@ -301,14 +304,40 @@ Q
 ```
 
     ##             [,1]       [,2]       [,3]        [,4]
-    ## [1,] -0.82289603  0.7081322  0.1108515 0.003912301
-    ## [2,]  0.05246478 -0.3912099  0.3291471 0.009597949
-    ## [3,]  0.02852307  0.6085411 -0.6870101 0.049945932
+    ## [1,] -0.82288941  0.7082904  0.1106595 0.003939604
+    ## [2,]  0.05241097 -0.3916701  0.3296053 0.009653838
+    ## [3,]  0.02862592  0.6089989 -0.6861351 0.048510225
     ## [4,]  0.00000000  0.0000000  0.0000000 0.000000000
 
 It is a standard argument that the probability of observing a patient
 starting in state $i$ being in state $j$ at time $t$ is then
-$\text{exp}(t Q)[i, j]$.
+$\text{exp}(t Q)[i, j]$. An example of the `0.1` year situation is as
+follows.
+
+``` r
+Matrix::expm(0.1 * Q)
+```
+
+    ## 4 x 4 Matrix of class "dgeMatrix"
+    ##             [,1]       [,2]       [,3]         [,4]
+    ## [1,] 0.921195520 0.06700413 0.01136186 0.0004384922
+    ## [2,] 0.004978949 0.96272357 0.03127220 0.0010252821
+    ## [3,] 0.002805482 0.05782530 0.93465034 0.0047188754
+    ## [4,] 0.000000000 0.00000000 0.00000000 1.0000000000
+
+As is usual with exponents, the `k* 0.1` year estimate is the `k'th`
+power of the `0.1` year estimate.
+
+``` r
+Matrix::expm(3 * 0.1 * Q) - (Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q))
+```
+
+    ## 4 x 4 Matrix of class "dgeMatrix"
+    ##               [,1]          [,2]          [,3]          [,4]
+    ## [1,]  1.110223e-16 -2.775558e-17 -6.938894e-18  0.000000e+00
+    ## [2,] -3.469447e-18 -3.330669e-16 -2.775558e-17 -4.336809e-19
+    ## [3,] -1.734723e-18 -5.551115e-17 -4.440892e-16 -3.469447e-18
+    ## [4,]  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
 
 Notice we have not referred to the [Kolmogorov
 equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains),
@@ -345,4 +374,4 @@ plot_frame = pivot_to_blocks(
 )
 ```
 
-![](mc_stan_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](mc_stan_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->

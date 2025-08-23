@@ -42,7 +42,7 @@ We encode the transitions as an ad-hoc continuous time Markov chain (time being 
 unique(cav$state)
 ```
 
-For this analysis we are going to assume the observation times are independent of the states and that there are no unobserved transitions. We will also model state 4 as absorbing. We can perform the analysis with different assumptions.
+For this analysis we are going to assume the observation times are independent of the states and that there are no unobserved transitions. This is a strong assumption that the reporting intervals are triggers are sufficiently sensitive. If this is not the case we need different methods. We will also model state 4 as absorbing. We can perform the analysis with different assumptions.
 
 
 A number of lemmas allow us to represent a [continuous time Markov chain](https://en.wikipedia.org/wiki/Continuous-time_Markov_chain) by estimating exponential holding times at each state and the discrete jump probabilities given a transition takes place. 
@@ -54,7 +54,7 @@ The [exponential distribution](https://en.wikipedia.org/wiki/Exponential_distrib
   * The mean is $1 / \lambda$.
   * The CDF or $\text{P}[X <= x]$ is $1 - e^{-\lambda x}$.
   * $\text{P}[X >= x] =  e^{-\lambda x}$.
-  * The distribution is "memoryless" that is $\text{P}[X >= a + b \;|\; X >= b] = \text{P}[X >= a]$. Or: no matter how long you have waited, your remaining expected wait time remans the same. This property allows us to analyze the recorded data row by row.
+  * The distribution is "memoryless" that is $\text{P}[X >= a + b \;|\; X >= b] = \text{P}[X >= a]$. Or: no matter how long you have waited, your remaining expected wait time remains the same. This property allows us to analyze the recorded data row by row.
 
 
 In this formulation:the time spent at state $i$ is distributed exponential with parameter $\lambda_{i} > 0$.
@@ -224,7 +224,20 @@ for (j in 1:(n_states - 1)) {
 Q
 ```
 
-It is a standard argument that the probability of observing a patient starting in state $i$ being in state $j$ at time $t$ is then $\text{exp}(t Q)[i, j]$. 
+
+
+It is a standard argument that the probability of observing a patient starting in state $i$ being in state $j$ at time $t$ is then $\text{exp}(t Q)[i, j]$. An example of the `0.1` year situation is as follows.
+
+```{r}
+Matrix::expm(0.1 * Q)
+```
+
+As is usual with exponents, the `k* 0.1` year estimate is the `k'th` power of the `0.1` year estimate.
+
+```{r}
+Matrix::expm(3 * 0.1 * Q) - (Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q))
+```
+
 
 Notice we have not referred to the [Kolmogorov equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains), instead attempting to infer parameters that entail a Q-matrix which we can use to build detailed summaries.
 
