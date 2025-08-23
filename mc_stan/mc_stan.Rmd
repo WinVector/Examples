@@ -97,12 +97,16 @@ parameters {
 }
 model {
   for (i in 2:m_examples) {
-     if ((pt_idx[i-1] == pt_idx[i]) && (state[i] < n_states)) {
+     if ((pt_idx[i-1] == pt_idx[i]) && (state[i-1] < n_states)) {
        real t;
        real v;
        t = years[i] - years[i-1];
        if (state[i-1] == state[i]) {
-          v = exp(-lambda[state[i]] * t);
+          // stayed: 1 - CDF
+          v = exp(-lambda[state[i-1]] * t);
+       } else if (state[i] >= n_states) {
+          // moved: CDF
+          v = 1 - exp(-lambda[state[i-1]] * t);
        } else {
           if (abs(lambda[state[i]] - lambda[state[i-1]]) > 1e-5 ) { // depends on paramter inferences (ick)
             v = (
@@ -240,7 +244,7 @@ Notice we have not referred to the [Kolmogorov equations](https://en.wikipedia.o
 
 ```{r}
 time_frame = data.frame(
-  year = seq(from=0, to=10, by=0.1),
+  year = seq(from=0, to=20, by=0.1),
   s1 = 0,
   s2 = 0,
   s3 = 0,
