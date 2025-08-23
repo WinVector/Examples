@@ -61,16 +61,16 @@ In this formulation:the time spent at state $i$ is distributed exponential with 
   * The probability of observing a state $i$ to $j$ ($j$ different than $i$) transition at an unknown intermediate time $z$ such that $0 <= z <= t$ happens with probability given by waiting until time $z$ in state $i$, jumping from $i$ to $j$ (itself with probability $\text{P}[i, j]$) and then waiting in state $j$ for time $t - z$. For a given $z$ this probability is $(\lambda_{i} \text{exp}(-\lambda_{i} z)) \text{P}[i, j] (\lambda_{j} \text{exp}(-\lambda_{j} (t - z)))$. As we don't know $t$ we integrate it out. The solution in this case is (with the correct convention when $\lambda_i = \lambda_j$) then our solution is $\text{P}[i, j] I$ where:
   
 \[
-I = \int_{0}^{t}\bigl(\lambda_i e^{-\lambda_i z}\bigr)\bigl(\lambda_j e^{-\lambda_j (t-z)}\bigr)\,dz
+I = \int_{0}^{t} \bigl(\lambda_i e^{-\lambda_i z}\bigr) \bigl(\lambda_j e^{-\lambda_j (t-z)}\bigr) dz
 \]
 
 For $\lambda_i \neq \lambda_j$:
 
 \[
-I = \frac{\lambda_i \lambda_j}{\lambda_i - \lambda_j}\;\Bigl(e^{-\lambda_j t} - e^{-\lambda_i t}\Bigr).
+I = \frac{\lambda_i \lambda_j}{\lambda_i - \lambda_j} \Bigl(e^{-\lambda_j t} - e^{-\lambda_i t}\Bigr).
 \]
 
-For the equal--rate case $\lambda_i = \lambda_j = \lambda$:
+For $\lambda_i = \lambda_j = \lambda$ the above form is problematic, and we switch to its limit:
 
 \[
 I = \lambda^{2} t e^{-\lambda t}.
