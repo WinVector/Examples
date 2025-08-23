@@ -1,0 +1,206 @@
+---
+title: "stan_ex"
+output: github_document
+date: "2025-08-23"
+---
+
+Working the problem shared in: 
+[J. Rickert, "Multistate Models for Medical Applications"](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/).
+
+Direct Q solution.
+
+
+```{r, warning=FALSE, message=FALSE, results='hide'}
+library(msm)
+library(rstan)
+library(cdata)
+library(ggplot2)
+```
+
+```{r}
+cav = cav[order(cav$PTNUM, cav$years), , drop=FALSE]
+cav$pt_idx = match(cav$PTNUM, unique(cav$PTNUM))
+head(cav)
+```
+
+
+```{r}
+statetable.msm(state = state, subject = PTNUM, data = cav)
+```
+
+Each row (except for the first) for each patient represents an observed state transition. We confirm this by comparing the following counts.
+
+```{r}
+sum(statetable.msm(state = state, subject = PTNUM, data = cav))
+```
+
+```{r}
+nrow(cav) - length(unique(cav$PTNUM))
+```
+
+We encode this in Q-form where a state `i` to state `j` transition (`i=j` allowed) after time `t` is observed with probability `exp(t Q)[i, j]`.
+
+We model state 4 as absorbing. We can perform the analysis with different assumptions.
+
+Let's translate this into Stan as distributional statements.
+
+```{r}
+stan_src = "
+data {
+  int<lower=1> m_examples;
+  int<lower=2> n_states;
+  int<lower=1> n_patients;
+  array[m_examples] int<lower=1, upper=n_patients> pt_idx;
+  vector[m_examples] years;
+  array[m_examples] int<lower=1, upper=n_states> state;
+}
+parameters {
+  matrix<lower=0>[n_states - 1, n_states] Qd;
+}
+transformed parameters {
+  matrix[n_states, n_states] Q;
+  for (i in 1:n_states - 1) {
+    for (j in 1:n_states) {
+      if (i != j) {
+        Q[i, j] = Qd[i, j];
+      } else {
+        Q[i, j] = 0;
+      }
+    }
+  }
+  for (j in 1:n_states) {
+    Q[n_states , j] = 0;
+  }
+  for (i in 1:n_states - 1) {
+    for (j in 1:n_states) {
+      if (i != j) {
+        Q[i, i] = Q[i, i] - Qd[i, j];
+      }
+    }
+  }
+}
+model {
+  // diffuse priors
+  for (i in 1:n_states - 1) {
+    for (j in 1:n_states) {
+       Qd[i, j] ~ exponential(0.01);
+    }
+  }
+  // relation to observations
+  for (i in 2:m_examples) {
+     if ((pt_idx[i-1] == pt_idx[i])  && (state[i - 1] < n_states)) {
+       real pij;
+       pij = matrix_exp( (years[i] - years[i-1]) * Q )[state[i-1], state[i]];
+       target += log(pij + 1e-6);
+     }
+  }
+}
+"
+```
+
+
+Let's use Stan to find a set of parameters for which the observations are likely.
+
+```{r, warning=FALSE, message=FALSE, results='hide'}
+model = stan_model(
+  model_code=stan_src
+)
+```
+
+```{r}
+stan_data <- list(
+  m_examples = nrow(cav),
+  n_states = max(cav$state),
+  n_patients = max(cav$pt_idx),
+  pt_idx = array(cav$pt_idx, dim=nrow(cav)),
+  years = array(cav$years, dim=nrow(cav)),
+  state = array(cav$state, dim=nrow(cav))
+)
+```
+
+
+
+```{r}
+res <- as.data.frame(sampling(
+  model,
+  data = stan_data,
+  chains = 4,                 # number of Markov chains
+  cores = 4,                  # number of cores (could use one per chain)
+  warmup = 500,              # number of warmup iterations per chain
+  iter = 1000,                # total number of iterations per chain
+  refresh = 0                # no progress shown
+))
+```
+
+```{r}
+res = res[res$lp__ >= quantile(res$lp__, 0.9), , drop=FALSE]
+res_row = colMeans(res)
+```
+
+```{r}
+head(res)
+```
+
+We now pull out an estimate of the so-called Q matrix.
+
+```{r}
+n_states = max(cav$state)
+Q = matrix(0, nrow=n_states, ncol=n_states)
+for (i in 1:(n_states - 1)) {
+  for (j in 1:n_states) {
+       Q[i, j] = as.numeric(res_row[paste0('Q[', i, ',', j, ']')])
+     }
+}
+
+Q
+```
+
+
+It is a standard argument that the probability of observing a patient starting in state $i$ being in state $j$ at time $t$ is then $\text{exp}(t Q)[i, j]$. An example of the `0.1` year situation is as follows.
+
+```{r}
+Matrix::expm(0.1 * Q)
+```
+
+As is usual with exponents, the `k* 0.1` year estimate is the `k'th` power of the `0.1` year estimate.
+
+```{r}
+Matrix::expm(3 * 0.1 * Q) - (Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q))
+```
+
+
+Notice we have not referred to the [Kolmogorov equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains), instead attempting to infer parameters that entail a Q-matrix which we can use to build detailed summaries.
+
+```{r}
+time_frame = data.frame(
+  year = seq(from=0, to=10, by=0.1),
+  s1 = 0,
+  s2 = 0,
+  s3 = 0,
+  s4 = 0
+  )
+for (i in 1:nrow(time_frame)) {
+  d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
+  time_frame[i, 's1'] = d[1, 1]
+  time_frame[i, 's2'] = d[1, 2]
+  time_frame[i, 's3'] = d[1, 3]
+  time_frame[i, 's4'] = d[1, 4]
+}
+plot_frame = pivot_to_blocks(
+  time_frame, 
+  nameForNewKeyColumn = 'state', 
+  nameForNewValueColumn = 'probability', 
+  columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
+(
+  ggplot(
+    data=plot_frame,
+    mapping=aes(x=year, y=probability, color=state)
+    )
+  + geom_line()
+  + ggtitle("probability of being in state-i starting from state-1 by year")
+)
+```
+
+
+
+
