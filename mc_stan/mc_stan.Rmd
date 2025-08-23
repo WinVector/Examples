@@ -38,9 +38,6 @@ nrow(cav) - length(unique(cav$PTNUM))
 
 We encode the transitions as an ad-hoc continuous time Markov chain (time being given by "years").
 
-```{r}
-unique(cav$state)
-```
 
 For this analysis we are going to assume the observation times are independent of the states and that there are no unobserved transitions. This is a strong assumption that the reporting intervals are triggers are sufficiently sensitive. If this is not the case we need different methods. We will also model state 4 as absorbing. We can perform the analysis with different assumptions.
 
