@@ -1,0 +1,194 @@
+---
+title: "stan_ex"
+output: github_document
+date: "2025-08-23"
+---
+
+[J. Rickert, "Multistate Models for Medical Applications"](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/)
+
+
+```{r}
+library(msm)
+library(rstan)
+```
+
+```{r}
+cav = cav[order(cav$PTNUM, cav$years), , drop=FALSE]
+cav$pt_idx = match(cav$PTNUM, unique(cav$PTNUM))
+head(cav)
+```
+
+
+```{r}
+statetable.msm(state = state, subject = PTNUM, data = cav)
+```
+
+Each row (except for the first) for each patient represents an observed state transition. We confirm this by comparing the following counts.
+
+```{r}
+sum(statetable.msm(state = state, subject = PTNUM, data = cav))
+```
+
+```{r}
+nrow(cav) - length(unique(cav$PTNUM))
+```
+
+We encode the transitions as an ad-hoc continuous time Markov chain.
+
+```{r}
+unique(cav$state)
+```
+
+For this analysis we are going to assume the observation times are independent of the states and that there are no unobserved transitions. We can perform the analysis with different assumptions.
+
+One can characterize a [continuous time Markov chain](https://en.wikipedia.org/wiki/Continuous-time_Markov_chain) by estimating exponential holding times at each state and the discrete jump probabilities given a transition takes place. We will use the memorylessness of the exponential distribution to allow us to analyze the recorded data row by row, 
+
+In this formulation:the time spent at state $i$ is distributed exponential with parameter $\lambda_{i} > 0$.
+
+  * Observing a state $i$ to $i$ transition while waiting $t$ time units is given by how much mass of the exponential distribution is at least $t$. For the [exponential distribution](https://en.wikipedia.org/wiki/Exponential_distribution) this is $exp(-\lambda_{i} t)$.
+  * Observing a state $i$ to $j$ ($j$ different than $i$) transition at an unknown intermediate time $z$ such that $0 <= z <= t$ happens with probability given by waiting until time $z$ in state $i$, jumping from $i$ to $j$ (itself with probability $P[i, j]$) and then waiting in state $j$ for time $t - z$. For a given $z$ this probability is $(\lambda_{i} exp(-\lambda_{i} z)) P[i, j] (\lambda_{j} exp(-\lambda_{j} (t - z)))$. As we don't know $t$ we integrate it out. The solution in this case is (with the correct convention when $\lambda_i = \lambda_j$) then our solution is $P[i, j] I$ where:
+  
+\[
+I(t)=\int_{0}^{t}\bigl(\lambda_i e^{-\lambda_i z}\bigr)\bigl(\lambda_j e^{-\lambda_j (t-z)}\bigr)\,dz
+\]
+
+For $\lambda_i \neq \lambda_j$,
+\[
+I(t) = \frac{\lambda_i \lambda_j}{\lambda_i - \lambda_j}\,\Bigl(e^{-\lambda_j t} - e^{-\lambda_i t}\Bigr).
+\]
+
+For the equal--rate case $\lambda_i = \lambda_j = \lambda$,
+\[
+I(t) = \lambda^{2} t e^{-\lambda t}.
+\]
+
+It is a bit delicate to argue why integrating out is a correct step. But assuming that let's proceed.
+
+Given that we can copy these into Stan as distributional statements.
+
+```{r}
+stan_src = "
+data {
+  int<lower=1> m_examples;
+  int<lower=2> n_states;
+  int<lower=1> n_patients;
+  array[m_examples] int<lower=1, upper=n_patients> pt_idx;
+  vector[m_examples] years;
+  array[m_examples] int<lower=1, upper=n_states> state;
+}
+parameters {
+   vector<lower=0>[n_states - 1] lambda;
+   array[n_states - 1] simplex[n_states - 1] P;
+}
+model {
+  for (i in 2:m_examples) {
+     if ((pt_idx[i-1] == pt_idx[i]) && (state[i] < n_states)) {
+       real t;
+       real v;
+       t = years[i] - years[i-1];
+       if (state[i-1] == state[i]) {
+          v = exp(-lambda[state[i]] * t);
+       } else {
+          if (abs(lambda[state[i]] - lambda[state[i-1]]) > 1e-5 ) {
+            v = (
+               lambda[state[i]] * lambda[state[i-1]] 
+                 * (
+                    exp(-lambda[state[i-1]] * t)
+                    - exp(-lambda[state[i]] * t)
+                 )
+                 / (lambda[state[i]] - lambda[state[i-1]])
+            );
+          } else {
+            v = (
+               lambda[state[i]] * lambda[state[i-1]] 
+                  * t 
+                  * exp(-(lambda[state[i]] + lambda[state[i-1]]) * t / 2)
+            );
+          }
+          if (state[i-1] < state[i]) {
+             v = (v + 1e-6) * (P[state[i-1], state[i] - 1] + 1e-6);
+          } else {
+             v = (v + 1e-6) * (P[state[i-1], state[i]] + 1e-6);
+          }
+       }
+       target += log(v);
+     }
+  }
+}
+"
+```
+
+```{r}
+stan_data <- list(
+  m_examples = nrow(cav),
+  n_states = max(cav$state),
+  n_patients = max(cav$pt_idx),
+  pt_idx = array(cav$pt_idx, dim=nrow(cav)),
+  years = array(cav$years, dim=nrow(cav)),
+  state = array(cav$state, dim=nrow(cav))
+)
+```
+
+```{r}
+model = stan_model(
+  model_code=stan_src
+)
+```
+
+```{r}
+res <- as.data.frame(sampling(
+  model,
+  data = stan_data,
+  chains = 4,                 # number of Markov chains
+  cores = 4,                  # number of cores (could use one per chain)
+  warmup = 16000,              # number of warmup iterations per chain
+  iter = 20000,                # total number of iterations per chain
+  refresh = 0                # no progress shown
+))
+```
+
+```{r}
+res = res[res$lp__ >= quantile(res$lp__, 0.9), , drop=FALSE]
+res_row = colMeans(res)
+```
+
+```{r}
+head(res)
+```
+
+
+```{r}
+n_states = max(cav$state)
+step_matrix = matrix(0, nrow=n_states, ncol=n_states)
+for (i in 1:(n_states - 1)) {
+  for (j in 1:n_states) {
+     if (i!=j) {
+       js = j
+       if (j > i) {
+         js = j - 1
+       }
+       step_matrix[i, j] = as.numeric(res_row[paste0('P[', i, ',', js, ']')])
+     }
+  }
+}
+
+step_matrix
+```
+
+```{r}
+q_matrix = step_matrix
+for (j in 1:(n_states - 1)) {
+  # divide by expected hold time (1/lambda)
+  q_matrix[, j] = q_matrix[, j] * res_row[paste0('lambda[', j, ']')]
+}
+diag = -rowSums(q_matrix)
+for (j in 1:(n_states - 1)) {
+  q_matrix[j, j] = diag[j]
+}
+
+q_matrix
+```
+
+
+
+
