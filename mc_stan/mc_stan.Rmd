@@ -8,9 +8,11 @@ Working the problem shared in:
 [J. Rickert, "Multistate Models for Medical Applications"](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/)
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE, results='hide'}
 library(msm)
 library(rstan)
+library(cdata)
+library(ggplot2)
 ```
 
 ```{r}
@@ -76,6 +78,8 @@ For $\lambda_i = \lambda_j = \lambda$ the above form is problematic, and we swit
 I = \lambda^{2} t e^{-\lambda t}.
 \]
 
+The switching is problematic (it destroys derivatives), but could be softened by different interpolation ideas.
+
 The argument that integrating out $z$ is a correct step is as follows: we could put it in a model as an unobserved parameter of the model. Then sampling the model would be picking viable values of $z$ uniformly, which is numerically equivalent to integrating $z$ out. So either having $z$ as an explicit unobserved parameter or integrating it out is a correct inference method. When the math allows it we integrate out $z$, when it does not we just add many $z$ as model parameters.
 
 Given that we can copy these into Stan as distributional statements.
@@ -134,13 +138,15 @@ model {
 
 The `Pd`s in this model do not encode self-transitions are in encoded as follows:
 
-   * For $i > j$ $Pd[i, j]$ is the probability of moving from state $i$ to state $j$.
-   * For $i < j$ $Pd[i, j - 1]$ is the probability of moving from state $i$ to state $j$.
+   * For $i > j$ $\text{Pd}[i, j]$ is the probability of moving from state $i$ to state $j$, given there was a transition.
+   * For $i < j$ $\text{Pd}[i, j - 1]$ is the probability of moving from state $i$ to state $j$, given there was a transition.
 
 Notice there is no representation for a $i$ to $i$ transition. When we unpack these results we will pad them out to get a more regular $\text{P}[i, j]$ represents the $i$ to $j$ transition notation.
 
 
 One can extend the model to parametric inference by writing `Pd` and `lambda` as parametric functions of instance features.
+
+Let's use Stan to find a set of parameters for which the observations are likely.
 
 ```{r, warning=FALSE, message=FALSE, results='hide'}
 model = stan_model(
@@ -218,5 +224,40 @@ for (j in 1:(n_states - 1)) {
 Q
 ```
 
-It is a standard argument that the probability of observing a patient starting in state $i$ being in state $j$ at time $t$ is then $\text{exp}(t Q)[i, j]$.
+It is a standard argument that the probability of observing a patient starting in state $i$ being in state $j$ at time $t$ is then $\text{exp}(t Q)[i, j]$. 
+
+Notice we have not referred to the [Kolmogorov equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains), instead attempting to infer parameters that entail a Q-matrix which we can use to build detailed summaries.
+
+```{r}
+time_frame = data.frame(
+  year = seq(from=0, to=10, by=0.1),
+  s1 = 0,
+  s2 = 0,
+  s3 = 0,
+  s4 = 0
+  )
+for (i in 1:nrow(time_frame)) {
+  d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
+  time_frame[i, 's1'] = d[1, 1]
+  time_frame[i, 's2'] = d[1, 2]
+  time_frame[i, 's3'] = d[1, 3]
+  time_frame[i, 's4'] = d[1, 4]
+}
+plot_frame = pivot_to_blocks(
+  time_frame, 
+  nameForNewKeyColumn = 'state', 
+  nameForNewValueColumn = 'probability', 
+  columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
+(
+  ggplot(
+    data=plot_frame,
+    mapping=aes(x=year, y=probability, color=state)
+    )
+  + geom_line()
+  + ggtitle("probability of being in state-i starting from state-1 by year")
+)
+```
+
+
+
 

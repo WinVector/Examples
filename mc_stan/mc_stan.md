@@ -9,20 +9,9 @@ Applications”](https://rviews.rstudio.com/2023/04/19/multistate-models-for-med
 ``` r
 library(msm)
 library(rstan)
+library(cdata)
+library(ggplot2)
 ```
-
-    ## Loading required package: StanHeaders
-
-    ## 
-    ## rstan version 2.32.6 (Stan version 2.32.2)
-
-    ## For execution on a local, multicore CPU with excess RAM we recommend calling
-    ## options(mc.cores = parallel::detectCores()).
-    ## To avoid recompilation of unchanged Stan programs, we recommend calling
-    ## rstan_options(auto_write = TRUE)
-    ## For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,
-    ## change `threads_per_chain` option:
-    ## rstan_options(threads_per_chain = 1)
 
 ``` r
 cav = cav[order(cav$PTNUM, cav$years), , drop=FALSE]
@@ -131,6 +120,9 @@ $$
 I = \lambda^{2} t e^{-\lambda t}.
 $$
 
+The switching is problematic (it destroys derivatives), but could be
+softened by different interpolation ideas.
+
 The argument that integrating out $z$ is a correct step is as follows:
 we could put it in a model as an unobserved parameter of the model. Then
 sampling the model would be picking viable values of $z$ uniformly,
@@ -196,10 +188,10 @@ model {
 The `Pd`s in this model do not encode self-transitions are in encoded as
 follows:
 
-- For $i > j$ $Pd[i, j]$ is the probability of moving from state $i$ to
-  state $j$.
-- For $i < j$ $Pd[i, j - 1]$ is the probability of moving from state $i$
-  to state $j$.
+- For $i > j$ $\text{Pd}[i, j]$ is the probability of moving from state
+  $i$ to state $j$, given there was a transition.
+- For $i < j$ $\text{Pd}[i, j - 1]$ is the probability of moving from
+  state $i$ to state $j$, given there was a transition.
 
 Notice there is no representation for a $i$ to $i$ transition. When we
 unpack these results we will pad them out to get a more regular
@@ -207,6 +199,9 @@ $\text{P}[i, j]$ represents the $i$ to $j$ transition notation.
 
 One can extend the model to parametric inference by writing `Pd` and
 `lambda` as parametric functions of instance features.
+
+Let’s use Stan to find a set of parameters for which the observations
+are likely.
 
 ``` r
 model = stan_model(
@@ -247,19 +242,19 @@ head(res)
 ```
 
     ##    lambda[1] lambda[2] lambda[3]   Pd[1,1]   Pd[2,1]   Pd[3,1]   Pd[1,2]
-    ## 3  0.1074034 0.9088712 0.6321297 0.8145221 0.4453542 0.1572724 0.1812960
-    ## 5  0.1198312 0.8417540 0.5548391 0.8219302 0.4933370 0.2675063 0.1725522
-    ## 7  0.1104179 0.9192706 0.6008022 0.8266347 0.4432129 0.2448043 0.1717263
-    ## 15 0.1118236 0.7980800 0.6252320 0.8303443 0.5082514 0.2977180 0.1681083
-    ## 48 0.1106810 0.8096113 0.6069468 0.8284002 0.4352925 0.2976471 0.1682989
-    ## 54 0.1113944 0.8704110 0.6522751 0.8270936 0.4906704 0.2785500 0.1718146
+    ## 19 0.1117116 0.8672675 0.5891406 0.8371314 0.4269707 0.2421480 0.1613028
+    ## 26 0.1092027 0.8689813 0.5433011 0.8318111 0.4988148 0.2261622 0.1666959
+    ## 56 0.1216461 0.8730400 0.5615971 0.7991770 0.4552582 0.2249190 0.1985382
+    ## 57 0.1046196 0.8789665 0.6251324 0.8015848 0.4659379 0.2837044 0.1942818
+    ## 76 0.1213487 0.8531039 0.6481224 0.8203592 0.4852439 0.3890683 0.1755155
+    ## 84 0.1136673 0.9673022 0.6029154 0.8244254 0.4747332 0.2368654 0.1730495
     ##      Pd[2,2]   Pd[3,2]     Pd[1,3]     Pd[2,3]    Pd[3,3]      lp__
-    ## 3  0.5516441 0.7867152 0.004181854 0.003001639 0.05601243 -1588.817
-    ## 5  0.4991948 0.6899790 0.005517592 0.007468172 0.04251464 -1588.143
-    ## 7  0.5506678 0.7319331 0.001639054 0.006119337 0.02326263 -1588.194
-    ## 15 0.4852536 0.6542650 0.001547408 0.006495010 0.04801696 -1588.944
-    ## 48 0.5623052 0.6266280 0.003300924 0.002402319 0.07572494 -1588.764
-    ## 54 0.5073506 0.6624982 0.001091804 0.001978967 0.05895183 -1588.740
+    ## 19 0.5708452 0.6840276 0.001565828 0.002184068 0.07382439 -1588.643
+    ## 26 0.4922962 0.7251128 0.001492962 0.008889056 0.04872499 -1588.865
+    ## 56 0.5343881 0.7510072 0.002284841 0.010353682 0.02407380 -1588.408
+    ## 57 0.5303302 0.6747311 0.004133398 0.003731880 0.04156450 -1588.634
+    ## 76 0.5114736 0.5738843 0.004125234 0.003282470 0.03704733 -1588.825
+    ## 84 0.5089408 0.7290891 0.002525115 0.016326061 0.03404544 -1588.888
 
 From our sample can extract the discrete step matrix, which encodes:
 given one changed states what state did one change to?
@@ -283,9 +278,9 @@ step_matrix
 ```
 
     ##           [,1]      [,2]      [,3]        [,4]
-    ## [1,] 0.0000000 0.8172666 0.1786737 0.004059779
-    ## [2,] 0.4565648 0.0000000 0.5337538 0.009681476
-    ## [3,] 0.2492002 0.7015638 0.0000000 0.049236040
+    ## [1,] 0.0000000 0.8164378 0.1796499 0.003912301
+    ## [2,] 0.4569746 0.0000000 0.5334275 0.009597949
+    ## [3,] 0.2484394 0.7016147 0.0000000 0.049945932
     ## [4,] 0.0000000 0.0000000 0.0000000 0.000000000
 
 And it is then standard to combine this and the expected hold-times to
@@ -306,11 +301,48 @@ Q
 ```
 
     ##             [,1]       [,2]       [,3]        [,4]
-    ## [1,] -0.82415307  0.7099574  0.1101359 0.004059779
-    ## [2,]  0.05238696 -0.3910786  0.3290101 0.009681476
-    ## [3,]  0.02859362  0.6094467 -0.6872764 0.049236040
+    ## [1,] -0.82289603  0.7081322  0.1108515 0.003912301
+    ## [2,]  0.05246478 -0.3912099  0.3291471 0.009597949
+    ## [3,]  0.02852307  0.6085411 -0.6870101 0.049945932
     ## [4,]  0.00000000  0.0000000  0.0000000 0.000000000
 
 It is a standard argument that the probability of observing a patient
 starting in state $i$ being in state $j$ at time $t$ is then
 $\text{exp}(t Q)[i, j]$.
+
+Notice we have not referred to the [Kolmogorov
+equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains),
+instead attempting to infer parameters that entail a Q-matrix which we
+can use to build detailed summaries.
+
+``` r
+time_frame = data.frame(
+  year = seq(from=0, to=10, by=0.1),
+  s1 = 0,
+  s2 = 0,
+  s3 = 0,
+  s4 = 0
+  )
+for (i in 1:nrow(time_frame)) {
+  d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
+  time_frame[i, 's1'] = d[1, 1]
+  time_frame[i, 's2'] = d[1, 2]
+  time_frame[i, 's3'] = d[1, 3]
+  time_frame[i, 's4'] = d[1, 4]
+}
+plot_frame = pivot_to_blocks(
+  time_frame, 
+  nameForNewKeyColumn = 'state', 
+  nameForNewValueColumn = 'probability', 
+  columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
+(
+  ggplot(
+    data=plot_frame,
+    mapping=aes(x=year, y=probability, color=state)
+    )
+  + geom_line()
+  + ggtitle("probability of being in state-i starting from state-1 by year")
+)
+```
+
+![](mc_stan_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
