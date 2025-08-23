@@ -7,7 +7,8 @@ date: "2025-08-23"
 Working the problem shared in: 
 [J. Rickert, "Multistate Models for Medical Applications"](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/).
 
-Direct Q solution.
+
+Attempt at a Q solution. A different "assume no unobserved transitions" solution can be found [here](https://github.com/WinVector/Examples/blob/main/mc_stan/mc_stan.md).
 
 
 ```{r, warning=FALSE, message=FALSE, results='hide'}
@@ -87,11 +88,29 @@ model {
     }
   }
   // relation to observations
+  // cheap-simulate matrix exp
+  matrix[n_states, n_states] Q0;
+  matrix[n_states, n_states] Q2;
+  for (i in 1:n_states) {
+    for (j in 1:n_states) {
+      if (i != j) {
+        Q0[i, j] = 0;
+      } else {
+        Q0[i, j] = 1;
+      }
+    }
+  }
+  Q2 = Q * Q;
   for (i in 2:m_examples) {
-     if ((pt_idx[i-1] == pt_idx[i])  && (state[i - 1] < n_states)) {
+     if ((pt_idx[i-1] == pt_idx[i]) && (state[i - 1] < n_states)) {
+       real t;
+       matrix[n_states, n_states] expQ;
        real pij;
-       pij = matrix_exp( (years[i] - years[i-1]) * Q )[state[i-1], state[i]];
-       target += log(pij + 1e-6);
+       t = years[i] - years[i-1];
+       // expQ = matrix_exp( t * Q );
+       expQ = Q0 + t * Q + pow(t, 2) * Q2 / 2;
+       pij = expQ[state[i-1], state[i]];
+       target += log(fmax(1e-6, pij)) + pij;
      }
   }
 }
