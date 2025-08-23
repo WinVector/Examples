@@ -96,6 +96,9 @@ parameters {
    array[n_states - 1] simplex[n_states - 1] Pd;
 }
 model {
+  // diffuse priors
+  lambda ~ exponential(0.01);
+  // relations to observations
   for (i in 2:m_examples) {
      if ((pt_idx[i-1] == pt_idx[i]) && (state[i-1] < n_states)) {
        real t;
@@ -174,8 +177,8 @@ res <- as.data.frame(sampling(
   data = stan_data,
   chains = 4,                 # number of Markov chains
   cores = 4,                  # number of cores (could use one per chain)
-  warmup = 16000,              # number of warmup iterations per chain
-  iter = 20000,                # total number of iterations per chain
+  # warmup = 16000,              # number of warmup iterations per chain
+  # iter = 20000,                # total number of iterations per chain
   refresh = 0                # no progress shown
 ))
 ```
