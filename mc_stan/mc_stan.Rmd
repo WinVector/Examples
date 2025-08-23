@@ -179,6 +179,7 @@ res <- as.data.frame(sampling(
   cores = 4,                  # number of cores (could use one per chain)
   # warmup = 16000,              # number of warmup iterations per chain
   # iter = 20000,                # total number of iterations per chain
+  pars = c("lambda", "Pd"),
   refresh = 0                # no progress shown
 ))
 ```
