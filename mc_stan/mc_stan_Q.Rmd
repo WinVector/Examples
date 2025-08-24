@@ -19,18 +19,24 @@ library(ggplot2)
 ```
 
 ```{r}
+forward_only = FALSE
+```
+
+```{r}
 cav = cav[order(cav$PTNUM, cav$years), , drop=FALSE]
 cav$pt_idx = match(cav$PTNUM, unique(cav$PTNUM))
 head(cav)
 ```
 
 ```{r}
-while(TRUE) {
-  regressions = c(FALSE, (diff(cav$pt_idx) == 0) & (diff(cav$state) < 0))
-  if (sum(regressions) <= 0) {
-    break
+if (forward_only) {
+  while(TRUE) {
+    regressions = c(FALSE, (diff(cav$pt_idx) == 0) & (diff(cav$state) < 0))
+    if (sum(regressions) <= 0) {
+      break
+    }
+    cav = cav[regressions == FALSE, , drop=FALSE]
   }
-  cav = cav[regressions == FALSE, , drop=FALSE]
 }
 ```
 
@@ -59,6 +65,7 @@ Let's translate this into Stan as distributional statements.
 ```{r}
 stan_src = "
 data {
+  int<lower=0, upper=1> forward_only;
   int<lower=1> m_examples;
   int<lower=2> n_states;
   int<lower=1> n_patients;
@@ -73,7 +80,7 @@ transformed parameters {
   matrix[n_states, n_states] Q;
   for (i in 1:n_states - 1) {
     for (j in 1:n_states) {
-      if (i < j) {
+      if ( ((forward_only==1) && (i < j)) || ((forward_only==0) && (i != j)) ) {
         Q[i, j] = Qd[i, j];
       } else {
         Q[i, j] = 0;
@@ -125,6 +132,7 @@ model = stan_model(
 
 ```{r}
 stan_data <- list(
+  forward_only = if (forward_only) 1 else 0,
   m_examples = nrow(cav),
   n_states = max(cav$state),
   n_patients = max(cav$pt_idx),
