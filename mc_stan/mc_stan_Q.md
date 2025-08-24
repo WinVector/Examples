@@ -2,13 +2,9 @@ stan_ex
 ================
 2025-08-23
 
-Working the problem shared in: [J. Rickert, “Multistate Models for
-Medical
+Working a variation of the problem shared in: [J. Rickert, “Multistate
+Models for Medical
 Applications”](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/).
-
-Attempt at a Q solution. A different “assume no unobserved transitions”
-solution can be found
-[here](https://github.com/WinVector/Examples/blob/main/mc_stan/mc_stan.md).
 
 ``` r
 library(msm)
@@ -16,6 +12,8 @@ library(rstan)
 library(cdata)
 library(ggplot2)
 ```
+
+For this example we will leave in observed backwards transitions.
 
 ``` r
 forward_only = FALSE
@@ -183,27 +181,27 @@ res_row = colMeans(res)
 head(res)
 ```
 
-    ##        Q[1,1]    Q[2,1]      Q[3,1] Q[4,1]    Q[1,2]     Q[2,2]    Q[3,2]
-    ## 10 -0.1747797 0.2444584 0.022114062      0 0.1239382 -0.6443086 0.1011909
-    ## 12 -0.1926914 0.2268416 0.016813758      0 0.1432877 -0.6322553 0.1382339
-    ## 52 -0.1846018 0.2319540 0.019818213      0 0.1348084 -0.6289951 0.2047384
-    ## 56 -0.1736322 0.2553609 0.014757069      0 0.1259770 -0.6577024 0.1860791
-    ## 67 -0.1769937 0.2479096 0.002912616      0 0.1282249 -0.5929378 0.1473756
-    ## 76 -0.1856984 0.2749688 0.007888328      0 0.1283586 -0.6521430 0.1677132
-    ##    Q[4,2]      Q[1,3]    Q[2,3]     Q[3,3] Q[4,3]     Q[1,4]     Q[2,4]
-    ## 10      0 0.002827728 0.3090444 -0.5020005      0 0.04801382 0.09080577
-    ## 12      0 0.001605071 0.3288552 -0.4921926      0 0.04779863 0.07655847
-    ## 52      0 0.000614109 0.3189977 -0.5598363      0 0.04917934 0.07804344
-    ## 56      0 0.002429527 0.3023400 -0.5790168      0 0.04522563 0.10000155
-    ## 67      0 0.003084828 0.2564211 -0.4734320      0 0.04568390 0.08860712
-    ## 76      0 0.006534632 0.2783546 -0.5236316      0 0.05080524 0.09881956
-    ##       Q[3,4] Q[4,4]      lp__
-    ## 10 0.3786955      0 -2008.251
-    ## 12 0.3371449      0 -2009.475
-    ## 52 0.3352797      0 -2009.137
-    ## 56 0.3781807      0 -2009.313
-    ## 67 0.3231438      0 -2009.183
-    ## 76 0.3480300      0 -2009.342
+    ##        Q[1,1]    Q[2,1]     Q[3,1] Q[4,1]    Q[1,2]     Q[2,2]    Q[3,2] Q[4,2]
+    ## 6  -0.1714406 0.2238297 0.01964604      0 0.1218169 -0.6028829 0.1512067      0
+    ## 9  -0.1841702 0.2479826 0.01252220      0 0.1292913 -0.5845410 0.1134835      0
+    ## 21 -0.1744206 0.2269192 0.03861678      0 0.1208582 -0.6202168 0.1802868      0
+    ## 36 -0.1727590 0.2500679 0.01306027      0 0.1218090 -0.6350000 0.1540545      0
+    ## 41 -0.1750943 0.2334576 0.03975346      0 0.1195889 -0.6037287 0.1235047      0
+    ## 46 -0.1758434 0.2026111 0.02091855      0 0.1228458 -0.6170589 0.1415376      0
+    ##         Q[1,3]    Q[2,3]     Q[3,3] Q[4,3]     Q[1,4]     Q[2,4]    Q[3,4]
+    ## 6  0.003706417 0.2552398 -0.5047383      0 0.04591725 0.12381350 0.3338855
+    ## 9  0.004954932 0.2466969 -0.4381051      0 0.04992395 0.08986154 0.3120994
+    ## 21 0.003202988 0.3190824 -0.5941110      0 0.05035943 0.07421519 0.3752075
+    ## 36 0.001319355 0.3063326 -0.5059344      0 0.04963057 0.07859960 0.3388196
+    ## 41 0.001386301 0.2897648 -0.4914640      0 0.05411909 0.08050619 0.3282059
+    ## 46 0.000955178 0.3209921 -0.5326698      0 0.05204242 0.09345565 0.3702136
+    ##    Q[4,4]      lp__
+    ## 6       0 -2008.295
+    ## 9       0 -2009.264
+    ## 21      0 -2007.989
+    ## 36      0 -2008.323
+    ## 41      0 -2008.090
+    ## 46      0 -2009.376
 
 We now pull out an estimate of the so-called Q matrix.
 
@@ -219,11 +217,11 @@ for (i in 1:(n_states - 1)) {
 Q
 ```
 
-    ##             [,1]       [,2]       [,3]       [,4]
-    ## [1,] -0.17573062  0.1241915  0.0030183 0.04852079
-    ## [2,]  0.23297446 -0.6128267  0.2990639 0.08078832
-    ## [3,]  0.02035461  0.1444356 -0.5053547 0.34056448
-    ## [4,]  0.00000000  0.0000000  0.0000000 0.00000000
+    ##             [,1]       [,2]         [,3]       [,4]
+    ## [1,] -0.17514381  0.1234017  0.003001276 0.04874078
+    ## [2,]  0.23121619 -0.6064548  0.293778179 0.08146044
+    ## [3,]  0.02139701  0.1419968 -0.501074697 0.33768093
+    ## [4,]  0.00000000  0.0000000  0.000000000 0.00000000
 
 It is a standard argument that the probability of observing a patient
 starting in state $i$ being in state $j$ at time $t$ is then
@@ -236,9 +234,9 @@ Matrix::expm(0.1 * Q)
 
     ## 4 x 4 Matrix of class "dgeMatrix"
     ##             [,1]       [,2]         [,3]        [,4]
-    ## [1,] 0.982720988 0.01194349 0.0004696576 0.004865867
-    ## [2,] 0.022430370 0.94089943 0.0282871558 0.008383042
-    ## [3,] 0.002128799 0.01367201 0.9509252536 0.033273934
+    ## [1,] 0.982776757 0.01187157 0.0004638907 0.004887783
+    ## [2,] 0.022269891 0.94149021 0.0278019249 0.008437972
+    ## [3,] 0.002226202 0.01344902 0.9513253504 0.032999431
     ## [4,] 0.000000000 0.00000000 0.0000000000 1.000000000
 
 As is usual with exponents, the `k* 0.1` year estimate is the `k'th`
@@ -249,11 +247,11 @@ Matrix::expm(3 * 0.1 * Q) - (Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q) %*%
 ```
 
     ## 4 x 4 Matrix of class "dgeMatrix"
-    ##               [,1]         [,2]          [,3]          [,4]
-    ## [1,] -3.330669e-16 6.938894e-18  0.000000e+00 -1.734723e-18
-    ## [2,]  0.000000e+00 4.440892e-16  1.387779e-17  1.387779e-17
-    ## [3,] -1.734723e-18 6.938894e-18 -2.220446e-16  0.000000e+00
-    ## [4,]  0.000000e+00 0.000000e+00  0.000000e+00  0.000000e+00
+    ##               [,1]          [,2]          [,3]          [,4]
+    ## [1,]  0.000000e+00  6.938894e-18  0.000000e+00  0.000000e+00
+    ## [2,]  6.938894e-18  2.220446e-16  1.387779e-17 -3.469447e-18
+    ## [3,] -1.734723e-18 -6.938894e-18 -2.220446e-16  0.000000e+00
+    ## [4,]  0.000000e+00  0.000000e+00  0.000000e+00  0.000000e+00
 
 Notice we have not referred to the [Kolmogorov
 equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains),
@@ -261,33 +259,35 @@ instead attempting to infer parameters that entail a Q-matrix which we
 can use to build detailed summaries.
 
 ``` r
-time_frame = data.frame(
-  year = seq(from=0, to=10, by=0.1),
-  s1 = 0,
-  s2 = 0,
-  s3 = 0,
-  s4 = 0
-  )
-for (i in 1:nrow(time_frame)) {
-  d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
-  time_frame[i, 's1'] = d[1, 1]
-  time_frame[i, 's2'] = d[1, 2]
-  time_frame[i, 's3'] = d[1, 3]
-  time_frame[i, 's4'] = d[1, 4]
-}
-plot_frame = pivot_to_blocks(
-  time_frame, 
-  nameForNewKeyColumn = 'state', 
-  nameForNewValueColumn = 'probability', 
-  columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
-(
-  ggplot(
-    data=plot_frame,
-    mapping=aes(x=year, y=probability, color=state)
+for (s0 in 1:3) {
+  time_frame = data.frame(
+    year = seq(from=0, to=20, by=0.1),
+    s1 = 0,
+    s2 = 0,
+    s3 = 0,
+    s4 = 0
     )
-  + geom_line()
-  + ggtitle("probability of being in state-i starting from state-1 by year")
-)
+  for (i in 1:nrow(time_frame)) {
+    d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
+    time_frame[i, 's1'] = d[s0, 1]
+    time_frame[i, 's2'] = d[s0, 2]
+    time_frame[i, 's3'] = d[s0, 3]
+    time_frame[i, 's4'] = d[s0, 4]
+  }
+  plot_frame = pivot_to_blocks(
+    time_frame, 
+    nameForNewKeyColumn = 'state', 
+    nameForNewValueColumn = 'probability', 
+    columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
+  print(
+    ggplot(
+      data=plot_frame,
+      mapping=aes(x=year, y=probability, color=state)
+      )
+    + geom_line()
+    + ggtitle(paste0("probability of being in state-i starting from state-", s0, " by year"))
+  )
+}
 ```
 
-![](mc_stan_Q_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](mc_stan_Q_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->![](mc_stan_Q_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->![](mc_stan_Q_files/figure-gfm/unnamed-chunk-17-3.png)<!-- -->

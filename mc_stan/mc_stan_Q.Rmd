@@ -4,11 +4,9 @@ output: github_document
 date: "2025-08-23"
 ---
 
-Working the problem shared in: 
+Working a variation of the problem shared in: 
 [J. Rickert, "Multistate Models for Medical Applications"](https://rviews.rstudio.com/2023/04/19/multistate-models-for-medical-applications/).
 
-
-Attempt at a Q solution. A different "assume no unobserved transitions" solution can be found [here](https://github.com/WinVector/Examples/blob/main/mc_stan/mc_stan.md).
 
 
 ```{r, warning=FALSE, message=FALSE, results='hide'}
@@ -17,6 +15,8 @@ library(rstan)
 library(cdata)
 library(ggplot2)
 ```
+
+For this example we will leave in observed backwards transitions.
 
 ```{r}
 forward_only = FALSE
@@ -197,33 +197,35 @@ Matrix::expm(3 * 0.1 * Q) - (Matrix::expm(0.1 * Q) %*% Matrix::expm(0.1 * Q) %*%
 Notice we have not referred to the [Kolmogorov equations](https://en.wikipedia.org/wiki/Kolmogorov_equations#Continuous-time_Markov_chains), instead attempting to infer parameters that entail a Q-matrix which we can use to build detailed summaries.
 
 ```{r}
-time_frame = data.frame(
-  year = seq(from=0, to=10, by=0.1),
-  s1 = 0,
-  s2 = 0,
-  s3 = 0,
-  s4 = 0
-  )
-for (i in 1:nrow(time_frame)) {
-  d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
-  time_frame[i, 's1'] = d[1, 1]
-  time_frame[i, 's2'] = d[1, 2]
-  time_frame[i, 's3'] = d[1, 3]
-  time_frame[i, 's4'] = d[1, 4]
-}
-plot_frame = pivot_to_blocks(
-  time_frame, 
-  nameForNewKeyColumn = 'state', 
-  nameForNewValueColumn = 'probability', 
-  columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
-(
-  ggplot(
-    data=plot_frame,
-    mapping=aes(x=year, y=probability, color=state)
+for (s0 in 1:3) {
+  time_frame = data.frame(
+    year = seq(from=0, to=20, by=0.1),
+    s1 = 0,
+    s2 = 0,
+    s3 = 0,
+    s4 = 0
     )
-  + geom_line()
-  + ggtitle("probability of being in state-i starting from state-1 by year")
-)
+  for (i in 1:nrow(time_frame)) {
+    d = Matrix::expm(max(1e-6, time_frame$year[i]) * Q)  # could also just power up exp(time[1] * Q)
+    time_frame[i, 's1'] = d[s0, 1]
+    time_frame[i, 's2'] = d[s0, 2]
+    time_frame[i, 's3'] = d[s0, 3]
+    time_frame[i, 's4'] = d[s0, 4]
+  }
+  plot_frame = pivot_to_blocks(
+    time_frame, 
+    nameForNewKeyColumn = 'state', 
+    nameForNewValueColumn = 'probability', 
+    columnsToTakeFrom = c('s1', 's2', 's3', 's4'))
+  print(
+    ggplot(
+      data=plot_frame,
+      mapping=aes(x=year, y=probability, color=state)
+      )
+    + geom_line()
+    + ggtitle(paste0("probability of being in state-i starting from state-", s0, " by year"))
+  )
+}
 ```
 
 
