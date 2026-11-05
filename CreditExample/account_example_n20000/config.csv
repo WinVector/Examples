@@ -1,0 +1,2 @@
+calibration_possible_positives,calibration_true_positives,calibration_possible_negatives,calibration_true_negatives,last_year_loss,n_compromised_last_year,n_accounts_last_year,n_accounts,study_rate,scan_cost,intervention_cost,intervention_effectiveness,expected_loss,sd_loss,output_dir
+10,8,50,48,541989.51,45,19000,20000,0.02,5.0,100.0,0.8,12000.0,4000.0,account_example_n20000
