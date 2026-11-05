@@ -1,5 +1,5 @@
 
-## PyMC model: produces samples of n\_at\_risk
+## PyMC model: produces samples of $\text{n{\textunderscore}at{\textunderscore}risk}$
 
 
 
@@ -16,8 +16,8 @@ $$
 
 $$
 \begin{align*}
-\text{n\_at\_risk} &\sim \text{binomial}(\underline{\text{n\_accounts}}, \overline{\textbf{risk\_rate}}) \\
-\text{n\_safe} &= \underline{\text{n\_accounts}} - \text{n\_at\_risk} \\
+\text{n{\textunderscore}at{\textunderscore}risk} &\sim \text{binomial}(\underline{\text{n{\textunderscore}accounts}}, \overline{\textbf{risk{\textunderscore}rate}}) \\
+\text{n{\textunderscore}safe} &= \underline{\text{n{\textunderscore}accounts}} - \text{n{\textunderscore}at{\textunderscore}risk} \\
 \end{align*}
 $$
 
@@ -26,9 +26,9 @@ $$
 $$
 \begin{align*}
 \text{pmf}(\textsf{ntp}, \textsf{nfp}) &\colonequals
-  \text{binomial}(\text{n\_at\_risk}, \text{sensitivity}).\text{pmf}(\textsf{ntp}) \;\times\; \\
- &\; \text{binomial}(\text{n\_safe}, 1 - \text{specificity}).\text{pmf}(\textsf{nfp}) \\
-\text{Z}() &\colonequals \sum_{\textsf{ntp} = 0}^{\overline{\textbf{n\_indications}}} \text{pmf}(\text{ntp}, \overline{\textbf{n\_indications}} - \textsf{ntp}) \\
+  \text{binomial}(\text{n{\textunderscore}at{\textunderscore}risk}, \text{sensitivity}).\text{pmf}(\textsf{ntp}) \;\times\; \\
+ &\; \text{binomial}(\text{n{\textunderscore}safe}, 1 - \text{specificity}).\text{pmf}(\textsf{nfp}) \\
+\text{Z}() &\colonequals \sum_{\textsf{ntp} = 0}^{\overline{\textbf{n{\textunderscore}indications}}} \text{pmf}(\text{ntp}, \overline{\textbf{n{\textunderscore}indications}} - \textsf{ntp}) \\
 \end{align*}
 $$
 
@@ -46,10 +46,10 @@ $$
 
 $$
 \begin{align*}
-\text{ntp} &\sim \text{pmf}(\textsf{ntp}, \overline{\textbf{n\_indications}} - \textsf{ntp}) / \ln(\text{Z}()) \\
-\text{nfp} &= \overline{\textbf{n\_indications}} - \text{ntp} \\
-\text{nfn} &= \text{n\_at\_risk} - \text{ntp} \\
-\text{ntn} &= \text{n\_safe} - \text{nfp} \\
+\text{ntp} &\sim \text{pmf}(\textsf{ntp}, \overline{\textbf{n{\textunderscore}indications}} - \textsf{ntp}) / \ln(\text{Z}()) \\
+\text{nfp} &= \overline{\textbf{n{\textunderscore}indications}} - \text{ntp} \\
+\text{nfn} &= \text{n{\textunderscore}at{\textunderscore}risk} - \text{ntp} \\
+\text{ntn} &= \text{n{\textunderscore}safe} - \text{nfp} \\
 \end{align*}
 $$
 
@@ -59,8 +59,8 @@ $$
 
 $$
 \begin{align*}
-\text{attacker\_coverage} \;\times\; \overline{\textbf{risk\_rate}} \sim \beta( &1 + \underline{\text{n\_compromised\_last\_year}}, \\
-& 1 + \underline{\text{n\_accounts\_last\_year}} - \underline{\text{n\_compromised\_last\_year}}) \\
+\text{attacker{\textunderscore}coverage} \;\times\; \overline{\textbf{risk{\textunderscore}rate}} \sim \beta( &1 + \underline{\text{n{\textunderscore}compromised{\textunderscore}last{\textunderscore}year}}, \\
+& 1 + \underline{\text{n{\textunderscore}accounts{\textunderscore}last{\textunderscore}year}} - \underline{\text{n{\textunderscore}compromised{\textunderscore}last{\textunderscore}year}}) \\
 \end{align*}
 $$
 
@@ -68,8 +68,8 @@ $$
 
 $$
 \begin{align*}
-\text{n\_failed\_treatment} &\sim \text{binomial}(\text{ntp}, 1 - \text{intervention\_effectiveness}) \\
-\text{n additional compromised | no intervention} &\sim \text{binomial}(\text{ntp} - \text{n\_failed\_treatment}, \text{attacker\_coverage}) \\
+\text{n{\textunderscore}failed{\textunderscore}treatment} &\sim \text{binomial}(\text{ntp}, 1 - \text{intervention{\textunderscore}effectiveness}) \\
+\text{n additional compromised | no intervention} &\sim \text{binomial}(\text{ntp} - \text{n{\textunderscore}failed{\textunderscore}treatment}, \text{attacker{\textunderscore}coverage}) \\
 \text{dollars additional compromised | no intervention} &\sim
 \text{normal} \left(
     \begin{aligned}
@@ -86,7 +86,7 @@ $$
 
 $$
 \begin{align*}
-\text{n compromised | intervention} &\sim \text{binomial}(\text{nfn} + \text{n\_failed\_treatment}, \text{attacker\_coverage}) \\
+\text{n compromised | intervention} &\sim \text{binomial}(\text{nfn} + \text{n{\textunderscore}failed{\textunderscore}treatment}, \text{attacker{\textunderscore}coverage}) \\
 \text{dollars compromised | intervention} &\sim 
 \text{normal} \left(
     \begin{aligned}
